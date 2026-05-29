@@ -1,0 +1,17 @@
+services:
+    web:
+        build: .
+        volumes:
+            - .:/var/www/html
+        ports:
+            - "8080:80"
+        depends_on:
+            - db
+
+    db:
+        image: mysql:8.0
+        environment:
+            MYSQL_DATABASE: digipa
+            MYSQL_USER: digipa
+            MYSQL_PASSWORD: ${DB_PASS:-secret}
+            MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
