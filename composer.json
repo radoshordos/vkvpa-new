@@ -1,16 +1,18 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/laravel",
+    "name": "vkvpa/provozni-aktiv",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
+    "description": " Webový systém pro radioamatérský závod VKV Provozní aktiv",
     "keywords": ["laravel", "framework"],
     "license": "MIT",
     "require": {
-        "php": "^8.3",
-        "laravel/framework": "^13.8",
+        "php": "^8.5",
+        "dg/adminer-custom": "^3.3",
+        "laravel/framework": "^13.12",
         "laravel/tinker": "^3.0"
     },
     "require-dev": {
+        "barryvdh/laravel-ide-helper": "^3.7",
         "fakerphp/faker": "^1.23",
         "laravel/pail": "^1.2.5",
         "laravel/pao": "^1.0.6",
