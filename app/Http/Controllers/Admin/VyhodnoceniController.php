@@ -1,0 +1,40 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\VkvpaKola;
+use App\Services\Scoring\ScoringService;
+use Illuminate\Http\RedirectResponse;
+
+/**
+ * Vyhodnocení a uzávěrka kola (Fáze 7) – admin.
+ * Nahrazuje vysledky.php → vyhodnoceni.php / uzavreni.php.
+ */
+class VyhodnoceniController extends Controller
+{
+    public function __construct(private readonly ScoringService $scoring)
+    {
+    }
+
+    /** Přepočítá pořadí v kole (vyhodnoceni.php). */
+    public function vyhodnotit(VkvpaKola $kolo): RedirectResponse
+    {
+        $this->scoring->rankRound($kolo->id);
+
+        return redirect()->route('edit_kola')
+            ->with('announcement', 'Kolo „' . $kolo->nazev . '" vyhodnoceno.');
+    }
+
+    /** Uzavře kolo (uzavreni.php) – přepočítá pořadí a nastaví vyhodnoceno. */
+    public function uzavrit(VkvpaKola $kolo): RedirectResponse
+    {
+        $this->scoring->rankRound($kolo->id);
+        $this->scoring->closeRound($kolo->id);
+
+        return redirect()->route('edit_kola')
+            ->with('announcement', 'Kolo „' . $kolo->nazev . '" uzavřeno.');
+    }
+}

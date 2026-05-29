@@ -1,0 +1,57 @@
+<?php
+
+declare(strict_types=1);
+
+use App\Http\Controllers\EdiController;
+use App\Http\Controllers\HlaseniController;
+use App\Http\Controllers\KolaController;
+use App\Http\Controllers\Admin\DenikyController;
+use App\Http\Controllers\Admin\ImportController;
+use App\Http\Controllers\Admin\KategorieController;
+use App\Http\Controllers\VysledkyController;
+use Illuminate\Support\Facades\Route;
+
+/*
+ * Routy aplikace (Fáze 6) – nahrazují index.php ?str= whitelist.
+ * Legacy klíč ?str=X  →  pojmenovaná routa (name odpovídá klíči).
+ */
+
+require __DIR__ . '/auth.php'; // Fáze 4
+
+// Výchozí stránka = formulář hlášení (legacy default $_GET['str']='edit_hlaseni').
+Route::get('/', [HlaseniController::class, 'index'])->name('edit_hlaseni');
+
+// --- Veřejné ---
+Route::get('/kola', [KolaController::class, 'index'])->name('edit_kola');
+
+Route::get('/hlaseni', [HlaseniController::class, 'index'])->name('hlaseni.index');
+Route::post('/hlaseni', [HlaseniController::class, 'store'])->name('hlaseni.store');
+
+Route::get('/vysledky', [VysledkyController::class, 'listina'])->name('vysledkova_listina');
+Route::get('/vysledky/rocni', [VysledkyController::class, 'rocni'])->name('rocni_vysledky');
+
+// Obfuskovaný e-mail jako obrázek (footer) – nahrazuje mail.php
+Route::get('/mail-image', [\App\Http\Controllers\MailImageController::class, 'show'])->name('mail.image');
+
+// Nahrání EDI deníku (využívá EdiParser/EdiImportService z Fáze 5).
+Route::get('/edi', [EdiController::class, 'create'])->name('read_edi');
+Route::post('/edi', [EdiController::class, 'store'])->name('read_edi.store');
+
+// Mapa spojení stanice (Fáze 9) – sjednocuje map*.php
+Route::get('/edi/{head}/mapa', [\App\Http\Controllers\MapController::class, 'show'])->name('edi.mapa');
+
+// --- Administrace (chráněno middleware z Fáze 4) ---
+Route::middleware('admin')->group(function (): void {
+    // Vyhodnocení a uzávěrka kola (Fáze 7)
+    Route::post('/admin/kolo/{kolo}/vyhodnotit', [\App\Http\Controllers\Admin\VyhodnoceniController::class, 'vyhodnotit'])->name('kolo.vyhodnotit');
+    Route::post('/admin/kolo/{kolo}/uzavrit', [\App\Http\Controllers\Admin\VyhodnoceniController::class, 'uzavrit'])->name('kolo.uzavrit');
+
+    // CRUD hlášení (edit/del/confirm z edit_hlaseni.php) – Fáze 6b
+    Route::get('/hlaseni/{data}/edit', [HlaseniController::class, 'edit'])->name('hlaseni.edit');
+    Route::put('/hlaseni/{data}', [HlaseniController::class, 'update'])->name('hlaseni.update');
+    Route::delete('/hlaseni/{data}', [HlaseniController::class, 'destroy'])->name('hlaseni.destroy');
+
+    Route::get('/admin/deniky', [DenikyController::class, 'index'])->name('edit_deniky');
+    Route::get('/admin/kategorie', [KategorieController::class, 'index'])->name('edit_kategorie');
+    Route::get('/admin/importy', [ImportController::class, 'index'])->name('edit_import');
+});

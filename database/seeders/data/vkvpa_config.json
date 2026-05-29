@@ -1,0 +1,38 @@
+[
+  {
+    "cfg_key": "debug",
+    "cfg_value": "true"
+  },
+  {
+    "cfg_key": "debug_EDI",
+    "cfg_value": "true"
+  },
+  {
+    "cfg_key": "strictdate",
+    "cfg_value": "false"
+  },
+  {
+    "cfg_key": "V_ADMIN_MAIL",
+    "cfg_value": "mail@hcsradio.cz"
+  },
+  {
+    "cfg_key": "V_DEBUG_MAIL",
+    "cfg_value": "false"
+  },
+  {
+    "cfg_key": "V_MAIL_TESTER",
+    "cfg_value": "bartovsky@bbhosting.cz"
+  },
+  {
+    "cfg_key": "V_SMTP_HOST",
+    "cfg_value": "kevin.bbhosting.cz"
+  },
+  {
+    "cfg_key": "V_SMTP_PASS",
+    "cfg_value": "qkG7H5268ZT1"
+  },
+  {
+    "cfg_key": "V_SMTP_USER",
+    "cfg_value": "vkvpa@hamradio.cz"
+  }
+]
