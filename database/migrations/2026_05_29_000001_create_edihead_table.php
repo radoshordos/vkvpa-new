@@ -9,9 +9,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('edihead', function (Blueprint $table): void {
-            $table->charset = 'utf8mb4';
-            $table->collation = 'utf8mb4_unicode_ci';
-
             $table->integer('ID', true);
             $table->integer('id_kola')->nullable()->default(0);
             $table->string('TDate', 17);

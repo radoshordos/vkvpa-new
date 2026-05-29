@@ -24,7 +24,7 @@ final class ScoringService
      * Od tohoto kola se hlášení bez EDI deníku do ročního součtu nezapočítávají
      * (legacy `$edikolo = 91`).
      */
-    private const NON_EDI_NULLIFY_FROM_KOLO = 91;
+    private const int NON_EDI_NULLIFY_FROM_KOLO = 91;
 
     /**
      * Přidělí pořadí (`poradi`) v rámci každé kategorie kola.

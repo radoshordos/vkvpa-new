@@ -9,9 +9,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('vkvpa_kola', function (Blueprint $table): void {
-            $table->charset = 'utf8mb3';
-            $table->collation = 'utf8mb3_general_ci';
-
             $table->integer('id', true);
             $table->date('datum_konani');
             $table->dateTime('datum_uzaverky');
