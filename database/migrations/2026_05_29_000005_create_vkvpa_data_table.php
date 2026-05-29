@@ -23,7 +23,7 @@ return new class extends Migration {
             $table->string('mail', 250)->nullable()->default('');
             $table->string('telefon', 20)->nullable()->default('');
             $table->string('poznamka', 250)->nullable()->default('');
-            $table->string('soapbox', 250)->nullable()->default('');
+            $table->string('soapbox', 2000)->nullable()->default('');
             $table->string('ip', 64)->nullable()->default('');
             $table->boolean('EDI')->nullable()->default(false);
             $table->integer('EDI_ID')->nullable()->default(0);
