@@ -13,5 +13,5 @@ services:
         environment:
             MYSQL_DATABASE: digipa
             MYSQL_USER: digipa
-            MYSQL_PASSWORD: ${DB_PASS:-secret}
+            MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
             MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
