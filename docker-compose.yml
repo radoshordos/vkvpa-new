@@ -4,15 +4,15 @@ services:
             context: .
             dockerfile: Dockerfile
         volumes:
-            - .:/var/www/html
+            - ./:/var/www/html
         ports:
             - "8080:80"
         depends_on:
             db:
                 condition: service_healthy
-
     db:
         image: mysql:8.0
+        command: --sql-mode="ALLOW_INVALID_DATES"
         environment:
             MYSQL_DATABASE: ${DB_DATABASE:-digipa}
             MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-secret}
@@ -25,6 +25,5 @@ services:
             interval: 10s
             timeout: 5s
             retries: 10
-
 volumes:
     dbdata:
