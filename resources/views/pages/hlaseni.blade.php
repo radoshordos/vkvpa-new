@@ -1,67 +1,147 @@
-{{-- Formulář hlášení (Fáze 6). Plná vizuální parita + JS dopočty → 6c. --}}
+{{--
+    Ruční formulář hlášení (Fáze 6c) – zrcadlení legacy tpl_form_manual.php.
+    Zachován vzhled (vkv-table) i dvojjazyčné popisky; napojeno na Eloquent,
+    route() a StoreHlaseniRequest. Názvy polí sjednoceny s backendem
+    (locator → lokator, email → mail).
+--}}
 @extends('layouts.app')
 
-@section('title', 'Odeslat deník – VKV PA')
+@section('title', 'Odeslat deník / Log import – VKV PA')
+
+@push('head')
+<style>
+    .vkv-table { width: 100%; border-collapse: collapse; background-color: #D6ECF3; font-family: Arial, sans-serif; font-size: 13px; color: black; }
+    .vkv-table td { padding: 6px 10px; border-bottom: 2px solid white; vertical-align: middle; }
+    .vkv-table tr:last-child td { border-bottom: none; }
+    .vkv-input { border: 1px solid black; padding: 2px; font-size: 13px; background: white; }
+    .vkv-input-bold { font-weight: bold; }
+    .vkv-select { border: 1px solid black; padding: 1px; background: white; font-size: 13px; }
+    .vkv-text-area { border: 1px solid black; width: 100%; margin-top: 5px; background: white; font-family: Arial, sans-serif; }
+    .vkv-error { background: #fff3f3; border: 1px solid #cc0000; color: #cc0000; padding: 10px; margin: 10px 0; font-family: Arial; font-size: 13px; font-weight: bold; }
+</style>
+@endpush
 
 @section('content')
-<h1>Odeslat deník / Log import</h1>
+@php
+    $p = session('edi_prefill', []);
+    $e = $edit ?? null;
+    // Hodnota pole: old() → EDI prefill → editovaný záznam → default.
+    $val = fn (string $name, $editVal = null, $def = '') => old($name, $p[$name] ?? ($editVal ?? $def));
+@endphp
+
+<h1 style="margin-top: 40px;">Odeslat deník / Log import</h1>
 
 @if (session('announcement'))
-  <p class="green">{{ session('announcement') }}</p>
+    <div style="background:#f0fff0;border:1px solid #2a2;color:#161;padding:10px;margin:10px 0;font-family:Arial;font-size:13px;">
+        {{ session('announcement') }}
+    </div>
 @endif
+
 @if ($errors->any())
-  <div class="red">
-    @foreach ($errors->all() as $e)
-      {{ $e }}<br>
-    @endforeach
-  </div>
+    <div class="vkv-error">
+        @foreach ($errors->all() as $err)
+            {{ $err }}<br>
+        @endforeach
+    </div>
 @endif
 
-@php $p = session('edi_prefill', []); $e = $edit ?? null; @endphp
-
-@if (! $kolo)
-  <p class="red">Není otevřené žádné kolo závodu.</p>
-@else
-  <p>Kolo: <strong>{{ $kolo->nazev }}</strong></p>
-
-  <form action="{{ $e ? route('hlaseni.update', $e->id) : route('hlaseni.store') }}" method="post">
+<form action="{{ $e ? route('hlaseni.update', $e->id) : route('hlaseni.store') }}" method="post">
     @csrf
     @if ($e) @method('PUT') @endif
-    <input type="hidden" name="kolo" value="{{ $kolo->id }}">
-    <input type="hidden" name="EDI" value="{{ $p['EDI'] ?? ($e->EDI ?? 0) }}">
-    <input type="hidden" name="EDIID" value="{{ $p['EDIID'] ?? ($e->EDI_ID ?? 0) }}">
+    <input type="hidden" name="EDI" value="{{ $val('EDI', $e->EDI ?? 0, 0) }}">
+    <input type="hidden" name="EDIID" value="{{ $val('EDIID', $e->EDI_ID ?? 0, 0) }}">
 
-    <table class="form">
-      <tr><td>Kategorie</td><td>
-        <select name="kategorie">
-          @foreach ($kategorie as $k)
-            <option value="{{ $k->id }}" @selected(old('kategorie', $e->id_kategorie ?? '') == $k->id)>{{ $k->nazev }}</option>
-          @endforeach
-        </select>
-      </td></tr>
-      <tr><td>Značka</td><td><input type="text" name="znacka" value="{{ old('znacka', $p['znacka'] ?? ($e->znacka ?? '')) }}"></td></tr>
-      <tr><td>Lokátor</td><td><input type="text" name="lokator" value="{{ old('lokator', $p['lokator'] ?? ($e->locator ?? '')) }}"></td></tr>
-      <tr><td>Počet QSO</td><td><input type="number" name="pocet" value="{{ old('pocet', $p['pocet'] ?? ($e->pocet ?? '')) }}"></td></tr>
-      <tr><td>Bodů za QSO</td><td><input type="number" name="bodu_za_qso" value="{{ old('bodu_za_qso', $p['bodu_za_qso'] ?? ($e->bodu_za_qso ?? '')) }}"></td></tr>
-      <tr><td>Násobiče</td><td><input type="number" name="nasobice" value="{{ old('nasobice', $p['nasobice'] ?? ($e->nasobice ?? '')) }}"></td></tr>
-      <tr><td>Body celkem</td><td><input type="number" name="body" value="{{ old('body', $p['body'] ?? ($e->body ?? '')) }}"></td></tr>
-      <tr><td>Jméno</td><td><input type="text" name="jmeno" value="{{ old('jmeno', $p['jmeno'] ?? ($e->jmeno ?? '')) }}"></td></tr>
-      <tr><td>E-mail</td><td><input type="text" name="mail" value="{{ old('mail', $p['mail'] ?? ($e->mail ?? '')) }}"></td></tr>
-      <tr><td>Telefon</td><td><input type="text" name="telefon" value="{{ old('telefon', $p['telefon'] ?? ($e->telefon ?? '')) }}"></td></tr>
-      <tr><td>Poznámka</td><td><input type="text" name="poznamka" value="{{ old('poznamka', $e->poznamka ?? '') }}"></td></tr>
-      <tr><td>Soapbox</td><td><textarea name="soapbox">{{ old('soapbox', $e->soapbox ?? '') }}</textarea></td></tr>
-      <tr><td colspan="2"><input type="submit" name="Odeslat" value="Odeslat / Send"></td></tr>
+    <table class="vkv-table">
+        <tr>
+            <td width="150">Kolo *<br>Period *</td>
+            <td>
+                <select name="kolo" class="vkv-select" style="width: 250px;">
+                    <option value="">--- vyberte kolo / select period ---</option>
+                    @foreach ($kola as $k)
+                        <option value="{{ $k->id }}" @selected((int) $val('kolo', $e->id_kola ?? ($kolo->id ?? 0)) === $k->id)>
+                            {{ $k->nazev }}
+                        </option>
+                    @endforeach
+                </select>
+            </td>
+            <td colspan="2"></td>
+        </tr>
+
+        <tr>
+            <td>Kategorie *<br>Category *</td>
+            <td>
+                <select name="kategorie" class="vkv-select" style="width: 250px;">
+                    <option value="">--- vyberte kategorii / select ---</option>
+                    @foreach ($kategorie as $cat)
+                        <option value="{{ $cat->id }}" @selected((int) $val('kategorie', $e->id_kategorie ?? 0) === $cat->id)>
+                            {{ $cat->nazev }}
+                        </option>
+                    @endforeach
+                </select>
+            </td>
+            <td colspan="2">
+                <input type="checkbox" name="qrp" value="1" @checked($val('qrp', $e->qrp ?? false))>
+                QRP (zaškrtněte, pokud jste v závodě použili výkon QRP)
+            </td>
+        </tr>
+
+        <tr>
+            <td><strong>Volací znak *<br>Callsign *</strong></td>
+            <td><input name="znacka" type="text" class="vkv-input vkv-input-bold" value="{{ $val('znacka', $e->znacka ?? '') }}" size="25"></td>
+            <td width="100">Lokátor *<br>WWL *</td>
+            <td><input name="lokator" type="text" class="vkv-input" value="{{ $val('lokator', $e->locator ?? '') }}" size="15"></td>
+        </tr>
+
+        <tr>
+            <td colspan="4">
+                <table width="100%" cellpadding="0" cellspacing="0" style="border:none;">
+                    <tr>
+                        <td style="border:none;">Počet QSO *</td>
+                        <td style="border:none;"><input name="pocet" type="text" class="vkv-input" value="{{ $val('pocet', $e->pocet ?? 0, 0) }}" size="6"></td>
+                        <td style="border:none;">Bodů za QSO</td>
+                        <td style="border:none;"><input name="bodu_za_qso" type="text" class="vkv-input" value="{{ $val('bodu_za_qso', $e->bodu_za_qso ?? 0, 0) }}" size="6"></td>
+                        <td style="border:none;">Násobiče *</td>
+                        <td style="border:none;"><input name="nasobice" type="text" class="vkv-input" value="{{ $val('nasobice', $e->nasobice ?? 0, 0) }}" size="6"></td>
+                        <td style="border:none;">Celkem bodů *</td>
+                        <td style="border:none;"><input name="body" type="text" class="vkv-input vkv-input-bold" value="{{ $val('body', $e->body ?? 0, 0) }}" size="10" style="background-color: #ffffcc;"></td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+
+        <tr>
+            <td>Jméno / Name</td>
+            <td colspan="3"><input name="jmeno" type="text" class="vkv-input" value="{{ $val('jmeno', $e->jmeno ?? '') }}" style="width: 300px;"></td>
+        </tr>
+        <tr>
+            <td>Kontakt / Contact:*</td>
+            <td><input name="mail" type="text" class="vkv-input" value="{{ $val('mail', $e->mail ?? '') }}" style="width: 280px;"></td>
+            <td align="right">telefon</td>
+            <td><input name="telefon" type="text" class="vkv-input" value="{{ $val('telefon', $e->telefon ?? '') }}" style="width: 200px;"></td>
+        </tr>
+
+        <tr>
+            <td colspan="4">
+                <strong>Poznámka / Note</strong><br>
+                <textarea name="poznamka" class="vkv-text-area" style="height: 40px;">{{ $val('poznamka', $e->poznamka ?? '') }}</textarea>
+            </td>
+        </tr>
+
+        <tr>
+            <td colspan="4">
+                <strong>Soapbox:</strong><br>
+                <textarea name="soapbox" class="vkv-text-area" style="height: 80px;">{{ $val('soapbox', $e->soapbox ?? '') }}</textarea>
+            </td>
+        </tr>
+
+        <tr>
+            <td colspan="2">
+                <a href="{{ route('edit_hlaseni') }}" style="color: #CC0000; text-decoration: underline;">vymazat formulář</a>
+            </td>
+            <td colspan="2" align="right">
+                <input type="submit" name="Odeslat" value="Odeslat / Send" style="padding: 5px 20px; font-weight: bold; cursor: pointer;">
+            </td>
+        </tr>
     </table>
-  </form>
-
-  <h2>Podaná hlášení</h2>
-  <table class="vypis">
-    <tr><th>Značka</th><th>Lokátor</th><th>QSO</th><th>Body</th></tr>
-    @foreach ($hlaseni as $h)
-      <tr class="{{ $h->schvaleno ? 'schvaleno1' : 'neschvaleno' }}">
-        <td>{{ $h->znacka }}</td><td>{{ $h->locator }}</td><td>{{ $h->pocet }}</td><td>{{ $h->body }}</td>
-      </tr>
-    @endforeach
-  </table>
-@endif
+</form>
 @endsection

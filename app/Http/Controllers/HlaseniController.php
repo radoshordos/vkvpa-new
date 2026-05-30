@@ -32,6 +32,8 @@ class HlaseniController extends Controller
         return view('pages.hlaseni', [
             'active' => 'edit_hlaseni',
             'kolo' => $kolo,
+            // Seznam kol pro výběr (až 3 roky zpět), nejnovější první.
+            'kola' => VkvpaKola::query()->orderByDesc('datum_konani')->limit(36)->get(),
             'kategorie' => VkvpaKategorie::query()->orderBy('id')->get(),
             'hlaseni' => $kolo
                 ? VkvpaData::query()->where('id_kola', $kolo->id)->orderByDesc('body')->get()
@@ -102,6 +104,7 @@ class HlaseniController extends Controller
         return view('pages.hlaseni', [
             'active' => 'edit_hlaseni',
             'kolo' => $data->kolo,
+            'kola' => VkvpaKola::query()->orderByDesc('datum_konani')->limit(36)->get(),
             'kategorie' => VkvpaKategorie::query()->orderBy('id')->get(),
             'hlaseni' => collect(),
             'edit' => $data,
