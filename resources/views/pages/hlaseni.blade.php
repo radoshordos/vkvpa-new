@@ -23,11 +23,8 @@
 
 @section('content')
 @php
-    $p = (array) session('edi_prefill', []);
     $e = $edit ?? null;
-    $val = function (string $name, $editVal = null, $def = '') use ($p) {
-        return old($name, $p[$name] ?? ($editVal ?? $def));
-    };
+    $val = fn (string $name, $editVal = null, $def = '') => old($name, $editVal ?? $def);
 @endphp
 
 @if (session('announcement'))
@@ -36,6 +33,7 @@
     </div>
 @endif
 
+@if ($maAktivniKolo)
 {{-- ===== EDI upload box (tpl_form_edi.php) ===== --}}
 <div class="vkv-edi-box">
     <h1 style="color: #000080; font-size: 20px; margin-top: 0;">Načíst EDI soubor / Import EDI file</h1>
@@ -176,17 +174,46 @@
 </form>
 @endif
 
-{{-- ===== Průběžné výsledky vybraného kola ===== --}}
+@else
+    @include('partials.no-active-period')
+@endif
+
+{{-- ===== Průběžné výsledky vybraného kola (styl vysledky.php) ===== --}}
 @if ($vysledky->isNotEmpty())
-<hr>
-<h2 style="margin-top: 20px;">Průběžné výsledky / Current results</h2>
 @php $katMap = $kategorie->keyBy('id'); @endphp
 @foreach ($vysledky->groupBy('id_kategorie') as $katId => $radky)
-    <h3>{{ $katMap[$katId]->nazev ?? ('Kategorie ' . $katId) }}</h3>
-    <table class="vkv-table">
-        <tr><td><strong>poř.</strong></td><td><strong>značka</strong></td><td><strong>lokátor</strong></td><td><strong>QSO</strong></td><td><strong>body</strong></td></tr>
-        @foreach ($radky as $r)
-            <tr><td>{{ $r->poradi }}</td><td>{{ $r->znacka }}</td><td>{{ $r->locator }}</td><td>{{ $r->pocet }}</td><td>{{ $r->body }}</td></tr>
+    <h1 style="font-size: 1.2em; margin-top: 15px; margin-bottom: 5px; color: #22108b; border-bottom: 3px solid #bababa; text-align: left;">
+        Průběžné výsledky kola — {{ $katMap[$katId]->nazev ?? ('kategorie ' . $katId) }}
+    </h1>
+    <table width="100%" cellpadding="4" cellspacing="1" bgcolor="#b4b4b4" style="font-size: 0.9em; border-collapse: separate; margin-top: 5px;">
+        <tr bgcolor="#e6e6fa" style="color: #000080; font-weight: bold;">
+            <th align="center" width="40">Poř.</th>
+            <th align="left" width="100">Značka</th>
+            <th align="center" width="80">Lokátor</th>
+            <th align="right" width="70">QSO</th>
+            <th align="right" width="80">Násobiče</th>
+            <th align="right" width="80">Celkem bodů</th>
+            <th align="left">Jméno / Poznámka</th>
+            <th align="center" width="60">Stav</th>
+        </tr>
+        @foreach ($radky as $i => $r)
+            @php $bg = ! $r->schvaleno ? '#ffdab9' : (($i % 2) ? '#d6ecf3' : '#ffffff'); @endphp
+            <tr bgcolor="{{ $bg }}" style="color: black;">
+                <td align="center"><b>{{ $i + 1 }}.</b></td>
+                <td align="left"><b>{{ $r->znacka }}</b>{{ $r->qrp ? ' /QRP' : '' }}</td>
+                <td align="center">{{ $r->locator }}</td>
+                <td align="right">{{ (int) $r->pocet }}</td>
+                <td align="right">{{ (int) $r->nasobice }}</td>
+                <td align="right"><b>{{ (int) $r->body }}</b></td>
+                <td align="left" class="small">{{ $r->jmeno }} @if ($r->poznamka)<i>({{ $r->poznamka }})</i>@endif</td>
+                <td align="center">
+                    @if ($r->schvaleno)
+                        <font color="#2db62f"><b>OK</b></font>
+                    @else
+                        <font color="#ff6347">Čeká</font>
+                    @endif
+                </td>
+            </tr>
         @endforeach
     </table>
 @endforeach
