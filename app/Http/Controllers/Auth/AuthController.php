@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Auth;
 
-use Illuminate\Auth\Events\Login;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\VkvpaPrihlaseni;
@@ -34,7 +33,7 @@ class AuthController extends Controller
             return redirect()->intended('/');
         }
 
-        return view(Login::class);
+        return view('auth.login');
     }
 
     public function login(Request $request): RedirectResponse

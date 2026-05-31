@@ -1,0 +1,42 @@
+[REG1TEST;1]
+TName=PA012026
+TDate=20260118;20260118
+PCall=OK1DCI
+PWWLo=JO70EB
+PExch=
+PAdr1=Praha 5
+PAdr2=
+PSect=SINGLE
+PBand=2,3 GHz
+PClub=
+RName=Jiri Vanourek
+RCall=OK1DCI
+RAdr1=Chur·Úovsk· 3
+RAdr2=
+RPoCo=150 00
+RCity=Praha 5
+RCoun=Czech Republic
+RPhon=(+420) 602600200
+RHBBS=jiri_vanourek@seznam.cz
+MOpe1=OK1DCI
+MOpe2=
+STXEq=IC9700+transvertor
+SPowe=70
+SRXEq=IC9700+transvertor
+SAnte=F9FT 26el
+SAntH=12;315
+CQSOs=1;1
+CQSOP=3
+CWWLs=2;0;2
+CWWLB=0
+CExcs=0;0;1
+CExcB=0
+CDXCs=1;0;1
+CDXCB=0
+CToSc=6
+CODXC=OK1UEI;JN79FV;3
+[Remarks]
+
+[QSORecords;1]
+260118;0817;OK1UEI;1;59;001;59;001;;JN79FV;3;;;N;
+[END;VUSC for Win by OK1DIX, version 7.03]

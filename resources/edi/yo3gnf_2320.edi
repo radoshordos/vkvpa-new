@@ -1,0 +1,41 @@
+[REG1TEST;1]
+TName=OK Activity Contest VHF,UHF,SHF
+TDate=20260118;20260118
+PCall=YO3GNF
+PWWLo=KN34AL
+PExch=# KN34AL
+PAdr1=Soseaua Straulesti, Nr. 60A
+PAdr2=Bloc B2, Apt.21, Sector 1
+PSect=SINGLE DX
+PBand=2,3 GHz
+PClub=CSU PITESTI
+RName=Jack URSULEAN
+RCall=YO3GNF
+RAdr1=Soseaua Straulesti, Nr. 60A
+RAdr2=Bloc B2, Apt.21, Sector 1
+RPoCo=013336
+RCity=BUCHAREST
+RCoun=ROMANIA
+RPhon=
+RHBBS=yo3gnf@yahoo.com
+MOpe1=YO3GNF
+MOpe2=
+STXEq=IC705+MKU23G4+amp.
+SPowe=10
+SRXEq=IC705+MKU23G4
+SAnte=Panel 17 DBi
+SAntH=2;100
+CQSOs=1;1
+CQSOP=7
+CWWLs=1;0;1
+CWWLB=0
+CExcs=0;0;1
+CExcB=0
+CDXCs=1;0;1
+CDXCB=0
+CToSc=7
+CODXC=YO3FWL;KN24XL;7
+[Remarks]
+
+[QSORecords;1]
+260118;0905;YO3FWL;1;59;001;59;001;;KN24XL;7;;;;
