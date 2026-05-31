@@ -32,7 +32,7 @@ return new class extends Migration
             $table->timestamp('d_cas')->nullable()->useCurrent();
             $table->longText('SRCR')->nullable();
 
-            $table->index('id_kola', 'id_kola');
+            $table->index('id_kola', 'edihead_id_kola_idx');
         });
     }
 

@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('foto', 100)->nullable();
             $table->string('ip', 45)->nullable();
 
-            $table->index('id_kola', 'id_kola');
+            $table->index('id_kola', 'vkvpa_diskuse_id_kola_idx');
         });
     }
 

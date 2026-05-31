@@ -107,7 +107,7 @@ final class ScoringService
             ->where('vkvpa_kola.nazev', 'like', "%{$year}")
             ->selectRaw('vkvpa_data.id_kategorie as kategorie_id, vkvpa_data.znacka')
             ->selectRaw(
-                'SUM(IF(vkvpa_data.EDI_ID = 0 AND vkvpa_data.id_kola >= ?, 0, vkvpa_data.body)) as celkem',
+                'SUM(CASE WHEN vkvpa_data.EDI_ID = 0 AND vkvpa_data.id_kola >= ? THEN 0 ELSE vkvpa_data.body END) as celkem',
                 [self::NON_EDI_NULLIFY_FROM_KOLO],
             )
             ->groupBy('vkvpa_data.id_kategorie', 'vkvpa_data.znacka')

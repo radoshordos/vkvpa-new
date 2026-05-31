@@ -55,6 +55,7 @@ class AuthController extends Controller
         }
 
         $request->session()->regenerate();
+        $request->session()->put('prihlasen', $credentials['username']); // legacy most
 
         return redirect()->intended('/');
     }
@@ -87,6 +88,7 @@ class AuthController extends Controller
         $token->delete();
 
         request()->session()->regenerate();
+        request()->session()->put('prihlasen', $admin->name); // legacy most
 
         // „Převzít záznam" odkaz z e-mailu vyhodnocovateli (?confirm=ID).
         $confirm = (int) request()->integer('confirm');
