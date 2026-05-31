@@ -1,0 +1,34 @@
+# PHPStan + Larastan (Laravel-aware statická analýza).
+# Spuštění:  vendor/bin/phpstan analyse
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    level: 6
+
+    paths:
+        - app
+        - routes
+        - database/migrations
+        - database/seeders
+        - tests
+
+    excludePaths:
+        - database/source_sql/*
+
+    # Bootstrap aplikace (kvůli helperům jako env()/config()/route()).
+    bootstrapFiles:
+        - vendor/autoload.php
+
+    ignoreErrors:
+        # Eloquent dynamické vlastnosti – sloupce s nestandardními názvy
+        # (např. 'Mode-code', 'Received-WWL', 'Sent QSO number') i běžné
+        # přístupy jako $head->PCall. Bez @property anotací je PHPStan hlásí.
+        - identifier: property.notFound
+          paths:
+            - app/Models/*
+            - app/Services/*
+            - app/Http/Controllers/*
+
+        # Mass-assignment / dynamické atributy modelů.
+        - '#Access to an undefined property App\\Models\\#'
