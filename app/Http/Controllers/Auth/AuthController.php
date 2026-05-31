@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Auth;
 
+use Illuminate\Auth\Events\Login;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\VkvpaPrihlaseni;
@@ -25,7 +26,7 @@ use Illuminate\View\View;
 class AuthController extends Controller
 {
     /** Dní platnosti přihlašovacího kódu (legacy: 5 dní). */
-    private const TOKEN_TTL_DAYS = 5;
+    private const int TOKEN_TTL_DAYS = 5;
 
     public function showLoginForm(Request $request): View|RedirectResponse
     {
@@ -33,7 +34,7 @@ class AuthController extends Controller
             return redirect()->intended('/');
         }
 
-        return view('auth.login');
+        return view(Login::class);
     }
 
     public function login(Request $request): RedirectResponse

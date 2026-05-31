@@ -16,7 +16,7 @@ final class Maidenhead
     public static function toLatLon(string $locator): ?array
     {
         $loc = strtoupper(trim($locator));
-        if (! preg_match('/^[A-R]{2}[0-9]{2}[A-X]{2}$/', $loc)) {
+        if (! preg_match('/^[A-R]{2}\d{2}[A-X]{2}$/', $loc)) {
             return null;
         }
 

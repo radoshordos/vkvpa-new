@@ -27,9 +27,7 @@ class AuthTest extends TestCase
 
     public function test_login_form_renders(): void
     {
-        $this->get('/login')
-            ->assertOk()
-            ->assertSee('šup tam', false);
+        $this->get('/login')->assertOk()->assertSeeHtml('šup tam');
     }
 
     public function test_admin_can_log_in_with_valid_credentials(): void

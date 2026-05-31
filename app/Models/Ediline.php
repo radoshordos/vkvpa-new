@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Attributes\Table;
+use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -23,28 +25,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $sqr
  * @property float|null $lon
  * @property float|null $lat
- * @property-read \App\Models\Edihead|null $head
+ * @property-read Edihead|null $head
  */
+#[Table(name: 'edilines', key: 'ID')]
+#[WithoutTimestamps]
 class Ediline extends Model
 {
-    protected $table = 'edilines';
-
-    protected $primaryKey = 'ID';
-
-    public $timestamps = false;
-
+    #[\Override]
     protected $guarded = [];
-
-    protected $casts = [
-        'IDS' => 'integer',
-        'Mode-code' => 'integer',
-        'Sent QSO number' => 'integer',
-        'Received QSO number' => 'integer',
-        'QSO-Points' => 'integer',
-        'sqr' => 'integer',
-        'lon' => 'float',
-        'lat' => 'float',
-    ];
 
     /**
      * Hlavička deníku, ke kterému spojení patří.
@@ -52,5 +40,19 @@ class Ediline extends Model
     public function head(): BelongsTo
     {
         return $this->belongsTo(Edihead::class, 'IDS', 'ID');
+    }
+    #[\Override]
+    protected function casts(): array
+    {
+        return [
+            'IDS' => 'integer',
+            'Mode-code' => 'integer',
+            'Sent QSO number' => 'integer',
+            'Received QSO number' => 'integer',
+            'QSO-Points' => 'integer',
+            'sqr' => 'integer',
+            'lon' => 'float',
+            'lat' => 'float',
+        ];
     }
 }

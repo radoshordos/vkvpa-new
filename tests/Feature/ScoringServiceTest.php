@@ -71,7 +71,7 @@ class ScoringServiceTest extends TestCase
     public function test_score_edi_from_fixture(): void
     {
         $edi = (string) file_get_contents(__DIR__ . '/../fixtures/sample.edi');
-        $head = (new EdiImportService())->import((new EdiParser())->parse($edi));
+        $head = new EdiImportService()->import(new EdiParser()->parse($edi));
 
         $score = app(ScoringService::class)->scoreEdi($head);
 

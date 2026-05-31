@@ -17,7 +17,7 @@ final class EdiParser
     /**
      * Regex jednoho QSO řádku – 15 skupin přesně dle původního read_edi.php.
      */
-    private const QSO_PATTERN =
+    private const string QSO_PATTERN =
         '/^([0-9]+);([0-9]+);([0-9A-Z\/]+);([0-9]*);([0-9]+[AS]?);([0-9]+);'
         . '([0-9]+[AS]?);([0-9]+);([0-9]*);([A-Z]{2}[0-9]{2}[A-Z]{2});([0-9]+);'
         . '([A-Z0-9]*);([A-Z0-9]*);([A-Z0-9]*);([A-Z0-9]*)/';

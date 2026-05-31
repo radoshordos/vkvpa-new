@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\MailImageController;
+use App\Http\Controllers\MapController;
+use App\Http\Controllers\Admin\VyhodnoceniController;
 use App\Http\Controllers\EdiController;
 use App\Http\Controllers\HlaseniController;
 use App\Http\Controllers\KolaController;
@@ -31,20 +34,20 @@ Route::get('/vysledky', [VysledkyController::class, 'listina'])->name('vysledkov
 Route::get('/vysledky/rocni', [VysledkyController::class, 'rocni'])->name('rocni_vysledky');
 
 // Obfuskovaný e-mail jako obrázek (footer) – nahrazuje mail.php
-Route::get('/mail-image', [\App\Http\Controllers\MailImageController::class, 'show'])->name('mail.image');
+Route::get('/mail-image', [MailImageController::class, 'show'])->name('mail.image');
 
 // Nahrání EDI deníku (využívá EdiParser/EdiImportService z Fáze 5).
 Route::get('/edi', [EdiController::class, 'create'])->name('read_edi');
 Route::post('/edi', [EdiController::class, 'store'])->name('read_edi.store');
 
 // Mapa spojení stanice (Fáze 9) – sjednocuje map*.php
-Route::get('/edi/{head}/mapa', [\App\Http\Controllers\MapController::class, 'show'])->name('edi.mapa');
+Route::get('/edi/{head}/mapa', [MapController::class, 'show'])->name('edi.mapa');
 
 // --- Administrace (chráněno middleware z Fáze 4) ---
 Route::middleware('admin')->group(function (): void {
     // Vyhodnocení a uzávěrka kola (Fáze 7)
-    Route::post('/admin/kolo/{kolo}/vyhodnotit', [\App\Http\Controllers\Admin\VyhodnoceniController::class, 'vyhodnotit'])->name('kolo.vyhodnotit');
-    Route::post('/admin/kolo/{kolo}/uzavrit', [\App\Http\Controllers\Admin\VyhodnoceniController::class, 'uzavrit'])->name('kolo.uzavrit');
+    Route::post('/admin/kolo/{kolo}/vyhodnotit', [VyhodnoceniController::class, 'vyhodnotit'])->name('kolo.vyhodnotit');
+    Route::post('/admin/kolo/{kolo}/uzavrit', [VyhodnoceniController::class, 'uzavrit'])->name('kolo.uzavrit');
 
     // (Editace hlášení je nyní přes ?id na stránce hlášení; uložení přes hlaseni.store.)
 

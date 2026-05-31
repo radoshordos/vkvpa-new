@@ -20,7 +20,7 @@ class EdiParserTest extends TestCase
 
     public function test_parses_header_fields(): void
     {
-        $log = (new EdiParser())->parse($this->fixture());
+        $log = new EdiParser()->parse($this->fixture());
 
         $this->assertSame('OK2KJT', $log->header->pCall());
         $this->assertSame('JN99AJ', $log->header->pWWLo());
@@ -33,7 +33,7 @@ class EdiParserTest extends TestCase
 
     public function test_parses_all_qso_lines(): void
     {
-        $log = (new EdiParser())->parse($this->fixture());
+        $log = new EdiParser()->parse($this->fixture());
 
         $this->assertSame(2, $log->declaredTotal);
         $this->assertSame(2, $log->qsoCount());
@@ -50,7 +50,7 @@ class EdiParserTest extends TestCase
         $edi = "[REG1TEST;1]\nPCall=OK1ABC\n[QSORecords;1]\n"
             . "260315;0800;ok1xyz;1;59;001;59;001;;jn79ab;3;;;;\n[END;]\n";
 
-        $log = (new EdiParser())->parse($edi);
+        $log = new EdiParser()->parse($edi);
 
         $this->assertSame('OK1XYZ', $log->qsos[0]->callSign);
         $this->assertSame('JN79AB', $log->qsos[0]->receivedWwl);
@@ -62,12 +62,12 @@ class EdiParserTest extends TestCase
         $edi = str_replace('[QSORecords;2]', '[QSORecords;5]', $this->fixture());
 
         $this->expectException(EdiParseException::class);
-        (new EdiParser())->parse($edi);
+        new EdiParser()->parse($edi);
     }
 
     public function test_strips_bom(): void
     {
-        $log = (new EdiParser())->parse("\xEF\xBB\xBF" . $this->fixture());
+        $log = new EdiParser()->parse("\xEF\xBB\xBF" . $this->fixture());
 
         $this->assertSame('OK2KJT', $log->header->pCall());
     }

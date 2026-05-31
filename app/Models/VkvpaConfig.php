@@ -4,24 +4,21 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Attributes\Table;
+use Illuminate\Database\Eloquent\Attributes\WithoutIncrementing;
+use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
 use Illuminate\Database\Eloquent\Model;
 
 /**
  * Konfigurace systému jako klíč–hodnota (nahrazuje file-based `mail.inc`
  * a roztroušené konstanty z legacy kódu).
  */
+#[Table(name: 'vkvpa_config', key: 'cfg_key', keyType: 'string')]
+#[WithoutIncrementing]
+#[WithoutTimestamps]
 class VkvpaConfig extends Model
 {
-    protected $table = 'vkvpa_config';
-
-    protected $primaryKey = 'cfg_key';
-
-    protected $keyType = 'string';
-
-    public $incrementing = false;
-
-    public $timestamps = false;
-
+    #[\Override]
     protected $guarded = [];
 
     /**

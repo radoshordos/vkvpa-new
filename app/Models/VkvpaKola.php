@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Attributes\Table;
+use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Support\Carbon;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -12,31 +17,21 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * Kolo závodu (contest period).
  *
  * @property int $id
- * @property \Illuminate\Support\Carbon $datum_konani
- * @property \Illuminate\Support\Carbon|null $datum_uzaverky
+ * @property Carbon $datum_konani
+ * @property Carbon|null $datum_uzaverky
  * @property bool $aktivni
  * @property string $nazev
- * @property \Illuminate\Support\Carbon|null $vyhodnoceno
+ * @property Carbon|null $vyhodnoceno
  * @property string $poznamka
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\VkvpaData> $hlaseni
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\VkvpaDiskuse> $diskuse
+ * @property-read Collection<int, VkvpaData> $hlaseni
+ * @property-read Collection<int, VkvpaDiskuse> $diskuse
  */
+#[Table(name: 'vkvpa_kola', key: 'id')]
+#[WithoutTimestamps]
 class VkvpaKola extends Model
 {
-    protected $table = 'vkvpa_kola';
-
-    protected $primaryKey = 'id';
-
-    public $timestamps = false;
-
+    #[\Override]
     protected $guarded = [];
-
-    protected $casts = [
-        'aktivni' => 'boolean',
-        'datum_konani' => 'date',
-        'datum_uzaverky' => 'datetime',
-        'vyhodnoceno' => 'datetime',
-    ];
 
     public function hlaseni(): HasMany
     {
@@ -91,8 +86,19 @@ class VkvpaKola extends Model
     }
 
     /** Scope: jen kola označená jako aktivní. */
-    public function scopeActive(Builder $query): Builder
+    #[Scope]
+    protected function active(Builder $query): Builder
     {
         return $query->where('aktivni', true);
+    }
+    #[\Override]
+    protected function casts(): array
+    {
+        return [
+            'aktivni' => 'boolean',
+            'datum_konani' => 'date',
+            'datum_uzaverky' => 'datetime',
+            'vyhodnoceno' => 'datetime',
+        ];
     }
 }

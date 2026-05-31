@@ -22,8 +22,8 @@ class EdiImportTest extends TestCase
     {
         $edi = (string) file_get_contents(__DIR__ . '/../fixtures/sample.edi');
 
-        $log = (new EdiParser())->parse($edi);
-        $head = (new EdiImportService())->import($log);
+        $log = new EdiParser()->parse($edi);
+        $head = new EdiImportService()->import($log);
 
         $this->assertInstanceOf(Edihead::class, $head);
         $this->assertSame('OK2KJT', $head->PCall);

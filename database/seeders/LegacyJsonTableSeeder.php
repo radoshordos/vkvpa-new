@@ -46,7 +46,7 @@ abstract class LegacyJsonTableSeeder extends Seeder
         return "seeders/data/{$this->table}.json"
                 |> database_path(...)
                 |> file_get_contents(...)
-                |> (fn($x) => json_decode($x, true, 512, JSON_THROW_ON_ERROR));
+                |> (fn($x): mixed => json_decode((string) $x, true, 512, JSON_THROW_ON_ERROR));
     }
 
     private function restoreAutoIncrement(): void

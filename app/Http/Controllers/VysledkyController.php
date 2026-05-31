@@ -24,7 +24,7 @@ class VysledkyController extends Controller
     public function listina(Request $request): View
     {
         $koloId = (int) $request->integer('kolo');
-        $kolo = $koloId
+        $kolo = $koloId !== 0
             ? VkvpaKola::find($koloId)
             : VkvpaKola::query()->where('datum_uzaverky', '<', now())->orderByDesc('datum_konani')->first();
 

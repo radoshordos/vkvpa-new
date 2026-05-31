@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Attributes\Table;
+use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -36,36 +38,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $odeslano
  * @property string $session_id
  * @property string|null $timestamp
- * @property-read \App\Models\VkvpaKola|null $kolo
- * @property-read \App\Models\VkvpaKategorie|null $kategorie
- * @property-read \App\Models\Edihead|null $edihead
+ * @property-read VkvpaKola|null $kolo
+ * @property-read VkvpaKategorie|null $kategorie
+ * @property-read Edihead|null $edihead
  */
+#[Table(name: 'vkvpa_data', key: 'id')]
+#[WithoutTimestamps]
 class VkvpaData extends Model
 {
-    protected $table = 'vkvpa_data';
-
-    protected $primaryKey = 'id';
-
-    public $timestamps = false;
-
+    #[\Override]
     protected $guarded = [];
-
-    protected $casts = [
-        'id_kola' => 'integer',
-        'id_kategorie' => 'integer',
-        'qrp' => 'boolean',
-        'lp' => 'boolean',
-        'pocet' => 'integer',
-        'bodu_za_qso' => 'integer',
-        'nasobice' => 'integer',
-        'body' => 'integer',
-        'EDI' => 'boolean',
-        'EDI_ID' => 'integer',
-        'poradi' => 'integer',
-        'schvaleno' => 'boolean',
-        'odeslano' => 'boolean',
-        'timestamp' => 'datetime',
-    ];
 
     public function kolo(): BelongsTo
     {
@@ -80,5 +62,25 @@ class VkvpaData extends Model
     public function edihead(): BelongsTo
     {
         return $this->belongsTo(Edihead::class, 'EDI_ID', 'ID');
+    }
+    #[\Override]
+    protected function casts(): array
+    {
+        return [
+            'id_kola' => 'integer',
+            'id_kategorie' => 'integer',
+            'qrp' => 'boolean',
+            'lp' => 'boolean',
+            'pocet' => 'integer',
+            'bodu_za_qso' => 'integer',
+            'nasobice' => 'integer',
+            'body' => 'integer',
+            'EDI' => 'boolean',
+            'EDI_ID' => 'integer',
+            'poradi' => 'integer',
+            'schvaleno' => 'boolean',
+            'odeslano' => 'boolean',
+            'timestamp' => 'datetime',
+        ];
     }
 }

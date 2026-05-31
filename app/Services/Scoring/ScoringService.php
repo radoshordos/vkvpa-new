@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\DB;
 final class ScoringService
 {
     /** Od tohoto kola se hlášení bez EDI do ročního součtu nezapočítávají. */
-    private const NON_EDI_NULLIFY_FROM_KOLO = 91;
+    private const int NON_EDI_NULLIFY_FROM_KOLO = 91;
 
     /**
      * Přidělí pořadí (`poradi`) v rámci každé kategorie kola (husté: shoda = stejné).

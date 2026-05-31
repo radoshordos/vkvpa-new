@@ -28,7 +28,6 @@ class MailImageController extends Controller
         ob_start();
         imagepng($im);
         $png = (string) ob_get_clean();
-        imagedestroy($im);
 
         return response($png, 200, [
             'Content-Type' => 'image/png',

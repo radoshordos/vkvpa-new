@@ -20,6 +20,7 @@ class StoreHlaseniRequest extends FormRequest
         return true;
     }
 
+    #[\Override]
     protected function prepareForValidation(): void
     {
         $this->merge([
@@ -54,6 +55,7 @@ class StoreHlaseniRequest extends FormRequest
         ];
     }
 
+    #[\Override]
     public function messages(): array
     {
         return [

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Attributes\Table;
+use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -13,22 +15,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * Pozn.: tabulka i sloupce ponechány v původních názvech kvůli kompatibilitě.
  * Vlastní časové sloupce (`stamp`, `d_cas`) nejsou Laravel created_at/updated_at.
  */
+#[Table(name: 'edihead', key: 'ID')]
+#[WithoutTimestamps]
 class Edihead extends Model
 {
-    protected $table = 'edihead';
-
-    protected $primaryKey = 'ID';
-
-    public $timestamps = false;
-
+    #[\Override]
     protected $guarded = [];
-
-    protected $casts = [
-        'id_kola' => 'integer',
-        'SPowe' => 'integer',
-        'stamp' => 'datetime',
-        'd_cas' => 'datetime',
-    ];
 
     /**
      * Jednotlivá spojení (QSO) tohoto deníku.
@@ -36,5 +28,15 @@ class Edihead extends Model
     public function lines(): HasMany
     {
         return $this->hasMany(Ediline::class, 'IDS', 'ID');
+    }
+    #[\Override]
+    protected function casts(): array
+    {
+        return [
+            'id_kola' => 'integer',
+            'SPowe' => 'integer',
+            'stamp' => 'datetime',
+            'd_cas' => 'datetime',
+        ];
     }
 }
