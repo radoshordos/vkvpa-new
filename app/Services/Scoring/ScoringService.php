@@ -13,23 +13,15 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Vyhodnocení a skóre (Fáze 7).
- *
- * Nahrazuje: vyhodnoceni.php (pořadí), uzavreni.php (uzávěrka) a rekonstruuje
- * DB pohled `vysledky` (skóre z deníku). Vše přes Eloquent, bez SQL injection.
+ * Vyhodnocení a skóre (Fáze 7, sladěno s reálným edit_hlaseni.php v4.1.3).
  */
 final class ScoringService
 {
-    /**
-     * Od tohoto kola se hlášení bez EDI deníku do ročního součtu nezapočítávají
-     * (legacy `$edikolo = 91`).
-     */
-    private const int NON_EDI_NULLIFY_FROM_KOLO = 91;
+    /** Od tohoto kola se hlášení bez EDI do ročního součtu nezapočítávají. */
+    private const NON_EDI_NULLIFY_FROM_KOLO = 91;
 
     /**
-     * Přidělí pořadí (`poradi`) v rámci každé kategorie kola.
-     * Husté pořadí: shodný počet bodů = stejné pořadí (1, 2, 2, 3…).
-     * Nahrazuje vyhodnoceni.php.
+     * Přidělí pořadí (`poradi`) v rámci každé kategorie kola (husté: shoda = stejné).
      */
     public function rankRound(int $koloId): void
     {
@@ -55,46 +47,56 @@ final class ScoringService
         });
     }
 
-    /**
-     * Uzavře kolo (nastaví `vyhodnoceno`). Nahrazuje uzavreni.php.
-     */
     public function closeRound(int $koloId): void
     {
-        VkvpaKola::query()
-            ->whereKey($koloId)
-            ->update(['vyhodnoceno' => Carbon::now()]);
+        VkvpaKola::query()->whereKey($koloId)->update(['vyhodnoceno' => Carbon::now()]);
     }
 
     /**
-     * Spočítá skóre deníku z jeho QSO řádků (rekonstrukce pohledu `vysledky`).
-     *
-     * Předpoklady (dokumentované, neboť definice pohledu chyběla):
-     *  - platné QSO = řádek s QSO-Points > 0,
-     *  - lbody      = součet QSO-Points platných QSO,
-     *  - lnasobic   = počet různých „velkých čtverců" (první 4 znaky WWL).
+     * Spočítá skóre deníku z QSO řádků (vzorec z edit_hlaseni.php v4.1.3):
+     *  - domácí velký čtverec = první 4 znaky PWWLo,
+     *  - pocet    = QSO do cizích velkých čtverců,
+     *  - nasobice = počet různých cizích velkých čtverců + 1,
+     *  - body     = pocet * nasobice.
      */
     public function scoreEdi(Edihead $head): EdiScore
     {
-        $lines = $head->lines()
-            ->where('QSO-Points', '>', 0)
-            ->get(['QSO-Points', 'Received-WWL']);
+        $home = strtoupper(substr(trim((string) $head->PWWLo), 0, 4));
 
-        $lbody = (int) $lines->sum('QSO-Points');
-        $platnych = $lines->count();
-        $lnasobic = $lines
-            ->map(static fn ($l): string => substr((string) $l->{'Received-WWL'}, 0, 4))
-            ->filter(static fn (string $sq): bool => $sq !== '')
-            ->unique()
-            ->count();
+        $squares = $head->lines()
+            ->get(['Received-WWL'])
+            ->map(static fn ($l): string => strtoupper(substr(trim((string) $l->{'Received-WWL'}), 0, 4)))
+            ->filter(static fn (string $sq): bool => $sq !== '' && $sq !== $home);
 
-        return new EdiScore(lbody: $lbody, lnasobic: $lnasobic, platnych: $platnych);
+        $pocet = $squares->count();
+        $nasobice = $squares->unique()->count() + 1;
+        $body = $pocet * $nasobice;
+
+        return new EdiScore(pocet: $pocet, nasobice: $nasobice, body: $body);
     }
 
     /**
-     * Roční výsledky: součet bodů přes kola daného roku, po kategoriích a značkách.
-     * Pravidlo nulování ne-EDI hlášení od kola >= 91 (legacy).
+     * Najde id kola podle data z hlavičky EDI (TDate, formát RRRRMMDD…).
+     */
+    public function koloForTDate(?string $tdate): ?int
+    {
+        $digits = preg_replace('/[^0-9]/', '', (string) $tdate) ?? '';
+        if (strlen($digits) < 6) {
+            return null;
+        }
+        $year = (int) substr($digits, 0, 4);
+        $month = (int) substr($digits, 4, 2);
+
+        return VkvpaKola::query()
+            ->whereYear('datum_konani', $year)
+            ->whereMonth('datum_konani', $month)
+            ->value('id');
+    }
+
+    /**
+     * Roční výsledky: součet bodů přes kola roku, po kategoriích a značkách.
      *
-     * @return Collection<int, object{kategorie_id:int, znacka:string, celkem:int}>
+     * @return Collection<int, object>
      */
     public function yearlyResults(int $year, bool $qrpOnly = false): Collection
     {

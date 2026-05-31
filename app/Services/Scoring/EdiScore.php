@@ -7,24 +7,17 @@ namespace App\Services\Scoring;
 /**
  * Výsledek automatického ohodnocení deníku z edilines.
  *
- * Rekonstrukce původního DB pohledu `vysledky` (lbody, lnasobic, platnych),
- * jehož definice nebyla v repozitáři/dumpu. Mapování na legacy:
- *   bodu_za_qso = lbody    (součet QSO-Points)
- *   nasobice    = lnasobic (počet násobičů = různé velké čtverce WWL)
- *   pocet       = platnych (počet platných QSO)
- *   body        = lbody * lnasobic
+ * Vzorec dle reálné verze edit_hlaseni.php (v4.1.3):
+ *   pocet    = počet QSO do CIZÍCH velkých čtverců (mimo domácí)
+ *   nasobice = počet různých cizích velkých čtverců + 1 (domácí čtverec)
+ *   body     = pocet * nasobice
  */
 final readonly class EdiScore
 {
     public function __construct(
-        public int $lbody,
-        public int $lnasobic,
-        public int $platnych,
+        public int $pocet,
+        public int $nasobice,
+        public int $body,
     ) {
-    }
-
-    public function body(): int
-    {
-        return $this->lbody * $this->lnasobic;
     }
 }

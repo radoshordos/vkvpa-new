@@ -1,12 +1,11 @@
 {{--
-    Ruční formulář hlášení (Fáze 6c) – zrcadlení legacy tpl_form_manual.php.
-    Zachován vzhled (vkv-table) i dvojjazyčné popisky; napojeno na Eloquent,
-    route() a StoreHlaseniRequest. Názvy polí sjednoceny s backendem
-    (locator → lokator, email → mail).
+    Hlášení (sladěno s edit_hlaseni.php v4.1.3 + tpl_form_edi.php + tpl_form_manual.php).
+    Nahoře EDI upload box; ruční formulář se zobrazí jen když $showManual.
+    Pod tím průběžné výsledky vybraného kola.
 --}}
 @extends('layouts.app')
 
-@section('title', 'Odeslat deník / Log import – VKV PA')
+@section('title', 'Hlášení / Log import – VKV PA')
 
 @push('head')
 <style>
@@ -18,18 +17,18 @@
     .vkv-select { border: 1px solid black; padding: 1px; background: white; font-size: 13px; }
     .vkv-text-area { border: 1px solid black; width: 100%; margin-top: 5px; background: white; font-family: Arial, sans-serif; }
     .vkv-error { background: #fff3f3; border: 1px solid #cc0000; color: #cc0000; padding: 10px; margin: 10px 0; font-family: Arial; font-size: 13px; font-weight: bold; }
+    .vkv-edi-box { background: #eee; padding: 15px; border: 1px solid #ccc; margin-bottom: 20px; }
 </style>
 @endpush
 
 @section('content')
 @php
-    $p = session('edi_prefill', []);
+    $p = (array) session('edi_prefill', []);
     $e = $edit ?? null;
-    // Hodnota pole: old() → EDI prefill → editovaný záznam → default.
-    $val = fn (string $name, $editVal = null, $def = '') => old($name, $p[$name] ?? ($editVal ?? $def));
+    $val = function (string $name, $editVal = null, $def = '') use ($p) {
+        return old($name, $p[$name] ?? ($editVal ?? $def));
+    };
 @endphp
-
-<h1 style="margin-top: 40px;">Odeslat deník / Log import</h1>
 
 @if (session('announcement'))
     <div style="background:#f0fff0;border:1px solid #2a2;color:#161;padding:10px;margin:10px 0;font-family:Arial;font-size:13px;">
@@ -37,19 +36,54 @@
     </div>
 @endif
 
-@if ($errors->any())
+{{-- ===== EDI upload box (tpl_form_edi.php) ===== --}}
+<div class="vkv-edi-box">
+    <h1 style="color: #000080; font-size: 20px; margin-top: 0;">Načíst EDI soubor / Import EDI file</h1>
+
+    @if ($errors->has('upload'))
+        <div class="vkv-error">
+            {{ $errors->first('upload') }}
+            @foreach (session('lineErrors', []) as $le)
+                <br><span style="font-weight:normal;">Chybný řádek: {{ $le }}</span>
+            @endforeach
+        </div>
+    @endif
+
+    <form action="{{ route('read_edi.store') }}" method="post" enctype="multipart/form-data">
+        @csrf
+        EDI soubor: <input type="file" name="upload" size="30" style="border: 1px solid #777; background: white;">
+        <input type="submit" value="nahrát / upload" style="font-weight: bold; cursor: pointer;">
+        <p style="font-size: 11px; color: #333; line-height: 1.4; margin-top: 10px;">
+            Lze použít jakýkoli logovací software, který umí edi export a nezáleží na tom, jestli samotný deník umí počítat body pro PA, nebo ne. Zcela vyhoví standardní konfigurace pro závody, ve kterých je jeden bod za kilometr, robot si spočítá body dle pravidel PA i vyhledá v deníku násobiče.<br><br>
+            You can use any logging software that can export edi, and it doesn't matter whether the log itself can count points for OK Activity or not. You can use the standard VHF/UHF contest configuration, where one point per kilometer, robot calculates the points according to the OK Activity rules and looks up the multipliers in the log.
+        </p>
+    </form>
+
+    <div style="margin-top: 10px; border-top: 1px solid #ccc; padding-top: 5px;">
+        <b style="color: #A52A2A;">
+            <a href="{{ route('edit_hlaseni', ['showfrm' => 1]) }}" style="color: #A52A2A; text-decoration: underline;">Nemám EDI soubor (vyplním hlášení ručně) / No EDI file</a>
+        </b>
+    </div>
+</div>
+
+{{-- ===== Ruční formulář (tpl_form_manual.php) – jen když je potřeba ===== --}}
+@if ($showManual)
+<hr>
+
+@if ($errors->any() && ! ($errors->count() === 1 && $errors->has('upload')))
     <div class="vkv-error">
         @foreach ($errors->all() as $err)
-            {{ $err }}<br>
+            @if ($err !== $errors->first('upload'))
+                {{ $err }}<br>
+            @endif
         @endforeach
     </div>
 @endif
 
-<form action="{{ $e ? route('hlaseni.update', $e->id) : route('hlaseni.store') }}" method="post">
+<form action="{{ route('hlaseni.store') }}" method="post">
     @csrf
-    @if ($e) @method('PUT') @endif
-    <input type="hidden" name="EDI" value="{{ $val('EDI', $e->EDI ?? 0, 0) }}">
-    <input type="hidden" name="EDIID" value="{{ $val('EDIID', $e->EDI_ID ?? 0, 0) }}">
+    <input type="hidden" name="id_zaznamu" value="{{ (int) ($e->id ?? 0) }}">
+    <input type="hidden" name="EDIID" value="{{ (int) $val('EDIID', $e->EDI_ID ?? 0, 0) }}">
 
     <table class="vkv-table">
         <tr>
@@ -58,9 +92,7 @@
                 <select name="kolo" class="vkv-select" style="width: 250px;">
                     <option value="">--- vyberte kolo / select period ---</option>
                     @foreach ($kola as $k)
-                        <option value="{{ $k->id }}" @selected((int) $val('kolo', $e->id_kola ?? ($kolo->id ?? 0)) === $k->id)>
-                            {{ $k->nazev }}
-                        </option>
+                        <option value="{{ $k->id }}" @selected((int) $val('kolo', $e->id_kola ?? 0) === $k->id)>{{ $k->nazev }}</option>
                     @endforeach
                 </select>
             </td>
@@ -73,9 +105,7 @@
                 <select name="kategorie" class="vkv-select" style="width: 250px;">
                     <option value="">--- vyberte kategorii / select ---</option>
                     @foreach ($kategorie as $cat)
-                        <option value="{{ $cat->id }}" @selected((int) $val('kategorie', $e->id_kategorie ?? 0) === $cat->id)>
-                            {{ $cat->nazev }}
-                        </option>
+                        <option value="{{ $cat->id }}" @selected((int) $val('kategorie', $e->id_kategorie ?? 0) === $cat->id)>{{ $cat->nazev }}</option>
                     @endforeach
                 </select>
             </td>
@@ -89,7 +119,7 @@
             <td><strong>Volací znak *<br>Callsign *</strong></td>
             <td><input name="znacka" type="text" class="vkv-input vkv-input-bold" value="{{ $val('znacka', $e->znacka ?? '') }}" size="25"></td>
             <td width="100">Lokátor *<br>WWL *</td>
-            <td><input name="lokator" type="text" class="vkv-input" value="{{ $val('lokator', $e->locator ?? '') }}" size="15"></td>
+            <td><input name="locator" type="text" class="vkv-input" value="{{ $val('locator', $e->locator ?? '') }}" size="15"></td>
         </tr>
 
         <tr>
@@ -97,13 +127,13 @@
                 <table width="100%" cellpadding="0" cellspacing="0" style="border:none;">
                     <tr>
                         <td style="border:none;">Počet QSO *</td>
-                        <td style="border:none;"><input name="pocet" type="text" class="vkv-input" value="{{ $val('pocet', $e->pocet ?? 0, 0) }}" size="6"></td>
+                        <td style="border:none;"><input name="pocet" type="text" class="vkv-input" value="{{ (int) $val('pocet', $e->pocet ?? 0, 0) }}" size="6"></td>
                         <td style="border:none;">Bodů za QSO</td>
-                        <td style="border:none;"><input name="bodu_za_qso" type="text" class="vkv-input" value="{{ $val('bodu_za_qso', $e->bodu_za_qso ?? 0, 0) }}" size="6"></td>
+                        <td style="border:none;"><input name="bodu_za_qso" type="text" class="vkv-input" value="{{ (int) $val('bodu_za_qso', $e->bodu_za_qso ?? 0, 0) }}" size="6"></td>
                         <td style="border:none;">Násobiče *</td>
-                        <td style="border:none;"><input name="nasobice" type="text" class="vkv-input" value="{{ $val('nasobice', $e->nasobice ?? 0, 0) }}" size="6"></td>
+                        <td style="border:none;"><input name="nasobice" type="text" class="vkv-input" value="{{ (int) $val('nasobice', $e->nasobice ?? 0, 0) }}" size="6"></td>
                         <td style="border:none;">Celkem bodů *</td>
-                        <td style="border:none;"><input name="body" type="text" class="vkv-input vkv-input-bold" value="{{ $val('body', $e->body ?? 0, 0) }}" size="10" style="background-color: #ffffcc;"></td>
+                        <td style="border:none;"><input name="body" type="text" class="vkv-input vkv-input-bold" value="{{ (int) $val('body', $e->body ?? 0, 0) }}" size="10" style="background-color: #ffffcc;"></td>
                     </tr>
                 </table>
             </td>
@@ -115,7 +145,7 @@
         </tr>
         <tr>
             <td>Kontakt / Contact:*</td>
-            <td><input name="mail" type="text" class="vkv-input" value="{{ $val('mail', $e->mail ?? '') }}" style="width: 280px;"></td>
+            <td><input name="email" type="text" class="vkv-input" value="{{ $val('email', $e->mail ?? '') }}" style="width: 280px;"></td>
             <td align="right">telefon</td>
             <td><input name="telefon" type="text" class="vkv-input" value="{{ $val('telefon', $e->telefon ?? '') }}" style="width: 200px;"></td>
         </tr>
@@ -144,4 +174,21 @@
         </tr>
     </table>
 </form>
+@endif
+
+{{-- ===== Průběžné výsledky vybraného kola ===== --}}
+@if ($vysledky->isNotEmpty())
+<hr>
+<h2 style="margin-top: 20px;">Průběžné výsledky / Current results</h2>
+@php $katMap = $kategorie->keyBy('id'); @endphp
+@foreach ($vysledky->groupBy('id_kategorie') as $katId => $radky)
+    <h3>{{ $katMap[$katId]->nazev ?? ('Kategorie ' . $katId) }}</h3>
+    <table class="vkv-table">
+        <tr><td><strong>poř.</strong></td><td><strong>značka</strong></td><td><strong>lokátor</strong></td><td><strong>QSO</strong></td><td><strong>body</strong></td></tr>
+        @foreach ($radky as $r)
+            <tr><td>{{ $r->poradi }}</td><td>{{ $r->znacka }}</td><td>{{ $r->locator }}</td><td>{{ $r->pocet }}</td><td>{{ $r->body }}</td></tr>
+        @endforeach
+    </table>
+@endforeach
+@endif
 @endsection

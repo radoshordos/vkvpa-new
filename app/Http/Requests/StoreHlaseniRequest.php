@@ -4,16 +4,14 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
-use App\Models\VkvpaData;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Validator;
 
 /**
- * Validace podání hlášení (Fáze 6) – nahrazuje extract($_POST) + preg_match
- * + ruční kontroly z edit_hlaseni.php. Žádná interpolace do SQL.
+ * Validace podání hlášení (sladěno s edit_hlaseni.php v4.1.3).
  *
- * Pravidla pro běžného účastníka jsou přísná; admin („Beda") má úlevy,
- * shodně s legací (řada kontrol byla obalena `if prihlasen != Beda`).
+ * Povinné: značka, kolo, e-mail, lokátor (jako v reálném POST handleru).
+ * Žádný striktní součinový check – ta verze ho nemá. Žádné SQL injection
+ * (na rozdíl od legacy mysqli_real_escape_string + interpolace).
  */
 class StoreHlaseniRequest extends FormRequest
 {
@@ -22,19 +20,11 @@ class StoreHlaseniRequest extends FormRequest
         return true;
     }
 
-    private function isAdmin(): bool
-    {
-        return (bool) ($this->user()?->is_admin);
-    }
-
-    /**
-     * Značku a lokátor převést na velká písmena (legacy strtoupper).
-     */
     protected function prepareForValidation(): void
     {
         $this->merge([
-            'znacka' => strtoupper((string) $this->input('znacka')),
-            'lokator' => strtoupper((string) $this->input('lokator')),
+            'znacka' => strtoupper(trim((string) $this->input('znacka'))),
+            'locator' => strtoupper(trim((string) $this->input('locator'))),
         ]);
     }
 
@@ -43,64 +33,34 @@ class StoreHlaseniRequest extends FormRequest
      */
     public function rules(): array
     {
-        $required = $this->isAdmin() ? 'nullable' : 'required';
-
         return [
+            'id_zaznamu' => ['nullable', 'integer'],
+            'EDIID' => ['nullable', 'integer'],
+            'EDI' => ['nullable', 'boolean'],
             'kolo' => ['required', 'integer', 'exists:vkvpa_kola,id'],
-            'kategorie' => ['required', 'integer', 'exists:vkvpa_kategorie,id'],
-            'znacka' => [$required, 'string', 'max:10', 'regex:/^[A-Z0-9]+(\/[A-Z]{1,3})*$/'],
-            'lokator' => [$required, 'string', 'regex:/^[A-Z]{2}[0-9]{2}[A-Z]{2}$/'],
-            'pocet' => [$required, 'integer', 'min:0'],
-            'bodu_za_qso' => [$required, 'integer', 'min:0'],
-            'nasobice' => [$required, 'integer', 'min:0'],
-            'body' => [$required, 'integer', 'min:0'],
+            'kategorie' => ['nullable', 'integer', 'exists:vkvpa_kategorie,id'],
+            'znacka' => ['required', 'string', 'max:20'],
+            'locator' => ['required', 'string', 'max:10'],
+            'email' => ['required', 'email', 'max:250'],
+            'pocet' => ['nullable', 'integer', 'min:0'],
+            'bodu_za_qso' => ['nullable', 'integer', 'min:0'],
+            'nasobice' => ['nullable', 'integer', 'min:0'],
+            'body' => ['nullable', 'integer', 'min:0'],
             'jmeno' => ['nullable', 'string', 'max:60'],
-            // E-mail nebo telefon je povinný (jen pro běžného účastníka).
-            'mail' => [$this->isAdmin() ? 'nullable' : 'required_without:telefon', 'nullable', 'email', 'max:250'],
-            'telefon' => [$this->isAdmin() ? 'nullable' : 'required_without:mail', 'nullable', 'string', 'max:20'],
+            'telefon' => ['nullable', 'string', 'max:30'],
             'poznamka' => ['nullable', 'string'],
             'soapbox' => ['nullable', 'string'],
             'qrp' => ['nullable', 'boolean'],
-            'EDI' => ['nullable', 'boolean'],
-            'EDIID' => ['nullable', 'integer'],
         ];
     }
 
-    public function withValidator(Validator $validator): void
+    public function messages(): array
     {
-        $validator->after(function (Validator $v): void {
-            if ($this->isAdmin()) {
-                return; // admin má úlevy (jako v legacy)
-            }
-
-            $pocet = (int) $this->input('pocet');
-            $boduZaQso = (int) $this->input('bodu_za_qso');
-            $nasobice = (int) $this->input('nasobice');
-            $body = (int) $this->input('body');
-
-            if ($boduZaQso * $nasobice !== $body) {
-                $v->errors()->add('body', "Chybně zadaný počet bodů: {$boduZaQso} × {$nasobice} = " . ($boduZaQso * $nasobice) . ' bodů.');
-            }
-            if ($body < $pocet) {
-                $v->errors()->add('body', 'Celkový počet bodů je nižší než počet QSO.');
-            }
-            if ($boduZaQso < $pocet) {
-                $v->errors()->add('bodu_za_qso', 'Počet bodů za QSO je nižší než počet QSO.');
-            }
-            if ($nasobice > $pocet + 1) {
-                $v->errors()->add('nasobice', 'Počet násobičů neodpovídá počtu QSO.');
-            }
-
-            // Duplicita: značka + kolo + kategorie už existuje.
-            $exists = VkvpaData::query()
-                ->where('znacka', $this->input('znacka'))
-                ->where('id_kola', (int) $this->input('kolo'))
-                ->where('id_kategorie', (int) $this->input('kategorie'))
-                ->exists();
-
-            if ($exists) {
-                $v->errors()->add('znacka', 'Hlášení této stanice pro dané kolo a kategorii již bylo podáno. Pro opravu kontaktujte vyhodnocovatele.');
-            }
-        });
+        return [
+            'znacka.required' => 'Chybí povinná pole! (volací znak)',
+            'kolo.required' => 'Chybí povinná pole! (kolo)',
+            'email.required' => 'Chybí povinná pole! (kontakt / e-mail)',
+            'locator.required' => 'Chybí povinná pole! (lokátor)',
+        ];
     }
 }

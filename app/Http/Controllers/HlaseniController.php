@@ -5,141 +5,96 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreHlaseniRequest;
-use App\Mail\HlaseniPrijato;
-use App\Mail\HlaseniProVyhodnocovatele;
 use App\Models\VkvpaData;
 use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
-use App\Models\VkvpaPrihlaseni;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 /**
- * Podání a správa hlášení (Fáze 6) – jádro z edit_hlaseni.php.
+ * Podání a správa hlášení (sladěno s edit_hlaseni.php v4.1.3).
  *
- * Nahrazuje: extract($_POST), poziční INSERT a SQL injection
- * pojmenovaným zápisem přes Eloquent. Maily → Fáze 8. Plný formulář → 6c.
+ * Stránka standardně ukazuje EDI upload box; ruční formulář se zobrazí
+ * po EDI uploadu, při editaci (?id), po „vyplnit ručně" (?showfrm) nebo
+ * po chybě validace. Pod tím průběžné výsledky vybraného kola.
  */
 class HlaseniController extends Controller
 {
     public function index(Request $request): View
     {
-        $kolo = $this->aktualniKolo();
+        $prefill = (array) session('edi_prefill', []);
+
+        $editId = (int) $request->integer('id');
+        $edit = $editId > 0 ? VkvpaData::find($editId) : null;
+
+        // Ruční formulář: po EDI uploadu / editaci / „ručně" / po chybě validace.
+        $showManual = $edit !== null
+            || $prefill !== []
+            || $request->has('showfrm')
+            || old('znacka') !== null;
+
+        // Kolo pro filtr průběžných výsledků.
+        $idKola = $edit?->id_kola
+            ?? ($prefill['kolo'] ?? null)
+            ?? ($request->integer('kolo') ?: null);
+
+        $vysledky = $idKola
+            ? VkvpaData::query()
+                ->where('id_kola', $idKola)
+                ->where('schvaleno', true)
+                ->orderBy('id_kategorie')->orderByDesc('body')
+                ->get()
+            : collect();
 
         return view('pages.hlaseni', [
             'active' => 'edit_hlaseni',
-            'kolo' => $kolo,
-            // Seznam kol pro výběr (až 3 roky zpět), nejnovější první.
             'kola' => VkvpaKola::query()->orderByDesc('datum_konani')->limit(36)->get(),
             'kategorie' => VkvpaKategorie::query()->orderBy('id')->get(),
-            'hlaseni' => $kolo
-                ? VkvpaData::query()->where('id_kola', $kolo->id)->orderByDesc('body')->get()
-                : collect(),
+            'showManual' => $showManual,
+            'edit' => $edit,
+            'idKola' => $idKola,
+            'vysledky' => $vysledky,
         ]);
     }
 
     public function store(StoreHlaseniRequest $request): RedirectResponse
     {
-        $data = $request->validated();
+        $v = $request->validated();
+        $idZaznamu = (int) ($v['id_zaznamu'] ?? 0);
 
-        $hlaseni = VkvpaData::create([
-            'id_kola' => (int) $data['kolo'],
-            'id_kategorie' => (int) $data['kategorie'],
-            'qrp' => (bool) ($data['qrp'] ?? false),
-            'znacka' => $data['znacka'],
-            'locator' => $data['lokator'],
-            'pocet' => (int) $data['pocet'],
-            'bodu_za_qso' => (int) $data['bodu_za_qso'],
-            'nasobice' => (int) $data['nasobice'],
-            'body' => (int) $data['body'],
-            'jmeno' => $data['jmeno'] ?? '',
-            'mail' => $data['mail'] ?? '',
-            'telefon' => $data['telefon'] ?? '',
-            'poznamka' => mb_substr((string) ($data['poznamka'] ?? ''), 0, 30),
-            'soapbox' => nl2br(mb_substr((string) ($data['soapbox'] ?? ''), 0, 2000)),
-            'ip' => (string) $request->ip(),
-            'EDI' => (bool) ($data['EDI'] ?? false),
-            'EDI_ID' => (int) ($data['EDIID'] ?? 0),
-            'schvaleno' => false,
-        ]);
-
-        $this->odesliMaily($hlaseni);
-
-        return redirect()
-            ->route('edit_hlaseni')
-            ->with('announcement', 'Hlášení bylo odesláno.');
-    }
-
-    /**
-     * Potvrzovací e-mail účastníkovi + oznámení vyhodnocovateli s login kódem.
-     * Nahrazuje mymail()/PHPMailer z edit_hlaseni.php (Fáze 8).
-     */
-    private function odesliMaily(VkvpaData $hlaseni): void
-    {
-        $koloNazev = (string) ($hlaseni->kolo?->nazev ?? '');
-        $kategorieNazev = (string) ($hlaseni->kategorie?->nazev ?? '');
-
-        // Jednorázový kód pro „převzít záznam" (login.token z Fáze 4).
-        $kod = Str::random(40);
-        VkvpaPrihlaseni::create(['kod' => $kod, 'time' => now()]);
-
-        if ($hlaseni->mail !== '') {
-            Mail::to($hlaseni->mail)->send(
-                new HlaseniPrijato($hlaseni, $koloNazev, $kategorieNazev)
-            );
+        // Editace existujícího záznamu jen pro administrátora (ochrana proti IDOR).
+        if ($idZaznamu > 0 && ! ($request->user()?->is_admin)) {
+            abort(403, 'Úpravu existujícího hlášení může provést jen administrátor.');
         }
 
-        Mail::to(config('vkvpa.contact_mail'))->send(
-            new HlaseniProVyhodnocovatele($hlaseni, $koloNazev, $kategorieNazev, $kod)
-        );
-    }
-
-    // --- Administrace (Fáze 6b) ---
-
-    public function edit(VkvpaData $data): View
-    {
-        return view('pages.hlaseni', [
-            'active' => 'edit_hlaseni',
-            'kolo' => $data->kolo,
-            'kola' => VkvpaKola::query()->orderByDesc('datum_konani')->limit(36)->get(),
-            'kategorie' => VkvpaKategorie::query()->orderBy('id')->get(),
-            'hlaseni' => collect(),
-            'edit' => $data,
-        ]);
-    }
-
-    public function update(StoreHlaseniRequest $request, VkvpaData $data): RedirectResponse
-    {
-        $v = $request->validated();
-        $data->update([
+        $payload = [
             'id_kola' => (int) $v['kolo'],
-            'id_kategorie' => (int) $v['kategorie'],
+            'id_kategorie' => (int) ($v['kategorie'] ?? 0),
             'znacka' => $v['znacka'],
-            'locator' => $v['lokator'],
-            'pocet' => (int) $v['pocet'],
-            'bodu_za_qso' => (int) $v['bodu_za_qso'],
-            'nasobice' => (int) $v['nasobice'],
-            'body' => (int) $v['body'],
-        ]);
+            'locator' => $v['locator'],
+            'pocet' => (int) ($v['pocet'] ?? 0),
+            'bodu_za_qso' => (int) ($v['bodu_za_qso'] ?? 0),
+            'nasobice' => (int) ($v['nasobice'] ?? 0),
+            'body' => (int) ($v['body'] ?? 0),
+            'qrp' => (bool) ($v['qrp'] ?? false),
+            'mail' => $v['email'],
+            'jmeno' => $v['jmeno'] ?? '',
+            'telefon' => $v['telefon'] ?? '',
+            'soapbox' => $v['soapbox'] ?? '',
+            'poznamka' => $v['poznamka'] ?? '',
+            'EDI_ID' => (int) ($v['EDIID'] ?? 0),
+            'schvaleno' => true,
+        ];
 
-        return redirect()->route('edit_hlaseni')->with('announcement', 'Hlášení upraveno.');
-    }
+        if ($idZaznamu > 0) {
+            VkvpaData::findOrFail($idZaznamu)->update($payload);
+        } else {
+            VkvpaData::create($payload);
+        }
 
-    public function destroy(VkvpaData $data): RedirectResponse
-    {
-        $data->delete();
-
-        return redirect()->route('edit_hlaseni')->with('announcement', 'Hlášení smazáno.');
-    }
-
-    private function aktualniKolo(): ?VkvpaKola
-    {
-        return VkvpaKola::query()
-            ->whereDate('datum_konani', '<=', now())
-            ->orderByDesc('datum_konani')
-            ->first();
+        return redirect()
+            ->route('vysledkova_listina', ['kolo' => $payload['id_kola']])
+            ->with('announcement', 'Hlášení bylo uloženo.');
     }
 }

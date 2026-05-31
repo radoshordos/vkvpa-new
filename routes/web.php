@@ -46,10 +46,7 @@ Route::middleware('admin')->group(function (): void {
     Route::post('/admin/kolo/{kolo}/vyhodnotit', [\App\Http\Controllers\Admin\VyhodnoceniController::class, 'vyhodnotit'])->name('kolo.vyhodnotit');
     Route::post('/admin/kolo/{kolo}/uzavrit', [\App\Http\Controllers\Admin\VyhodnoceniController::class, 'uzavrit'])->name('kolo.uzavrit');
 
-    // CRUD hlášení (edit/del/confirm z edit_hlaseni.php) – Fáze 6b
-    Route::get('/hlaseni/{data}/edit', [HlaseniController::class, 'edit'])->name('hlaseni.edit');
-    Route::put('/hlaseni/{data}', [HlaseniController::class, 'update'])->name('hlaseni.update');
-    Route::delete('/hlaseni/{data}', [HlaseniController::class, 'destroy'])->name('hlaseni.destroy');
+    // (Editace hlášení je nyní přes ?id na stránce hlášení; uložení přes hlaseni.store.)
 
     Route::get('/admin/deniky', [DenikyController::class, 'index'])->name('edit_deniky');
     Route::get('/admin/kategorie', [KategorieController::class, 'index'])->name('edit_kategorie');
