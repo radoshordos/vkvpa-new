@@ -41,6 +41,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property-read VkvpaKola|null $kolo
  * @property-read VkvpaKategorie|null $kategorie
  * @property-read Edihead|null $edihead
+ *
+ * Projekce z {@see \App\Services\Scoring\ScoringService::yearlyResults()}:
+ * @property-read int $kategorie_id
+ * @property-read int|string $celkem
  */
 #[Table(name: 'vkvpa_data', key: 'id')]
 #[WithoutTimestamps]
@@ -49,16 +53,19 @@ class VkvpaData extends Model
     #[\Override]
     protected $guarded = [];
 
+    /** @return BelongsTo<VkvpaKola, $this> */
     public function kolo(): BelongsTo
     {
         return $this->belongsTo(VkvpaKola::class, 'id_kola', 'id');
     }
 
+    /** @return BelongsTo<VkvpaKategorie, $this> */
     public function kategorie(): BelongsTo
     {
         return $this->belongsTo(VkvpaKategorie::class, 'id_kategorie', 'id');
     }
 
+    /** @return BelongsTo<Edihead, $this> */
     public function edihead(): BelongsTo
     {
         return $this->belongsTo(Edihead::class, 'EDI_ID', 'ID');

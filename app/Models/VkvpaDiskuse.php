@@ -19,6 +19,7 @@ class VkvpaDiskuse extends Model
     #[\Override]
     protected $guarded = [];
 
+    /** @return BelongsTo<VkvpaKola, $this> */
     public function kolo(): BelongsTo
     {
         return $this->belongsTo(VkvpaKola::class, 'id_kola', 'id');

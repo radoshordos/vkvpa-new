@@ -33,11 +33,13 @@ class VkvpaKola extends Model
     #[\Override]
     protected $guarded = [];
 
+    /** @return HasMany<VkvpaData, $this> */
     public function hlaseni(): HasMany
     {
         return $this->hasMany(VkvpaData::class, 'id_kola', 'id');
     }
 
+    /** @return HasMany<VkvpaDiskuse, $this> */
     public function diskuse(): HasMany
     {
         return $this->hasMany(VkvpaDiskuse::class, 'id_kola', 'id');
@@ -85,7 +87,12 @@ class VkvpaKola extends Model
         return VkvpaData::query()->where('schvaleno', false)->exists();
     }
 
-    /** Scope: jen kola označená jako aktivní. */
+    /**
+     * Scope: jen kola označená jako aktivní.
+     *
+     * @param  Builder<VkvpaKola>  $query
+     * @return Builder<VkvpaKola>
+     */
     #[Scope]
     protected function active(Builder $query): Builder
     {

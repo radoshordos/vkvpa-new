@@ -19,6 +19,7 @@ class VkvpaKategorie extends Model
     #[\Override]
     protected $guarded = [];
 
+    /** @return HasMany<VkvpaData, $this> */
     public function hlaseni(): HasMany
     {
         return $this->hasMany(VkvpaData::class, 'id_kategorie', 'id');

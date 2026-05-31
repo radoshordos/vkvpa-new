@@ -85,7 +85,7 @@ final class EdiParser
 
         return new EdiLog(
             header: new EdiHeader($fields),
-            qsos: array_values($qsos),
+            qsos: $qsos,
             rawSource: $raw,
             declaredTotal: $declaredTotal,
             lineErrors: $errors,

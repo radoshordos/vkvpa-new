@@ -96,7 +96,7 @@ final class ScoringService
     /**
      * Roční výsledky: součet bodů přes kola roku, po kategoriích a značkách.
      *
-     * @return Collection<int, object>
+     * @return \Illuminate\Database\Eloquent\Collection<int, VkvpaData>
      */
     public function yearlyResults(int $year, bool $qrpOnly = false): Collection
     {

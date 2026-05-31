@@ -36,6 +36,8 @@ class Ediline extends Model
 
     /**
      * Hlavička deníku, ke kterému spojení patří.
+     *
+     * @return BelongsTo<Edihead, $this>
      */
     public function head(): BelongsTo
     {

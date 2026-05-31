@@ -14,6 +14,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  *
  * Pozn.: tabulka i sloupce ponechány v původních názvech kvůli kompatibilitě.
  * Vlastní časové sloupce (`stamp`, `d_cas`) nejsou Laravel created_at/updated_at.
+ *
+ * @property int $ID
+ * @property int|null $id_kola
+ * @property string $PCall
+ * @property int $SPowe
+ * @property \Illuminate\Support\Carbon|null $stamp
+ * @property \Illuminate\Support\Carbon|null $d_cas
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Ediline> $lines
  */
 #[Table(name: 'edihead', key: 'ID')]
 #[WithoutTimestamps]
@@ -24,6 +32,8 @@ class Edihead extends Model
 
     /**
      * Jednotlivá spojení (QSO) tohoto deníku.
+     *
+     * @return HasMany<Ediline, $this>
      */
     public function lines(): HasMany
     {

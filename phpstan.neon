@@ -22,6 +22,5 @@ parameters:
         # PHP identifikátory). Přistupuje se k nim dynamicky: $line->{'Received-WWL'}.
         - identifier: property.notFound
           paths:
-            - app/Models/Ediline.php
             - app/Services/Scoring/ScoringService.php
             - app/Http/Controllers/MapController.php

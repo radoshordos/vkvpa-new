@@ -12,6 +12,9 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * Konfigurace systému jako klíč–hodnota (nahrazuje file-based `mail.inc`
  * a roztroušené konstanty z legacy kódu).
+ *
+ * @property string $cfg_key
+ * @property string|null $cfg_value
  */
 #[Table(name: 'vkvpa_config', key: 'cfg_key', keyType: 'string')]
 #[WithoutIncrementing]
@@ -26,7 +29,7 @@ class VkvpaConfig extends Model
      */
     public static function get(string $key, ?string $default = null): ?string
     {
-        return static::query()->find($key)?->cfg_value ?? $default;
+        return static::query()->find($key)->cfg_value ?? $default;
     }
 
     /**

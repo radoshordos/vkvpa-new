@@ -16,6 +16,7 @@ class HlaseniTest extends TestCase
 {
     use RefreshDatabase;
 
+    /** @return array{VkvpaKola, VkvpaKategorie} */
     private function prepare(): array
     {
         $kolo = VkvpaKola::create([
@@ -30,6 +31,7 @@ class HlaseniTest extends TestCase
         return [$kolo, $kat];
     }
 
+    /** @return array<string, mixed> */
     private function payload(int $kolo, int $kat): array
     {
         return [

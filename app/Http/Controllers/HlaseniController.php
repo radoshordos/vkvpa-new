@@ -30,8 +30,8 @@ class HlaseniController extends Controller
             || $request->has('showfrm')
             || old('znacka') !== null;
 
-        $idKola = $edit?->id_kola ?? ($request->integer('kolo') ?: null);
-        $idKategorie = $edit?->id_kategorie ?? ($request->integer('kategorie') ?: null);
+        $idKola = $edit->id_kola ?? ($request->integer('kolo') ?: null);
+        $idKategorie = $edit->id_kategorie ?? ($request->integer('kategorie') ?: null);
 
         // Průběžné výsledky vybraného kola (i nezveřejněné = stav „Čeká").
         $vysledky = $idKola

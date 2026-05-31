@@ -70,6 +70,6 @@ class AuthTest extends TestCase
     {
         // Vyžaduje registrovanou testovací routu s middleware 'admin'
         // nebo konkrétní admin routu z Fáze 6.
-        $this->assertTrue(true);
+        $this->expectNotToPerformAssertions();
     }
 }
