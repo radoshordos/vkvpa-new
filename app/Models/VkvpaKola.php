@@ -10,6 +10,16 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Kolo závodu (contest period).
+ *
+ * @property int $id
+ * @property \Illuminate\Support\Carbon $datum_konani
+ * @property \Illuminate\Support\Carbon|null $datum_uzaverky
+ * @property bool $aktivni
+ * @property string $nazev
+ * @property \Illuminate\Support\Carbon|null $vyhodnoceno
+ * @property string $poznamka
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\VkvpaData> $hlaseni
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\VkvpaDiskuse> $diskuse
  */
 class VkvpaKola extends Model
 {

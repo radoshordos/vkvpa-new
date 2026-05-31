@@ -8,6 +8,9 @@ RUN apt-get update && apt-get install -y \
         libpng-dev \
         libzip-dev \
         libicu-dev \
+        unzip \
+        git \
+        zip \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) gd pdo_mysql zip intl \
     && rm -rf /var/lib/apt/lists/*

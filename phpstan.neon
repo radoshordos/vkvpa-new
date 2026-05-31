@@ -1,5 +1,5 @@
 # PHPStan + Larastan (Laravel-aware statická analýza).
-# Spuštění:  vendor/bin/phpstan analyse
+# Spuštění:  vendor/bin/phpstan analyse   (nebo: composer stan)
 includes:
     - vendor/larastan/larastan/extension.neon
 
@@ -16,19 +16,12 @@ parameters:
     excludePaths:
         - database/source_sql/*
 
-    # Bootstrap aplikace (kvůli helperům jako env()/config()/route()).
-    bootstrapFiles:
-        - vendor/autoload.php
-
     ignoreErrors:
-        # Eloquent dynamické vlastnosti – sloupce s nestandardními názvy
-        # (např. 'Mode-code', 'Received-WWL', 'Sent QSO number') i běžné
-        # přístupy jako $head->PCall. Bez @property anotací je PHPStan hlásí.
+        # Ediline má sloupce s nestandardními názvy ('Mode-code', 'Received-WWL',
+        # 'Sent QSO number'…), které nelze zapsat jako @property (nejsou to platné
+        # PHP identifikátory). Přistupuje se k nim dynamicky: $line->{'Received-WWL'}.
         - identifier: property.notFound
           paths:
-            - app/Models/*
-            - app/Services/*
-            - app/Http/Controllers/*
-
-        # Mass-assignment / dynamické atributy modelů.
-        - '#Access to an undefined property App\\Models\\#'
+            - app/Models/Ediline.php
+            - app/Services/Scoring/ScoringService.php
+            - app/Http/Controllers/MapController.php
