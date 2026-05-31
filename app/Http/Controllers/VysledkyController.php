@@ -37,8 +37,8 @@ class VysledkyController extends Controller
                 ->where('schvaleno', true)
                 ->when($request->boolean('qrp'), fn ($q) => $q->where('qrp', true))
                 ->when($hledat !== '', fn ($q) => $q->where(
-                    fn ($w) => $w->where('znacka', 'like', "%{$hledat}%")
-                        ->orWhere('locator', 'like', "%{$hledat}%"),
+                    fn ($w) => $w->where('znacka', 'like', sprintf('%%%s%%', $hledat))
+                        ->orWhere('locator', 'like', sprintf('%%%s%%', $hledat)),
                 ))
                 ->orderBy('id_kategorie')->orderBy('poradi')->orderByDesc('body')
                 ->get()
@@ -56,7 +56,7 @@ class VysledkyController extends Controller
 
     public function rocni(Request $request): View
     {
-        $rok = (int) $request->integer('rok', (int) date('Y'));
+        $rok = $request->integer('rok', (int) date('Y'));
         $qrp = $request->boolean('qrp');
 
         $vysledky = $this->scoring->yearlyResults($rok, $qrp)

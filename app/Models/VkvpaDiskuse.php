@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Override;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
 use Illuminate\Database\Eloquent\Model;
@@ -16,7 +17,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[WithoutTimestamps]
 class VkvpaDiskuse extends Model
 {
-    #[\Override]
+    #[Override]
     protected $guarded = [];
 
     /** @return BelongsTo<VkvpaKola, $this> */
@@ -24,7 +25,8 @@ class VkvpaDiskuse extends Model
     {
         return $this->belongsTo(VkvpaKola::class, 'id_kola', 'id');
     }
-    #[\Override]
+
+    #[Override]
     protected function casts(): array
     {
         return [

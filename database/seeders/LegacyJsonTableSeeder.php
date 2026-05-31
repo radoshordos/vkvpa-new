@@ -44,7 +44,7 @@ abstract class LegacyJsonTableSeeder extends Seeder
     private function rows(): array
     {
         /** @var list<array<string, mixed>> $rows */
-        $rows = "seeders/data/{$this->table}.json"
+        $rows = sprintf('seeders/data/%s.json', $this->table)
                 |> database_path(...)
                 |> file_get_contents(...)
                 |> (fn ($x): mixed => json_decode((string) $x, true, 512, JSON_THROW_ON_ERROR));
@@ -58,6 +58,6 @@ abstract class LegacyJsonTableSeeder extends Seeder
             return;
         }
 
-        DB::statement("ALTER TABLE `{$this->table}` AUTO_INCREMENT = {$this->autoIncrement}");
+        DB::statement(sprintf('ALTER TABLE `%s` AUTO_INCREMENT = %d', $this->table, $this->autoIncrement));
     }
 }

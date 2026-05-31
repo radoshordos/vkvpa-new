@@ -40,6 +40,7 @@ final class ScoringService
                     if ($entry->body !== $prevBody) {
                         $counter++;
                     }
+
                     $entry->update(['poradi' => $counter]);
                     $prevBody = $entry->body;
                 }
@@ -84,6 +85,7 @@ final class ScoringService
         if (strlen($digits) < 6) {
             return null;
         }
+
         $year = (int) substr($digits, 0, 4);
         $month = (int) substr($digits, 4, 2);
 
@@ -106,7 +108,7 @@ final class ScoringService
             ->join('vkvpa_kola', 'vkvpa_data.id_kola', '=', 'vkvpa_kola.id')
             ->where('vkvpa_data.schvaleno', true)
             ->where('vkvpa_data.poradi', '<>', 0)
-            ->where('vkvpa_kola.nazev', 'like', "%{$year}")
+            ->where('vkvpa_kola.nazev', 'like', '%' . $year)
             ->selectRaw('vkvpa_data.id_kategorie as kategorie_id, vkvpa_data.znacka')
             ->selectRaw(
                 'SUM(CASE WHEN vkvpa_data.EDI_ID = 0 AND vkvpa_data.id_kola >= ? THEN 0 ELSE vkvpa_data.body END) as celkem',

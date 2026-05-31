@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Auth;
 
+use Illuminate\Auth\Events\Login;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\VkvpaPrihlaseni;
@@ -33,7 +34,7 @@ class AuthController extends Controller
             return redirect()->intended('/');
         }
 
-        return view('auth.login');
+        return view(Login::class);
     }
 
     public function login(Request $request): RedirectResponse
@@ -91,7 +92,7 @@ class AuthController extends Controller
         request()->session()->put('prihlasen', $admin->name); // legacy most
 
         // „Převzít záznam" odkaz z e-mailu vyhodnocovateli (?confirm=ID).
-        $confirm = (int) request()->integer('confirm');
+        $confirm = request()->integer('confirm');
         if ($confirm > 0) {
             return redirect()->route('edit_hlaseni', ['id' => $confirm]);
         }

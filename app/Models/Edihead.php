@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Override;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 /**
  * Hlavička deníku EDI (REG1TEST).
@@ -19,15 +22,15 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int|null $id_kola
  * @property string $PCall
  * @property int $SPowe
- * @property \Illuminate\Support\Carbon|null $stamp
- * @property \Illuminate\Support\Carbon|null $d_cas
- * @property-read \Illuminate\Database\Eloquent\Collection<int, Ediline> $lines
+ * @property Carbon|null $stamp
+ * @property Carbon|null $d_cas
+ * @property-read Collection<int, Ediline> $lines
  */
 #[Table(name: 'edihead', key: 'ID')]
 #[WithoutTimestamps]
 class Edihead extends Model
 {
-    #[\Override]
+    #[Override]
     protected $guarded = [];
 
     /**
@@ -39,7 +42,8 @@ class Edihead extends Model
     {
         return $this->hasMany(Ediline::class, 'IDS', 'ID');
     }
-    #[\Override]
+
+    #[Override]
     protected function casts(): array
     {
         return [

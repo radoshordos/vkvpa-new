@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use Override;
+
 class VkvpaKategorieTableSeeder extends LegacyJsonTableSeeder
 {
-    #[\Override]
+    #[Override]
     protected string $table = 'vkvpa_kategorie';
 
-    #[\Override]
+    #[Override]
     protected ?int $autoIncrement = 46;
 }

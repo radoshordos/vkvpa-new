@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Override;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
 use Illuminate\Database\Eloquent\Model;
@@ -31,7 +32,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[WithoutTimestamps]
 class Ediline extends Model
 {
-    #[\Override]
+    #[Override]
     protected $guarded = [];
 
     /**
@@ -43,7 +44,8 @@ class Ediline extends Model
     {
         return $this->belongsTo(Edihead::class, 'IDS', 'ID');
     }
-    #[\Override]
+
+    #[Override]
     protected function casts(): array
     {
         return [

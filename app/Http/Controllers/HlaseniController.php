@@ -21,7 +21,7 @@ class HlaseniController extends Controller
     public function index(Request $request): View
     {
         $ownedId = $this->intFrom($request->session()->get('owned_data_id', 0));
-        $editId = (int) $request->integer('id'); // editace adminem přes ?id
+        $editId = $request->integer('id'); // editace adminem přes ?id
 
         $targetId = $editId ?: $ownedId;
         $edit = $targetId > 0 ? VkvpaData::find($targetId) : null;

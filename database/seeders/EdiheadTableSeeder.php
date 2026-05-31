@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use Override;
+
 class EdiheadTableSeeder extends LegacyJsonTableSeeder
 {
-    #[\Override]
+    #[Override]
     protected string $table = 'edihead';
 
-    #[\Override]
+    #[Override]
     protected ?int $autoIncrement = 23111;
 }

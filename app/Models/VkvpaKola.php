@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Override;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
 use Illuminate\Database\Eloquent\Attributes\Scope;
@@ -30,7 +31,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[WithoutTimestamps]
 class VkvpaKola extends Model
 {
-    #[\Override]
+    #[Override]
     protected $guarded = [];
 
     /** @return HasMany<VkvpaData, $this> */
@@ -98,7 +99,8 @@ class VkvpaKola extends Model
     {
         return $query->where('aktivni', true);
     }
-    #[\Override]
+
+    #[Override]
     protected function casts(): array
     {
         return [

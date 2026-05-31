@@ -8,6 +8,7 @@
     "require": {
         "php": "^8.5",
         "ext-pdo": "*",
+        "ext-gd": "*",
         "dg/adminer-custom": "^3.3",
         "laravel/framework": "^13.12",
         "laravel/tinker": "^3.0"

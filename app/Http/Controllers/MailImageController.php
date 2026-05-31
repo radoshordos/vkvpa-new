@@ -21,11 +21,12 @@ class MailImageController extends Controller
 
         $width = max(1, strlen($text) * 12);
         $im = imagecreate($width, 16);
-        $bg = imagecolorallocate($im, 255, 255, 255);
+        imagecolorallocate($im, 255, 255, 255);
         $fg = imagecolorallocate($im, 0, 0, 0);
         if ($fg === false) {
             abort(500, 'GD: nepodařilo se alokovat barvu.');
         }
+
         imagestring($im, 4, 0, 0, $text, $fg);
 
         ob_start();

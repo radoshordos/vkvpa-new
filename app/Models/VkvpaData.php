@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Override;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
 use Illuminate\Database\Eloquent\Model;
@@ -50,7 +51,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[WithoutTimestamps]
 class VkvpaData extends Model
 {
-    #[\Override]
+    #[Override]
     protected $guarded = [];
 
     /** @return BelongsTo<VkvpaKola, $this> */
@@ -70,7 +71,8 @@ class VkvpaData extends Model
     {
         return $this->belongsTo(Edihead::class, 'EDI_ID', 'ID');
     }
-    #[\Override]
+
+    #[Override]
     protected function casts(): array
     {
         return [

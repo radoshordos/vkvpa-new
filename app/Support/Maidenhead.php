@@ -24,7 +24,7 @@ final class Maidenhead
         $lat = (ord($loc[1]) - ord('A')) * 10 - 90;
 
         $lon += ((int) $loc[2]) * 2;
-        $lat += ((int) $loc[3]) * 1;
+        $lat += (int) $loc[3];
 
         $lon += (ord($loc[4]) - ord('A')) * (2 / 24);
         $lat += (ord($loc[5]) - ord('A')) * (1 / 24);

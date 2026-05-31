@@ -16,6 +16,7 @@ class MapController extends Controller
 {
     /** Soutěžní okno (legacy filtr `time BETWEEN 0800 and 1100`). */
     private const string QSO_FROM = '0800';
+
     private const string QSO_TO = '1100';
 
     public function show(Edihead $head): View
@@ -36,6 +37,7 @@ class MapController extends Controller
                     $lat = $c['lat'] ?? null;
                     $lon = $c['lon'] ?? null;
                 }
+
                 if ($lat === null || $lon === null) {
                     return null;
                 }
@@ -53,7 +55,7 @@ class MapController extends Controller
 
         return view('pages.map', [
             'active' => '',
-            'pcall' => (string) $head->PCall,
+            'pcall' => $head->PCall,
             'home' => $home,
             'homeLoc' => (string) $homeLoc,
             'points' => $points,

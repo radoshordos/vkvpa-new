@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use Override;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
@@ -20,7 +21,7 @@ class StoreHlaseniRequest extends FormRequest
         return true;
     }
 
-    #[\Override]
+    #[Override]
     protected function prepareForValidation(): void
     {
         $this->merge([
@@ -55,7 +56,7 @@ class StoreHlaseniRequest extends FormRequest
         ];
     }
 
-    #[\Override]
+    #[Override]
     public function messages(): array
     {
         return [

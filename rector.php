@@ -11,6 +11,7 @@ use RectorLaravel\Set\LaravelLevelSetList;
  * Spuštění:
  *   vendor/bin/rector process --dry-run   # jen ukáže změny (nic nezapíše)
  *   vendor/bin/rector process             # provede změny
+ *   docker compose exec web vendor/bin/rector process --dry-run
  */
 
 return RectorConfig::configure()
@@ -28,13 +29,13 @@ return RectorConfig::configure()
     ->withSets([LaravelLevelSetList::UP_TO_LARAVEL_130])
     ->withPhpSets(php85: true)
     ->withPreparedSets(
-     //   deadCode: true,
+        deadCode: true,
         codeQuality: true,
+        codingStyle: true,
         typeDeclarations: true,
-    //    privatization: true,
-        earlyReturn: true,
+        privatization: true,
+        earlyReturn: true
     )
     ->withImportNames(
-        importShortClasses: false,
         removeUnusedImports: true,
     );

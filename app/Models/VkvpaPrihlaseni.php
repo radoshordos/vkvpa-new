@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Override;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
 use Illuminate\Database\Eloquent\Model;
@@ -18,10 +19,10 @@ use Illuminate\Database\Eloquent\Model;
 #[WithoutTimestamps]
 class VkvpaPrihlaseni extends Model
 {
-    #[\Override]
+    #[Override]
     protected $guarded = [];
 
-    #[\Override]
+    #[Override]
     protected function casts(): array
     {
         return [

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Override;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Attributes\WithoutIncrementing;
 use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
@@ -21,7 +22,7 @@ use Illuminate\Database\Eloquent\Model;
 #[WithoutTimestamps]
 class VkvpaConfig extends Model
 {
-    #[\Override]
+    #[Override]
     protected $guarded = [];
 
     /**

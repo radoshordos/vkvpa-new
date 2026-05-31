@@ -45,10 +45,10 @@ class EdiController extends Controller
 
         try {
             $log = $this->parser->parse($content);
-        } catch (EdiParseException $e) {
+        } catch (EdiParseException $ediParseException) {
             return back()
-                ->withErrors(['upload' => $e->getMessage()])
-                ->with('lineErrors', $e->lineErrors);
+                ->withErrors(['upload' => $ediParseException->getMessage()])
+                ->with('lineErrors', $ediParseException->lineErrors);
         }
 
         $head = $this->importer->import($log);

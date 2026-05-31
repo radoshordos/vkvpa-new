@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use Override;
+
 class PrefixesTableSeeder extends LegacyJsonTableSeeder
 {
-    #[\Override]
+    #[Override]
     protected string $table = 'prefixes';
 
-    #[\Override]
+    #[Override]
     protected ?int $autoIncrement = 533;
 }
