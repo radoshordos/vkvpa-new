@@ -43,10 +43,13 @@ abstract class LegacyJsonTableSeeder extends Seeder
      */
     private function rows(): array
     {
-        return "seeders/data/{$this->table}.json"
+        /** @var list<array<string, mixed>> $rows */
+        $rows = "seeders/data/{$this->table}.json"
                 |> database_path(...)
                 |> file_get_contents(...)
-                |> (fn($x): mixed => json_decode((string) $x, true, 512, JSON_THROW_ON_ERROR));
+                |> (fn ($x): mixed => json_decode((string) $x, true, 512, JSON_THROW_ON_ERROR));
+
+        return $rows;
     }
 
     private function restoreAutoIncrement(): void

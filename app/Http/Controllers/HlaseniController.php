@@ -20,7 +20,7 @@ class HlaseniController extends Controller
 {
     public function index(Request $request): View
     {
-        $ownedId = (int) $request->session()->get('owned_data_id', 0);
+        $ownedId = $this->intFrom($request->session()->get('owned_data_id', 0));
         $editId = (int) $request->integer('id'); // editace adminem přes ?id
 
         $targetId = $editId ?: $ownedId;
@@ -57,11 +57,11 @@ class HlaseniController extends Controller
     public function store(StoreHlaseniRequest $request): RedirectResponse
     {
         $v = $request->validated();
-        $idZaznamu = (int) ($v['id_zaznamu'] ?? 0);
-        $ownedId = (int) $request->session()->get('owned_data_id', 0);
+        $idZaznamu = $this->intFrom($v['id_zaznamu'] ?? 0);
+        $ownedId = $this->intFrom($request->session()->get('owned_data_id', 0));
 
         // Hlášení lze odeslat jen do aktivního kola (admin má výjimku).
-        if (! ($request->user()?->is_admin) && ! VkvpaKola::jeAktivni((int) $v['kolo'])) {
+        if (! ($request->user()?->is_admin) && ! VkvpaKola::jeAktivni($this->intFrom($v['kolo']))) {
             return back()->withInput()->withErrors([
                 'kolo' => 'Do tohoto kola nelze odeslat hlášení – není aktivní. / Period is not active.',
             ]);
@@ -73,21 +73,21 @@ class HlaseniController extends Controller
         }
 
         $payload = [
-            'id_kola' => (int) $v['kolo'],
-            'id_kategorie' => (int) ($v['kategorie'] ?? 0),
+            'id_kola' => $this->intFrom($v['kolo']),
+            'id_kategorie' => $this->intFrom($v['kategorie'] ?? 0),
             'znacka' => $v['znacka'],
             'locator' => $v['locator'],
-            'pocet' => (int) ($v['pocet'] ?? 0),
-            'bodu_za_qso' => (int) ($v['bodu_za_qso'] ?? 0),
-            'nasobice' => (int) ($v['nasobice'] ?? 0),
-            'body' => (int) ($v['body'] ?? 0),
+            'pocet' => $this->intFrom($v['pocet'] ?? 0),
+            'bodu_za_qso' => $this->intFrom($v['bodu_za_qso'] ?? 0),
+            'nasobice' => $this->intFrom($v['nasobice'] ?? 0),
+            'body' => $this->intFrom($v['body'] ?? 0),
             'qrp' => (bool) ($v['qrp'] ?? false),
             'mail' => $v['email'],
             'jmeno' => $v['jmeno'] ?? '',
             'telefon' => $v['telefon'] ?? '',
             'soapbox' => $v['soapbox'] ?? '',
             'poznamka' => $v['poznamka'] ?? '',
-            'EDI_ID' => (int) ($v['EDIID'] ?? 0),
+            'EDI_ID' => $this->intFrom($v['EDIID'] ?? 0),
             'schvaleno' => true,
         ];
 
@@ -102,5 +102,11 @@ class HlaseniController extends Controller
         return redirect()
             ->route('vysledkova_listina', ['kolo' => $payload['id_kola']])
             ->with('announcement', 'Hlášení bylo uloženo.');
+    }
+
+    /** Bezpečný převod nedůvěryhodné (mixed) vstupní hodnoty na int. */
+    private function intFrom(mixed $value): int
+    {
+        return is_numeric($value) ? (int) $value : 0;
     }
 }

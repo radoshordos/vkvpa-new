@@ -32,6 +32,7 @@ class EdiImportTest extends TestCase
         $this->assertSame(2, Ediline::where('IDS', $head->ID)->count());
 
         $first = Ediline::where('IDS', $head->ID)->orderBy('ID')->first();
+        $this->assertNotNull($first);
         $this->assertSame('OK2IMH', $first->CallSign);
         $this->assertSame('JN99BP', $first->{'Received-WWL'});
         $this->assertSame(2, (int) $first->{'QSO-Points'});

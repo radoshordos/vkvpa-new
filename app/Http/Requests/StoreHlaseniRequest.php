@@ -24,8 +24,8 @@ class StoreHlaseniRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $this->merge([
-            'znacka' => strtoupper(trim((string) $this->input('znacka'))),
-            'locator' => strtoupper(trim((string) $this->input('locator'))),
+            'znacka' => $this->string('znacka')->trim()->upper()->value(),
+            'locator' => $this->string('locator')->trim()->upper()->value(),
         ]);
     }
 

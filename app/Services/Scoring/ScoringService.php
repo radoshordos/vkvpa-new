@@ -87,10 +87,12 @@ final class ScoringService
         $year = (int) substr($digits, 0, 4);
         $month = (int) substr($digits, 4, 2);
 
-        return VkvpaKola::query()
+        $id = VkvpaKola::query()
             ->whereYear('datum_konani', $year)
             ->whereMonth('datum_konani', $month)
             ->value('id');
+
+        return is_numeric($id) ? (int) $id : null;
     }
 
     /**

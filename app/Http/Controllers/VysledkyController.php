@@ -23,16 +23,23 @@ class VysledkyController extends Controller
 
     public function listina(Request $request): View
     {
-        $koloId = (int) $request->integer('kolo');
+        $koloId = $request->integer('kolo');
         $kolo = $koloId !== 0
             ? VkvpaKola::find($koloId)
             : VkvpaKola::query()->where('datum_uzaverky', '<', now())->orderByDesc('datum_konani')->first();
+
+        // Hledat / Search – filtruje podle značky nebo lokátoru ve vybraném kole.
+        $hledat = $request->string('hledat')->trim()->value();
 
         $radky = $kolo
             ? VkvpaData::query()
                 ->where('id_kola', $kolo->id)
                 ->where('schvaleno', true)
                 ->when($request->boolean('qrp'), fn ($q) => $q->where('qrp', true))
+                ->when($hledat !== '', fn ($q) => $q->where(
+                    fn ($w) => $w->where('znacka', 'like', "%{$hledat}%")
+                        ->orWhere('locator', 'like', "%{$hledat}%"),
+                ))
                 ->orderBy('id_kategorie')->orderBy('poradi')->orderByDesc('body')
                 ->get()
             : collect();
@@ -41,7 +48,9 @@ class VysledkyController extends Controller
             'active' => 'vysledkova_listina',
             'kola' => VkvpaKola::query()->orderByDesc('datum_konani')->get(),
             'kolo' => $kolo,
+            'kategorie' => VkvpaKategorie::query()->orderBy('id')->get()->keyBy('id'),
             'radky' => $radky,
+            'hledat' => $hledat,
         ]);
     }
 

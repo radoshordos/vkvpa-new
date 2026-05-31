@@ -55,6 +55,7 @@ class HlaseniTest extends TestCase
             ->assertSessionHas('announcement');
 
         $row = VkvpaData::first();
+        $this->assertNotNull($row);
         $this->assertSame('OK2KJT', $row->znacka);   // uppercased
         $this->assertSame('JN99AJ', $row->locator);
         $this->assertSame('test@example.com', $row->mail);

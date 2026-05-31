@@ -52,10 +52,10 @@ class ScoringServiceTest extends TestCase
 
         app(ScoringService::class)->rankRound($kolo->id);
 
-        $this->assertSame(1, $a->fresh()->poradi);
-        $this->assertSame(2, $b->fresh()->poradi);
-        $this->assertSame(2, $c->fresh()->poradi); // stejné pořadí jako B
-        $this->assertSame(3, $d->fresh()->poradi);
+        $this->assertSame(1, $a->refresh()->poradi);
+        $this->assertSame(2, $b->refresh()->poradi);
+        $this->assertSame(2, $c->refresh()->poradi); // stejné pořadí jako B
+        $this->assertSame(3, $d->refresh()->poradi);
     }
 
     public function test_close_round_sets_vyhodnoceno(): void
@@ -65,7 +65,7 @@ class ScoringServiceTest extends TestCase
 
         app(ScoringService::class)->closeRound($kolo->id);
 
-        $this->assertNotNull($kolo->fresh()->vyhodnoceno);
+        $this->assertNotNull($kolo->refresh()->vyhodnoceno);
     }
 
     public function test_score_edi_from_fixture(): void
@@ -94,6 +94,8 @@ class ScoringServiceTest extends TestCase
 
         $res = app(ScoringService::class)->yearlyResults(2026);
 
-        $this->assertSame(250, (int) $res->firstWhere('znacka', 'OK1A')->celkem);
+        $row = $res->firstWhere('znacka', 'OK1A');
+        $this->assertNotNull($row);
+        $this->assertSame(250, (int) $row->celkem);
     }
 }
