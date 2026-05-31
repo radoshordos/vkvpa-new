@@ -23,6 +23,9 @@ class MailImageController extends Controller
         $im = imagecreate($width, 16);
         $bg = imagecolorallocate($im, 255, 255, 255);
         $fg = imagecolorallocate($im, 0, 0, 0);
+        if ($fg === false) {
+            abort(500, 'GD: nepodařilo se alokovat barvu.');
+        }
         imagestring($im, 4, 0, 0, $text, $fg);
 
         ob_start();
