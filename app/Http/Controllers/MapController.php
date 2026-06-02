@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Edihead;
+use App\Support\ContestWindow;
 use App\Support\Maidenhead;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
@@ -27,10 +28,6 @@ use Illuminate\View\View;
  */
 class MapController extends Controller
 {
-    /** Soutěžní okno (legacy filtr `time BETWEEN 0800 AND 1100`). */
-    private const string QSO_FROM = '0800';
-
-    private const string QSO_TO = '1100';
 
     /**
      * Mapa „M" – ježek.
@@ -116,7 +113,7 @@ class MapController extends Controller
     private function points(Edihead $head, ?array $home): Collection
     {
         return $head->lines()
-            ->whereBetween('Time', [self::QSO_FROM, self::QSO_TO])
+            ->whereBetween('Time', [ContestWindow::FROM, ContestWindow::TO])
             ->orderBy('Received-WWL')
             ->get(['lon', 'lat', 'CallSign', 'Received-WWL', 'QSO-Points'])
             ->map(function ($l) use ($home): ?array {
@@ -159,7 +156,7 @@ class MapController extends Controller
     private function squares(Edihead $head): Collection
     {
         $counts = [];
-        foreach ($head->lines()->whereBetween('Time', [self::QSO_FROM, self::QSO_TO])->get(['Received-WWL']) as $l) {
+        foreach ($head->lines()->whereBetween('Time', [ContestWindow::FROM, ContestWindow::TO])->get(['Received-WWL']) as $l) {
             $sq = strtoupper(substr(trim((string) $l->{'Received-WWL'}), 0, 4));
             if (preg_match('/^[A-R]{2}\d{2}$/', $sq)) {
                 $counts[$sq] = ($counts[$sq] ?? 0) + 1;

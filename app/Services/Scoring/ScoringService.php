@@ -8,6 +8,7 @@ use App\Models\Edihead;
 use App\Models\VkvpaData;
 use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
+use App\Support\ContestWindow;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -19,11 +20,6 @@ final class ScoringService
 {
     /** Od tohoto kola se hlášení bez EDI do ročního součtu nezapočítávají. */
     private const int NON_EDI_NULLIFY_FROM_KOLO = 91;
-
-    /** Závodní okno (HHMM, UTC) – QSO mimo se nezapočítávají (bodová hodnota 0). */
-    private const string OKNO_OD = '0800';
-
-    private const string OKNO_DO = '1100';
 
     /**
      * Přidělí pořadí (`poradi`) v rámci každé kategorie kola (husté: shoda = stejné).
@@ -75,7 +71,7 @@ final class ScoringService
         $den = substr(trim((string) $head->TDate), 2, 6);
 
         $squares = $head->lines()
-            ->whereBetween('Time', [self::OKNO_OD, self::OKNO_DO])
+            ->whereBetween('Time', [ContestWindow::FROM, ContestWindow::TO])
             ->when($den !== '', fn ($q) => $q->where('Date', $den))
             ->get(['Received-WWL'])
             ->map(static fn ($l): string => strtoupper(substr(trim((string) $l->{'Received-WWL'}), 0, 4)))
