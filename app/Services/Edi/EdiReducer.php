@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services\Edi;
 
+use App\Support\ContestWindow;
+
 /**
  * Ořez EDI deníku (REG1TEST) na časové okno závodu – podklad pro akci „EDIR".
  *
@@ -12,18 +14,10 @@ namespace App\Services\Edi;
  * uvnitř okna 08:00–11:00 UTC, zachová hlavičku i sekci [Remarks] a přepočítá
  * počet v řádku `[QSORecords;N]`. Výsledek je platný (zmenší) EDI soubor.
  *
- * Časové okno odpovídá filtru v {@see \App\Http\Controllers\MapController}
- * (QSO_FROM/QSO_TO) – legacy pravidlo `time BETWEEN 0800 AND 1100`.
- *
  * Čistá služba bez DB a výstupu (snadno testovatelná).
  */
 final class EdiReducer
 {
-    /** Začátek závodního okna (HHMM, UTC), včetně. */
-    private const string OKNO_OD = '0800';
-
-    /** Konec závodního okna (HHMM, UTC), včetně. */
-    private const string OKNO_DO = '1100';
 
     /**
      * Vrátí EDI text oříznutý jen na QSO uvnitř závodního okna.
@@ -81,6 +75,6 @@ final class EdiReducer
     {
         $hhmm = substr(trim($time), 0, 4);
 
-        return strlen($hhmm) === 4 && $hhmm >= self::OKNO_OD && $hhmm <= self::OKNO_DO;
+        return strlen($hhmm) === 4 && $hhmm >= ContestWindow::FROM && $hhmm <= ContestWindow::TO;
     }
 }
