@@ -8,7 +8,7 @@ CREATE TABLE `prefixes`
 ) ENGINE = InnoDB
   AUTO_INCREMENT = 533
   DEFAULT CHARSET = utf8mb4
-  COLLATE = utf8mb4_general_ci;
+  COLLATE = utf8mb4_unicode_ci;
 
 
 INSERT INTO `prefixes`

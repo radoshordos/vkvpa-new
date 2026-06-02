@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('prefixes', function (Blueprint $table): void {
             $table->charset = 'utf8mb4';
-            $table->collation = 'utf8mb4_general_ci';
+            $table->collation = 'utf8mb4_unicode_ci';
 
             $table->integer('id', true);
             $table->string('prefix', 3);

@@ -6,8 +6,8 @@ CREATE TABLE `vkvpa_prihlaseni`
     PRIMARY KEY (`id`)
 ) ENGINE = InnoDB
   AUTO_INCREMENT = 12981
-  DEFAULT CHARSET = utf8mb3
-  COLLATE = utf8mb3_general_ci;
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_unicode_ci;
 
 
 INSERT INTO `vkvpa_prihlaseni`

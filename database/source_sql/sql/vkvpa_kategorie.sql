@@ -8,8 +8,8 @@ CREATE TABLE `vkvpa_kategorie`
     PRIMARY KEY (`id`)
 ) ENGINE = InnoDB
   AUTO_INCREMENT = 46
-  DEFAULT CHARSET = utf8mb3
-  COLLATE = utf8mb3_general_ci;
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_unicode_ci;
 
 INSERT INTO `vkvpa_kategorie`
 VALUES (1, '144 MHz single op', '', '144 SO', 0),
