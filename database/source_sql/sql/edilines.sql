@@ -27,8 +27,8 @@ CREATE TABLE `edilines`
     CONSTRAINT `edilines_ibfk_1` FOREIGN KEY (`IDS`) REFERENCES `edihead` (`ID`)
 ) ENGINE = InnoDB
   AUTO_INCREMENT = 887832
-  DEFAULT CHARSET = utf8mb3
-  COLLATE = utf8mb3_general_ci;
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_unicode_ci;
 
 
 INSERT INTO `edilines`

@@ -5,7 +5,7 @@ CREATE TABLE `vkvpa_config`
     PRIMARY KEY (`cfg_key`)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
-  COLLATE = utf8mb4_general_ci;
+  COLLATE = utf8mb4_unicode_ci;
 
 
 INSERT INTO `vkvpa_config`

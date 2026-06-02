@@ -13,7 +13,7 @@ CREATE TABLE `vkvpa_diskuse`
 ) ENGINE = InnoDB
   AUTO_INCREMENT = 31
   DEFAULT CHARSET = utf8mb4
-  COLLATE = utf8mb4_general_ci;
+  COLLATE = utf8mb4_unicode_ci;
 
 INSERT INTO `vkvpa_diskuse`
 VALUES (20, 130, '2026-04-22 09:11:23', 'OK1KZE', 'OK1VUM',
