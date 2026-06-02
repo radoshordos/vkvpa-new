@@ -105,6 +105,21 @@ class HlaseniTest extends TestCase
         $resp->assertSessionHas('owned_data_id', $row->id);  // vlastní řádek v session
     }
 
+    public function test_duplicate_edi_upload_is_rejected(): void
+    {
+        $edi = (string) file_get_contents(__DIR__ . '/../fixtures/sample.edi');
+
+        // První nahrání projde.
+        $this->post('/edi', ['upload' => UploadedFile::fake()->createWithContent('a.edi', $edi)])
+            ->assertRedirect(route('edit_hlaseni', ['import' => 'success']));
+
+        // Druhé nahrání téhož deníku (stejná značka + kolo) → odmítnuto s hláškou.
+        $this->post('/edi', ['upload' => UploadedFile::fake()->createWithContent('b.edi', $edi)])
+            ->assertSessionHasErrors('upload');
+
+        $this->assertSame(1, Edihead::count()); // druhý import se neuložil
+    }
+
     public function test_submission_to_inactive_round_is_blocked(): void
     {
         $kolo = VkvpaKola::create([

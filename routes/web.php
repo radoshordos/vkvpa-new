@@ -11,6 +11,7 @@ use App\Http\Controllers\KolaController;
 use App\Http\Controllers\Admin\DenikyController;
 use App\Http\Controllers\Admin\ImportController;
 use App\Http\Controllers\Admin\KategorieController;
+use App\Http\Controllers\Admin\ZaznamController;
 use App\Http\Controllers\VysledkyController;
 use Illuminate\Support\Facades\Route;
 
@@ -40,14 +41,29 @@ Route::get('/mail-image', [MailImageController::class, 'show'])->name('mail.imag
 Route::get('/edi', [EdiController::class, 'create'])->name('read_edi');
 Route::post('/edi', [EdiController::class, 'store'])->name('read_edi.store');
 
-// Mapa spojení stanice (Fáze 9) – sjednocuje map*.php
-Route::get('/edi/{head}/mapa', [MapController::class, 'show'])->name('edi.mapa');
+// Zobrazení EDI deníku (sloupec „Akce / EDI" ve výsledkové listině):
+//   EDI  – původní EDI soubor,
+//   EDIR – redukovaný EDI (oříznutý na závodní okno 08:00–11:00 UTC).
+Route::get('/edi/{head}/soubor', [EdiController::class, 'zobrazit'])->name('edi.soubor');
+Route::get('/edi/{head}/soubor-redukovany', [EdiController::class, 'zobrazitRedukovany'])->name('edi.soubor.redukovany');
+
+// Mapové pohledy na spojení stanice (sloupec „Akce / EDI" ve výsledkové listině):
+//   M – ježek (čáry do protistanic), N – špendlíky (značka/km/azimut),
+//   S – velké čtverce (lokátory) s počtem protistanic.
+Route::get('/edi/{head}/mapa/jezek', [MapController::class, 'jezek'])->name('edi.mapa.jezek');
+Route::get('/edi/{head}/mapa/spendliky', [MapController::class, 'spendliky'])->name('edi.mapa.spendliky');
+Route::get('/edi/{head}/mapa/lokatory', [MapController::class, 'lokatory'])->name('edi.mapa.lokatory');
 
 // --- Administrace (chráněno middleware z Fáze 4) ---
 Route::middleware('admin')->group(function (): void {
     // Vyhodnocení a uzávěrka kola (Fáze 7)
     Route::post('/admin/kolo/{kolo}/vyhodnotit', [VyhodnoceniController::class, 'vyhodnotit'])->name('kolo.vyhodnotit');
     Route::post('/admin/kolo/{kolo}/uzavrit', [VyhodnoceniController::class, 'uzavrit'])->name('kolo.uzavrit');
+
+    // Akce nad záznamem výsledkové listiny (sloupec „Akce / EDI" v legacy vysledky.php):
+    //   P – převzít záznam, X – smazat záznam. (U = úprava je přes ?id na stránce hlášení.)
+    Route::post('/admin/zaznam/{zaznam}/prevzit', [ZaznamController::class, 'prevzit'])->name('zaznam.prevzit');
+    Route::post('/admin/zaznam/{zaznam}/smazat', [ZaznamController::class, 'smazat'])->name('zaznam.smazat');
 
     // (Editace hlášení je nyní přes ?id na stránce hlášení; uložení přes hlaseni.store.)
 

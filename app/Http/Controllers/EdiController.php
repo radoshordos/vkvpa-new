@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Exceptions\EdiParseException;
+use App\Models\Edihead;
 use App\Models\VkvpaData;
 use App\Services\Edi\EdiImportService;
 use App\Services\Edi\EdiParser;
+use App\Services\Edi\EdiReducer;
 use App\Services\Scoring\ScoringService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
 
 /**
@@ -27,6 +30,7 @@ class EdiController extends Controller
         private readonly EdiParser $parser,
         private readonly EdiImportService $importer,
         private readonly ScoringService $scoring,
+        private readonly EdiReducer $reducer,
     ) {
     }
 
@@ -51,13 +55,23 @@ class EdiController extends Controller
                 ->with('lineErrors', $ediParseException->lineErrors);
         }
 
+        $h = $log->header;
+        $pcall = $h->pCall();
+        $idKola = $this->scoring->koloForTDate($h->tDate()) ?? 0;
+
+        // Duplicitní deník: stejná značka už má pro toto kolo nahraný EDI deník.
+        if (VkvpaData::query()->where('EDI', true)->where('znacka', $pcall)->where('id_kola', $idKola)->exists()) {
+            return back()->withErrors([
+                'upload' => "Deník stanice {$pcall} už byl pro toto kolo nahrán – soubor již existuje.",
+            ]);
+        }
+
         $head = $this->importer->import($log);
         $score = $this->scoring->scoreEdi($head);
-        $h = $log->header;
 
         // Rezervovaný řádek (schvaleno=0) – formulář ho převezme a doplní.
         $row = VkvpaData::create([
-            'id_kola' => $this->scoring->koloForTDate($h->tDate()) ?? 0,
+            'id_kola' => $idKola,
             'id_kategorie' => 0,
             'znacka' => $h->pCall(),
             'locator' => $h->pWWLo(),
@@ -79,5 +93,53 @@ class EdiController extends Controller
         $request->session()->put('owned_data_id', $row->id);
 
         return redirect()->route('edit_hlaseni', ['import' => 'success']);
+    }
+
+    /**
+     * Zobrazí původní EDI soubor deníku – akce „EDI" ve výsledkové listině.
+     *
+     * Endpoint: GET /edi/{head}/soubor  (name: edi.soubor)
+     * Vstup:    {head} = ID deníku v `edihead` (route-model-binding)
+     * Efekt:    žádný (jen čtení uloženého `edihead.src`)
+     * Návrat:   text/plain s původním obsahem EDI; 404 pokud zdroj chybí.
+     */
+    public function zobrazit(Edihead $head): Response
+    {
+        return $this->ediResponse($head, (string) $head->src, $head->PCall, 'edi');
+    }
+
+    /**
+     * Zobrazí REDUKOVANÝ EDI soubor – akce „EDIR" ve výsledkové listině.
+     *
+     * Endpoint: GET /edi/{head}/soubor-redukovany  (name: edi.soubor.redukovany)
+     * Vstup:    {head} = ID deníku v `edihead` (route-model-binding)
+     * Efekt:    žádný; z `edihead.src` se za běhu ořežou QSO mimo závodní okno
+     *           08:00–11:00 UTC ({@see EdiReducer}). Tato oříznutá podoba je
+     *           zároveň ta, podle které se deník vyhodnocuje.
+     * Návrat:   text/plain s oříznutým EDI; 404 pokud zdroj chybí.
+     */
+    public function zobrazitRedukovany(Edihead $head): Response
+    {
+        $src = (string) $head->src;
+        $reduced = $src === '' ? '' : $this->reducer->reduce($src);
+
+        return $this->ediResponse($head, $reduced, $head->PCall, 'edir');
+    }
+
+    /**
+     * Sestaví text/plain odpověď s EDI obsahem (zobrazení v prohlížeči, ne stažení).
+     */
+    private function ediResponse(Edihead $head, string $content, string $pcall, string $variant): Response
+    {
+        if (trim($content) === '') {
+            abort(404, 'EDI soubor není pro tento deník k dispozici.');
+        }
+
+        $filename = sprintf('%s-%d-%s.edi', $pcall !== '' ? $pcall : 'denik', $head->ID, $variant);
+
+        return response($content, 200, [
+            'Content-Type' => 'text/plain; charset=utf-8',
+            'Content-Disposition' => 'inline; filename="' . $filename . '"',
+        ]);
     }
 }

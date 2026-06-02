@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\Edihead;
+use App\Models\Ediline;
 use App\Models\VkvpaData;
 use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
@@ -80,6 +82,29 @@ class ScoringServiceTest extends TestCase
         $this->assertSame(1, $score->pocet);
         $this->assertSame(2, $score->nasobice);
         $this->assertSame(2, $score->body);
+    }
+
+    public function test_score_edi_ignores_qso_outside_window(): void
+    {
+        $head = Edihead::create([
+            'TDate' => '20260118;20260118', 'PCall' => 'OK1TEST', 'PWWLo' => 'JN99AA',
+            'PSect' => '', 'PBand' => '', 'RName' => '', 'RPhon' => '', 'RHBBS' => '', 'SPowe' => 100,
+        ]);
+        Ediline::insert([
+            // 2 QSO uvnitř okna (cizí čtverce JN89, JO70) → počítají se.
+            ['IDS' => $head->ID, 'Date' => '260118', 'Time' => '0830', 'CallSign' => 'A', 'Received-WWL' => 'JN89AA', 'QSO-Points' => 1],
+            ['IDS' => $head->ID, 'Date' => '260118', 'Time' => '0930', 'CallSign' => 'B', 'Received-WWL' => 'JO70AA', 'QSO-Points' => 1],
+            // mimo čas (12:30) a mimo den (17.) → nezapočítají se.
+            ['IDS' => $head->ID, 'Date' => '260118', 'Time' => '1230', 'CallSign' => 'C', 'Received-WWL' => 'JN88AA', 'QSO-Points' => 1],
+            ['IDS' => $head->ID, 'Date' => '260117', 'Time' => '0900', 'CallSign' => 'D', 'Received-WWL' => 'JN77AA', 'QSO-Points' => 1],
+        ]);
+
+        $score = app(ScoringService::class)->scoreEdi($head);
+
+        // Jen 2 QSO v okně do cizích čtverců: pocet=2, nasobice=2+1=3, body=6.
+        $this->assertSame(2, $score->pocet);
+        $this->assertSame(3, $score->nasobice);
+        $this->assertSame(6, $score->body);
     }
 
     public function test_yearly_results_aggregates_by_callsign(): void

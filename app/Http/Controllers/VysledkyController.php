@@ -31,10 +31,14 @@ class VysledkyController extends Controller
         // Hledat / Search – filtruje podle značky nebo lokátoru ve vybraném kole.
         $hledat = $request->string('hledat')->trim()->value();
 
+        // Veřejnost vidí jen převzaté (schvaleno=1); admin vidí i nepřevzaté
+        // (meruňkové) záznamy, aby je mohl tlačítkem „P" převzít.
+        $jenPrevzate = ! (bool) ($request->user()?->is_admin);
+
         $radky = $kolo
             ? VkvpaData::query()
                 ->where('id_kola', $kolo->id)
-                ->where('schvaleno', true)
+                ->when($jenPrevzate, fn ($q) => $q->where('schvaleno', true))
                 ->when($request->boolean('qrp'), fn ($q) => $q->where('qrp', true))
                 ->when($hledat !== '', fn ($q) => $q->where(
                     fn ($w) => $w->where('znacka', 'like', sprintf('%%%s%%', $hledat))

@@ -20,6 +20,11 @@ final class ScoringService
     /** Od tohoto kola se hlášení bez EDI do ročního součtu nezapočítávají. */
     private const int NON_EDI_NULLIFY_FROM_KOLO = 91;
 
+    /** Závodní okno (HHMM, UTC) – QSO mimo se nezapočítávají (bodová hodnota 0). */
+    private const string OKNO_OD = '0800';
+
+    private const string OKNO_DO = '1100';
+
     /**
      * Přidělí pořadí (`poradi`) v rámci každé kategorie kola (husté: shoda = stejné).
      */
@@ -59,12 +64,19 @@ final class ScoringService
      *  - pocet    = QSO do cizích velkých čtverců,
      *  - nasobice = počet různých cizích velkých čtverců + 1,
      *  - body     = pocet * nasobice.
+     *
+     * Započítávají se jen QSO uvnitř závodního okna (den závodu dle `TDate`
+     * a čas 08:00–11:00 UTC). QSO mimo okno mají efektivně bodovou hodnotu 0.
      */
     public function scoreEdi(Edihead $head): EdiScore
     {
         $home = strtoupper(substr(trim((string) $head->PWWLo), 0, 4));
+        // Den závodu = YYMMDD ze začátku TDate (formát YYYYMMDD;YYYYMMDD).
+        $den = substr(trim((string) $head->TDate), 2, 6);
 
         $squares = $head->lines()
+            ->whereBetween('Time', [self::OKNO_OD, self::OKNO_DO])
+            ->when($den !== '', fn ($q) => $q->where('Date', $den))
             ->get(['Received-WWL'])
             ->map(static fn ($l): string => strtoupper(substr(trim((string) $l->{'Received-WWL'}), 0, 4)))
             ->filter(static fn (string $sq): bool => $sq !== '' && $sq !== $home);

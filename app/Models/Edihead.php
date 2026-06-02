@@ -22,6 +22,7 @@ use Illuminate\Support\Carbon;
  * @property int|null $id_kola
  * @property string $PCall
  * @property int $SPowe
+ * @property string|null $src
  * @property Carbon|null $stamp
  * @property Carbon|null $d_cas
  * @property-read Collection<int, Ediline> $lines

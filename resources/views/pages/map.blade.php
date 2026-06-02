@@ -1,7 +1,22 @@
-{{-- Mapa spojení (Fáze 9) – Leaflet 1.9.4, nahrazuje všechny map*.php. --}}
+{{--
+    Mapové pohledy na spojení (Fáze 9) – Leaflet 1.9.4, nahrazuje map*.php.
+
+    Jeden šablonový soubor obsluhuje tři režimy ($mode) ze tří akcí MapController:
+      jezek     (M) – QTH uprostřed, čáry (paprsky) do protistanic
+      spendliky (N) – špendlíky protistanic; popup = značka, lokátor, km, azimut
+      lokatory  (S) – velké čtverce s počtem protistanic (popisek = počet)
+--}}
 @extends('layouts.app')
 
 @section('title', 'Mapa spojení ' . $pcall . ' – VKV PA')
+
+@php
+    $popisRezimu = [
+        'jezek' => 'ježek – čáry do protistanic',
+        'spendliky' => 'špendlíky – značka, vzdálenost, azimut',
+        'lokatory' => 'velké čtverce – počet protistanic',
+    ][$mode] ?? '';
+@endphp
 
 @push('head')
   <link rel="stylesheet"
@@ -13,17 +28,22 @@
           crossorigin=""></script>
   <style>
     #mapa { height: 70vh; width: 100%; max-width: 900px; }
+    /* Popisek s počtem protistanic ve velkém čtverci (režim „lokatory"). */
+    .sq-label { background: transparent; border: none; box-shadow: none; color: #fff; font-weight: bold; font-size: 12px; }
   </style>
 @endpush
 
 @section('content')
 <h1>Mapa spojení {{ $pcall }} ({{ $homeLoc }})</h1>
+<p style="color:#555;font-size:13px;margin-top:-8px;">{{ $popisRezimu }}</p>
 <div id="mapa"></div>
 
 <script>
   (function () {
+    const mode = @json($mode);
     const home = @json($home);
     const points = @json($points);
+    const squares = @json($squares);
 
     const map = L.map('mapa');
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -33,6 +53,7 @@
 
     const bounds = [];
 
+    // QTH zkoumané stanice (střed) – ve všech režimech.
     if (home) {
       L.circleMarker([home.lat, home.lon], { radius: 7, color: '#0033cc', fillOpacity: 0.9 })
         .addTo(map)
@@ -40,15 +61,37 @@
       bounds.push([home.lat, home.lon]);
     }
 
-    points.forEach(function (p) {
-      L.circleMarker([p.lat, p.lon], { radius: 4, color: '#009933', fillOpacity: 0.8 })
-        .addTo(map)
-        .bindPopup(p.call + '<br>' + p.wwl + '<br>' + p.points + ' b.');
-      bounds.push([p.lat, p.lon]);
-      if (home) {
-        L.polyline([[home.lat, home.lon], [p.lat, p.lon]], { color: '#009933', weight: 1, opacity: 0.5 }).addTo(map);
-      }
-    });
+    if (mode === 'lokatory') {
+      // S – velké čtverce: značka uprostřed čtverce s počtem protistanic.
+      squares.forEach(function (s) {
+        L.circleMarker([s.lat, s.lon], { radius: 12, color: '#cc3300', fillColor: '#ff6633', fillOpacity: 0.75 })
+          .addTo(map)
+          .bindTooltip(String(s.count), { permanent: true, direction: 'center', className: 'sq-label' })
+          .bindPopup(s.square + '<br>' + s.count + ' protistanic');
+        bounds.push([s.lat, s.lon]);
+      });
+    } else {
+      // M / N – jednotlivé protistanice.
+      points.forEach(function (p) {
+        let popup = p.call + '<br>' + p.wwl;
+        if (mode === 'spendliky') {
+          if (p.dist !== null) { popup += '<br>' + p.dist + ' km'; }
+          if (p.azimut !== null) { popup += '<br>azimut ' + p.azimut + '°'; }
+        } else {
+          popup += '<br>' + p.points + ' b.';
+        }
+
+        L.circleMarker([p.lat, p.lon], { radius: 4, color: '#009933', fillOpacity: 0.8 })
+          .addTo(map)
+          .bindPopup(popup);
+        bounds.push([p.lat, p.lon]);
+
+        // M (ježek) – paprsek z QTH do protistanice.
+        if (mode === 'jezek' && home) {
+          L.polyline([[home.lat, home.lon], [p.lat, p.lon]], { color: '#009933', weight: 1, opacity: 0.5 }).addTo(map);
+        }
+      });
+    }
 
     if (bounds.length > 0) {
       map.fitBounds(bounds, { padding: [20, 20] });

@@ -29,10 +29,20 @@ final class EdiParser
      */
     public function parse(string $content): EdiLog
     {
+        // Sjednocení kódování na UTF-8 – část deníků chodí ve Windows-1250
+        // (česká diakritika v RName/Remarks by se jinak rozbila). mbstring
+        // středoevropské CP1250 neumí, proto iconv.
+        if (! mb_check_encoding($content, 'UTF-8')) {
+            $converted = iconv('Windows-1250', 'UTF-8//IGNORE', $content);
+            if ($converted !== false) {
+                $content = $converted;
+            }
+        }
+
         $section = '';
         $fields = [];
         $qsos = [];
-        $errors = [];
+        $ignored = [];
         $declaredTotal = 0;
         $raw = '';
 
@@ -54,7 +64,10 @@ final class EdiParser
                 if (preg_match(self::QSO_PATTERN, $upper, $m)) {
                     $qsos[] = EdiQso::fromMatch($m);
                 } elseif ($buf !== '') {
-                    $errors[] = $buf;
+                    // Neparsovatelný řádek (značka „ERROR", prázdná povinná pole,
+                    // neplatný lokátor…) – přeskočíme a importujeme zbytek deníku.
+                    // Nezapočítává se do platných QSO.
+                    $ignored[] = $buf;
                 }
             }
 
@@ -72,14 +85,26 @@ final class EdiParser
             }
         }
 
-        if ($declaredTotal !== count($qsos)) {
+        // Žádné platné spojení, ač deník nějaká deklaruje → soubor nemá platnou
+        // strukturu EDI (např. odeslaný .txt místo .edi) → odmítnout.
+        if ($qsos === [] && $declaredTotal > 0) {
+            throw new EdiParseException(
+                'Soubor nevypadá jako platný EDI deník – nepodařilo se z něj načíst žádné spojení.',
+                $ignored,
+            );
+        }
+
+        // Platná + ignorovaná spojení musí dohromady dát deklarovaný počet;
+        // jinak v deníku něco chybí/přebývá (nesedí počet řádků).
+        if ($declaredTotal !== count($qsos) + count($ignored)) {
             throw new EdiParseException(
                 sprintf(
-                    'Nesoulad počtu QSO: deklarováno %d, naparsováno %d.',
+                    'Nesoulad počtu QSO: deklarováno %d, naparsováno %d, ignorováno %d.',
                     $declaredTotal,
                     count($qsos),
+                    count($ignored),
                 ),
-                $errors,
+                $ignored,
             );
         }
 
@@ -88,7 +113,7 @@ final class EdiParser
             qsos: $qsos,
             rawSource: $raw,
             declaredTotal: $declaredTotal,
-            lineErrors: $errors,
+            ignoredLines: $ignored,
         );
     }
 }

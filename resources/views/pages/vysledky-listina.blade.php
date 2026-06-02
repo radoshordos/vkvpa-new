@@ -1,8 +1,41 @@
 {{--
     Výsledková listina (sladěno s legacy vysledky.php).
+
     Výsledky vybraného kola rozdělené po kategoriích (144 MHz single op,
     144 MHz multi op, 432 MHz single op …), s vyhledáváním a – pro admina –
-    s odkazy na akce (úprava záznamu, mapa spojení z EDI).
+    se sloupcem „Akce / EDI".
+
+    Referenční podoba z původní aplikace (screenshoty 05/2026):
+      Filtr:   Kolo / Round (select)  |  Hledat / Search (značka / lokátor)
+      Sloupce: Poř. | Značka+Jméno+čas | Locator | QSO | Nás./Mult.
+               | Body (+ b/QSO) | Soapbox/Poznámka | Akce / EDI
+      Odznak:  QRP (zeleně) u QRP stanic
+      Pozadí:  meruňkové = nepřevzato (vyhodnocovatel záznam ještě neviděl);
+               vidí ho jen admin – host vidí pouze převzaté (schvaleno=1).
+      Vzorec:  b/QSO = body / (násobiče × QSO)
+
+    Sloupec „Akce / EDI" – 8 akcí ve třech řádcích (jen pro přihlášeného admina):
+      ── 1. řádek (barevná tlačítka, jen admin) ──────────────────────────────
+      P    PŘEVZÍT záznam – vyhodnocovatel ho viděl; zmizí meruňkové pozadí
+                              → route('zaznam.prevzit', ['zaznam' => $r->id])  ✅
+      U    upravit záznam – načte ho zpět do formuláře k editaci
+                              → route('edit_hlaseni', ['id' => $r->id])        ✅
+      X    smazat záznam     → route('zaznam.smazat', ['zaznam' => $r->id])    ✅
+      ── 2. řádek (EDI, modré odkazy) ────────────────────────────────────────
+      EDI  zobrazit původní EDI soubor   → route('edi.soubor', ['head' => …])   ✅
+      EDIR zobrazit REDUKOVANÝ EDI – oříznutý jen na časové okno závodu
+           (QSO mezi 08:00–11:00 UTC); tato podoba se zároveň vyhodnocuje.
+                          → route('edi.soubor.redukovany', ['head' => …])  ✅
+      ── 3. řádek (mapy, červené odkazy) ─────────────────────────────────────
+      M    mapa „ježek": z QTH vedou čáry do protistanic
+                              → route('edi.mapa.jezek', ['head' => …])      ✅
+      N    mapa se špendlíky protistanic; popup = značka, vzdálenost (km),
+           azimut (°)         → route('edi.mapa.spendliky', ['head' => …])  ✅
+           (inspirace: https://vushf.dk/contest/map_details.php)
+      S    mapa velkých čtverců (lokátorů) s počtem protistanic v každém
+                              → route('edi.mapa.lokatory', ['head' => …])   ✅
+
+    Legenda: ✅ hotovo · 🟡 částečně (existuje routa, ladí se zobrazení) · TODO chybí.
 --}}
 @extends('layouts.app')
 @section('title', 'Výsledková listina – VKV PA')
@@ -16,6 +49,8 @@
     table.vysl th { background:#e6e6fa; color:#000080; font-weight:bold; padding:4px 8px; text-align:left; }
     table.vysl td { padding:5px 8px; vertical-align:top; background:#fff; }
     table.vysl tr:nth-child(even) td { background:#f4eff1; }
+    /* Meruňková = nepřevzato (vyhodnocovatel záznam ještě neviděl); vidí jen admin. */
+    table.vysl tr.nepr td { background:#ffdab9; }
     .vysl-body { color:#b35a00; font-weight:bold; font-size:15px; }
     .vysl-bq { color:#666; font-size:11px; }
     .vysl-date { color:#999; font-size:11px; }
@@ -23,6 +58,15 @@
     .vysl-soap { color:#cc0000; font-size:12px; }
     .vysl-qrp { background:#2db62f; color:#fff; font-size:10px; font-weight:bold; padding:0 4px; border-radius:3px; margin-left:5px; vertical-align:middle; }
     .vysl-akce a { color:#1a3a8c; text-decoration:underline; font-size:11px; display:inline-block; margin-right:6px; }
+    /* Sloupec „Akce / EDI" – barevná tlačítka P/U/X (1. řádek) dle legacy vysledky.php. */
+    .akce-row { white-space:nowrap; margin-bottom:3px; }
+    .akce-row form { display:inline; margin:0; }
+    .akce-btn { display:inline-block; width:18px; height:18px; line-height:18px; text-align:center;
+                font-weight:bold; font-size:11px; color:#fff; border:none; border-radius:2px;
+                cursor:pointer; text-decoration:none; margin-right:2px; padding:0; font-family:Arial, sans-serif; }
+    .akce-p { background:#2db62f; }  /* P – schválit (zelené)  */
+    .akce-u { background:#1a5fb4; }  /* U – upravit  (modré)   */
+    .akce-x { background:#cc2222; }  /* X – smazat   (červené) */
     .num { text-align:right; }
 </style>
 @endpush
@@ -77,7 +121,7 @@
                         ? $r->body / ($r->nasobice * $r->pocet)
                         : 0.0;
                 @endphp
-                <tr>
+                <tr @class(['nepr' => ! $r->schvaleno])>
                     <td><b>{{ $poradi }}.</b></td>
                     <td>
                         <b>{{ $r->znacka }}</b>@if ($r->qrp)<span class="vysl-qrp">QRP</span>@endif
@@ -94,9 +138,35 @@
                     <td class="vysl-soap">{{ $r->soapbox }}@if ($r->poznamka)<br><i>{{ $r->poznamka }}</i>@endif</td>
                     @if ($isAdmin)
                         <td class="vysl-akce">
-                            <a href="{{ route('edit_hlaseni', ['id' => $r->id]) }}">Upravit</a>
+                            {{-- 1. řádek: P schválit · U upravit · X smazat --}}
+                            <div class="akce-row">
+                                {{-- P – převzít záznam (POST zaznam.prevzit); po převzetí zmizí meruňkové pozadí --}}
+                                <form method="post" action="{{ route('zaznam.prevzit', ['zaznam' => $r->id]) }}">
+                                    @csrf
+                                    <button type="submit" class="akce-btn akce-p"
+                                            title="{{ $r->schvaleno ? 'Záznam je převzat' : 'Převzít záznam (vyhodnocovatel viděl)' }}">P</button>
+                                </form>
+                                {{-- U – upravit záznam (GET, stránka hlášení s ?id) --}}
+                                <a href="{{ route('edit_hlaseni', ['id' => $r->id]) }}" class="akce-btn akce-u" title="Upravit záznam">U</a>
+                                {{-- X – smazat záznam (POST zaznam.smazat, s potvrzením) --}}
+                                <form method="post" action="{{ route('zaznam.smazat', ['zaznam' => $r->id]) }}"
+                                      onsubmit="return confirm('Opravdu smazat záznam {{ $r->znacka }}?');">
+                                    @csrf
+                                    <button type="submit" class="akce-btn akce-x" title="Smazat záznam">X</button>
+                                </form>
+                            </div>
                             @if ($r->EDI && $r->EDI_ID)
-                                <a href="{{ route('edi.mapa', ['head' => $r->EDI_ID]) }}">Mapa</a>
+                                {{-- 2. řádek: EDI (původní deník) · EDIR (oříznutý na 08–11 UTC) --}}
+                                <div class="akce-row">
+                                    <a href="{{ route('edi.soubor', ['head' => $r->EDI_ID]) }}" title="Zobrazit původní EDI soubor">EDI</a>
+                                    <a href="{{ route('edi.soubor.redukovany', ['head' => $r->EDI_ID]) }}" title="Zobrazit redukovaný EDI (08–11 UTC)">EDIR</a>
+                                </div>
+                                {{-- 3. řádek: mapy M (ježek) · N (špendlíky) · S (velké čtverce) --}}
+                                <div class="akce-row">
+                                    <a href="{{ route('edi.mapa.jezek', ['head' => $r->EDI_ID]) }}" title="Mapa – ježek (čáry do protistanic)">M</a>
+                                    <a href="{{ route('edi.mapa.spendliky', ['head' => $r->EDI_ID]) }}" title="Mapa – špendlíky (značka, km, azimut)">N</a>
+                                    <a href="{{ route('edi.mapa.lokatory', ['head' => $r->EDI_ID]) }}" title="Mapa – velké čtverce s počty protistanic">S</a>
+                                </div>
                             @endif
                         </td>
                     @endif
