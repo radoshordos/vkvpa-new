@@ -10,7 +10,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Ořez EDI na závodní okno 08:00–11:00 UTC (podklad pro akci EDIR).
  *
- * @see \App\Services\Edi\EdiReducer
+ * @see EdiReducer
  */
 class EdiReducerTest extends TestCase
 {
@@ -27,9 +27,9 @@ class EdiReducerTest extends TestCase
             '260315;1100;OK1C;1;59;003;59;003;;JN99BP;2;;;;', // 11:00 → hranice (zůstává)
             '260315;1101;OK1D;1;59;004;59;004;;JN99BP;2;;;;', // 11:01 → po okně (pryč)
             '[END;]',
-        ]) . "\n";
+        ])."\n";
 
-        $out = (new EdiReducer())->reduce($raw);
+        $out = (new EdiReducer)->reduce($raw);
 
         // Zůstávají jen QSO v okně a počet je přepočítán.
         $this->assertStringContainsString('[QSORecords;2]', $out);

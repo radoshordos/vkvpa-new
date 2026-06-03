@@ -15,7 +15,7 @@ class EdiParserTest extends TestCase
 {
     private function fixture(): string
     {
-        return (string) file_get_contents(__DIR__ . '/../fixtures/sample.edi');
+        return (string) file_get_contents(__DIR__.'/../fixtures/sample.edi');
     }
 
     public function test_parses_header_fields(): void
@@ -48,7 +48,7 @@ class EdiParserTest extends TestCase
     public function test_uppercases_qso_records(): void
     {
         $edi = "[REG1TEST;1]\nPCall=OK1ABC\n[QSORecords;1]\n"
-            . "260315;0800;ok1xyz;1;59;001;59;001;;jn79ab;3;;;;\n[END;]\n";
+            ."260315;0800;ok1xyz;1;59;001;59;001;;jn79ab;3;;;;\n[END;]\n";
 
         $log = new EdiParser()->parse($edi);
 
@@ -67,7 +67,7 @@ class EdiParserTest extends TestCase
 
     public function test_strips_bom(): void
     {
-        $log = new EdiParser()->parse("\xEF\xBB\xBF" . $this->fixture());
+        $log = new EdiParser()->parse("\xEF\xBB\xBF".$this->fixture());
 
         $this->assertSame('OK2KJT', $log->header->pCall());
     }
@@ -75,7 +75,7 @@ class EdiParserTest extends TestCase
     public function test_converts_windows1250_to_utf8(): void
     {
         $utf8 = "[REG1TEST;1]\nPCall=OK1ABC\nRName=Tomáš Novák\n[QSORecords;1]\n"
-            . "260315;0800;OK1XYZ;1;59;001;59;001;;JN79AB;3;;;;\n[END;]\n";
+            ."260315;0800;OK1XYZ;1;59;001;59;001;;JN79AB;3;;;;\n[END;]\n";
         $win1250 = (string) iconv('UTF-8', 'Windows-1250', $utf8);
 
         // Pojistka: vstup opravdu není UTF-8.
@@ -101,9 +101,9 @@ class EdiParserTest extends TestCase
         // Deklarováno 3, ale jeden řádek má značku „ERROR" (vadné spojení).
         // Ten se ignoruje a počet QSO přesto sedí (3 = 2 platné + 1 ignorovaný).
         $edi = "[REG1TEST;1]\nPCall=OK1ABC\n[QSORecords;3]\n"
-            . "260315;0800;OK1XYZ;1;59;001;59;001;;JN79AB;3;;;;\n"
-            . "260315;;ERROR;1;59;002;;;;JN79AB;0;;;;\n"
-            . "260315;0802;OK2DEF;1;59;003;59;002;;JN89CD;2;;;;\n[END;]\n";
+            ."260315;0800;OK1XYZ;1;59;001;59;001;;JN79AB;3;;;;\n"
+            ."260315;;ERROR;1;59;002;;;;JN79AB;0;;;;\n"
+            ."260315;0802;OK2DEF;1;59;003;59;002;;JN89CD;2;;;;\n[END;]\n";
 
         $log = new EdiParser()->parse($edi);
 

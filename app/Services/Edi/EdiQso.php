@@ -27,13 +27,12 @@ final readonly class EdiQso
         public string $newWwl,
         public string $newDxcc,
         public string $duplicate,
-    ) {
-    }
+    ) {}
 
     /**
      * Vytvoří QSO z 15 zachycených skupin regexu (index 1..15 z preg_match).
      *
-     * @param array<int,string> $m
+     * @param  array<int,string>  $m
      */
     public static function fromMatch(array $m): self
     {

@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use Override;
+use App\Services\Scoring\ScoringService;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Override;
 
 /**
  * Záznam hlášení do závodu (řádek výsledkové listiny pro dané kolo).
@@ -43,7 +44,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property-read VkvpaKategorie|null $kategorie
  * @property-read Edihead|null $edihead
  *
- * Projekce z {@see \App\Services\Scoring\ScoringService::yearlyResults()}:
+ * Projekce z {@see ScoringService::yearlyResults()}:
  * @property-read int $kategorie_id
  * @property-read int|string $celkem
  */

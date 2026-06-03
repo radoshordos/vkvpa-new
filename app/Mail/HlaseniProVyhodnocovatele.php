@@ -35,7 +35,7 @@ class HlaseniProVyhodnocovatele extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: $this->hlaseni->znacka . ' ' . $this->koloNazev,
+            subject: $this->hlaseni->znacka.' '.$this->koloNazev,
         );
     }
 

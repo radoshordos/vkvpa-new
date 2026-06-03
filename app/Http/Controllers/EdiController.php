@@ -28,8 +28,7 @@ class EdiController extends Controller
         private readonly EdiImportService $importer,
         private readonly ScoringService $scoring,
         private readonly EdiReducer $reducer,
-    ) {
-    }
+    ) {}
 
     public function create(): View
     {
@@ -136,7 +135,7 @@ class EdiController extends Controller
 
         return response($content, 200, [
             'Content-Type' => 'text/plain; charset=utf-8',
-            'Content-Disposition' => 'inline; filename="' . $filename . '"',
+            'Content-Disposition' => 'inline; filename="'.$filename.'"',
         ]);
     }
 }

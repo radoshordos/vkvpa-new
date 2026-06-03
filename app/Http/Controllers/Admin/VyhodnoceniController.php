@@ -14,9 +14,7 @@ use Illuminate\Http\RedirectResponse;
  */
 class VyhodnoceniController extends Controller
 {
-    public function __construct(private readonly ScoringService $scoring)
-    {
-    }
+    public function __construct(private readonly ScoringService $scoring) {}
 
     /** Přepočítá pořadí v kole (vyhodnoceni.php). */
     public function vyhodnotit(VkvpaKola $kolo): RedirectResponse
@@ -24,7 +22,7 @@ class VyhodnoceniController extends Controller
         $this->scoring->rankRound($kolo->id);
 
         return redirect()->route('edit_kola')
-            ->with('announcement', 'Kolo „' . $kolo->nazev . '" vyhodnoceno.');
+            ->with('announcement', 'Kolo „'.$kolo->nazev.'" vyhodnoceno.');
     }
 
     /** Uzavře kolo (uzavreni.php) – přepočítá pořadí a nastaví vyhodnoceno. */
@@ -34,6 +32,6 @@ class VyhodnoceniController extends Controller
         $this->scoring->closeRound($kolo->id);
 
         return redirect()->route('edit_kola')
-            ->with('announcement', 'Kolo „' . $kolo->nazev . '" uzavřeno.');
+            ->with('announcement', 'Kolo „'.$kolo->nazev.'" uzavřeno.');
     }
 }

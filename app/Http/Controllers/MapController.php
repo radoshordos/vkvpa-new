@@ -27,7 +27,6 @@ use Illuminate\View\View;
  */
 class MapController extends Controller
 {
-
     /**
      * Mapa „M" – ježek.
      *

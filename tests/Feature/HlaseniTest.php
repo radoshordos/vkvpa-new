@@ -90,7 +90,7 @@ class HlaseniTest extends TestCase
 
     public function test_edi_upload_creates_reserved_row_and_session(): void
     {
-        $edi = (string) file_get_contents(__DIR__ . '/../fixtures/sample.edi');
+        $edi = (string) file_get_contents(__DIR__.'/../fixtures/sample.edi');
         $file = UploadedFile::fake()->createWithContent('02OK2KJT.edi', $edi);
 
         $resp = $this->post('/edi', ['upload' => $file])
@@ -107,7 +107,7 @@ class HlaseniTest extends TestCase
 
     public function test_duplicate_edi_upload_is_rejected(): void
     {
-        $edi = (string) file_get_contents(__DIR__ . '/../fixtures/sample.edi');
+        $edi = (string) file_get_contents(__DIR__.'/../fixtures/sample.edi');
 
         // První nahrání projde.
         $this->post('/edi', ['upload' => UploadedFile::fake()->createWithContent('a.edi', $edi)])

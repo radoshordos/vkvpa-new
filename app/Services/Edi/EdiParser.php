@@ -16,8 +16,8 @@ final class EdiParser
      */
     private const string QSO_PATTERN =
         '/^([0-9]+);([0-9]+);([0-9A-Z\/]+);([0-9]*);([0-9]+[AS]?);([0-9]+);'
-        . '([0-9]+[AS]?);([0-9]+);([0-9]*);([A-Z]{2}[0-9]{2}[A-Z]{2});([0-9]+);'
-        . '([A-Z0-9]*);([A-Z0-9]*);([A-Z0-9]*);([A-Z0-9]*)/';
+        .'([0-9]+[AS]?);([0-9]+);([0-9]*);([A-Z]{2}[0-9]{2}[A-Z]{2});([0-9]+);'
+        .'([A-Z0-9]*);([A-Z0-9]*);([A-Z0-9]*);([A-Z0-9]*)/';
 
     /**
      * Naparsuje obsah EDI souboru.
@@ -45,7 +45,7 @@ final class EdiParser
 
         foreach (preg_split('/\r\n|\r|\n/', $content) ?: [] as $line) {
             $buf = trim(str_replace("\xEF\xBB\xBF", '', $line));
-            $raw .= $buf . "\n";
+            $raw .= $buf."\n";
 
             if ($section === 'head' && preg_match('/^(.+)=(.*)$/', $buf, $m)) {
                 $fields[$m[1]] = $m[2];

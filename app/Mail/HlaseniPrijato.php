@@ -23,13 +23,12 @@ class HlaseniPrijato extends Mailable
         public readonly VkvpaData $hlaseni,
         public readonly string $koloNazev,
         public readonly string $kategorieNazev,
-    ) {
-    }
+    ) {}
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Přijetí hlášení VKV PA ' . $this->koloNazev,
+            subject: 'Přijetí hlášení VKV PA '.$this->koloNazev,
         );
     }
 

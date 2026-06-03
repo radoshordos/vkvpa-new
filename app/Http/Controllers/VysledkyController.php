@@ -16,9 +16,7 @@ use Illuminate\View\View;
  */
 class VysledkyController extends Controller
 {
-    public function __construct(private readonly ScoringService $scoring)
-    {
-    }
+    public function __construct(private readonly ScoringService $scoring) {}
 
     public function listina(Request $request): View
     {

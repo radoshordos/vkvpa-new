@@ -10,9 +10,9 @@ namespace App\Services\Edi;
 final readonly class EdiLog
 {
     /**
-     * @param list<EdiQso>  $qsos
-     * @param list<string>  $lineErrors   řádky v sekci QSO, které neodpovídaly formátu
-     * @param list<string>  $ignoredLines řádky vědomě přeskočené (značka „ERROR" z logovacího SW)
+     * @param  list<EdiQso>  $qsos
+     * @param  list<string>  $lineErrors  řádky v sekci QSO, které neodpovídaly formátu
+     * @param  list<string>  $ignoredLines  řádky vědomě přeskočené (značka „ERROR" z logovacího SW)
      */
     public function __construct(
         public EdiHeader $header,
@@ -21,8 +21,7 @@ final readonly class EdiLog
         public int $declaredTotal,
         public array $lineErrors = [],
         public array $ignoredLines = [],
-    ) {
-    }
+    ) {}
 
     public function qsoCount(): int
     {

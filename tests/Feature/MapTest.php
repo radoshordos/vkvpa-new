@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\MapController;
 use App\Models\Edihead;
 use App\Services\Edi\EdiImportService;
 use App\Services\Edi\EdiParser;
@@ -13,7 +14,7 @@ use Tests\TestCase;
 /**
  * Tři mapové pohledy: M (ježek), N (špendlíky), S (velké čtverce).
  *
- * @see \App\Http\Controllers\MapController
+ * @see MapController
  */
 class MapTest extends TestCase
 {
@@ -21,7 +22,7 @@ class MapTest extends TestCase
 
     private function importSample(): Edihead
     {
-        $edi = (string) file_get_contents(__DIR__ . '/../fixtures/sample.edi');
+        $edi = (string) file_get_contents(__DIR__.'/../fixtures/sample.edi');
 
         return new EdiImportService()->import(new EdiParser()->parse($edi));
     }

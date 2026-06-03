@@ -10,11 +10,9 @@ namespace App\Services\Edi;
 final readonly class EdiHeader
 {
     /**
-     * @param array<string,string> $fields syrová mapa klíč=hodnota
+     * @param  array<string,string>  $fields  syrová mapa klíč=hodnota
      */
-    public function __construct(public array $fields)
-    {
-    }
+    public function __construct(public array $fields) {}
 
     public function get(string $key, string $default = ''): string
     {

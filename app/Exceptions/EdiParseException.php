@@ -12,7 +12,7 @@ use RuntimeException;
 class EdiParseException extends RuntimeException
 {
     /**
-     * @param list<string> $lineErrors
+     * @param  list<string>  $lineErrors
      */
     public function __construct(string $message, public readonly array $lineErrors = [])
     {

@@ -11,7 +11,7 @@ namespace App\Support;
 final class Maidenhead
 {
     /**
-     * @return array{lat: float, lon: float}|null  null při neplatném lokátoru
+     * @return array{lat: float, lon: float}|null null při neplatném lokátoru
      */
     public static function toLatLon(string $locator): ?array
     {
@@ -40,7 +40,7 @@ final class Maidenhead
      * Střed velkého čtverce (4 znaky, např. „JN99") – plocha 2° zem. délky × 1° šířky.
      * Používá mapa „S" (počet protistanic v každém velkém čtverci = násobiči).
      *
-     * @return array{lat: float, lon: float}|null  null při neplatném čtverci
+     * @return array{lat: float, lon: float}|null null při neplatném čtverci
      */
     public static function bigSquareCenter(string $square): ?array
     {

@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-use App\Http\Controllers\MailImageController;
-use App\Http\Controllers\MapController;
-use App\Http\Controllers\Admin\VyhodnoceniController;
-use App\Http\Controllers\EdiController;
-use App\Http\Controllers\HlaseniController;
-use App\Http\Controllers\KolaController;
 use App\Http\Controllers\Admin\DenikyController;
 use App\Http\Controllers\Admin\ImportController;
 use App\Http\Controllers\Admin\KategorieController;
+use App\Http\Controllers\Admin\VyhodnoceniController;
 use App\Http\Controllers\Admin\ZaznamController;
+use App\Http\Controllers\EdiController;
+use App\Http\Controllers\HlaseniController;
+use App\Http\Controllers\KolaController;
+use App\Http\Controllers\MailImageController;
+use App\Http\Controllers\MapController;
 use App\Http\Controllers\VysledkyController;
 use Illuminate\Support\Facades\Route;
 
@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Route;
  * Legacy klíč ?str=X  →  pojmenovaná routa (name odpovídá klíči).
  */
 
-require __DIR__ . '/auth.php'; // Fáze 4
+require __DIR__.'/auth.php'; // Fáze 4
 
 // Výchozí stránka = formulář hlášení (legacy default $_GET['str']='edit_hlaseni').
 Route::get('/', [HlaseniController::class, 'index'])->name('edit_hlaseni');

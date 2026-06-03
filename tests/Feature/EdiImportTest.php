@@ -20,7 +20,7 @@ class EdiImportTest extends TestCase
 
     public function test_imports_header_and_lines(): void
     {
-        $edi = (string) file_get_contents(__DIR__ . '/../fixtures/sample.edi');
+        $edi = (string) file_get_contents(__DIR__.'/../fixtures/sample.edi');
 
         $log = new EdiParser()->parse($edi);
         $head = new EdiImportService()->import($log);

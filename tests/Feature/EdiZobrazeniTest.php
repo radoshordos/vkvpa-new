@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\EdiController;
 use App\Models\Edihead;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -11,7 +12,7 @@ use Tests\TestCase;
 /**
  * Zobrazení EDI deníku: akce EDI (původní) a EDIR (redukovaný na 08–11 UTC).
  *
- * @see \App\Http\Controllers\EdiController
+ * @see EdiController
  */
 class EdiZobrazeniTest extends TestCase
 {
@@ -26,7 +27,7 @@ class EdiZobrazeniTest extends TestCase
             '260315;0801;OK1A;1;59;001;59;001;;JN99BP;2;;;;', // 08:01 → v okně
             '260315;1200;OK1Z;1;59;002;59;002;;JN99BP;2;;;;', // 12:00 → mimo okno
             '[END;]',
-        ]) . "\n";
+        ])."\n";
 
         return Edihead::create([
             'TDate' => '20260315;20260315', 'PCall' => 'OK2KJT', 'PWWLo' => 'JN99AJ',

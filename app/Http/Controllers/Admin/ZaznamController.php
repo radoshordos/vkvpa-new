@@ -28,9 +28,7 @@ use Illuminate\Http\RedirectResponse;
  */
 class ZaznamController extends Controller
 {
-    public function __construct(private readonly ScoringService $scoring)
-    {
-    }
+    public function __construct(private readonly ScoringService $scoring) {}
 
     /**
      * Převezme záznam – tlačítko „P" ve výsledkové listině.
@@ -51,7 +49,7 @@ class ZaznamController extends Controller
 
         return redirect()
             ->route('vysledkova_listina', ['kolo' => $zaznam->id_kola])
-            ->with('announcement', 'Záznam „' . $zaznam->znacka . '" byl převzat.');
+            ->with('announcement', 'Záznam „'.$zaznam->znacka.'" byl převzat.');
     }
 
     /**
@@ -77,6 +75,6 @@ class ZaznamController extends Controller
 
         return redirect()
             ->route('vysledkova_listina', ['kolo' => $idKola])
-            ->with('announcement', 'Záznam „' . $znacka . '" byl smazán.');
+            ->with('announcement', 'Záznam „'.$znacka.'" byl smazán.');
     }
 }

@@ -18,12 +18,11 @@ use App\Support\ContestWindow;
  */
 final class EdiReducer
 {
-
     /**
      * Vrátí EDI text oříznutý jen na QSO uvnitř závodního okna.
      *
      * @param  string  $raw  původní obsah EDI souboru (sloupec `edihead.src`)
-     * @return string        platný EDI s přepočítaným počtem QSO
+     * @return string platný EDI s přepočítaným počtem QSO
      */
     public function reduce(string $raw): string
     {
@@ -39,9 +38,11 @@ final class EdiReducer
                 if (str_starts_with($buf, '[QSORecords;')) {
                     // Řádek s počtem QSO vložíme znovu níže s aktualizovaným číslem.
                     $state = 'records';
+
                     continue;
                 }
                 $head[] = $line;
+
                 continue;
             }
 
@@ -49,6 +50,7 @@ final class EdiReducer
                 if (str_starts_with($buf, '[END')) {
                     $state = 'tail';
                     $tail[] = $line;
+
                     continue;
                 }
                 if ($buf === '') {
@@ -59,13 +61,14 @@ final class EdiReducer
                 if ($this->inWindow($time)) {
                     $kept[] = $line;
                 }
+
                 continue;
             }
 
             $tail[] = $line;
         }
 
-        $out = [...$head, '[QSORecords;' . count($kept) . ']', ...$kept, ...$tail];
+        $out = [...$head, '[QSORecords;'.count($kept).']', ...$kept, ...$tail];
 
         return implode("\n", $out);
     }

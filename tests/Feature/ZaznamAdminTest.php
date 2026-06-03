@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\Admin\ZaznamController;
 use App\Models\User;
 use App\Models\VkvpaData;
 use App\Models\VkvpaKategorie;
@@ -15,7 +16,7 @@ use Tests\TestCase;
 /**
  * Admin akce nad záznamem výsledkové listiny: P (schválit) a X (smazat).
  *
- * @see \App\Http\Controllers\Admin\ZaznamController
+ * @see ZaznamController
  */
 class ZaznamAdminTest extends TestCase
 {

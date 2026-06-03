@@ -18,6 +18,5 @@ final readonly class EdiScore
         public int $pocet,
         public int $nasobice,
         public int $body,
-    ) {
-    }
+    ) {}
 }
