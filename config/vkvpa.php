@@ -10,4 +10,7 @@ return [
     'contact_name' => env('CONTACT_NAME', 'Míla OK1VUM'),
 
     'token_ttl_days' => 5,
+
+    // Od tohoto kola se hlášení bez EDI do ročního součtu nezapočítávají.
+    'non_edi_nullify_from_kolo' => 91,
 ];
