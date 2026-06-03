@@ -25,7 +25,8 @@ class StoreHlaseniRequest extends FormRequest
         if ($this->user()?->is_admin) {
             return true;
         }
-        $ownedId = (int) $this->session()->get('owned_data_id', 0);
+        $ownedIdRaw = $this->session()->get('owned_data_id', 0);
+        $ownedId = is_numeric($ownedIdRaw) ? (int) $ownedIdRaw : 0;
 
         return $ownedId > 0 && $idZaznamu === $ownedId;
     }
