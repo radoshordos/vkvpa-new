@@ -18,8 +18,11 @@ use Illuminate\View\View;
  */
 class AuthController extends Controller
 {
-    /** Dní platnosti přihlašovacího kódu. */
-    private const int TOKEN_TTL_DAYS = 5;
+    /** Dní platnosti přihlašovacího kódu – čte se z config('vkvpa.token_ttl_days'). */
+    private function tokenTtlDays(): int
+    {
+        return (int) config('vkvpa.token_ttl_days', 5);
+    }
 
     public function showLoginForm(Request $request): View|RedirectResponse
     {
@@ -60,7 +63,7 @@ class AuthController extends Controller
     public function loginViaToken(string $kod): RedirectResponse
     {
         VkvpaPrihlaseni::query()
-            ->where('time', '<', Carbon::now()->subDays(self::TOKEN_TTL_DAYS))
+            ->where('time', '<', Carbon::now()->subDays($this->tokenTtlDays()))
             ->delete();
 
         $token = VkvpaPrihlaseni::query()->where('kod', $kod)->first();
