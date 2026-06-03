@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Services\Scoring\ScoringService;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
 use Illuminate\Database\Eloquent\Model;
@@ -48,12 +49,16 @@ use Override;
  * @property-read int $kategorie_id
  * @property-read int|string $celkem
  */
+#[Fillable([
+    'id_kola', 'id_kategorie', 'qrp', 'lp', 'znacka', 'locator',
+    'pocet', 'bodu_za_qso', 'nasobice', 'body', 'jmeno', 'mail',
+    'telefon', 'poznamka', 'soapbox', 'ip', 'EDI', 'EDI_ID',
+    'poradi', 'schvaleno', 'odeslano', 'session_id',
+])]
 #[Table(name: 'vkvpa_data', key: 'id')]
 #[WithoutTimestamps]
 class VkvpaData extends Model
 {
-    #[Override]
-    protected $guarded = [];
 
     /** @return BelongsTo<VkvpaKola, $this> */
     public function kolo(): BelongsTo

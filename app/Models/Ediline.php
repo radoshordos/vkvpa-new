@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
 use Illuminate\Database\Eloquent\Model;
@@ -28,12 +29,17 @@ use Override;
  * @property float|null $lat
  * @property-read Edihead|null $head
  */
+#[Fillable([
+    'IDS', 'Date', 'Time', 'CallSign', 'Mode-code', 'Sent-RST',
+    'Sent QSO number', 'Received-RST', 'Received QSO number',
+    'Received exchange', 'Received-WWL', 'QSO-Points',
+    'New-Exchange-(N)', 'New-WWL-(N)', 'New-DXCC-(N)',
+    'Duplicate-QSO-(D)', 'sqr', 'lon', 'lat',
+])]
 #[Table(name: 'edilines', key: 'ID')]
 #[WithoutTimestamps]
 class Ediline extends Model
 {
-    #[Override]
-    protected $guarded = [];
 
     /**
      * Hlavička deníku, ke kterému spojení patří.

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
 use Illuminate\Database\Eloquent\Collection;
@@ -27,12 +28,15 @@ use Override;
  * @property Carbon|null $d_cas
  * @property-read Collection<int, Ediline> $lines
  */
+#[Fillable([
+    'id_kola', 'TDate', 'PCall', 'PWWLo', 'PSect', 'PBand',
+    'RName', 'REmai', 'RPhon', 'RHBBS', 'SPowe', 'STXEq', 'SAnte',
+    'src', 'Remarks', 'SRCR',
+])]
 #[Table(name: 'edihead', key: 'ID')]
 #[WithoutTimestamps]
 class Edihead extends Model
 {
-    #[Override]
-    protected $guarded = [];
 
     /**
      * Jednotlivá spojení (QSO) tohoto deníku.

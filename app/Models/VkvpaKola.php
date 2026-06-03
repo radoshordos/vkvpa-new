@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
@@ -27,12 +28,11 @@ use Override;
  * @property-read Collection<int, VkvpaData> $hlaseni
  * @property-read Collection<int, VkvpaDiskuse> $diskuse
  */
+#[Fillable(['datum_konani', 'datum_uzaverky', 'nazev', 'poznamka', 'vyhodnoceno', 'aktivni'])]
 #[Table(name: 'vkvpa_kola', key: 'id')]
 #[WithoutTimestamps]
 class VkvpaKola extends Model
 {
-    #[Override]
-    protected $guarded = [];
 
     /** @return HasMany<VkvpaData, $this> */
     public function hlaseni(): HasMany

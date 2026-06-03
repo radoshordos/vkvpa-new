@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Attributes\WithoutIncrementing;
 use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
 use Illuminate\Database\Eloquent\Model;
-use Override;
 
 /**
  * Konfigurace systému jako klíč–hodnota.
@@ -16,13 +16,12 @@ use Override;
  * @property string $cfg_key
  * @property string|null $cfg_value
  */
+#[Fillable(['cfg_key', 'cfg_value'])]
 #[Table(name: 'vkvpa_config', key: 'cfg_key', keyType: 'string')]
 #[WithoutIncrementing]
 #[WithoutTimestamps]
 class VkvpaConfig extends Model
 {
-    #[Override]
-    protected $guarded = [];
 
     /**
      * Pohodlné načtení hodnoty konfigurace s výchozí hodnotou.

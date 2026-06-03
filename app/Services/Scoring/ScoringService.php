@@ -18,9 +18,6 @@ use Illuminate\Support\Facades\DB;
  */
 final class ScoringService
 {
-    /** Od tohoto kola se hlášení bez EDI do ročního součtu nezapočítávají. */
-    private const int NON_EDI_NULLIFY_FROM_KOLO = 91;
-
     /**
      * Přidělí pořadí (`poradi`) v rámci každé kategorie kola (husté: shoda = stejné).
      */
@@ -33,17 +30,23 @@ final class ScoringService
                     ->where('schvaleno', true)
                     ->where('id_kategorie', $kategorieId)
                     ->orderByDesc('body')
-                    ->get();
+                    ->get(['id', 'body']);
 
+                // Collect IDs grouped by rank first, then batch-update to avoid N+1.
                 $counter = 0;
                 $prevBody = null;
+                /** @var array<int, int[]> $byRank */
+                $byRank = [];
                 foreach ($entries as $entry) {
                     if ($entry->body !== $prevBody) {
                         $counter++;
+                        $prevBody = $entry->body;
                     }
+                    $byRank[$counter][] = $entry->id;
+                }
 
-                    $entry->update(['poradi' => $counter]);
-                    $prevBody = $entry->body;
+                foreach ($byRank as $rank => $ids) {
+                    VkvpaData::query()->whereIn('id', $ids)->update(['poradi' => $rank]);
                 }
             }
         });
@@ -120,7 +123,7 @@ final class ScoringService
             ->selectRaw('vkvpa_data.id_kategorie as kategorie_id, vkvpa_data.znacka')
             ->selectRaw(
                 'SUM(CASE WHEN vkvpa_data.EDI_ID = 0 AND vkvpa_data.id_kola >= ? THEN 0 ELSE vkvpa_data.body END) as celkem',
-                [self::NON_EDI_NULLIFY_FROM_KOLO],
+                [(int) config('vkvpa.non_edi_nullify_from_kolo', 91)],
             )
             ->groupBy('vkvpa_data.id_kategorie', 'vkvpa_data.znacka')
             ->orderByDesc('celkem');
