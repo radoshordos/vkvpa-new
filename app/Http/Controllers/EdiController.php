@@ -11,6 +11,7 @@ use App\Models\VkvpaData;
 use App\Services\Edi\CategoryResolver;
 use App\Services\Edi\EdiImportService;
 use App\Services\Edi\EdiParser;
+use App\Services\Edi\EdiQso;
 use App\Services\Edi\EdiReducer;
 use App\Services\Scoring\ScoringService;
 use Illuminate\Http\RedirectResponse;
@@ -56,6 +57,24 @@ class EdiController extends Controller
 
         $h = $log->header;
         $pcall = $h->pCall();
+
+        // Den závodu (YYMMDD) z hlavičky TDate – stejná konvence jako ScoringService::scoreEdi().
+        // Když ani jedno spojení není z tohoto dne, je TDate v hlavičce chybné a skóre by se
+        // počítalo z nuly QSO (pocet=0, nasobice=1, body=0). Takový deník odmítneme, ať odesílatel
+        // TDate opraví a nahraje znovu – jinak se mu uloží nulové body bez varování.
+        $tdateDay = substr(trim($h->tDate()), 2, 6);
+        $qsoDays = array_values(array_unique(array_map(static fn (EdiQso $q): string => $q->date, $log->qsos)));
+        if ($tdateDay !== '' && $qsoDays !== [] && ! in_array($tdateDay, $qsoDays, true)) {
+            return back()->withErrors([
+                'upload' => sprintf(
+                    'Datum závodu v hlavičce deníku (TDate=%s) neodpovídá datům spojení (%s). '
+                    .'Oprav prosím TDate v hlavičce EDI souboru a nahraj ho znovu.',
+                    $h->tDate(),
+                    implode(', ', array_map($this->formatEdiDate(...), array_slice($qsoDays, 0, 3))),
+                ),
+            ]);
+        }
+
         $idKola = $this->scoring->koloForTDate($h->tDate()) ?? 0;
 
         // Duplicitní deník: stejná značka už má pro toto kolo nahraný EDI deník.
@@ -150,5 +169,13 @@ class EdiController extends Controller
             'Content-Type' => 'text/plain; charset=utf-8',
             'Content-Disposition' => 'inline; filename="'.$filename.'"',
         ]);
+    }
+
+    /** Datum spojení YYMMDD (např. „260118") → čitelné „18.01.2026" do chybové hlášky. */
+    private function formatEdiDate(string $yymmdd): string
+    {
+        return strlen($yymmdd) === 6
+            ? sprintf('%s.%s.20%s', substr($yymmdd, 4, 2), substr($yymmdd, 2, 2), substr($yymmdd, 0, 2))
+            : $yymmdd;
     }
 }
