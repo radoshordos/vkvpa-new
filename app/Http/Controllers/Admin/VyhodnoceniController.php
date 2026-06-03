@@ -25,8 +25,8 @@ class VyhodnoceniController extends Controller
 
         Log::info('admin.kolo.vyhodnotit', [
             'kolo_id' => $kolo->id,
-            'nazev'   => $kolo->nazev,
-            'admin'   => Auth::user()?->name,
+            'nazev' => $kolo->nazev,
+            'admin' => Auth::user()?->name,
         ]);
 
         return redirect()->route('edit_kola')
@@ -41,8 +41,8 @@ class VyhodnoceniController extends Controller
 
         Log::info('admin.kolo.uzavrit', [
             'kolo_id' => $kolo->id,
-            'nazev'   => $kolo->nazev,
-            'admin'   => Auth::user()?->name,
+            'nazev' => $kolo->nazev,
+            'admin' => Auth::user()?->name,
         ]);
 
         return redirect()->route('edit_kola')

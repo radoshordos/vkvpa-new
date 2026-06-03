@@ -33,7 +33,6 @@ use Override;
 #[WithoutTimestamps]
 class VkvpaKola extends Model
 {
-
     /** @return HasMany<VkvpaData, $this> */
     public function hlaseni(): HasMany
     {

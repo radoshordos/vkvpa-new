@@ -59,7 +59,6 @@ use Override;
 #[WithoutTimestamps]
 class VkvpaData extends Model
 {
-
     /** @return BelongsTo<VkvpaKola, $this> */
     public function kolo(): BelongsTo
     {

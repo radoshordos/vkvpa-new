@@ -48,9 +48,9 @@ class ZaznamController extends Controller
 
         Log::info('admin.zaznam.prevzit', [
             'zaznam_id' => $zaznam->id,
-            'znacka'    => $zaznam->znacka,
-            'kolo_id'   => $zaznam->id_kola,
-            'admin'     => Auth::user()?->name,
+            'znacka' => $zaznam->znacka,
+            'kolo_id' => $zaznam->id_kola,
+            'admin' => Auth::user()?->name,
         ]);
 
         // Přepočet pořadí kola – množina převzatých (zveřejněných) záznamů se změnila.
@@ -81,9 +81,9 @@ class ZaznamController extends Controller
 
         Log::info('admin.zaznam.smazat', [
             'zaznam_id' => $zaznam->id,
-            'znacka'    => $znacka,
-            'kolo_id'   => $idKola,
-            'admin'     => Auth::user()?->name,
+            'znacka' => $znacka,
+            'kolo_id' => $idKola,
+            'admin' => Auth::user()?->name,
         ]);
 
         // Přepočet pořadí kola – ze žebříčku zmizel jeden záznam.

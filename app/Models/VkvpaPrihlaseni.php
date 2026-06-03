@@ -18,7 +18,6 @@ use Override;
 #[WithoutTimestamps]
 class VkvpaPrihlaseni extends Model
 {
-
     #[Override]
     protected function casts(): array
     {

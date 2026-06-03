@@ -17,6 +17,6 @@ return [
     // Závodní časové okno (UTC, formát HHMM). QSO mimo se nezapočítávají.
     'contest_window' => [
         'from' => '0800',
-        'to'   => '1100',
+        'to' => '1100',
     ],
 ];

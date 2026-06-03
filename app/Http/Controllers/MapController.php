@@ -72,13 +72,13 @@ class MapController extends Controller
         $home = Maidenhead::toLatLon((string) $head->PWWLo);
 
         return view('pages.map', [
-            'active'   => '',
-            'mode'     => $mode,
-            'pcall'    => (string) $head->PCall,
-            'homeLoc'  => (string) $head->PWWLo,
-            'home'     => $home,
-            'points'   => $withPoints ? $this->points($head, $home) : collect(),
-            'squares'  => $withPoints ? collect() : $this->squares($head),
+            'active' => '',
+            'mode' => $mode,
+            'pcall' => (string) $head->PCall,
+            'homeLoc' => (string) $head->PWWLo,
+            'home' => $home,
+            'points' => $withPoints ? $this->points($head, $home) : collect(),
+            'squares' => $withPoints ? collect() : $this->squares($head),
         ]);
     }
 

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Models\VkvpaKola;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Override;
 
@@ -16,7 +18,26 @@ class StoreHlaseniRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $idZaznamu = $this->integer('id_zaznamu');
+        if ($idZaznamu === 0) {
+            return true;
+        }
+        if ($this->user()?->is_admin) {
+            return true;
+        }
+        $ownedId = (int) $this->session()->get('owned_data_id', 0);
+
+        return $ownedId > 0 && $idZaznamu === $ownedId;
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $v): void {
+            $koloId = $this->integer('kolo');
+            if ($koloId > 0 && ! $this->user()?->is_admin && ! VkvpaKola::jeAktivni($koloId)) {
+                $v->errors()->add('kolo', 'Do tohoto kola nelze odeslat hlášení – není aktivní. / Period is not active.');
+            }
+        });
     }
 
     #[Override]
