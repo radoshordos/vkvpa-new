@@ -9,7 +9,7 @@ Webový systém pre správu a vyhodnocovanie závodov v pásme VKV (Very High Fr
 - **Databáza**: MySQL 8.0
 - **Kontajnerizácia**: Docker + Docker Compose
 - **Testovanie**: PHPUnit 12 / Pest
-- **Statická analýza**: PHPStan, Pint, Rector
+- **Statická analýza**: PHPStan, Pint
 
 ## Funkcie
 
