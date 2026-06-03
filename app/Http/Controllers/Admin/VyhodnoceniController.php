@@ -8,6 +8,8 @@ use App\Http\Controllers\Controller;
 use App\Models\VkvpaKola;
 use App\Services\Scoring\ScoringService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Vyhodnocení a uzávěrka kola – admin.
@@ -21,6 +23,12 @@ class VyhodnoceniController extends Controller
     {
         $this->scoring->rankRound($kolo->id);
 
+        Log::info('admin.kolo.vyhodnotit', [
+            'kolo_id' => $kolo->id,
+            'nazev'   => $kolo->nazev,
+            'admin'   => Auth::user()?->name,
+        ]);
+
         return redirect()->route('edit_kola')
             ->with('announcement', 'Kolo „'.$kolo->nazev.'" vyhodnoceno.');
     }
@@ -30,6 +38,12 @@ class VyhodnoceniController extends Controller
     {
         $this->scoring->rankRound($kolo->id);
         $this->scoring->closeRound($kolo->id);
+
+        Log::info('admin.kolo.uzavrit', [
+            'kolo_id' => $kolo->id,
+            'nazev'   => $kolo->nazev,
+            'admin'   => Auth::user()?->name,
+        ]);
 
         return redirect()->route('edit_kola')
             ->with('announcement', 'Kolo „'.$kolo->nazev.'" uzavřeno.');

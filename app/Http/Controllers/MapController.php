@@ -35,17 +35,7 @@ class MapController extends Controller
      */
     public function jezek(Edihead $head): View
     {
-        $home = $this->home($head);
-
-        return view('pages.map', [
-            'active' => '',
-            'mode' => 'jezek',
-            'pcall' => (string) $head->PCall,
-            'homeLoc' => (string) $head->PWWLo,
-            'home' => $home,
-            'points' => $this->points($head, $home),
-            'squares' => collect(),
-        ]);
+        return $this->mapView($head, 'jezek');
     }
 
     /**
@@ -57,17 +47,7 @@ class MapController extends Controller
      */
     public function spendliky(Edihead $head): View
     {
-        $home = $this->home($head);
-
-        return view('pages.map', [
-            'active' => '',
-            'mode' => 'spendliky',
-            'pcall' => (string) $head->PCall,
-            'homeLoc' => (string) $head->PWWLo,
-            'home' => $home,
-            'points' => $this->points($head, $home),
-            'squares' => collect(),
-        ]);
+        return $this->mapView($head, 'spendliky');
     }
 
     /**
@@ -79,27 +59,27 @@ class MapController extends Controller
      */
     public function lokatory(Edihead $head): View
     {
-        $home = $this->home($head);
-
-        return view('pages.map', [
-            'active' => '',
-            'mode' => 'lokatory',
-            'pcall' => (string) $head->PCall,
-            'homeLoc' => (string) $head->PWWLo,
-            'home' => $home,
-            'points' => collect(),
-            'squares' => $this->squares($head),
-        ]);
+        return $this->mapView($head, 'lokatory', withPoints: false);
     }
 
     /**
-     * Souřadnice domácího QTH (z lokátoru hlavičky PWWLo).
+     * Společná logika pro sestavení dat mapového pohledu.
      *
-     * @return array{lat: float, lon: float}|null
+     * @param  bool  $withPoints  true = body protistanic (jezek/spendliky), false = velké čtverce (lokatory)
      */
-    private function home(Edihead $head): ?array
+    private function mapView(Edihead $head, string $mode, bool $withPoints = true): View
     {
-        return Maidenhead::toLatLon((string) $head->PWWLo);
+        $home = Maidenhead::toLatLon((string) $head->PWWLo);
+
+        return view('pages.map', [
+            'active'   => '',
+            'mode'     => $mode,
+            'pcall'    => (string) $head->PCall,
+            'homeLoc'  => (string) $head->PWWLo,
+            'home'     => $home,
+            'points'   => $withPoints ? $this->points($head, $home) : collect(),
+            'squares'  => $withPoints ? collect() : $this->squares($head),
+        ]);
     }
 
     /**
@@ -111,7 +91,7 @@ class MapController extends Controller
     private function points(Edihead $head, ?array $home): Collection
     {
         return $head->lines()
-            ->whereBetween('Time', [ContestWindow::FROM, ContestWindow::TO])
+            ->whereBetween('Time', [ContestWindow::from(), ContestWindow::to()])
             ->orderBy('Received-WWL')
             ->get(['lon', 'lat', 'CallSign', 'Received-WWL', 'QSO-Points'])
             ->map(function ($l) use ($home): ?array {
@@ -154,7 +134,7 @@ class MapController extends Controller
     private function squares(Edihead $head): Collection
     {
         $counts = [];
-        foreach ($head->lines()->whereBetween('Time', [ContestWindow::FROM, ContestWindow::TO])->get(['Received-WWL']) as $l) {
+        foreach ($head->lines()->whereBetween('Time', [ContestWindow::from(), ContestWindow::to()])->get(['Received-WWL']) as $l) {
             $sq = strtoupper(substr(trim((string) $l->{'Received-WWL'}), 0, 4));
             if (preg_match('/^[A-R]{2}\d{2}$/', $sq)) {
                 $counts[$sq] = ($counts[$sq] ?? 0) + 1;

@@ -8,6 +8,8 @@ use App\Http\Controllers\Controller;
 use App\Models\VkvpaData;
 use App\Services\Scoring\ScoringService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Admin akce nad jedním záznamem výsledkové listiny (řádkem hlášení `vkvpa_data`).
@@ -44,6 +46,13 @@ class ZaznamController extends Controller
     {
         $zaznam->update(['schvaleno' => true]);
 
+        Log::info('admin.zaznam.prevzit', [
+            'zaznam_id' => $zaznam->id,
+            'znacka'    => $zaznam->znacka,
+            'kolo_id'   => $zaznam->id_kola,
+            'admin'     => Auth::user()?->name,
+        ]);
+
         // Přepočet pořadí kola – množina převzatých (zveřejněných) záznamů se změnila.
         $this->scoring->rankRound($zaznam->id_kola);
 
@@ -69,6 +78,13 @@ class ZaznamController extends Controller
         $znacka = $zaznam->znacka;
 
         $zaznam->delete();
+
+        Log::info('admin.zaznam.smazat', [
+            'zaznam_id' => $zaznam->id,
+            'znacka'    => $znacka,
+            'kolo_id'   => $idKola,
+            'admin'     => Auth::user()?->name,
+        ]);
 
         // Přepočet pořadí kola – ze žebříčku zmizel jeden záznam.
         $this->scoring->rankRound($idKola);
