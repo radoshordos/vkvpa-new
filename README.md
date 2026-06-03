@@ -51,8 +51,21 @@ composer setup
 docker compose up -d
 
 # Inicializácia projektu v kontajneri
-docker compose exec app composer setup
+docker compose exec web composer setup
 ```
+
+> **DB_HOST**: v `.env` nastav `DB_HOST=db` (nie `127.0.0.1`).
+
+#### Ochrana Adminera
+
+Adminer (správa databázy) je chránený HTTP Basic Auth. Pred spustením vytvor súbor `.htpasswd` v koreňovom adresári projektu:
+
+```bash
+# htpasswd je súčasťou balíčka apache2-utils / httpd-tools
+htpasswd -c .htpasswd admin
+```
+
+Súbor `.htpasswd` je v `.gitignore` – **nikdy ho necommituj**.
 
 ### Konfigurácia `.env`
 

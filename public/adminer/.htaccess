@@ -1,0 +1,4 @@
+AuthType Basic
+AuthName "Database Admin"
+AuthUserFile /var/www/html/.htpasswd
+Require valid-user
