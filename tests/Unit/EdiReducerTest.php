@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit;
 
 use App\Services\Edi\EdiReducer;
-use PHPUnit\Framework\TestCase;
+use Tests\TestCase;
 
 /**
  * Ořez EDI na závodní okno 08:00–11:00 UTC (podklad pro akci EDIR).

@@ -72,7 +72,7 @@ class EdiController extends Controller
             'znacka' => $h->pCall(),
             'locator' => $h->pWWLo(),
             'jmeno' => $h->rName(),
-            'mail' => $h->rHBBS() !== '' ? $h->rHBBS() : $h->get('REmai'),
+            'mail' => $h->rEmail(),
             'telefon' => $h->rPhon(),
             'soapbox' => $h->get('RSoap'),
             'pocet' => $score->pocet,

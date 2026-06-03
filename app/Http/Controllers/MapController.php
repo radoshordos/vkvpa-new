@@ -80,7 +80,17 @@ class MapController extends Controller
      */
     public function lokatory(Edihead $head): View
     {
-        $home = $this->home($head);
+        return $this->mapView($head, 'lokatory', withPoints: false);
+    }
+
+    /**
+     * Společná logika pro sestavení dat mapového pohledu.
+     *
+     * @param  bool  $withPoints  true = body protistanic (jezek/spendliky), false = velké čtverce (lokatory)
+     */
+    private function mapView(Edihead $head, string $mode, bool $withPoints = true): View
+    {
+        $home = Maidenhead::toLatLon((string) $head->PWWLo);
 
         return view('pages.map', [
             'active' => '',
@@ -88,19 +98,9 @@ class MapController extends Controller
             'pcall' => (string) $head->PCall,
             'homeLoc' => (string) $head->PWWLo,
             'home' => $home,
-            'points' => collect(),
-            'squares' => $this->squares($head),
+            'points' => $withPoints ? $this->points($head, $home) : collect(),
+            'squares' => $withPoints ? collect() : $this->squares($head),
         ]);
-    }
-
-    /**
-     * Souřadnice domácího QTH (z lokátoru hlavičky PWWLo).
-     *
-     * @return array{lat: float, lon: float}|null
-     */
-    private function home(Edihead $head): ?array
-    {
-        return Maidenhead::toLatLon((string) $head->PWWLo);
     }
 
     /**
@@ -112,7 +112,7 @@ class MapController extends Controller
     private function points(Edihead $head, ?array $home): Collection
     {
         return $head->lines()
-            ->whereBetween('Time', [ContestWindow::FROM, ContestWindow::TO])
+            ->whereBetween('Time', [ContestWindow::from(), ContestWindow::to()])
             ->orderBy('Received-WWL')
             ->get(['lon', 'lat', 'CallSign', 'Received-WWL', 'QSO-Points'])
             ->map(function ($l) use ($home): ?array {
@@ -155,7 +155,7 @@ class MapController extends Controller
     private function squares(Edihead $head): Collection
     {
         $counts = [];
-        foreach ($head->lines()->whereBetween('Time', [ContestWindow::FROM, ContestWindow::TO])->get(['Received-WWL']) as $l) {
+        foreach ($head->lines()->whereBetween('Time', [ContestWindow::from(), ContestWindow::to()])->get(['Received-WWL']) as $l) {
             $sq = strtoupper(substr(trim((string) $l->{'Received-WWL'}), 0, 4));
             if (preg_match('/^[A-R]{2}\d{2}$/', $sq)) {
                 $counts[$sq] = ($counts[$sq] ?? 0) + 1;

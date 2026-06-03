@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Models\Edihead;
+use App\Models\User;
 use App\Models\VkvpaData;
 use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class HlaseniTest extends TestCase
@@ -134,6 +136,45 @@ class HlaseniTest extends TestCase
         $this->post('/hlaseni', $this->payload($kolo->id, $kat->id))
             ->assertSessionHasErrors('kolo');
         $this->assertSame(0, VkvpaData::count());
+    }
+
+    public function test_admin_can_edit_any_record(): void
+    {
+        [$kolo, $kat] = $this->prepare();
+        $existing = VkvpaData::create([
+            'id_kola' => $kolo->id, 'id_kategorie' => $kat->id, 'znacka' => 'OK1OLD',
+            'locator' => 'JO70AA', 'mail' => 'x@y.cz', 'pocet' => 1, 'nasobice' => 1, 'body' => 1,
+            'schvaleno' => true,
+        ]);
+        $admin = User::create(['name' => 'Admin', 'password' => Hash::make('x'), 'is_admin' => true]);
+
+        $payload = $this->payload($kolo->id, $kat->id);
+        $payload['id_zaznamu'] = $existing->id;
+
+        $this->actingAs($admin)
+            ->post('/hlaseni', $payload)
+            ->assertRedirect(route('vysledkova_listina', ['kolo' => $kolo->id]));
+
+        $this->assertSame('OK2KJT', $existing->refresh()->znacka); // 'ok2kjt' → uppercase
+    }
+
+    public function test_session_owner_can_edit_their_own_record(): void
+    {
+        [$kolo, $kat] = $this->prepare();
+        $existing = VkvpaData::create([
+            'id_kola' => $kolo->id, 'id_kategorie' => $kat->id, 'znacka' => 'OK1OLD',
+            'locator' => 'JO70AA', 'mail' => 'x@y.cz', 'pocet' => 1, 'nasobice' => 1, 'body' => 1,
+            'schvaleno' => true,
+        ]);
+
+        $payload = $this->payload($kolo->id, $kat->id);
+        $payload['id_zaznamu'] = $existing->id;
+
+        $this->withSession(['owned_data_id' => $existing->id])
+            ->post('/hlaseni', $payload)
+            ->assertRedirect(route('vysledkova_listina', ['kolo' => $kolo->id]));
+
+        $this->assertSame('OK2KJT', $existing->refresh()->znacka);
     }
 
     public function test_admin_routes_require_login(): void

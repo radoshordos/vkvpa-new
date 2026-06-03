@@ -57,19 +57,6 @@ class HlaseniController extends Controller
     {
         $v = $request->validated();
         $idZaznamu = $this->intFrom($v['id_zaznamu'] ?? 0);
-        $ownedId = $this->intFrom($request->session()->get('owned_data_id', 0));
-
-        // Hlášení lze odeslat jen do aktivního kola (admin má výjimku).
-        if (! ($request->user()?->is_admin) && ! VkvpaKola::jeAktivni($this->intFrom($v['kolo']))) {
-            return back()->withInput()->withErrors([
-                'kolo' => 'Do tohoto kola nelze odeslat hlášení – není aktivní. / Period is not active.',
-            ]);
-        }
-
-        // Editovat existující smí admin, nebo autor čerstvého importu (vlastní řádek v session).
-        if ($idZaznamu > 0 && ! ($request->user()?->is_admin) && $idZaznamu !== $ownedId) {
-            abort(403, 'Úpravu tohoto hlášení může provést jen administrátor.');
-        }
 
         $payload = [
             'id_kola' => $this->intFrom($v['kolo']),

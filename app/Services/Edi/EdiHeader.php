@@ -55,6 +55,15 @@ final readonly class EdiHeader
         return $this->get('RHBBS');
     }
 
+    /**
+     * E-mail pro kontakt – primárně RHBBS, záloha pole REmai.
+     * REG1TEST ukládá e-mail do RHBBS; starší deníky používají REmai.
+     */
+    public function rEmail(): string
+    {
+        return $this->rHBBS() !== '' ? $this->rHBBS() : $this->get('REmai');
+    }
+
     public function tDate(): string
     {
         return $this->get('TDate');

@@ -75,7 +75,7 @@ final class ScoringService
         $den = substr(trim((string) $head->TDate), 2, 6);
 
         $squares = $head->lines()
-            ->whereBetween('Time', [ContestWindow::FROM, ContestWindow::TO])
+            ->whereBetween('Time', [ContestWindow::from(), ContestWindow::to()])
             ->when($den !== '', fn ($q) => $q->where('Date', $den))
             ->get(['Received-WWL'])
             ->map(static fn ($l): string => strtoupper(substr(trim((string) $l->{'Received-WWL'}), 0, 4)))

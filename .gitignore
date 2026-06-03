@@ -26,6 +26,9 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+*.sqlite
+*.sqlite3
+/digipa
 /.env
 /.env.backup
 /.phpunit.result.cache

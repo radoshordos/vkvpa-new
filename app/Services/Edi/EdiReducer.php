@@ -78,6 +78,6 @@ final class EdiReducer
     {
         $hhmm = substr(trim($time), 0, 4);
 
-        return strlen($hhmm) === 4 && $hhmm >= ContestWindow::FROM && $hhmm <= ContestWindow::TO;
+        return strlen($hhmm) === 4 && $hhmm >= ContestWindow::from() && $hhmm <= ContestWindow::to();
     }
 }

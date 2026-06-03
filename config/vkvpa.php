@@ -13,4 +13,10 @@ return [
 
     // Od tohoto kola se hlášení bez EDI do ročního součtu nezapočítávají.
     'non_edi_nullify_from_kolo' => 91,
+
+    // Závodní časové okno (UTC, formát HHMM). QSO mimo se nezapočítávají.
+    'contest_window' => [
+        'from' => '0800',
+        'to' => '1100',
+    ],
 ];
