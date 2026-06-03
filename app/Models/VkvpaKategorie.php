@@ -19,7 +19,6 @@ use Override;
 #[WithoutTimestamps]
 class VkvpaKategorie extends Model
 {
-
     /** @return HasMany<VkvpaData, $this> */
     public function hlaseni(): HasMany
     {

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Enums\MapMode;
 use App\Models\Edihead;
 use App\Support\ContestWindow;
 use App\Support\Maidenhead;
@@ -39,7 +40,7 @@ class MapController extends Controller
 
         return view('pages.map', [
             'active' => '',
-            'mode' => 'jezek',
+            'mode' => MapMode::Jezek,
             'pcall' => (string) $head->PCall,
             'homeLoc' => (string) $head->PWWLo,
             'home' => $home,
@@ -61,7 +62,7 @@ class MapController extends Controller
 
         return view('pages.map', [
             'active' => '',
-            'mode' => 'spendliky',
+            'mode' => MapMode::Spendliky,
             'pcall' => (string) $head->PCall,
             'homeLoc' => (string) $head->PWWLo,
             'home' => $home,
@@ -83,7 +84,7 @@ class MapController extends Controller
 
         return view('pages.map', [
             'active' => '',
-            'mode' => 'lokatory',
+            'mode' => MapMode::Lokatory,
             'pcall' => (string) $head->PCall,
             'homeLoc' => (string) $head->PWWLo,
             'home' => $home,
