@@ -11,6 +11,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Config;
 use Illuminate\View\View;
 
 /**
@@ -21,7 +22,7 @@ class AuthController extends Controller
     /** Dní platnosti přihlašovacího kódu – čte se z config('vkvpa.token_ttl_days'). */
     private function tokenTtlDays(): int
     {
-        return (int) config('vkvpa.token_ttl_days', 5);
+        return Config::integer('vkvpa.token_ttl_days', 5);
     }
 
     public function showLoginForm(Request $request): View|RedirectResponse
@@ -35,13 +36,16 @@ class AuthController extends Controller
 
     public function login(Request $request): RedirectResponse
     {
-        $credentials = $request->validate([
+        $request->validate([
             'username' => ['required', 'string', 'max:255'],
             'heslo' => ['required', 'string'],
         ]);
 
+        $username = $request->string('username')->value();
+        $heslo = $request->string('heslo')->value();
+
         $ok = Auth::attempt(
-            ['name' => $credentials['username'], 'password' => $credentials['heslo']],
+            ['name' => $username, 'password' => $heslo],
             $request->boolean('remember'),
         );
 
@@ -52,7 +56,7 @@ class AuthController extends Controller
         }
 
         $request->session()->regenerate();
-        $request->session()->put('prihlasen', $credentials['username']);
+        $request->session()->put('prihlasen', $username);
 
         return redirect()->intended('/');
     }

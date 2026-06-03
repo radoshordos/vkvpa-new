@@ -4,7 +4,7 @@ includes:
     - vendor/larastan/larastan/extension.neon
 
 parameters:
-    level: 9
+    level: 10
 
     paths:
         - app
@@ -15,12 +15,3 @@ parameters:
 
     excludePaths:
         - database/source_sql/*
-
-    ignoreErrors:
-        # Ediline má sloupce s nestandardními názvy ('Mode-code', 'Received-WWL',
-        # 'Sent QSO number'…), které nelze zapsat jako @property (nejsou to platné
-        # PHP identifikátory). Přistupuje se k nim dynamicky: $line->{'Received-WWL'}.
-        - identifier: property.notFound
-          paths:
-            - app/Services/Scoring/ScoringService.php
-            - app/Http/Controllers/MapController.php

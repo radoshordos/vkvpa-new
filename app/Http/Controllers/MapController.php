@@ -90,7 +90,7 @@ class MapController extends Controller
      */
     private function mapView(Edihead $head, string $mode, bool $withPoints = true): View
     {
-        $home = Maidenhead::toLatLon((string) $head->PWWLo);
+        $home = $this->home($head);
 
         return view('pages.map', [
             'active' => '',
@@ -101,6 +101,16 @@ class MapController extends Controller
             'points' => $withPoints ? $this->points($head, $home) : collect(),
             'squares' => $withPoints ? collect() : $this->squares($head),
         ]);
+    }
+
+    /**
+     * Souřadnice domácího stanoviště (střed lokátoru z hlavičky), nebo null.
+     *
+     * @return array{lat: float, lon: float}|null
+     */
+    private function home(Edihead $head): ?array
+    {
+        return Maidenhead::toLatLon((string) $head->PWWLo);
     }
 
     /**

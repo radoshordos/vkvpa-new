@@ -21,7 +21,9 @@ use Override;
  *
  * @property int $ID
  * @property int|null $id_kola
+ * @property string $TDate
  * @property string $PCall
+ * @property string $PWWLo
  * @property int $SPowe
  * @property string|null $src
  * @property Carbon|null $stamp
