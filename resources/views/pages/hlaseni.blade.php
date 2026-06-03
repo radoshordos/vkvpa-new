@@ -1,6 +1,5 @@
 {{--
-    Hlášení (sladěno s edit_hlaseni.php v4.1.3 + tpl_form_edi.php + tpl_form_manual.php).
-    Nahoře EDI upload box; ruční formulář se zobrazí jen když $showManual.
+    Hlášení. Nahoře EDI upload box; ruční formulář se zobrazí jen když $showManual.
     Pod tím průběžné výsledky vybraného kola.
 --}}
 @extends('layouts.app')

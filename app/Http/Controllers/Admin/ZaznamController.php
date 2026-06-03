@@ -12,7 +12,7 @@ use Illuminate\Http\RedirectResponse;
 /**
  * Admin akce nad jedním záznamem výsledkové listiny (řádkem hlášení `vkvpa_data`).
  *
- * Pokrývá tlačítka ze sloupce „Akce / EDI" v legacy vysledky.php:
+ * Pokrývá tlačítka ze sloupce „Akce / EDI":
  *   P – PŘEVZÍT záznam (vyhodnocovatel ho viděl)  → {@see prevzit()}
  *   X – smazat záznam                             → {@see smazat()}
  * (U = úprava je řešena přes HlaseniController::index s ?id a HlaseniController::store.)

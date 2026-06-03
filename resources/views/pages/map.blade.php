@@ -1,5 +1,5 @@
 {{--
-    Mapové pohledy na spojení (Fáze 9) – Leaflet 1.9.4, nahrazuje map*.php.
+    Mapové pohledy na spojení – Leaflet 1.9.4.
 
     Jeden šablonový soubor obsluhuje tři režimy ($mode) ze tří akcí MapController:
       jezek     (M) – QTH uprostřed, čáry (paprsky) do protistanic

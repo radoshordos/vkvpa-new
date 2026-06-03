@@ -11,8 +11,7 @@ use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
 /**
- * Mapové pohledy na spojení stanice (Fáze 9). Sjednocuje legacy map*.php
- * do tří jasně oddělených akcí odpovídajících sloupci „Akce / EDI":
+ * Mapové pohledy na spojení stanice. Tři akce odpovídající sloupci „Akce / EDI":
  *
  *   M – {@see jezek()}     „ježek": ze stanoviště vedou čáry do protistanic
  *   N – {@see spendliky()} špendlíky protistanic; popup = značka, vzdálenost, azimut

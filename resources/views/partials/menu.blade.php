@@ -1,4 +1,4 @@
-{{-- Hlavní menu (Fáze 3, ve Fázi 6 napojeno na route()). --}}
+{{-- Hlavní menu. --}}
 <div id="mainmenu">
 <ul class="menu">
 @unless($isAdmin)

@@ -48,7 +48,6 @@ class VkvpaKola extends Model
 
     /**
      * Je kolo v aktivní fázi pro příjem hlášení?
-     * Ekvivalent legacy je_aktivni_kolo():
      *  1) sloupec aktivni = 1, nebo
      *  2) záložní pojistka – v kole jsou čerstvá neschválená data.
      */
@@ -65,7 +64,7 @@ class VkvpaKola extends Model
     }
 
     /**
-     * Statický ekvivalent legacy je_aktivni_kolo($id_kola).
+     * Statická varianta isActive() pro dané kolo dle ID.
      */
     public static function jeAktivni(int $idKola): bool
     {

@@ -11,8 +11,7 @@ use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Konfigurace systému jako klíč–hodnota (nahrazuje file-based `mail.inc`
- * a roztroušené konstanty z legacy kódu).
+ * Konfigurace systému jako klíč–hodnota.
  *
  * @property string $cfg_key
  * @property string|null $cfg_value

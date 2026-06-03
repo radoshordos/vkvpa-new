@@ -12,11 +12,9 @@ use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * Oznámení o přijetí hlášení – vyhodnocovateli (Fáze 8).
- * Nahrazuje druhé mymail() volání z edit_hlaseni.php.
- *
- * Obsahuje „převzít záznam" odkaz s jednorázovým kódem (login.token z Fáze 4),
- * který po přihlášení přesměruje na převzetí konkrétního hlášení.
+ * Oznámení o přijetí hlášení – vyhodnocovateli.
+ * Obsahuje „převzít záznam" odkaz s jednorázovým kódem, který po přihlášení
+ * přesměruje na převzetí konkrétního hlášení.
  */
 class HlaseniProVyhodnocovatele extends Mailable
 {

@@ -14,7 +14,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Vyhodnocení a skóre (Fáze 7, sladěno s reálným edit_hlaseni.php v4.1.3).
+ * Vyhodnocení a skóre dle pravidel VKV PA.
  */
 final class ScoringService
 {

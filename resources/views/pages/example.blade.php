@@ -1,9 +1,6 @@
 {{--
-    Ukázka: takto se obsah jednotlivých legacy str=*.php stránek (Fáze 6)
-    napojí na layout. Controller předá $active pro zvýraznění položky menu.
-
-    Použití v controlleru:
-        return view('pages.example', ['active' => 'edit_hlaseni']);
+    Ukázka layoutu. Controller předá $active pro zvýraznění položky menu.
+    Použití: return view('pages.example', ['active' => 'edit_hlaseni']);
 --}}
 @extends('layouts.app')
 

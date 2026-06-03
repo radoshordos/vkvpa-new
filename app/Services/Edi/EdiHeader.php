@@ -51,7 +51,7 @@ final readonly class EdiHeader
         return $this->get('RPhon');
     }
 
-    /** Pozn.: legacy ukládá e-mail účastníka do pole RHBBS. */
+    /** E-mail účastníka – dle REG1TEST formátu uložen v poli RHBBS. */
     public function rHBBS(): string
     {
         return $this->get('RHBBS');

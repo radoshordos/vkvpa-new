@@ -7,7 +7,7 @@ namespace App\Http\Controllers;
 use App\Models\VkvpaKola;
 use Illuminate\View\View;
 
-/** Kola závodu (Fáze 6) – nahrazuje edit_kola.php (veřejný výpis). */
+/** Kola závodu – veřejný výpis. */
 class KolaController extends Controller
 {
     public function index(): View

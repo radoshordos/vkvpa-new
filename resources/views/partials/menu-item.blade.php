@@ -1,5 +1,5 @@
 {{--
-    Jedna položka menu (Fáze 6: interní odkazy přes route()).
+    Jedna položka menu.
     Vstup: $label (HTML), volitelně $key (název routy) nebo $url (externí), $target.
 --}}
 @php

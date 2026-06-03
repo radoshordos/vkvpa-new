@@ -1,5 +1,5 @@
 {{--
-    Výsledková listina (sladěno s legacy vysledky.php).
+    Výsledková listina.
 
     Výsledky vybraného kola rozdělené po kategoriích (144 MHz single op,
     144 MHz multi op, 432 MHz single op …), s vyhledáváním a – pro admina –
@@ -35,7 +35,6 @@
       S    mapa velkých čtverců (lokátorů) s počtem protistanic v každém
                               → route('edi.mapa.lokatory', ['head' => …])   ✅
 
-    Legenda: ✅ hotovo · 🟡 částečně (existuje routa, ladí se zobrazení) · TODO chybí.
 --}}
 @extends('layouts.app')
 @section('title', 'Výsledková listina – VKV PA')
@@ -58,7 +57,7 @@
     .vysl-soap { color:#cc0000; font-size:12px; }
     .vysl-qrp { background:#2db62f; color:#fff; font-size:10px; font-weight:bold; padding:0 4px; border-radius:3px; margin-left:5px; vertical-align:middle; }
     .vysl-akce a { color:#1a3a8c; text-decoration:underline; font-size:11px; display:inline-block; margin-right:6px; }
-    /* Sloupec „Akce / EDI" – barevná tlačítka P/U/X (1. řádek) dle legacy vysledky.php. */
+    /* Sloupec „Akce / EDI" – barevná tlačítka P/U/X (1. řádek). */
     .akce-row { white-space:nowrap; margin-bottom:3px; }
     .akce-row form { display:inline; margin:0; }
     .akce-btn { display:inline-block; width:18px; height:18px; line-height:18px; text-align:center;

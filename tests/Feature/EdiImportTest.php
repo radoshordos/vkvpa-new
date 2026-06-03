@@ -12,7 +12,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Test perzistence importu EDI (Fáze 5).
+ * Test perzistence importu EDI.
  */
 class EdiImportTest extends TestCase
 {
@@ -37,7 +37,6 @@ class EdiImportTest extends TestCase
         $this->assertSame('JN99BP', $first->{'Received-WWL'});
         $this->assertSame(2, (int) $first->{'QSO-Points'});
 
-        // Vztah z Fáze 1 funguje.
         $this->assertCount(2, $head->lines);
     }
 }

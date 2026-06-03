@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
 /**
- * Vykreslí e-mailovou adresu jako PNG (anti-scraping) – nahrazuje mail.php.
+ * Vykreslí e-mailovou adresu jako PNG (anti-scraping).
  * Vyžaduje rozšíření GD.
  */
 class MailImageController extends Controller

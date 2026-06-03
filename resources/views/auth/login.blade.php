@@ -1,4 +1,4 @@
-{{-- Přihlášení (Fáze 4) – nahrazuje login.php. Zachován vzhled formuláře. --}}
+{{-- Přihlášení. --}}
 @extends('layouts.app')
 
 @section('title', 'Přihlášení – VKV PA')
