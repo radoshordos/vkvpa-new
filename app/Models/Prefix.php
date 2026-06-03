@@ -15,6 +15,4 @@ use Illuminate\Database\Eloquent\Model;
 #[Fillable(['prefix', 'country'])]
 #[Table(name: 'prefixes', key: 'id')]
 #[WithoutTimestamps]
-class Prefix extends Model
-{
-}
+class Prefix extends Model {}

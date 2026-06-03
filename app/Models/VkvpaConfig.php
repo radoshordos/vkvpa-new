@@ -22,7 +22,6 @@ use Illuminate\Database\Eloquent\Model;
 #[WithoutTimestamps]
 class VkvpaConfig extends Model
 {
-
     /**
      * Pohodlné načtení hodnoty konfigurace s výchozí hodnotou.
      */

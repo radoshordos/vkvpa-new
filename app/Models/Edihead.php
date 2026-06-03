@@ -37,7 +37,6 @@ use Override;
 #[WithoutTimestamps]
 class Edihead extends Model
 {
-
     /**
      * Jednotlivá spojení (QSO) tohoto deníku.
      *

@@ -40,7 +40,6 @@ use Override;
 #[WithoutTimestamps]
 class Ediline extends Model
 {
-
     /**
      * Hlavička deníku, ke kterému spojení patří.
      *
