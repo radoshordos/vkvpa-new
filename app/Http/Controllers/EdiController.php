@@ -17,12 +17,9 @@ use Illuminate\Http\Response;
 use Illuminate\View\View;
 
 /**
- * Nahrání EDI deníku (sladěno s upload_processor.php + read_edin.php v6.70).
- *
- * Na rozdíl od legacy upload_processoru parsujeme i QSO řádky do `edilines`
- * (přes EdiParser/EdiImportService) – jen tak lze spočítat skóre. Poté se,
- * stejně jako v legacy, založí „rezervovaný" řádek ve vkvpa_data (schvaleno=0)
- * a jeho ID se uloží do session; formulář pak tento řádek edituje.
+ * Nahrání EDI deníku. QSO řádky se parsují do `edilines` (přes EdiParser/EdiImportService),
+ * poté se založí „rezervovaný" řádek ve vkvpa_data (schvaleno=0) a jeho ID se uloží
+ * do session; formulář pak tento řádek edituje.
  */
 class EdiController extends Controller
 {

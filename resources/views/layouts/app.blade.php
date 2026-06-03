@@ -1,19 +1,12 @@
 {{--
-    Hlavní layout aplikace (Fáze 3 migrace – extrakce z head.php/menu.php/bottom.php).
-
-    Zachovává grafický design: stejné css/styl.css a stejné id/class kontejnery
-    (#page, #banner, #mainmenu, ul.menu, #obsah, #copyright).
-
-    Modernizace bez vlivu na vzhled: HTML5 doctype + lang="cs" místo XHTML 1.0
-    Strict (oba režimy jsou standards mode, CSS se renderuje shodně).
+    Hlavní layout aplikace.
 
     Proměnné (volitelné, předává controller):
       $active     – klíč aktivní položky menu (např. 'edit_hlaseni')
-      $isAdmin    – je přihlášen administrátor? (default ze session – Fáze 4 nahradí Laravel Auth)
+      $isAdmin    – je přihlášen administrátor?
       $adminName  – jméno přihlášeného (zobrazení v menu)
 --}}
 @php
-    // Fáze 10: admin stav přes Laravel Auth (legacy session most odstraněn).
     $active    = $active    ?? '';
     $isAdmin   = $isAdmin   ?? (bool) (auth()->user()?->is_admin);
     $adminName = $adminName ?? (string) (auth()->user()?->name ?? '');

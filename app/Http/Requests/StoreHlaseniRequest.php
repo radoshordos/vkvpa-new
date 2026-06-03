@@ -8,11 +8,9 @@ use Override;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
- * Validace podání hlášení (sladěno s edit_hlaseni.php v4.1.3).
+ * Validace podání hlášení.
  *
- * Povinné: značka, kolo, e-mail, lokátor (jako v reálném POST handleru).
- * Žádný striktní součinový check – ta verze ho nemá. Žádné SQL injection
- * (na rozdíl od legacy mysqli_real_escape_string + interpolace).
+ * Povinné: značka, kolo, e-mail, lokátor.
  */
 class StoreHlaseniRequest extends FormRequest
 {

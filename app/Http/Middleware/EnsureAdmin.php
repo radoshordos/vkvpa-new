@@ -10,13 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Chrání administrátorské stránky (Fáze 4).
- * Nahrazuje legacy kontrolu $_SESSION['prihlasen'] == 'Beda'.
- *
- * Registrace aliasu v bootstrap/app.php:
- *   ->withMiddleware(function (Middleware $middleware) {
- *       $middleware->alias(['admin' => \App\Http\Middleware\EnsureAdmin::class]);
- *   })
+ * Chrání administrátorské stránky.
  */
 class EnsureAdmin
 {

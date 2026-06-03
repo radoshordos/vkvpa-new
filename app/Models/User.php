@@ -11,10 +11,9 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 /**
- * Uživatel administrace. Nahrazuje hardcoded login `Beda`/`oK1dOz` z head.php.
+ * Uživatel administrace.
  *
- * Přihlašuje se uživatelským jménem (sloupec `name`), nikoli e-mailem,
- * kvůli zachování stávajícího chování (login „Beda").
+ * Přihlašuje se uživatelským jménem (sloupec `name`), nikoli e-mailem.
  */
 #[Fillable([
     'name',

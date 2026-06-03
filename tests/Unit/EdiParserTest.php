@@ -9,7 +9,7 @@ use App\Services\Edi\EdiParser;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Testy parseru EDI (Fáze 5). Bez DB – čistá logika.
+ * Testy parseru EDI. Bez DB – čistá logika.
  */
 class EdiParserTest extends TestCase
 {

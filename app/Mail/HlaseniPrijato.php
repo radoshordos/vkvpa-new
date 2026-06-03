@@ -12,8 +12,7 @@ use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * Potvrzení o přijetí hlášení – účastníkovi (Fáze 8).
- * Nahrazuje první mymail() volání z edit_hlaseni.php.
+ * Potvrzení o přijetí hlášení – účastníkovi.
  */
 class HlaseniPrijato extends Mailable
 {

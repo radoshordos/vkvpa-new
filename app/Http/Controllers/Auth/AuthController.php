@@ -14,17 +14,11 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 /**
- * Autentizace administrace (Fáze 4).
- *
- * Nahrazuje:
- *  - hardcoded `Beda`/`oK1dOz` z head.php  → Auth::attempt + hashované heslo (S2)
- *  - interpolovaný `?kod=` lookup           → Eloquent s bindingem (S3)
- *  - `ereg()` validaci                      → validace Laravelu (S4)
- *  - logout.php (redirect na HTTP_REFERER)  → bezpečný redirect (žádný open-redirect)
+ * Autentizace administrace.
  */
 class AuthController extends Controller
 {
-    /** Dní platnosti přihlašovacího kódu (legacy: 5 dní). */
+    /** Dní platnosti přihlašovacího kódu. */
     private const int TOKEN_TTL_DAYS = 5;
 
     public function showLoginForm(Request $request): View|RedirectResponse
@@ -55,17 +49,16 @@ class AuthController extends Controller
         }
 
         $request->session()->regenerate();
-        $request->session()->put('prihlasen', $credentials['username']); // legacy most
+        $request->session()->put('prihlasen', $credentials['username']);
 
         return redirect()->intended('/');
     }
 
     /**
-     * Přihlášení přes jednorázový kód (legacy ?kod=). Bezpečně přes Eloquent.
+     * Přihlášení přes jednorázový kód (?kod=).
      */
     public function loginViaToken(string $kod): RedirectResponse
     {
-        // Úklid prošlých kódů (legacy: starší než 5 dní).
         VkvpaPrihlaseni::query()
             ->where('time', '<', Carbon::now()->subDays(self::TOKEN_TTL_DAYS))
             ->delete();
@@ -88,7 +81,7 @@ class AuthController extends Controller
         $token->delete();
 
         request()->session()->regenerate();
-        request()->session()->put('prihlasen', $admin->name); // legacy most
+        request()->session()->put('prihlasen', $admin->name);
 
         // „Převzít záznam" odkaz z e-mailu vyhodnocovateli (?confirm=ID).
         $confirm = request()->integer('confirm');

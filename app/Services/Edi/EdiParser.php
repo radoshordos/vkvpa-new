@@ -8,9 +8,6 @@ use App\Exceptions\EdiParseException;
 
 /**
  * Parser EDI deníku (formát REG1TEST). Čistá, testovatelná služba bez DB a výstupu.
- *
- * Zachovává chování legacy read_edi.php (stejný stavový automat i regex QSO),
- * jen místo echo/exit vrací strukturovaná data, resp. vyhazuje výjimku.
  */
 final class EdiParser
 {
@@ -47,7 +44,6 @@ final class EdiParser
         $raw = '';
 
         foreach (preg_split('/\r\n|\r|\n/', $content) ?: [] as $line) {
-            // Odstranění BOM a oříznutí (shodně s legacy).
             $buf = trim(str_replace("\xEF\xBB\xBF", '', $line));
             $raw .= $buf . "\n";
 

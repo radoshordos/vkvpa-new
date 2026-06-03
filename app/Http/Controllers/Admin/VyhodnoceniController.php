@@ -10,8 +10,7 @@ use App\Services\Scoring\ScoringService;
 use Illuminate\Http\RedirectResponse;
 
 /**
- * Vyhodnocení a uzávěrka kola (Fáze 7) – admin.
- * Nahrazuje vysledky.php → vyhodnoceni.php / uzavreni.php.
+ * Vyhodnocení a uzávěrka kola – admin.
  */
 class VyhodnoceniController extends Controller
 {

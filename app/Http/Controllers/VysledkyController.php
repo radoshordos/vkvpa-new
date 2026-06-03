@@ -12,8 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 /**
- * Výsledkové listiny (Fáze 7). Pořadí (`poradi`) počítá ScoringService
- * při vyhodnocení/uzávěrce; zde se jen zobrazuje seřazené.
+ * Výsledkové listiny. Pořadí (`poradi`) počítá ScoringService při vyhodnocení/uzávěrce.
  */
 class VysledkyController extends Controller
 {

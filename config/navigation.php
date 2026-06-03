@@ -3,13 +3,10 @@
 declare(strict_types=1);
 
 /**
- * Struktura hlavního menu (Fáze 3 – extrakce layoutu).
+ * Struktura hlavního menu.
  *
- * Položky s 'key' jsou interní (odkaz `?str={key}`, podporují aktivní stav).
+ * Položky s 'key' jsou interní (pojmenovaná routa, podporují aktivní stav).
  * Položky s 'url' jsou externí. 'label' může obsahovat statické HTML (<br>).
- *
- * Fáze 6 (routing): interní 'key' se přemapují na pojmenované routy a v
- * partialu partials/menu-item.blade.php se `?str=` nahradí route().
  */
 
 return [

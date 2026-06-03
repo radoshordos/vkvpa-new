@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 /**
- * Testy autentizace (Fáze 4).
+ * Testy autentizace.
  */
 class AuthTest extends TestCase
 {
@@ -40,7 +40,7 @@ class AuthTest extends TestCase
         ])->assertRedirect('/');
 
         $this->assertAuthenticated();
-        $this->assertSame('Beda', session('prihlasen')); // legacy most
+        $this->assertSame('Beda', session('prihlasen'));
     }
 
     public function test_login_fails_with_wrong_password(): void
@@ -68,8 +68,7 @@ class AuthTest extends TestCase
 
     public function test_admin_middleware_blocks_guests(): void
     {
-        // Vyžaduje registrovanou testovací routu s middleware 'admin'
-        // nebo konkrétní admin routu z Fáze 6.
+        // Vyžaduje registrovanou testovací routu s middleware 'admin'.
         $this->expectNotToPerformAssertions();
     }
 }

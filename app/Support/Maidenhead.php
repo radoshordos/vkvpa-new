@@ -6,7 +6,7 @@ namespace App\Support;
 
 /**
  * Převod Maidenhead QTH lokátoru (např. „JN99AJ") na zeměpisné souřadnice
- * (střed čtverce). Nahrazuje ruční výpočet (`myc`) z legacy map souborů.
+ * (střed čtverce).
  */
 final class Maidenhead
 {

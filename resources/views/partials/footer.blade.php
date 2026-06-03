@@ -1,8 +1,3 @@
-{{--
-    Patička (Fáze 3 – z bottom.php). Zachován „mail.php?text=" obfuskovaný
-    obrázek e-mailu i copyright. Adresy zatím literálně; Fáze 8 (Laravel Mail)
-    je přesune do konfigurace.
---}}
 <br style="clear: both;">
 <div id="copyright">
   <p class="small">

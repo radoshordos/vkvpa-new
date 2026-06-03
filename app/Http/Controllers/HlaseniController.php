@@ -13,8 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 /**
- * Podání a správa hlášení (sladěno s edit_hlaseni.php v4.1.3 a tokem
- * upload → rezervovaný řádek → editace formulářem).
+ * Podání a správa hlášení (tok: upload → rezervovaný řádek → editace formulářem).
  */
 class HlaseniController extends Controller
 {

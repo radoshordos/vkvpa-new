@@ -10,8 +10,6 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Uloží naparsovaný EDI deník do DB (edihead + edilines) v jedné transakci.
- *
- * Nahrazuje ruční prepared-statement zápis z read_edi.php (Eloquent + transakce).
  */
 final class EdiImportService
 {
