@@ -104,7 +104,21 @@ class HlaseniTest extends TestCase
         $this->assertNotNull($row);
         $this->assertSame('OK2KJT', $row->znacka);
         $this->assertFalse((bool) $row->schvaleno);          // rezervovaný řádek = Čeká
+        // Kategorie určena z hlavičky: PBand 144 MHz + PSect MULTI + OK → „144 MHz multi op" (id 2).
+        $this->assertSame(2, $row->id_kategorie);
         $resp->assertSessionHas('owned_data_id', $row->id);  // vlastní řádek v session
+    }
+
+    public function test_edi_upload_with_unknown_band_is_rejected(): void
+    {
+        $edi = (string) file_get_contents(__DIR__.'/../fixtures/sample.edi');
+        // Změníme pásmo na nerozpoznané (KV 14 MHz) → deník se má odmítnout.
+        $edi = str_replace('PBand=144 MHz', 'PBand=14 MHz', $edi);
+
+        $this->post('/edi', ['upload' => UploadedFile::fake()->createWithContent('x.edi', $edi)])
+            ->assertSessionHasErrors('upload');
+
+        $this->assertSame(0, Edihead::count()); // nic se neimportovalo
     }
 
     public function test_duplicate_edi_upload_is_rejected(): void
