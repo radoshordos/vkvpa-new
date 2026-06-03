@@ -11,6 +11,7 @@ use App\Models\VkvpaKola;
 use App\Support\ContestWindow;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -123,7 +124,7 @@ final class ScoringService
             ->selectRaw('vkvpa_data.id_kategorie as kategorie_id, vkvpa_data.znacka')
             ->selectRaw(
                 'SUM(CASE WHEN vkvpa_data.EDI_ID = 0 AND vkvpa_data.id_kola >= ? THEN 0 ELSE vkvpa_data.body END) as celkem',
-                [(int) config('vkvpa.non_edi_nullify_from_kolo', 91)],
+                [Config::integer('vkvpa.non_edi_nullify_from_kolo', 91)],
             )
             ->groupBy('vkvpa_data.id_kategorie', 'vkvpa_data.znacka')
             ->orderByDesc('celkem');

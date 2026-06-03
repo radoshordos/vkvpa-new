@@ -10,14 +10,6 @@
 
 @section('title', 'Mapa spojení ' . $pcall . ' – VKV PA')
 
-@php
-    $popisRezimu = [
-        'jezek' => 'ježek – čáry do protistanic',
-        'spendliky' => 'špendlíky – značka, vzdálenost, azimut',
-        'lokatory' => 'velké čtverce – počet protistanic',
-    ][$mode] ?? '';
-@endphp
-
 @push('head')
   <link rel="stylesheet"
         href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -35,12 +27,12 @@
 
 @section('content')
 <h1>Mapa spojení {{ $pcall }} ({{ $homeLoc }})</h1>
-<p style="color:#555;font-size:13px;margin-top:-8px;">{{ $popisRezimu }}</p>
+<p style="color:#555;font-size:13px;margin-top:-8px;">{{ $mode->label() }}</p>
 <div id="mapa"></div>
 
 <script>
   (function () {
-    const mode = @json($mode);
+    const mode = @json($mode->value);
     const home = @json($home);
     const points = @json($points);
     const squares = @json($squares);
