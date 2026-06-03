@@ -107,6 +107,27 @@ class ScoringServiceTest extends TestCase
         $this->assertSame(6, $score->body);
     }
 
+    public function test_yearly_results_nullifies_non_edi_for_kola_above_threshold(): void
+    {
+        config(['vkvpa.non_edi_nullify_from_kolo' => 2]); // práh = ID kola 2
+
+        $kat = $this->kategorie();
+        $k1 = $this->kolo('1. kolo 2026'); // ID=1, pod prahem → body se počítají
+        $k2 = $this->kolo('2. kolo 2026'); // ID=2, na prahu → non-EDI nulifikace
+
+        $e1 = $this->entry($k1->id, $kat->id, 'OK1A', 100);
+        $e1->update(['poradi' => 1]); // EDI_ID=0 (default) → pod prahem, počítá se
+
+        $e2 = $this->entry($k2->id, $kat->id, 'OK1A', 200);
+        $e2->update(['poradi' => 1]); // EDI_ID=0 (default) → na/nad prahem → 0 bodů
+
+        $res = app(ScoringService::class)->yearlyResults(2026);
+
+        $row = $res->firstWhere('znacka', 'OK1A');
+        $this->assertNotNull($row);
+        $this->assertSame(100, (int) $row->celkem); // 100 + 0 (nulifikováno) = 100
+    }
+
     public function test_yearly_results_aggregates_by_callsign(): void
     {
         $kat = $this->kategorie();
