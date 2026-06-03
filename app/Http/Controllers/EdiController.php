@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Exceptions\EdiParseException;
+use App\Exceptions\UnknownBandException;
 use App\Models\Edihead;
 use App\Models\VkvpaData;
+use App\Services\Edi\CategoryResolver;
 use App\Services\Edi\EdiImportService;
 use App\Services\Edi\EdiParser;
 use App\Services\Edi\EdiReducer;
@@ -28,6 +30,7 @@ class EdiController extends Controller
         private readonly EdiImportService $importer,
         private readonly ScoringService $scoring,
         private readonly EdiReducer $reducer,
+        private readonly CategoryResolver $categories,
     ) {}
 
     public function create(): View
@@ -62,13 +65,23 @@ class EdiController extends Controller
             ]);
         }
 
+        // Kategorie z hlavičky (pásmo + sekce + DX dle prefixu značky).
+        // Nerozpoznané pásmo → deník odmítneme; nerozpoznaná sekce → 0 (doplní admin).
+        try {
+            $idKategorie = $this->categories->resolve($pcall, $h->pBand(), $h->pSect()) ?? 0;
+        } catch (UnknownBandException) {
+            return back()->withErrors([
+                'upload' => 'Nerozpoznané pásmo v deníku ('.$h->pBand().') – nelze určit kategorii. Oprav PBand a nahraj znovu.',
+            ]);
+        }
+
         $head = $this->importer->import($log);
         $score = $this->scoring->scoreEdi($head);
 
         // Rezervovaný řádek (schvaleno=0) – formulář ho převezme a doplní.
         $row = VkvpaData::create([
             'id_kola' => $idKola,
-            'id_kategorie' => 0,
+            'id_kategorie' => $idKategorie,
             'znacka' => $h->pCall(),
             'locator' => $h->pWWLo(),
             'jmeno' => $h->rName(),
