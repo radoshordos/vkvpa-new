@@ -121,6 +121,19 @@ class HlaseniTest extends TestCase
         $this->assertSame(0, Edihead::count()); // nic se neimportovalo
     }
 
+    public function test_edi_upload_with_tdate_not_matching_qsos_is_rejected(): void
+    {
+        $edi = (string) file_get_contents(__DIR__.'/../fixtures/sample.edi');
+        // Datum v hlavičce posuneme na jiný den, než mají QSO řádky (260315) → bez opravy
+        // by se skóre spočítalo z 0 QSO; deník proto odmítneme.
+        $edi = str_replace('TDate=20260315;20260315', 'TDate=20260418;20260418', $edi);
+
+        $this->post('/edi', ['upload' => UploadedFile::fake()->createWithContent('x.edi', $edi)])
+            ->assertSessionHasErrors('upload');
+
+        $this->assertSame(0, Edihead::count()); // nic se neimportovalo
+    }
+
     public function test_duplicate_edi_upload_is_rejected(): void
     {
         $edi = (string) file_get_contents(__DIR__.'/../fixtures/sample.edi');
