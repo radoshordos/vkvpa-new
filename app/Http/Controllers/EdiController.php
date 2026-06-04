@@ -42,7 +42,7 @@ class EdiController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'upload' => ['required', 'file', 'max:'.(int) config('vkvpa.edi_max_size_kb'), 'extensions:edi,txt'],
+            'upload' => ['required', 'file', 'max:'.intval(config('vkvpa.edi_max_size_kb')), 'extensions:edi,txt'],
         ]);
 
         $content = (string) file_get_contents($request->file('upload')->getRealPath());
