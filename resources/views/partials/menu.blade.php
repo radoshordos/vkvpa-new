@@ -5,6 +5,8 @@
     @foreach(config('navigation.public') as $item)
         @include('partials.menu-item', $item)
     @endforeach
+    <br>
+    <li><a href="{{ route('login') }}">Přihlášení admin</a></li>
 @else
     @foreach(config('navigation.admin') as $item)
         @include('partials.menu-item', $item)
