@@ -14,7 +14,7 @@ class DatabaseSeeder extends Seeder
             // Data z původní DB (legacy dump → JSON). Volá dílčí seedery.
             LegacyDatabaseSeeder::class,
 
-            // Administrátorský účet z .env (ADMIN_USER / ADMIN_PASS).
+            // Administrátorský účet „Beda".
             AdminUserSeeder::class,
         ]);
     }
