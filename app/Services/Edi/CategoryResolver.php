@@ -44,6 +44,9 @@ final class CategoryResolver
      * Kanonické pásmo → sekce (SO/MO) → varianta (op/dx) → id kategorie ze seedu.
      * (PHP převádí numerické klíče jako „144" na int, proto int|string.)
      *
+     * ID odpovídají záznamům v `vkvpa_kategorie` – viz database/seeders/VkvpaKategorieTableSeeder.php.
+     * Při přidání nové kategorie: 1) přidej řádek do seederu, 2) doplň ID do této matice.
+     *
      * @var array<int|string, array<string, array<string, int>>>
      */
     private const array CATEGORIES = [

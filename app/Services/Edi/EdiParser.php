@@ -30,7 +30,7 @@ final class EdiParser
         // (česká diakritika v RName/Remarks by se jinak rozbila). mbstring
         // středoevropské CP1250 neumí, proto iconv.
         if (! mb_check_encoding($content, 'UTF-8')) {
-            $converted = iconv('Windows-1250', 'UTF-8//IGNORE', $content);
+            $converted = iconv('Windows-1250', 'UTF-8//TRANSLIT', $content);
             if ($converted !== false) {
                 $content = $converted;
             }
