@@ -105,7 +105,7 @@ class MapController extends Controller
             ->whereBetween('Time', [ContestWindow::from(), ContestWindow::to()])
             ->orderBy('Received-WWL')
             ->get(['lon', 'lat', 'CallSign', 'Received-WWL', 'QSO-Points'])
-            ->map(function ($l) use ($home): ?array {
+            ->map(function ($l) use ($home, $head): ?array {
                 $lat = $l->lat;
                 $lon = $l->lon;
                 // Když chybí lon/lat, dopočítej ze středu lokátoru.
