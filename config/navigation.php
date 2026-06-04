@@ -24,6 +24,7 @@ return [
         ['key' => 'edit_kola',          'label' => 'kola závodu'],
         ['key' => 'edit_hlaseni',       'label' => 'hlášení'],
         ['key' => 'edit_deniky',        'label' => 'deníky - upload'],
+        ['key' => 'edit_edi_debug',     'label' => 'EDI debug / kontrola bodů'],
         ['key' => 'vysledkova_listina', 'label' => 'výsledková listina'],
         ['key' => 'rocni_vysledky',     'label' => 'roční výsledky'],
         ['key' => 'edit_kategorie',     'label' => 'správa kategorií, konfigurace'],
