@@ -9,6 +9,7 @@ use App\Models\VkvpaData;
 use App\Services\Scoring\ScoringService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -44,21 +45,24 @@ class ZaznamController extends Controller
      */
     public function prevzit(VkvpaData $zaznam): RedirectResponse
     {
-        $zaznam->update(['schvaleno' => true]);
+        $idKola = $zaznam->id_kola;
+        $znacka = $zaznam->znacka;
+
+        DB::transaction(function () use ($zaznam, $idKola): void {
+            $zaznam->update(['schvaleno' => true]);
+            $this->scoring->rankRound($idKola);
+        });
 
         Log::info('admin.zaznam.prevzit', [
             'zaznam_id' => $zaznam->id,
-            'znacka' => $zaznam->znacka,
-            'kolo_id' => $zaznam->id_kola,
+            'znacka' => $znacka,
+            'kolo_id' => $idKola,
             'admin' => Auth::user()?->name,
         ]);
 
-        // Přepočet pořadí kola – množina převzatých (zveřejněných) záznamů se změnila.
-        $this->scoring->rankRound($zaznam->id_kola);
-
         return redirect()
-            ->route('vysledkova_listina', ['kolo' => $zaznam->id_kola])
-            ->with('announcement', 'Záznam „'.$zaznam->znacka.'" byl převzat.');
+            ->route('vysledkova_listina', ['kolo' => $idKola])
+            ->with('announcement', 'Záznam „'.$znacka.'" byl převzat.');
     }
 
     /**
@@ -77,7 +81,10 @@ class ZaznamController extends Controller
         $idKola = $zaznam->id_kola;
         $znacka = $zaznam->znacka;
 
-        $zaznam->delete();
+        DB::transaction(function () use ($zaznam, $idKola): void {
+            $zaznam->delete();
+            $this->scoring->rankRound($idKola);
+        });
 
         Log::info('admin.zaznam.smazat', [
             'zaznam_id' => $zaznam->id,
@@ -85,9 +92,6 @@ class ZaznamController extends Controller
             'kolo_id' => $idKola,
             'admin' => Auth::user()?->name,
         ]);
-
-        // Přepočet pořadí kola – ze žebříčku zmizel jeden záznam.
-        $this->scoring->rankRound($idKola);
 
         return redirect()
             ->route('vysledkova_listina', ['kolo' => $idKola])

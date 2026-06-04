@@ -78,4 +78,50 @@ class ZaznamAdminTest extends TestCase
 
         $this->assertFalse($zaznam->refresh()->schvaleno);
     }
+
+    public function test_prevzit_is_idempotent(): void
+    {
+        $zaznam = $this->zaznam(true);
+        $admin = $this->admin();
+
+        // Druhé převzetí nesmí způsobit chybu ani změnit stav.
+        $this->actingAs($admin)->post(route('zaznam.prevzit', ['zaznam' => $zaznam->id]))->assertRedirect();
+        $this->actingAs($admin)->post(route('zaznam.prevzit', ['zaznam' => $zaznam->id]))->assertRedirect();
+
+        $this->assertTrue($zaznam->refresh()->schvaleno);
+    }
+
+    public function test_prevzit_recalculates_ranking_for_round(): void
+    {
+        $kolo = VkvpaKola::create(['datum_konani' => now()->subDays(5), 'datum_uzaverky' => now()->subDay(), 'nazev' => '05/2026', 'poznamka' => '']);
+        $kat = VkvpaKategorie::create(['nazev' => '144 MHz single op', 'popis' => '', 'zkratka' => 'A', 'dxid' => 0]);
+
+        $a = VkvpaData::create(['id_kola' => $kolo->id, 'id_kategorie' => $kat->id, 'znacka' => 'OK1A', 'locator' => 'JN99AJ', 'pocet' => 10, 'nasobice' => 5, 'body' => 100, 'bodu_za_qso' => 0, 'schvaleno' => true, 'odeslano' => false, 'poradi' => 0]);
+        $b = VkvpaData::create(['id_kola' => $kolo->id, 'id_kategorie' => $kat->id, 'znacka' => 'OK1B', 'locator' => 'JN99AJ', 'pocet' => 5, 'nasobice' => 3, 'body' => 50, 'bodu_za_qso' => 0, 'schvaleno' => false, 'odeslano' => false, 'poradi' => 0]);
+
+        $this->actingAs($this->admin())
+            ->post(route('zaznam.prevzit', ['zaznam' => $b->id]))
+            ->assertRedirect();
+
+        // Po převzetí musí ScoringService přepočítat pořadí.
+        $this->assertSame(1, $a->refresh()->poradi);
+        $this->assertSame(2, $b->refresh()->poradi);
+    }
+
+    public function test_smazat_recalculates_ranking_after_deletion(): void
+    {
+        $kolo = VkvpaKola::create(['datum_konani' => now()->subDays(5), 'datum_uzaverky' => now()->subDay(), 'nazev' => '05/2026', 'poznamka' => '']);
+        $kat = VkvpaKategorie::create(['nazev' => '144 MHz single op', 'popis' => '', 'zkratka' => 'A', 'dxid' => 0]);
+
+        $a = VkvpaData::create(['id_kola' => $kolo->id, 'id_kategorie' => $kat->id, 'znacka' => 'OK1A', 'locator' => 'JN99AJ', 'pocet' => 10, 'nasobice' => 5, 'body' => 100, 'bodu_za_qso' => 0, 'schvaleno' => true, 'odeslano' => false, 'poradi' => 2]);
+        $b = VkvpaData::create(['id_kola' => $kolo->id, 'id_kategorie' => $kat->id, 'znacka' => 'OK1B', 'locator' => 'JN99AJ', 'pocet' => 5, 'nasobice' => 3, 'body' => 200, 'bodu_za_qso' => 0, 'schvaleno' => true, 'odeslano' => false, 'poradi' => 1]);
+
+        $this->actingAs($this->admin())
+            ->post(route('zaznam.smazat', ['zaznam' => $b->id]))
+            ->assertRedirect();
+
+        // Po smazání 1. místa musí OK1A přeskočit na 1. místo.
+        $this->assertSame(1, $a->refresh()->poradi);
+        $this->assertDatabaseMissing('vkvpa_data', ['id' => $b->id]);
+    }
 }
