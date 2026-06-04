@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 /**
@@ -70,9 +71,19 @@ class AuthController extends Controller
             ->where('time', '<', Carbon::now()->subDays($this->tokenTtlDays()))
             ->delete();
 
-        $token = VkvpaPrihlaseni::query()->where('kod', $kod)->first();
+        // lockForUpdate + delete v transakci: paralelní požadavky (prefetch prohlížeče,
+        // dvojité kliknutí) nemohou použít stejný token dvakrát.
+        $used = DB::transaction(function () use ($kod): bool {
+            $token = VkvpaPrihlaseni::query()->where('kod', $kod)->lockForUpdate()->first();
+            if ($token === null) {
+                return false;
+            }
+            $token->delete();
 
-        if ($token === null) {
+            return true;
+        });
+
+        if (! $used) {
             return redirect()->route('login')
                 ->withErrors(['username' => 'Přihlašovací kód je neplatný nebo vypršel.']);
         }
@@ -85,8 +96,6 @@ class AuthController extends Controller
         }
 
         Auth::login($admin);
-        $token->delete();
-
         request()->session()->regenerate();
         request()->session()->put('prihlasen', $admin->name);
 

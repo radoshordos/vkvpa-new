@@ -36,17 +36,7 @@ class MapController extends Controller
      */
     public function jezek(Edihead $head): View
     {
-        $home = $this->home($head);
-
-        return view('pages.map', [
-            'active' => '',
-            'mode' => MapMode::Jezek,
-            'pcall' => (string) $head->PCall,
-            'homeLoc' => (string) $head->PWWLo,
-            'home' => $home,
-            'points' => $this->points($head, $home),
-            'squares' => collect(),
-        ]);
+        return $this->mapView($head, MapMode::Jezek);
     }
 
     /**
@@ -58,17 +48,7 @@ class MapController extends Controller
      */
     public function spendliky(Edihead $head): View
     {
-        $home = $this->home($head);
-
-        return view('pages.map', [
-            'active' => '',
-            'mode' => MapMode::Spendliky,
-            'pcall' => (string) $head->PCall,
-            'homeLoc' => (string) $head->PWWLo,
-            'home' => $home,
-            'points' => $this->points($head, $home),
-            'squares' => collect(),
-        ]);
+        return $this->mapView($head, MapMode::Spendliky);
     }
 
     /**
@@ -80,21 +60,20 @@ class MapController extends Controller
      */
     public function lokatory(Edihead $head): View
     {
-        return $this->mapView($head, 'lokatory', withPoints: false);
+        return $this->mapView($head, MapMode::Lokatory);
     }
 
     /**
      * Společná logika pro sestavení dat mapového pohledu.
-     *
-     * @param  bool  $withPoints  true = body protistanic (jezek/spendliky), false = velké čtverce (lokatory)
      */
-    private function mapView(Edihead $head, string $mode, bool $withPoints = true): View
+    private function mapView(Edihead $head, MapMode $mode): View
     {
         $home = $this->home($head);
+        $withPoints = $mode !== MapMode::Lokatory;
 
         return view('pages.map', [
             'active' => '',
-            'mode' => MapMode::Lokatory,
+            'mode' => $mode,
             'pcall' => (string) $head->PCall,
             'homeLoc' => (string) $head->PWWLo,
             'home' => $home,

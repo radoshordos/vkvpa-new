@@ -62,7 +62,7 @@ class StoreHlaseniRequest extends FormRequest
             'kolo' => ['required', 'integer', 'exists:vkvpa_kola,id'],
             'kategorie' => ['nullable', 'integer', 'exists:vkvpa_kategorie,id'],
             'znacka' => ['required', 'string', 'max:10'],
-            'locator' => ['required', 'string', 'max:6'],
+            'locator' => ['required', 'string', 'max:6', 'regex:/^[A-R]{2}[0-9]{2}([A-X]{2})?$/i'],
             'email' => ['required', 'email', 'max:250'],
             'pocet' => ['nullable', 'integer', 'min:0'],
             'bodu_za_qso' => ['nullable', 'integer', 'min:0'],
@@ -84,6 +84,7 @@ class StoreHlaseniRequest extends FormRequest
             'kolo.required' => 'Chybí povinná pole! (kolo)',
             'email.required' => 'Chybí povinná pole! (kontakt / e-mail)',
             'locator.required' => 'Chybí povinná pole! (lokátor)',
+            'locator.regex' => 'Lokátor musí být platný Maidenhead formát (např. JN79 nebo JN79XW).',
         ];
     }
 }
