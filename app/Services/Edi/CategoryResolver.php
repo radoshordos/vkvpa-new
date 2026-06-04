@@ -67,9 +67,9 @@ final class CategoryResolver
      * @param  string  $pcall  volací značka (PCall) – pro určení DX
      * @param  string  $pBand  pásmo z hlavičky (PBand)
      * @param  string  $pSect  sekce z hlavičky (PSect)
-     * @return int|null  id kategorie, nebo null když sekci/kombinaci nelze určit
+     * @return int|null id kategorie, nebo null když sekci/kombinaci nelze určit
      *
-     * @throws UnknownBandException  pásmo nelze zařadit → deník se odmítne
+     * @throws UnknownBandException pásmo nelze zařadit → deník se odmítne
      */
     public function resolve(string $pcall, string $pBand, string $pSect): ?int
     {
@@ -91,7 +91,7 @@ final class CategoryResolver
         $key = strtoupper(trim($pBand));
 
         return self::BANDS[$key]
-            ?? throw new UnknownBandException(sprintf("Nerozpoznané pásmo „%s“.", $pBand));
+            ?? throw new UnknownBandException(sprintf('Nerozpoznané pásmo „%s“.', $pBand));
     }
 
     /** Sekce: 'MO' (multi), 'SO' (single), nebo null (nerozpoznané/prázdné). */

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\KolaController;
 use App\Models\VkvpaKola;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -11,7 +12,7 @@ use Tests\TestCase;
 /**
  * Veřejný výpis kol závodu.
  *
- * @see \App\Http\Controllers\KolaController
+ * @see KolaController
  */
 class KolaControllerTest extends TestCase
 {
