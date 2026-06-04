@@ -7,14 +7,15 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\View\View;
 
-/** Administrace – Import (kostra, plná implementace ve Fázi 6b). */
+/** Administrace – Hromadný import. */
 class ImportController extends Controller
 {
     public function index(): View
     {
         return view('pages.admin.placeholder', [
             'active' => '',
-            'nazev' => 'Import',
+            'nazev' => 'Hromadný import',
+            'popis' => 'Hromadný import EDI deníků ze ZIP archivu nebo adresáře. Jednotlivé deníky lze nahrát přes stránku Hlášení.',
         ]);
     }
 }

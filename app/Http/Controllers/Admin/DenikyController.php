@@ -7,14 +7,15 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\View\View;
 
-/** Administrace – Deniky (kostra, plná implementace ve Fázi 6b). */
+/** Administrace – Deníky. */
 class DenikyController extends Controller
 {
     public function index(): View
     {
         return view('pages.admin.placeholder', [
             'active' => '',
-            'nazev' => 'Deniky',
+            'nazev' => 'Deníky',
+            'popis' => 'Přehled nahraných EDI deníků. Jednotlivé deníky lze prohlížet přes výsledkovou listinu (sloupec Akce / EDI).',
         ]);
     }
 }
