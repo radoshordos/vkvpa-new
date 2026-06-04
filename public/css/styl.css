@@ -143,6 +143,18 @@ ul.menu li a:hover {
 	background-color: #2728C5;
 	color: white;
 }
+ul.menu li.menu-heading {
+	margin-top: 10px;
+	padding: 2px 5px;
+	font-size: 0.85em;
+	font-weight: bold;
+	color: #2728C5;
+	text-transform: uppercase;
+	border-bottom: 1px solid #BFCEF5;
+}
+ul.menu li.menu-heading:first-child {
+	margin-top: 0;
+}
 table.form select, table.form1 select {
 	width: 200px;
 }
