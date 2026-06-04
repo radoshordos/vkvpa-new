@@ -50,6 +50,36 @@ class MaidenheadTest extends TestCase
         $this->assertNull(Maidenhead::bigSquareCenter('JN99AJ')); // 6 znaků není velký čtverec
     }
 
+    public function test_big_square_ring_distance(): void
+    {
+        // Vlastní čtverec = 0.
+        $this->assertSame(0, Maidenhead::bigSquareRingDistance('JN99', 'JN99'));
+        // Sousední po délce (JN89 hned vedle JN99) = 1.
+        $this->assertSame(1, Maidenhead::bigSquareRingDistance('JN99', 'JN89'));
+        // Diagonální soused (JO80, o čtverec na sever i na západ) = 1.
+        $this->assertSame(1, Maidenhead::bigSquareRingDistance('JN99', 'JO80'));
+        // JO70: Δx=2, Δy=1 → Chebyshev = 2.
+        $this->assertSame(2, Maidenhead::bigSquareRingDistance('JN99', 'JO70'));
+        // Symetrie.
+        $this->assertSame(2, Maidenhead::bigSquareRingDistance('JO70', 'JN99'));
+    }
+
+    public function test_ring_distance_null_for_invalid(): void
+    {
+        $this->assertNull(Maidenhead::bigSquareRingDistance('JN99', 'ZZ99'));
+        $this->assertNull(Maidenhead::bigSquareRingDistance('', 'JN99'));
+    }
+
+    public function test_qso_points_follow_rules(): void
+    {
+        // Vlastní velký čtverec = 2 body, sousední = 3, další pás +1.
+        $this->assertSame(2, Maidenhead::qsoPoints('JN99', 'JN99'));
+        $this->assertSame(3, Maidenhead::qsoPoints('JN99', 'JN89'));
+        $this->assertSame(4, Maidenhead::qsoPoints('JN99', 'JO70'));
+        // Neplatný lokátor → 0 (spojení nelze ohodnotit).
+        $this->assertSame(0, Maidenhead::qsoPoints('JN99', 'XXXX'));
+    }
+
     public function test_distance_km(): void
     {
         $this->assertEqualsWithDelta(0.0, Maidenhead::distanceKm(50.0, 15.0, 50.0, 15.0), 0.001);

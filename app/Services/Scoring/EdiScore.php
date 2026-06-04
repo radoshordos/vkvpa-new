@@ -7,15 +7,18 @@ namespace App\Services\Scoring;
 /**
  * Výsledek automatického ohodnocení deníku z edilines.
  *
- * Vzorec dle reálné verze edit_hlaseni.php (v4.1.3):
- *   pocet    = počet QSO do CIZÍCH velkých čtverců (mimo domácí)
- *   nasobice = počet různých cizích velkých čtverců + 1 (domácí čtverec)
- *   body     = pocet * nasobice
+ * Vzorec dle pravidel VKV PA (bodování per velký čtverec):
+ *   pocet     = počet započítaných QSO (vč. QSO do vlastního čtverce)
+ *   boduZaQso = součet bodů za spojení – přepočítáno z lokátorů (vlastní čtverec
+ *               2, sousední 3, každý další pás o bod víc); QSO-Points z EDI se ignoruje
+ *   nasobice  = počet různých velkých čtverců včetně vlastního (vlastní vždy)
+ *   body      = boduZaQso * nasobice
  */
 final readonly class EdiScore
 {
     public function __construct(
         public int $pocet,
+        public int $boduZaQso,
         public int $nasobice,
         public int $body,
     ) {}

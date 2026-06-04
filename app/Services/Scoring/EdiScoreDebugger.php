@@ -6,6 +6,7 @@ namespace App\Services\Scoring;
 
 use App\Services\Edi\EdiLog;
 use App\Support\ContestWindow;
+use App\Support\Maidenhead;
 
 /**
  * Debug analyzátor bodování EDI deníku.
@@ -18,9 +19,11 @@ use App\Support\ContestWindow;
  * Pravidla (shodná se scoreEdi):
  *   - domácí velký čtverec = první 4 znaky PWWLo,
  *   - započítá se QSO v závodním okně (čas 08:00–11:00 UTC) a ve dni závodu
- *     (YYMMDD z TDate), jehož přijatý velký čtverec je cizí a neprázdný,
- *   - pocet = počet takových QSO, nasobice = počet různých cizích čtverců + 1,
- *   - body = pocet × nasobice.
+ *     (YYMMDD z TDate), jehož přijatý velký čtverec je neprázdný (vč. vlastního),
+ *   - pocet = počet takových QSO, boduZaQso = součet bodů za spojení přepočtených
+ *     z lokátorů (QSO-Points z deníku se ignoruje),
+ *     nasobice = počet různých cizích čtverců + 1 (vlastní čtverec),
+ *   - body = boduZaQso × nasobice.
  */
 final class EdiScoreDebugger
 {
@@ -39,6 +42,7 @@ final class EdiScoreDebugger
         $foreignSquares = [];
 
         $pocet = 0;
+        $boduZaQso = 0;
         $outOfWindow = 0;
         $wrongDate = 0;
         $ownSquare = 0;
@@ -52,6 +56,8 @@ final class EdiScoreDebugger
             $time = trim($qso->time);
             $date = trim($qso->date);
             $square = strtoupper(substr(trim($qso->receivedWwl), 0, 4));
+            // Body za spojení přepočítáme z lokátorů, ne z deníku (qsoPoints).
+            $points = Maidenhead::qsoPoints($home, $square);
 
             $inWindow = $time >= $from && $time <= $to;
             $dateMatches = $den === '' || $date === $den;
@@ -65,7 +71,9 @@ final class EdiScoreDebugger
             $counted = false;
             $newMultiplier = false;
 
-            // Pořadí důvodů kopíruje filtr scoreEdi: nejdřív čas, pak den, pak čtverec.
+            // Pořadí důvodů kopíruje filtr scoreEdi: nejdřív čas, pak den, pak prázdný WWL.
+            // Vlastní velký čtverec se započítává (2 body), není to ale nový cizí násobič
+            // – vlastní čtverec je vždy násobičem (ta „+1“ k cizím čtvercům).
             if (! $inWindow) {
                 $reason = 'out_of_window';
                 $outOfWindow++;
@@ -75,14 +83,14 @@ final class EdiScoreDebugger
             } elseif ($isEmpty) {
                 $reason = 'empty_wwl';
                 $emptyWwl++;
-            } elseif ($isOwn) {
-                $reason = 'own_square';
-                $ownSquare++;
             } else {
                 $reason = 'counted';
                 $counted = true;
                 $pocet++;
-                if (! in_array($square, $foreignSquares, true)) {
+                $boduZaQso += $points;
+                if ($isOwn) {
+                    $ownSquare++;
+                } elseif (! in_array($square, $foreignSquares, true)) {
                     $foreignSquares[] = $square;
                     $newMultiplier = true;
                 }
@@ -95,6 +103,7 @@ final class EdiScoreDebugger
                 callSign: $qso->callSign,
                 receivedWwl: $qso->receivedWwl,
                 bigSquare: $square,
+                points: $points,
                 inWindow: $inWindow,
                 dateMatches: $dateMatches,
                 isOwnSquare: $isOwn,
@@ -126,11 +135,12 @@ final class EdiScoreDebugger
             ignoredLines: $log->ignoredLines,
             lineErrors: $log->lineErrors,
             pocet: $pocet,
+            boduZaQso: $boduZaQso,
             nasobice: $nasobice,
-            body: $pocet * $nasobice,
+            body: $boduZaQso * $nasobice,
             excludedOutOfWindow: $outOfWindow,
             excludedWrongDate: $wrongDate,
-            excludedOwnSquare: $ownSquare,
+            ownSquareCount: $ownSquare,
             excludedEmpty: $emptyWwl,
             duplicateCount: $duplicates,
         );

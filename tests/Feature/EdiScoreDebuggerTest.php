@@ -52,19 +52,27 @@ class EdiScoreDebuggerTest extends TestCase
             ['260118', '1000', 'OK1C', 'JO70AA', ''],   // započteno, nový násobič
             ['260118', '1230', 'OK1D', 'JN88AA', ''],   // mimo okno (12:30)
             ['260117', '0900', 'OK1E', 'JN77AA', ''],   // jiný den (17.)
-            ['260118', '0900', 'OK1F', 'JN99XX', ''],   // vlastní čtverec JN99
+            ['260118', '0900', 'OK1F', 'JN99XX', ''],   // vlastní čtverec JN99 → započteno
             ['260118', '0945', 'OK1G', 'JN89AA', 'D'],  // započteno + duplikát
         ));
 
-        // pocet=4 (A,B,C,G), cizí čtverce {JN89,JO70} → nasobice=3, body=12.
-        $this->assertSame(4, $report->pocet);
+        // pocet=5 (A,B,C,F,G). Body přepočítané z lokátorů (domácí JN99):
+        // JN89=3, JN89=3, JO70=4, vlastní JN99=2, JN89 dup=3 → boduZaQso=15.
+        // cizí čtverce {JN89,JO70} + vlastní JN99 → nasobice=3, body=15×3=45.
+        $this->assertSame(5, $report->pocet);
+        $this->assertSame(15, $report->boduZaQso);
         $this->assertSame(3, $report->nasobice);
-        $this->assertSame(12, $report->body);
+        $this->assertSame(45, $report->body);
 
         $this->assertSame(1, $report->excludedOutOfWindow);
         $this->assertSame(1, $report->excludedWrongDate);
-        $this->assertSame(1, $report->excludedOwnSquare);
+        $this->assertSame(1, $report->ownSquareCount);     // vlastní čtverec – započteno
         $this->assertSame(1, $report->duplicateCount);
+
+        // Body za spojení na řádcích jsou přepočítané z lokátorů.
+        $this->assertSame(3, $report->rows[0]->points);   // JN89 = soused
+        $this->assertSame(4, $report->rows[2]->points);   // JO70 = 2 pásy
+        $this->assertSame(2, $report->rows[5]->points);   // vlastní JN99
 
         // Důvody jednotlivých řádků.
         $this->assertSame('counted', $report->rows[0]->reason);
@@ -73,7 +81,9 @@ class EdiScoreDebuggerTest extends TestCase
         $this->assertFalse($report->rows[1]->newMultiplier);   // stejný čtverec
         $this->assertSame('out_of_window', $report->rows[3]->reason);
         $this->assertSame('wrong_date', $report->rows[4]->reason);
-        $this->assertSame('own_square', $report->rows[5]->reason);
+        $this->assertSame('counted', $report->rows[5]->reason);     // vlastní čtverec se počítá
+        $this->assertTrue($report->rows[5]->isOwnSquare);
+        $this->assertFalse($report->rows[5]->newMultiplier);        // vlastní není nový cizí násobič
         $this->assertTrue($report->rows[6]->duplicate);
         $this->assertTrue($report->rows[6]->counted);          // duplikát se stále počítá
     }
@@ -90,6 +100,7 @@ class EdiScoreDebuggerTest extends TestCase
         $score = app(ScoringService::class)->scoreEdi($head);
 
         $this->assertSame($score->pocet, $report->pocet);
+        $this->assertSame($score->boduZaQso, $report->boduZaQso);
         $this->assertSame($score->nasobice, $report->nasobice);
         $this->assertSame($score->body, $report->body);
     }

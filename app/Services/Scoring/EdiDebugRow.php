@@ -9,10 +9,9 @@ namespace App\Services\Scoring;
  * spojení započítává do skóre, a proč (ne).
  *
  * `reason` je strojový kód stavu:
- *   - counted        spojení se započítává,
+ *   - counted        spojení se započítává (vč. QSO do vlastního čtverce, viz `isOwnSquare`),
  *   - out_of_window  čas mimo závodní okno,
  *   - wrong_date     datum neodpovídá dni závodu (TDate),
- *   - own_square     cíl je domácí velký čtverec,
  *   - empty_wwl      chybí přijatý lokátor.
  */
 final readonly class EdiDebugRow
@@ -24,6 +23,7 @@ final readonly class EdiDebugRow
         public string $callSign,
         public string $receivedWwl,
         public string $bigSquare,
+        public int $points,
         public bool $inWindow,
         public bool $dateMatches,
         public bool $isOwnSquare,
