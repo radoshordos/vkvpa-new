@@ -20,11 +20,11 @@
     .edx-uploader input[type=file] { font-size: 13px; }
     .edx-uploader__hint { font-size: 12px; color: #8a8597; margin: 2px 0 0; }
     .edx-btn {
-        appearance: none; border: 0; cursor: pointer; font: inherit; font-weight: 700;
-        background: #4f46b8; color: #fff; padding: 9px 20px; border-radius: 8px;
+        appearance: none; border: 0; cursor: pointer; font: inherit; font-size: 13px; font-weight: 600;
+        background: #6b7280; color: #fff; padding: 6px 14px; border-radius: 7px;
         transition: background .15s ease;
     }
-    .edx-btn:hover { background: #3c3596; color: #fff; }
+    .edx-btn:hover { background: #565e6b; color: #fff; }
 
     /* Alert */
     .edx-alert { border-radius: 10px; padding: 12px 16px; margin-bottom: 18px; font-size: 13px; }
@@ -80,10 +80,10 @@
     table.edx-qso { width: 100%; border-collapse: collapse; font-size: 12.5px; }
     table.edx-qso thead th {
         position: sticky; top: 0; background: #f3f4f9; color: #4a5161; text-align: left;
-        font-size: 11px; text-transform: uppercase; letter-spacing: .03em; padding: 9px 10px;
+        font-size: 11px; text-transform: uppercase; letter-spacing: .03em; padding: 4px 10px;
         border-bottom: 2px solid #e1e4ec; white-space: nowrap;
     }
-    table.edx-qso td { padding: 7px 10px; border-bottom: 1px solid #eef0f4; vertical-align: middle; }
+    table.edx-qso td { padding: 2px 10px; border-bottom: 1px solid #eef0f4; vertical-align: middle; }
     table.edx-qso tbody tr:last-child td { border-bottom: 0; }
     table.edx-qso .num { font-variant-numeric: tabular-nums; color: #4a5161; }
     table.edx-qso .call { font-weight: 700; }
