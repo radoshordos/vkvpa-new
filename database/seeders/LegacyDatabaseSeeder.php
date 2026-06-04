@@ -11,7 +11,6 @@ class LegacyDatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            AdminUserSeeder::class,
             EdiheadTableSeeder::class,
             EdilinesTableSeeder::class,
             PrefixesTableSeeder::class,
