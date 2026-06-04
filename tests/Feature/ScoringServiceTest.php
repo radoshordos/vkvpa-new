@@ -87,6 +87,24 @@ class ScoringServiceTest extends TestCase
         $this->assertSame(10, $score->body);
     }
 
+    public function test_score_edi_ok1io_real_log(): void
+    {
+        // Reálný deník OK1IO (VKV PA 2026/01, JO70NR) z resources/edi.
+        $edi = (string) file_get_contents(resource_path('edi/01ok1io.edi'));
+        $head = new EdiImportService()->import(new EdiParser()->parse($edi));
+
+        $score = app(ScoringService::class)->scoreEdi($head);
+
+        // 43 QSO v okně 08–11 UTC dne 18. 1. Body za spojení z lokátorů:
+        // 25× vlastní JO70 (2 b) + 16× sousední pás (3 b) + 2× JN99 (2. pás, 4 b)
+        // = 50 + 48 + 8 = 106. Násobič = 7 různých velkých čtverců vč. vlastního
+        // (JO70, JO80, JN79, JN89, JO60, JN69, JN99). Body = 106 × 7 = 742.
+        $this->assertSame(43, $score->pocet);
+        $this->assertSame(106, $score->boduZaQso);
+        $this->assertSame(7, $score->nasobice);
+        $this->assertSame(742, $score->body);
+    }
+
     public function test_score_edi_ignores_qso_outside_window(): void
     {
         $head = Edihead::create([
