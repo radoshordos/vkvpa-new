@@ -114,4 +114,19 @@ class EdiParserTest extends TestCase
         $this->assertSame('OK1XYZ', $log->qsos[0]->callSign);
         $this->assertSame('OK2DEF', $log->qsos[1]->callSign);
     }
+
+    public function test_skips_error_line_that_otherwise_matches_pattern(): void
+    {
+        // Chybový řádek je jinak zcela validní (vyplněný čas i pole) a vyhověl by
+        // regexu – bez detekce značky „ERROR" by se započítal jako platné QSO.
+        $edi = "[REG1TEST;1]\nPCall=OK1ABC\n[QSORecords;2]\n"
+            ."260315;0800;OK1XYZ;1;59;001;59;001;;JN79AB;3;;;;\n"
+            ."260118;0909;ERROR;1;59;098;59;025;;JN79IW;0;;;;\n[END;]\n";
+
+        $log = new EdiParser()->parse($edi);
+
+        $this->assertSame(1, $log->qsoCount());
+        $this->assertCount(1, $log->ignoredLines);
+        $this->assertSame('OK1XYZ', $log->qsos[0]->callSign);
+    }
 }

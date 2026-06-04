@@ -57,11 +57,18 @@ final class EdiParser
 
             if ($section === 'records') {
                 $upper = strtoupper($buf);
-                if (preg_match(self::QSO_PATTERN, $upper, $m)) {
+                if (str_contains($upper, 'ERROR') || str_contains($upper, 'EROR')) {
+                    // Řádek s chybovou značkou (vadné spojení) – ignorujeme i kdyby
+                    // jinak vyhověl regexu, protože značka „ERROR" stojí v poli
+                    // volačky a řádek by se jinak započítal jako platné QSO.
+                    if ($buf !== '') {
+                        $ignored[] = $buf;
+                    }
+                } elseif (preg_match(self::QSO_PATTERN, $upper, $m)) {
                     $qsos[] = EdiQso::fromMatch($m);
                 } elseif ($buf !== '') {
-                    // Neparsovatelný řádek (značka „ERROR", prázdná povinná pole,
-                    // neplatný lokátor…) – přeskočíme a importujeme zbytek deníku.
+                    // Neparsovatelný řádek (prázdná povinná pole, neplatný
+                    // lokátor…) – přeskočíme a importujeme zbytek deníku.
                     // Nezapočítává se do platných QSO.
                     $ignored[] = $buf;
                 }
