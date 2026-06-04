@@ -11,6 +11,9 @@ return [
 
     'token_ttl_days' => 5,
 
+    // Maximální velikost nahrávaného EDI souboru v kilobajtech.
+    'edi_max_size_kb' => (int) env('EDI_MAX_SIZE_KB', 500),
+
     // Od tohoto kola se hlášení bez EDI do ročního součtu nezapočítávají.
     'non_edi_nullify_from_kolo' => 91,
 
