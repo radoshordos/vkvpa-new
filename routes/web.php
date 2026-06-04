@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Admin\DenikyController;
+use App\Http\Controllers\Admin\EdiDebugController;
 use App\Http\Controllers\Admin\ImportController;
 use App\Http\Controllers\Admin\KategorieController;
 use App\Http\Controllers\Admin\VyhodnoceniController;
@@ -66,6 +67,10 @@ Route::middleware('admin')->group(function (): void {
     Route::post('/admin/zaznam/{zaznam}/smazat', [ZaznamController::class, 'smazat'])->name('zaznam.smazat');
 
     // (Editace hlášení je nyní přes ?id na stránce hlášení; uložení přes hlaseni.store.)
+
+    // EDI debug – nahrání deníku a rozpad bodování řádek po řádku (jen náhled).
+    Route::get('/admin/edi-debug', [EdiDebugController::class, 'create'])->name('edit_edi_debug');
+    Route::post('/admin/edi-debug', [EdiDebugController::class, 'analyze'])->name('edi_debug.analyze');
 
     Route::get('/admin/deniky', [DenikyController::class, 'index'])->name('edit_deniky');
     Route::get('/admin/kategorie', [KategorieController::class, 'index'])->name('edit_kategorie');
