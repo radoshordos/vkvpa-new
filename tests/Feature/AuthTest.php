@@ -116,7 +116,7 @@ class AuthTest extends TestCase
         VkvpaPrihlaseni::create(['time' => now(), 'kod' => 'xyz789']);
 
         $this->get(route('login.token', ['kod' => 'xyz789', 'confirm' => 42]))
-            ->assertRedirect(route('edit_hlaseni', ['id' => 42]));
+            ->assertRedirect(route('hlaseni.index', ['id' => 42]));
 
         $this->assertAuthenticatedAs($admin);
     }

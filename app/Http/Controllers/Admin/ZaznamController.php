@@ -36,14 +36,14 @@ class ZaznamController extends Controller
     /**
      * Převezme záznam – tlačítko „P" ve výsledkové listině.
      *
-     * Endpoint: POST /admin/zaznam/{zaznam}/prevzit  (name: zaznam.prevzit)
+     * Endpoint: PATCH /admin/zaznamy/{zaznam}  (name: zaznam.update)
      * Vstup:    {zaznam} = id řádku vkvpa_data (route-model-binding)
      * Oprávnění: jen administrátor (middleware `admin`)
      * Efekt:    nastaví `schvaleno = true` (záznam přestane být meruňkový)
      *           a přepočítá pořadí v kole, aby se promítl do žebříčku.
      * Návrat:   redirect zpět na výsledkovou listinu kola záznamu + hláška.
      */
-    public function prevzit(VkvpaData $zaznam): RedirectResponse
+    public function update(VkvpaData $zaznam): RedirectResponse
     {
         $idKola = $zaznam->id_kola;
         $znacka = $zaznam->znacka;
@@ -68,14 +68,14 @@ class ZaznamController extends Controller
     /**
      * Smaže záznam – tlačítko „X" ve výsledkové listině.
      *
-     * Endpoint: POST /admin/zaznam/{zaznam}/smazat  (name: zaznam.smazat)
+     * Endpoint: DELETE /admin/zaznamy/{zaznam}  (name: zaznam.destroy)
      * Vstup:    {zaznam} = id řádku vkvpa_data (route-model-binding)
      * Oprávnění: jen administrátor (middleware `admin`)
      * Efekt:    odstraní řádek hlášení (EDI deník v `edihead`/`edilines`
      *           zůstává; maže se jen výsledkový řádek) a přepočítá pořadí kola.
      * Návrat:   redirect zpět na výsledkovou listinu kola + hláška.
      */
-    public function smazat(VkvpaData $zaznam): RedirectResponse
+    public function destroy(VkvpaData $zaznam): RedirectResponse
     {
         // Údaje potřebné po smazání si uložíme předem (po delete už nejsou k dispozici).
         $idKola = $zaznam->id_kola;

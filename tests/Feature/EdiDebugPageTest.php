@@ -28,14 +28,14 @@ class EdiDebugPageTest extends TestCase
     public function test_admin_sees_upload_form(): void
     {
         $this->actingAs($this->admin())
-            ->get(route('edit_edi_debug'))
+            ->get(route('edi.debug.create'))
             ->assertOk()
             ->assertSee('EDI debug');
     }
 
     public function test_guest_is_redirected_to_login(): void
     {
-        $this->get(route('edit_edi_debug'))->assertRedirect(route('login'));
+        $this->get(route('edi.debug.create'))->assertRedirect(route('login'));
     }
 
     public function test_admin_uploads_edi_and_sees_breakdown(): void
@@ -44,7 +44,7 @@ class EdiDebugPageTest extends TestCase
         $file = UploadedFile::fake()->createWithContent('sample.edi', $content);
 
         $this->actingAs($this->admin())
-            ->post(route('edi_debug.analyze'), ['upload' => $file])
+            ->post(route('edi.debug.store'), ['upload' => $file])
             ->assertOk()
             ->assertSee('počet QSO')      // skóre headline se vykreslil
             ->assertSee('započteno');     // tabulka rozpadu
@@ -55,7 +55,7 @@ class EdiDebugPageTest extends TestCase
         $file = UploadedFile::fake()->createWithContent('bad.edi', "[REG1TEST;1]\nPCall=OK1ABC\n[QSORecords;2]\nnonsense\n[END;]\n");
 
         $this->actingAs($this->admin())
-            ->post(route('edi_debug.analyze'), ['upload' => $file])
+            ->post(route('edi.debug.store'), ['upload' => $file])
             ->assertRedirect()
             ->assertSessionHasErrors('upload');
     }

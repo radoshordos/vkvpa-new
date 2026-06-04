@@ -12,8 +12,8 @@ declare(strict_types=1);
 return [
 
     'public' => [
-        ['key' => 'edit_kola',          'label' => 'kola závodu <br> contest period'],
-        ['key' => 'edit_hlaseni',       'label' => 'odeslat deník<br>log import'],
+        ['key' => 'kola.index',         'label' => 'kola závodu <br> contest period'],
+        ['key' => 'hlaseni.index',      'label' => 'odeslat deník<br>log import'],
         ['key' => 'vysledkova_listina', 'label' => 'výsledková listina<br>results'],
         ['key' => 'rocni_vysledky',     'label' => 'roční výsledky<br>year results'],
         ['url' => 'https://vkvpa.hamradio.cz/rules/PA_VKV_2023–2022_12_23_en.pdf', 'label' => 'contest rules (pdf eng)'],
@@ -21,14 +21,14 @@ return [
     ],
 
     'admin' => [
-        ['key' => 'edit_kola',          'label' => 'kola závodu'],
-        ['key' => 'edit_hlaseni',       'label' => 'hlášení'],
-        ['key' => 'edit_deniky',        'label' => 'deníky - upload'],
-        ['key' => 'edit_edi_debug',     'label' => 'EDI debug / kontrola bodů'],
+        ['key' => 'kola.index',         'label' => 'kola závodu'],
+        ['key' => 'hlaseni.index',      'label' => 'hlášení'],
+        ['key' => 'deniky.index',       'label' => 'deníky - upload'],
+        ['key' => 'edi.debug.create',   'label' => 'EDI debug / kontrola bodů'],
         ['key' => 'vysledkova_listina', 'label' => 'výsledková listina'],
         ['key' => 'rocni_vysledky',     'label' => 'roční výsledky'],
-        ['key' => 'edit_kategorie',     'label' => 'správa kategorií, konfigurace'],
-        ['key' => 'edit_import',        'label' => 'importy'],
+        ['key' => 'kategorie.index',    'label' => 'správa kategorií, konfigurace'],
+        ['key' => 'importy.index',      'label' => 'importy'],
     ],
 
     'admin_external' => [

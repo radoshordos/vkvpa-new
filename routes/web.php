@@ -23,14 +23,12 @@ use Illuminate\Support\Facades\Route;
 
 require __DIR__.'/auth.php'; // Fáze 4
 
-// Výchozí stránka = formulář hlášení (legacy default $_GET['str']='edit_hlaseni').
-Route::get('/', [HlaseniController::class, 'index'])->name('edit_hlaseni');
+// Výchozí stránka = formulář hlášení.
+Route::get('/', [HlaseniController::class, 'index'])->name('hlaseni.index');
+Route::post('/hlaseni', [HlaseniController::class, 'store'])->name('hlaseni.store');
 
 // --- Veřejné ---
-Route::get('/kola', [KolaController::class, 'index'])->name('edit_kola');
-
-Route::get('/hlaseni', [HlaseniController::class, 'index'])->name('hlaseni.index');
-Route::post('/hlaseni', [HlaseniController::class, 'store'])->name('hlaseni.store');
+Route::get('/kola', [KolaController::class, 'index'])->name('kola.index');
 
 Route::get('/vysledky', [VysledkyController::class, 'listina'])->name('vysledkova_listina');
 Route::get('/vysledky/rocni', [VysledkyController::class, 'rocni'])->name('rocni_vysledky');
@@ -39,8 +37,8 @@ Route::get('/vysledky/rocni', [VysledkyController::class, 'rocni'])->name('rocni
 Route::get('/mail-image', [MailImageController::class, 'show'])->name('mail.image');
 
 // Nahrání EDI deníku (využívá EdiParser/EdiImportService z Fáze 5).
-Route::get('/edi', [EdiController::class, 'create'])->name('read_edi');
-Route::post('/edi', [EdiController::class, 'store'])->name('read_edi.store');
+Route::get('/edi', [EdiController::class, 'create'])->name('edi.create');
+Route::post('/edi', [EdiController::class, 'store'])->name('edi.store');
 
 // Zobrazení EDI deníku (sloupec „Akce / EDI" ve výsledkové listině):
 //   EDI  – původní EDI soubor,
@@ -57,22 +55,20 @@ Route::get('/edi/{head}/mapa/lokatory', [MapController::class, 'lokatory'])->nam
 
 // --- Administrace (chráněno middleware z Fáze 4) ---
 Route::middleware('admin')->group(function (): void {
-    // Vyhodnocení a uzávěrka kola (Fáze 7)
-    Route::post('/admin/kolo/{kolo}/vyhodnotit', [VyhodnoceniController::class, 'vyhodnotit'])->name('kolo.vyhodnotit');
-    Route::post('/admin/kolo/{kolo}/uzavrit', [VyhodnoceniController::class, 'uzavrit'])->name('kolo.uzavrit');
+    // Vyhodnocení a uzávěrka kola
+    Route::post('/admin/kola/{kolo}/vyhodnotit', [VyhodnoceniController::class, 'vyhodnotit'])->name('kola.vyhodnotit');
+    Route::post('/admin/kola/{kolo}/uzavrit', [VyhodnoceniController::class, 'uzavrit'])->name('kola.uzavrit');
 
-    // Akce nad záznamem výsledkové listiny (sloupec „Akce / EDI" v legacy vysledky.php):
-    //   P – převzít záznam, X – smazat záznam. (U = úprava je přes ?id na stránce hlášení.)
-    Route::post('/admin/zaznam/{zaznam}/prevzit', [ZaznamController::class, 'prevzit'])->name('zaznam.prevzit');
-    Route::post('/admin/zaznam/{zaznam}/smazat', [ZaznamController::class, 'smazat'])->name('zaznam.smazat');
-
-    // (Editace hlášení je nyní přes ?id na stránce hlášení; uložení přes hlaseni.store.)
+    // CRUD nad záznamem výsledkové listiny:
+    //   P – převzít (PATCH), X – smazat (DELETE). U = editace přes GET hlaseni.index?id=
+    Route::patch('/admin/zaznamy/{zaznam}', [ZaznamController::class, 'update'])->name('zaznam.update');
+    Route::delete('/admin/zaznamy/{zaznam}', [ZaznamController::class, 'destroy'])->name('zaznam.destroy');
 
     // EDI debug – nahrání deníku a rozpad bodování řádek po řádku (jen náhled).
-    Route::get('/admin/edi-debug', [EdiDebugController::class, 'create'])->name('edit_edi_debug');
-    Route::post('/admin/edi-debug', [EdiDebugController::class, 'analyze'])->name('edi_debug.analyze');
+    Route::get('/admin/edi-debug', [EdiDebugController::class, 'create'])->name('edi.debug.create');
+    Route::post('/admin/edi-debug', [EdiDebugController::class, 'analyze'])->name('edi.debug.store');
 
-    Route::get('/admin/deniky', [DenikyController::class, 'index'])->name('edit_deniky');
-    Route::get('/admin/kategorie', [KategorieController::class, 'index'])->name('edit_kategorie');
-    Route::get('/admin/importy', [ImportController::class, 'index'])->name('edit_import');
+    Route::get('/admin/deniky', [DenikyController::class, 'index'])->name('deniky.index');
+    Route::get('/admin/kategorie', [KategorieController::class, 'index'])->name('kategorie.index');
+    Route::get('/admin/importy', [ImportController::class, 'index'])->name('importy.index');
 });

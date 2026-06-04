@@ -120,7 +120,7 @@ class EdiController extends Controller
         // ID vlastněného řádku v session – povolí jeho editaci i nepřihlášenému.
         $request->session()->put('owned_data_id', $row->id);
 
-        return redirect()->route('edit_hlaseni', ['import' => 'success']);
+        return redirect()->route('hlaseni.index', ['import' => 'success']);
     }
 
     /**

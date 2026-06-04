@@ -102,7 +102,7 @@ class AuthController extends Controller
         // „Převzít záznam" odkaz z e-mailu vyhodnocovateli (?confirm=ID).
         $confirm = request()->integer('confirm');
         if ($confirm > 0) {
-            return redirect()->route('edit_hlaseni', ['id' => $confirm]);
+            return redirect()->route('hlaseni.index', ['id' => $confirm]);
         }
 
         return redirect()->intended('/');

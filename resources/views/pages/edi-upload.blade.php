@@ -10,7 +10,7 @@
     @endforeach
   @endif
 @endif
-<form action="{{ route('read_edi.store') }}" method="post" enctype="multipart/form-data">
+<form action="{{ route('edi.store') }}" method="post" enctype="multipart/form-data">
   @csrf
   EDI soubor / EDI file: <input type="file" name="upload" size="50"><br>
   <input type="submit" value="nahrát / upload">

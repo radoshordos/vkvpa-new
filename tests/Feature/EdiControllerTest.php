@@ -19,7 +19,7 @@ class EdiControllerTest extends TestCase
 
     public function test_upload_form_is_accessible(): void
     {
-        $this->get(route('read_edi'))->assertOk();
+        $this->get(route('edi.create'))->assertOk();
     }
 
     public function test_missing_file_is_rejected(): void
