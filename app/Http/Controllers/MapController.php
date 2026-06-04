@@ -9,6 +9,7 @@ use App\Models\Edihead;
 use App\Support\ContestWindow;
 use App\Support\Maidenhead;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 /**
@@ -114,6 +115,12 @@ class MapController extends Controller
                     $lon = $c['lon'] ?? null;
                 }
                 if ($lat === null || $lon === null) {
+                    Log::debug('map.points.skip', [
+                        'edihead_id' => $head->ID,
+                        'call' => (string) $l->CallSign,
+                        'wwl' => (string) $l->{'Received-WWL'},
+                    ]);
+
                     return null;
                 }
                 $lat = (float) $lat;
@@ -155,6 +162,11 @@ class MapController extends Controller
         foreach ($counts as $sq => $count) {
             $center = Maidenhead::bigSquareCenter($sq);
             if ($center === null) {
+                Log::debug('map.squares.skip', [
+                    'edihead_id' => $head->ID,
+                    'square' => $sq,
+                ]);
+
                 continue;
             }
             $out[] = ['square' => (string) $sq, 'count' => $count, 'lat' => $center['lat'], 'lon' => $center['lon']];
