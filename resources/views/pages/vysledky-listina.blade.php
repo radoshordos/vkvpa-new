@@ -67,6 +67,25 @@
     .akce-u { background:#1a5fb4; }  /* U – upravit  (modré)   */
     .akce-x { background:#cc2222; }  /* X – smazat   (červené) */
     .num { text-align:right; }
+    /* Modal pro potvrzení smazání */
+    #del-overlay {
+        display:none; position:fixed; inset:0; background:rgba(0,0,0,.45);
+        z-index:9999; align-items:center; justify-content:center;
+    }
+    #del-overlay.open { display:flex; }
+    #del-modal {
+        background:#fff; border:2px solid #cc2222; border-radius:4px;
+        padding:20px 24px; max-width:360px; width:100%;
+        font-family:Arial, sans-serif; font-size:13px;
+    }
+    #del-modal h2 { color:#cc2222; font-size:14px; font-weight:bold; margin-bottom:10px; border:none; }
+    #del-modal p  { margin-bottom:16px; color:#333; }
+    #del-modal .modal-btns { display:flex; gap:8px; justify-content:flex-end; }
+    .del-btn { display:inline-block; padding:3px 14px; font-weight:bold; font-size:12px;
+               color:#fff; border:none; border-radius:2px; cursor:pointer;
+               font-family:Arial, sans-serif; }
+    .del-btn-cancel  { background:#888; }
+    .del-btn-confirm { background:#cc2222; }
 </style>
 @endpush
 
@@ -147,11 +166,11 @@
                                 </form>
                                 {{-- U – upravit záznam (GET, stránka hlášení s ?id) --}}
                                 <a href="{{ route('edit_hlaseni', ['id' => $r->id]) }}" class="akce-btn akce-u" title="Upravit záznam">U</a>
-                                {{-- X – smazat záznam (POST zaznam.smazat, s potvrzením) --}}
-                                <form method="post" action="{{ route('zaznam.smazat', ['zaznam' => $r->id]) }}"
-                                      onsubmit="return confirm('Opravdu smazat záznam {{ $r->znacka }}?');">
+                                {{-- X – smazat záznam (POST zaznam.smazat, s modalem) --}}
+                                <form method="post" action="{{ route('zaznam.smazat', ['zaznam' => $r->id]) }}">
                                     @csrf
-                                    <button type="submit" class="akce-btn akce-x" title="Smazat záznam">X</button>
+                                    <button type="button" class="akce-btn akce-x" title="Smazat záznam"
+                                            onclick="openDelModal(this, @js($r->znacka))">X</button>
                                 </form>
                             </div>
                             @if ($r->EDI && $r->EDI_ID)
@@ -174,4 +193,51 @@
         </table>
     @endforeach
 @endif
+
+{{-- Modal pro potvrzení smazání záznamu --}}
+<div id="del-overlay" role="dialog" aria-modal="true" aria-labelledby="del-modal-title">
+    <div id="del-modal">
+        <h2 id="del-modal-title">Smazat záznam</h2>
+        <p id="del-modal-msg"></p>
+        <div class="modal-btns">
+            <button type="button" id="del-cancel"  class="del-btn del-btn-cancel">Zrušit</button>
+            <button type="button" id="del-confirm" class="del-btn del-btn-confirm">Smazat</button>
+        </div>
+    </div>
+</div>
+
+@push('scripts')
+<script>
+(function () {
+    var overlay    = document.getElementById('del-overlay');
+    var msgEl      = document.getElementById('del-modal-msg');
+    var confirmBtn = document.getElementById('del-confirm');
+    var cancelBtn  = document.getElementById('del-cancel');
+    var pending    = null;
+
+    window.openDelModal = function (btn, znacka) {
+        pending = btn.closest('form');
+        msgEl.textContent = 'Opravdu smazat záznam ' + znacka + '?';
+        overlay.classList.add('open');
+        confirmBtn.focus();
+    };
+
+    confirmBtn.addEventListener('click', function () {
+        overlay.classList.remove('open');
+        if (pending) { pending.submit(); }
+    });
+
+    function close() {
+        overlay.classList.remove('open');
+        pending = null;
+    }
+
+    cancelBtn.addEventListener('click', close);
+    overlay.addEventListener('click', function (e) { if (e.target === overlay) close(); });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && overlay.classList.contains('open')) close();
+    });
+}());
+</script>
+@endpush
 @endsection
