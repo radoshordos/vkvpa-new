@@ -20,7 +20,7 @@ class CategoryResolverTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->resolver = new CategoryResolver();
+        $this->resolver = new CategoryResolver;
     }
 
     public function test_band_section_and_dx_combine_to_category(): void

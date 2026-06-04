@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\VysledkyController;
 use App\Models\VkvpaData;
 use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
@@ -13,7 +14,7 @@ use Tests\TestCase;
 /**
  * Roční výsledky – agregace bodů přes všechna kola daného roku.
  *
- * @see \App\Http\Controllers\VysledkyController::rocni()
+ * @see VysledkyController::rocni()
  */
 class VysledkyRocniTest extends TestCase
 {
