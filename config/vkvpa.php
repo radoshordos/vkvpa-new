@@ -14,6 +14,9 @@ return [
     // Maximální velikost nahrávaného EDI souboru v kilobajtech.
     'edi_max_size_kb' => (int) env('EDI_MAX_SIZE_KB', 500),
 
+    // Maximální počet řádků výsledkové listiny jednoho kola (ochrana před přetížením paměti).
+    'listina_max_rows' => (int) env('LISTINA_MAX_ROWS', 1000),
+
     // Od tohoto kola se hlášení bez EDI do ročního součtu nezapočítávají.
     'non_edi_nullify_from_kolo' => 91,
 

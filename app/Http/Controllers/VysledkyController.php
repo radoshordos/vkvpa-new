@@ -9,6 +9,7 @@ use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
 use App\Services\Scoring\ScoringService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Config;
 use Illuminate\View\View;
 
 /**
@@ -32,6 +33,8 @@ class VysledkyController extends Controller
         // (meruňkové) záznamy, aby je mohl tlačítkem „P" převzít.
         $jenPrevzate = ! (bool) ($request->user()?->is_admin);
 
+        $maxRows = Config::integer('vkvpa.listina_max_rows', 1000);
+
         $radky = $kolo
             ? VkvpaData::query()
                 ->where('id_kola', $kolo->id)
@@ -42,6 +45,7 @@ class VysledkyController extends Controller
                         ->orWhere('locator', 'like', sprintf('%%%s%%', $hledat)),
                 ))
                 ->orderBy('id_kategorie')->orderBy('poradi')->orderByDesc('body')
+                ->limit($maxRows)
                 ->get()
             : collect();
 
@@ -52,6 +56,7 @@ class VysledkyController extends Controller
             'kategorie' => VkvpaKategorie::query()->orderBy('id')->get()->keyBy('id'),
             'radky' => $radky,
             'hledat' => $hledat,
+            'limitReached' => $radky->count() >= $maxRows,
         ]);
     }
 

@@ -112,6 +112,8 @@
 
 @if (! $kolo)
     <p>Žádné uzavřené kolo k zobrazení.</p>
+@elseif ($limitReached ?? false)
+    <p style="color:#cc0000;font-weight:bold;">Výsledků je příliš mnoho – zobrazeno je jen prvních {{ $radky->count() }} záznamů. Použijte filtr pro upřesnění.</p>
 @elseif ($radky->isEmpty())
     @if ($hledat !== '')
         <p>Hledání „{{ $hledat }}" v tomto kole nevrátilo žádné výsledky.</p>
