@@ -49,7 +49,7 @@
         </div>
     @endif
 
-    <form action="{{ route('read_edi.store') }}" method="post" enctype="multipart/form-data">
+    <form action="{{ route('edi.store') }}" method="post" enctype="multipart/form-data">
         @csrf
         EDI soubor: <input type="file" name="upload" size="30" style="border: 1px solid #777; background: white;">
         <input type="submit" value="nahrát / upload" style="font-weight: bold; cursor: pointer;">
@@ -61,7 +61,7 @@
 
     <div style="margin-top: 10px; border-top: 1px solid #ccc; padding-top: 5px;">
         <b style="color: #A52A2A;">
-            <a href="{{ route('edit_hlaseni', ['showfrm' => 1]) }}" style="color: #A52A2A; text-decoration: underline;">Nemám EDI soubor (vyplním hlášení ručně) / No EDI file</a>
+            <a href="{{ route('hlaseni.index', ['showfrm' => 1]) }}" style="color: #A52A2A; text-decoration: underline;">Nemám EDI soubor (vyplním hlášení ručně) / No EDI file</a>
         </b>
     </div>
 </div>
@@ -192,7 +192,7 @@
 
         <tr>
             <td colspan="2">
-                <a href="{{ route('edit_hlaseni') }}" style="color: #CC0000; text-decoration: underline;">vymazat formulář</a>
+                <a href="{{ route('hlaseni.index') }}" style="color: #CC0000; text-decoration: underline;">vymazat formulář</a>
             </td>
             <td colspan="2" align="right">
                 <input type="submit" name="Odeslat" value="Odeslat / Send" style="padding: 5px 20px; font-weight: bold; cursor: pointer;">

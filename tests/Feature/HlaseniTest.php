@@ -96,7 +96,7 @@ class HlaseniTest extends TestCase
         $file = UploadedFile::fake()->createWithContent('02OK2KJT.edi', $edi);
 
         $resp = $this->post('/edi', ['upload' => $file])
-            ->assertRedirect(route('edit_hlaseni', ['import' => 'success']));
+            ->assertRedirect(route('hlaseni.index', ['import' => 'success']));
 
         $this->assertSame(1, Edihead::count());
 
@@ -140,7 +140,7 @@ class HlaseniTest extends TestCase
 
         // První nahrání projde.
         $this->post('/edi', ['upload' => UploadedFile::fake()->createWithContent('a.edi', $edi)])
-            ->assertRedirect(route('edit_hlaseni', ['import' => 'success']));
+            ->assertRedirect(route('hlaseni.index', ['import' => 'success']));
 
         // Druhé nahrání téhož deníku (stejná značka + kolo) → odmítnuto s hláškou.
         $this->post('/edi', ['upload' => UploadedFile::fake()->createWithContent('b.edi', $edi)])

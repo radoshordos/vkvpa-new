@@ -19,7 +19,7 @@ class KolaControllerTest extends TestCase
 
     public function test_kola_page_loads_for_guest(): void
     {
-        $this->get(route('edit_kola'))->assertOk();
+        $this->get(route('kola.index'))->assertOk();
     }
 
     public function test_kola_page_shows_all_rounds_ordered_newest_first(): void
@@ -27,7 +27,7 @@ class KolaControllerTest extends TestCase
         VkvpaKola::create(['datum_konani' => '2025-01-18', 'datum_uzaverky' => '2025-02-01', 'nazev' => '01/2025', 'poznamka' => '']);
         VkvpaKola::create(['datum_konani' => '2026-01-17', 'datum_uzaverky' => '2026-02-01', 'nazev' => '01/2026', 'poznamka' => '']);
 
-        $response = $this->get(route('edit_kola'))->assertOk();
+        $response = $this->get(route('kola.index'))->assertOk();
 
         $pos2025 = strpos((string) $response->content(), '01/2025');
         $pos2026 = strpos((string) $response->content(), '01/2026');
@@ -39,7 +39,7 @@ class KolaControllerTest extends TestCase
 
     public function test_kola_page_shows_empty_state_without_rounds(): void
     {
-        $this->get(route('edit_kola'))
+        $this->get(route('kola.index'))
             ->assertOk()
             ->assertSee('Kola závodu');
     }
@@ -61,7 +61,7 @@ class KolaControllerTest extends TestCase
             'vyhodnoceno' => null,
         ]);
 
-        $this->get(route('edit_kola'))
+        $this->get(route('kola.index'))
             ->assertOk()
             ->assertSee('05.02.2026')
             ->assertSee('—');

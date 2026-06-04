@@ -142,7 +142,7 @@
         </div>
     @endif
 
-    <form class="edx-uploader" action="{{ route('edi_debug.analyze') }}" method="post" enctype="multipart/form-data">
+    <form class="edx-uploader" action="{{ route('edi.debug.store') }}" method="post" enctype="multipart/form-data">
         @csrf
         <div class="edx-uploader__field">
             <span class="edx-uploader__label">EDI soubor</span>

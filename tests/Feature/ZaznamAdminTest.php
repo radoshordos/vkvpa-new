@@ -49,7 +49,7 @@ class ZaznamAdminTest extends TestCase
         $zaznam = $this->zaznam(false);
 
         $this->actingAs($this->admin())
-            ->post(route('zaznam.prevzit', ['zaznam' => $zaznam->id]))
+            ->patch(route('zaznam.update', ['zaznam' => $zaznam->id]))
             ->assertRedirect(route('vysledkova_listina', ['kolo' => $zaznam->id_kola]))
             ->assertSessionHas('announcement');
 
@@ -62,7 +62,7 @@ class ZaznamAdminTest extends TestCase
         $zaznam = $this->zaznam(true);
 
         $this->actingAs($this->admin())
-            ->post(route('zaznam.smazat', ['zaznam' => $zaznam->id]))
+            ->delete(route('zaznam.destroy', ['zaznam' => $zaznam->id]))
             ->assertRedirect(route('vysledkova_listina', ['kolo' => $zaznam->id_kola]))
             ->assertSessionHas('announcement');
 
@@ -73,7 +73,7 @@ class ZaznamAdminTest extends TestCase
     {
         $zaznam = $this->zaznam(false);
 
-        $this->post(route('zaznam.prevzit', ['zaznam' => $zaznam->id]))
+        $this->patch(route('zaznam.update', ['zaznam' => $zaznam->id]))
             ->assertRedirect(route('login'));
 
         $this->assertFalse($zaznam->refresh()->schvaleno);
@@ -85,8 +85,8 @@ class ZaznamAdminTest extends TestCase
         $admin = $this->admin();
 
         // Druhé převzetí nesmí způsobit chybu ani změnit stav.
-        $this->actingAs($admin)->post(route('zaznam.prevzit', ['zaznam' => $zaznam->id]))->assertRedirect();
-        $this->actingAs($admin)->post(route('zaznam.prevzit', ['zaznam' => $zaznam->id]))->assertRedirect();
+        $this->actingAs($admin)->patch(route('zaznam.update', ['zaznam' => $zaznam->id]))->assertRedirect();
+        $this->actingAs($admin)->patch(route('zaznam.update', ['zaznam' => $zaznam->id]))->assertRedirect();
 
         $this->assertTrue($zaznam->refresh()->schvaleno);
     }
@@ -100,7 +100,7 @@ class ZaznamAdminTest extends TestCase
         $b = VkvpaData::create(['id_kola' => $kolo->id, 'id_kategorie' => $kat->id, 'znacka' => 'OK1B', 'locator' => 'JN99AJ', 'pocet' => 5, 'nasobice' => 3, 'body' => 50, 'bodu_za_qso' => 0, 'schvaleno' => false, 'odeslano' => false, 'poradi' => 0]);
 
         $this->actingAs($this->admin())
-            ->post(route('zaznam.prevzit', ['zaznam' => $b->id]))
+            ->patch(route('zaznam.update', ['zaznam' => $b->id]))
             ->assertRedirect();
 
         // Po převzetí musí ScoringService přepočítat pořadí.
@@ -117,7 +117,7 @@ class ZaznamAdminTest extends TestCase
         $b = VkvpaData::create(['id_kola' => $kolo->id, 'id_kategorie' => $kat->id, 'znacka' => 'OK1B', 'locator' => 'JN99AJ', 'pocet' => 5, 'nasobice' => 3, 'body' => 200, 'bodu_za_qso' => 0, 'schvaleno' => true, 'odeslano' => false, 'poradi' => 1]);
 
         $this->actingAs($this->admin())
-            ->post(route('zaznam.smazat', ['zaznam' => $b->id]))
+            ->delete(route('zaznam.destroy', ['zaznam' => $b->id]))
             ->assertRedirect();
 
         // Po smazání 1. místa musí OK1A přeskočit na 1. místo.

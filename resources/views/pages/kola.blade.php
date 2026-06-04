@@ -20,8 +20,8 @@
       @if ($isAdmin)
         <td>
           @unless ($k->vyhodnoceno)
-            <form action="{{ route('kolo.vyhodnotit', $k->id) }}" method="post" style="display:inline;">@csrf<button type="submit">vyhodnotit</button></form>
-            <form action="{{ route('kolo.uzavrit', $k->id) }}" method="post" style="display:inline;">@csrf<button type="submit">uzavřít</button></form>
+            <form action="{{ route('kola.vyhodnotit', $k->id) }}" method="post" style="display:inline;">@csrf<button type="submit">vyhodnotit</button></form>
+            <form action="{{ route('kola.uzavrit', $k->id) }}" method="post" style="display:inline;">@csrf<button type="submit">uzavřít</button></form>
           @endunless
         </td>
       @endif

@@ -17,10 +17,10 @@
     Sloupec „Akce / EDI" – 8 akcí ve třech řádcích (jen pro přihlášeného admina):
       ── 1. řádek (barevná tlačítka, jen admin) ──────────────────────────────
       P    PŘEVZÍT záznam – vyhodnocovatel ho viděl; zmizí meruňkové pozadí
-                              → route('zaznam.prevzit', ['zaznam' => $r->id])  ✅
+                              → route('zaznam.update', ['zaznam' => $r->id])  PATCH ✅
       U    upravit záznam – načte ho zpět do formuláře k editaci
-                              → route('edit_hlaseni', ['id' => $r->id])        ✅
-      X    smazat záznam     → route('zaznam.smazat', ['zaznam' => $r->id])    ✅
+                              → route('hlaseni.index', ['id' => $r->id])       ✅
+      X    smazat záznam     → route('zaznam.destroy', ['zaznam' => $r->id])  DELETE ✅
       ── 2. řádek (EDI, modré odkazy) ────────────────────────────────────────
       EDI  zobrazit původní EDI soubor   → route('edi.soubor', ['head' => …])   ✅
       EDIR zobrazit REDUKOVANÝ EDI – oříznutý jen na časové okno závodu
@@ -160,17 +160,19 @@
                         <td class="vysl-akce">
                             {{-- 1. řádek: P schválit · U upravit · X smazat --}}
                             <div class="akce-row">
-                                {{-- P – převzít záznam (POST zaznam.prevzit); po převzetí zmizí meruňkové pozadí --}}
-                                <form method="post" action="{{ route('zaznam.prevzit', ['zaznam' => $r->id]) }}">
+                                {{-- P – převzít záznam (PATCH zaznam.update); po převzetí zmizí meruňkové pozadí --}}
+                                <form method="post" action="{{ route('zaznam.update', ['zaznam' => $r->id]) }}">
                                     @csrf
+                                    @method('PATCH')
                                     <button type="submit" class="akce-btn akce-p"
                                             title="{{ $r->schvaleno ? 'Záznam je převzat' : 'Převzít záznam (vyhodnocovatel viděl)' }}">P</button>
                                 </form>
                                 {{-- U – upravit záznam (GET, stránka hlášení s ?id) --}}
-                                <a href="{{ route('edit_hlaseni', ['id' => $r->id]) }}" class="akce-btn akce-u" title="Upravit záznam">U</a>
-                                {{-- X – smazat záznam (POST zaznam.smazat, s modalem) --}}
-                                <form method="post" action="{{ route('zaznam.smazat', ['zaznam' => $r->id]) }}">
+                                <a href="{{ route('hlaseni.index', ['id' => $r->id]) }}" class="akce-btn akce-u" title="Upravit záznam">U</a>
+                                {{-- X – smazat záznam (DELETE zaznam.destroy, s modalem) --}}
+                                <form method="post" action="{{ route('zaznam.destroy', ['zaznam' => $r->id]) }}">
                                     @csrf
+                                    @method('DELETE')
                                     <button type="button" class="akce-btn akce-x" title="Smazat záznam"
                                             onclick="openDelModal(this, @js($r->znacka))">X</button>
                                 </form>
