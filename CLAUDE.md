@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-VKV Provozní aktiv – a Laravel 13 / PHP 8.5 web application for managing amateur radio VHF contest log submissions, EDI file parsing, scoring, and results display. The domain language is Czech/Slovak.
+VKV Provozní aktiv – a Laravel 13 / PHP 8.4 web application for managing amateur radio VHF contest log submissions, EDI file parsing, scoring, and results display. The domain language is Czech/Slovak.
 
 ## Commands
 
