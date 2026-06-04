@@ -47,9 +47,11 @@ EDI files may arrive as Windows-1250; `EdiParser` converts via `iconv` before pr
 ### Scoring Formula
 
 `ScoringService::scoreEdi()` implements the contest rules:
-- Count QSOs within the contest window (`ContestWindow::FROM = '0800'`, `TO = '1100'` UTC)
-- Exclude QSOs to the station's own big square (first 4 chars of `PWWLo`)
-- `body = pocet × nasobice` where `pocet` = total qualifying QSOs, `nasobice` = unique foreign big squares + 1
+- Count QSOs within the contest window (`ContestWindow::from()` = `'0800'`, `to()` = `'1100'` UTC) on the contest day taken from `TDate`; QSOs outside the window or day score 0
+- QSOs to the station's own big square (first 4 chars of `PWWLo`) **are** counted — `pocet` includes them
+- `boduZaQso` = sum of per-QSO points recomputed from locators via `Maidenhead::qsoPoints()` (own big square = 2 points, +1 for each further ring of big squares); the EDI `QSO-Points` column is ignored
+- `nasobice` = count of distinct big squares including the home square (home always counts, even if not worked)
+- `body = boduZaQso × nasobice`
 
 `ScoringService::rankRound()` assigns dense ranks within each category of a round.
 
