@@ -106,6 +106,7 @@
     .b--skip { background: #eceef2; color: #69707d; }
     .b--mult { background: #ece6fb; color: #5b3fa6; margin-left: 4px; }
     .b--dup { background: #fde7e5; color: #a5281c; margin-left: 4px; }
+    .b--own { background: #e6eefb; color: #2a4a86; margin-left: 4px; }
 
     .edx-empty { color: #8a909c; font-style: italic; padding: 14px 0; }
 </style>
@@ -193,13 +194,15 @@
         {{-- Skóre --}}
         <section class="edx-score">
             <div class="edx-score__formula">
-                <div class="edx-score__factor"><b>{{ $report->pocet }}</b><span>počet QSO</span></div>
+                <div class="edx-score__factor"><b>{{ $report->boduZaQso }}</b><span>body za spojení</span></div>
                 <span class="edx-score__op">×</span>
                 <div class="edx-score__factor"><b>{{ $report->nasobice }}</b><span>násobič</span></div>
                 <span class="edx-score__op">=</span>
                 <div class="edx-score__factor edx-score__factor--total"><b>{{ $report->body }}</b><span>bodů</span></div>
             </div>
             <p class="edx-score__note">
+                Body za spojení = přepočítáno z lokátorů {{ $report->pocet }} započtených QSO
+                (vlastní čtverec 2, sousední 3, každý další pás o bod víc; QSO-Points z deníku se ignoruje).
                 Násobič = {{ $report->nasobice - 1 }} různých cizích velkých čtverců + 1 domácí.
             </p>
         </section>
@@ -215,8 +218,8 @@
             @if ($report->excludedWrongDate)
                 <span class="edx-stat edx-stat--warn">jiný den&nbsp;<b>{{ $report->excludedWrongDate }}</b></span>
             @endif
-            @if ($report->excludedOwnSquare)
-                <span class="edx-stat">vlastní čtverec&nbsp;<b>{{ $report->excludedOwnSquare }}</b></span>
+            @if ($report->ownSquareCount)
+                <span class="edx-stat edx-stat--ok">vlastní čtverec (2 b.)&nbsp;<b>{{ $report->ownSquareCount }}</b></span>
             @endif
             @if ($report->excludedEmpty)
                 <span class="edx-stat">bez lokátoru&nbsp;<b>{{ $report->excludedEmpty }}</b></span>
@@ -245,7 +248,8 @@
         <div class="edx-legend">
             <span><i class="sw-ok"></i> započteno</span>
             <span><i class="sw-warn"></i> mimo okno / jiný den</span>
-            <span><i class="sw-skip"></i> vlastní čtverec / bez lokátoru</span>
+            <span><i class="sw-skip"></i> bez lokátoru</span>
+            <span><span class="b b--own">vlastní čtverec</span></span>
             <span><span class="b b--mult">★ nový násobič</span></span>
             <span><span class="b b--dup">duplikát</span></span>
         </div>
@@ -261,6 +265,7 @@
                         <th>Stanice</th>
                         <th>Přijatý WWL</th>
                         <th>Čtverec</th>
+                        <th>Body</th>
                         <th>Stav</th>
                     </tr>
                 </thead>
@@ -278,6 +283,7 @@
                             <td class="call">{{ $row->callSign }}</td>
                             <td class="sq">{{ $row->receivedWwl !== '' ? $row->receivedWwl : '—' }}</td>
                             <td class="sq">{{ $row->bigSquare !== '' ? $row->bigSquare : '—' }}</td>
+                            <td class="num">{{ $row->counted ? $row->points : '—' }}</td>
                             <td>
                                 @switch($row->reason)
                                     @case('counted')
@@ -289,18 +295,16 @@
                                     @case('wrong_date')
                                         <span class="b b--warn">jiný den</span>
                                         @break
-                                    @case('own_square')
-                                        <span class="b b--skip">vlastní čtverec</span>
-                                        @break
                                     @default
                                         <span class="b b--skip">bez lokátoru</span>
                                 @endswitch
+                                @if ($row->isOwnSquare && $row->counted)<span class="b b--own">vlastní čtverec</span>@endif
                                 @if ($row->newMultiplier)<span class="b b--mult">★ nový násobič</span>@endif
                                 @if ($row->duplicate)<span class="b b--dup">duplikát</span>@endif
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="7" class="edx-empty">Deník neobsahuje žádné naparsovatelné QSO.</td></tr>
+                        <tr><td colspan="8" class="edx-empty">Deník neobsahuje žádné naparsovatelné QSO.</td></tr>
                     @endforelse
                 </tbody>
             </table>

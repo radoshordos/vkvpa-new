@@ -9,6 +9,7 @@ use App\Models\VkvpaData;
 use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
 use App\Support\ContestWindow;
+use App\Support\Maidenhead;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Config;
@@ -59,11 +60,14 @@ final class ScoringService
     }
 
     /**
-     * Spočítá skóre deníku z QSO řádků (vzorec z edit_hlaseni.php v4.1.3):
+     * Spočítá skóre deníku z QSO řádků (bodování per velký čtverec dle pravidel):
      *  - domácí velký čtverec = první 4 znaky PWWLo,
-     *  - pocet    = QSO do cizích velkých čtverců,
-     *  - nasobice = počet různých cizích velkých čtverců + 1,
-     *  - body     = pocet * nasobice.
+     *  - pocet     = započítaná QSO (včetně QSO do vlastního čtverce),
+     *  - boduZaQso = součet bodů za spojení – přepočítáno z lokátorů (vlastní
+     *    čtverec 2 body, sousední 3, každý další pás o bod víc); hodnota
+     *    `QSO-Points` z deníku se ignoruje,
+     *  - nasobice  = počet různých velkých čtverců včetně vlastního (vlastní vždy),
+     *  - body      = boduZaQso * nasobice.
      *
      * Započítávají se jen QSO uvnitř závodního okna (den závodu dle `TDate`
      * a čas 08:00–11:00 UTC). QSO mimo okno mají efektivně bodovou hodnotu 0.
@@ -79,13 +83,22 @@ final class ScoringService
             ->when($den !== '', fn ($q) => $q->where('Date', $den))
             ->get(['Received-WWL'])
             ->map(static fn ($l): string => strtoupper(substr(trim((string) $l->{'Received-WWL'}), 0, 4)))
-            ->filter(static fn (string $sq): bool => $sq !== '' && $sq !== $home);
+            ->filter(static fn (string $sq): bool => $sq !== '')
+            ->values();
 
         $pocet = $squares->count();
-        $nasobice = $squares->unique()->count() + 1;
-        $body = $pocet * $nasobice;
+        // Body za spojení přepočítáme z lokátorů, ne z deníku.
+        $boduZaQso = $squares->sum(static fn (string $sq): int => Maidenhead::qsoPoints($home, $sq));
 
-        return new EdiScore(pocet: $pocet, nasobice: $nasobice, body: $body);
+        // Násobiče: různé velké čtverce, se kterými bylo pracováno, + vždy vlastní.
+        $unique = $squares->all();
+        if ($home !== '') {
+            $unique[] = $home;
+        }
+        $nasobice = count(array_unique($unique));
+        $body = $boduZaQso * $nasobice;
+
+        return new EdiScore(pocet: $pocet, boduZaQso: $boduZaQso, nasobice: $nasobice, body: $body);
     }
 
     /**

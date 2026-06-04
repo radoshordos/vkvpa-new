@@ -9,7 +9,7 @@ namespace App\Services\Scoring;
  * souhrn parsování a rozpad jednotlivých QSO ({@see EdiDebugRow}).
  *
  * Slouží jen pro náhled – nic se neukládá do databáze. Hodnoty `pocet`,
- * `nasobice` a `body` jsou shodné s {@see ScoringService::scoreEdi()}.
+ * `boduZaQso`, `nasobice` a `body` jsou shodné s {@see ScoringService::scoreEdi()}.
  */
 final readonly class EdiDebugReport
 {
@@ -36,11 +36,12 @@ final readonly class EdiDebugReport
         public array $ignoredLines,
         public array $lineErrors,
         public int $pocet,
+        public int $boduZaQso,
         public int $nasobice,
         public int $body,
         public int $excludedOutOfWindow,
         public int $excludedWrongDate,
-        public int $excludedOwnSquare,
+        public int $ownSquareCount,
         public int $excludedEmpty,
         public int $duplicateCount,
     ) {}

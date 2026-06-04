@@ -56,6 +56,55 @@ final class Maidenhead
     }
 
     /**
+     * Celočíselné souřadnice velkého čtverce v mřížce velkých čtverců
+     * (x = zem. délka po 2°, y = zem. šířka po 1°).
+     *
+     * @return array{x: int, y: int}|null null při neplatném čtverci
+     */
+    public static function bigSquareGrid(string $square): ?array
+    {
+        $sq = strtoupper(trim($square));
+        if (! preg_match('/^[A-R]{2}\d{2}$/', $sq)) {
+            return null;
+        }
+
+        return [
+            'x' => (ord($sq[0]) - ord('A')) * 10 + (int) $sq[2],
+            'y' => (ord($sq[1]) - ord('A')) * 10 + (int) $sq[3],
+        ];
+    }
+
+    /**
+     * Pásová (ring) vzdálenost mezi dvěma velkými čtverci v jednotkách velkých
+     * čtverců – Chebyshevova vzdálenost v mřížce. Vlastní čtverec = 0,
+     * sousední (i diagonální) = 1, každý další pás +1.
+     *
+     * @return int|null null při neplatném vstupu
+     */
+    public static function bigSquareRingDistance(string $a, string $b): ?int
+    {
+        $ga = self::bigSquareGrid($a);
+        $gb = self::bigSquareGrid($b);
+        if ($ga === null || $gb === null) {
+            return null;
+        }
+
+        return max(abs($ga['x'] - $gb['x']), abs($ga['y'] - $gb['y']));
+    }
+
+    /**
+     * Body za spojení dle pravidel VKV PA: vlastní velký čtverec 2 body,
+     * sousední 3 a v dalších pásech vždy o bod víc (2 + pásová vzdálenost).
+     * Při neplatném lokátoru (vlastním či protistanice) vrací 0.
+     */
+    public static function qsoPoints(string $homeSquare, string $workedSquare): int
+    {
+        $ring = self::bigSquareRingDistance($homeSquare, $workedSquare);
+
+        return $ring === null ? 0 : 2 + $ring;
+    }
+
+    /**
      * Vzdálenost mezi dvěma body v kilometrech (haversine, poloměr Země 6371 km).
      * Pro popup mapy „N" (vzdálenost spojení).
      */

@@ -46,7 +46,7 @@ class EdiDebugPageTest extends TestCase
         $this->actingAs($this->admin())
             ->post(route('edi.debug.store'), ['upload' => $file])
             ->assertOk()
-            ->assertSee('počet QSO')      // skóre headline se vykreslil
+            ->assertSee('body za spojení') // skóre headline se vykreslil
             ->assertSee('započteno');     // tabulka rozpadu
     }
 

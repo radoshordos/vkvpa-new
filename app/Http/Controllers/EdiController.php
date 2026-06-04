@@ -110,7 +110,7 @@ class EdiController extends Controller
             'soapbox' => $h->get('RSoap'),
             'pocet' => $score->pocet,
             'nasobice' => $score->nasobice,
-            'bodu_za_qso' => 0,
+            'bodu_za_qso' => $score->boduZaQso,
             'body' => $score->body,
             'qrp' => $h->isQrp(),
             'EDI' => true,

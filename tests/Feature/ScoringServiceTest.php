@@ -77,11 +77,14 @@ class ScoringServiceTest extends TestCase
 
         $score = app(ScoringService::class)->scoreEdi($head);
 
-        // Domácí PWWLo=JN99AJ → domácí čtverec JN99. JN99BP (home) vyloučen,
-        // JN89PV počítán: pocet=1, nasobice = 1 cizí čtverec + 1 = 2, body = 2.
-        $this->assertSame(1, $score->pocet);
+        // Domácí PWWLo=JN99AJ → domácí čtverec JN99. Obě QSO se počítají:
+        // JN99BP (vlastní čtverec, QSO-Points=2) + JN89PV (cizí, QSO-Points=3).
+        // pocet=2, body za spojení = 2+3 = 5,
+        // nasobice = 1 cizí čtverec (JN89) + 1 vlastní (JN99) = 2, body = 5 × 2 = 10.
+        $this->assertSame(2, $score->pocet);
+        $this->assertSame(5, $score->boduZaQso);
         $this->assertSame(2, $score->nasobice);
-        $this->assertSame(2, $score->body);
+        $this->assertSame(10, $score->body);
     }
 
     public function test_score_edi_ignores_qso_outside_window(): void
@@ -92,8 +95,9 @@ class ScoringServiceTest extends TestCase
         ]);
         Ediline::insert([
             // 2 QSO uvnitř okna (cizí čtverce JN89, JO70) → počítají se.
-            ['IDS' => $head->ID, 'Date' => '260118', 'Time' => '0830', 'CallSign' => 'A', 'Received-WWL' => 'JN89AA', 'QSO-Points' => 1],
-            ['IDS' => $head->ID, 'Date' => '260118', 'Time' => '0930', 'CallSign' => 'B', 'Received-WWL' => 'JO70AA', 'QSO-Points' => 1],
+            // QSO-Points v deníku jsou schválně chybné – přepočítáme je z lokátorů.
+            ['IDS' => $head->ID, 'Date' => '260118', 'Time' => '0830', 'CallSign' => 'A', 'Received-WWL' => 'JN89AA', 'QSO-Points' => 99],
+            ['IDS' => $head->ID, 'Date' => '260118', 'Time' => '0930', 'CallSign' => 'B', 'Received-WWL' => 'JO70AA', 'QSO-Points' => 99],
             // mimo čas (12:30) a mimo den (17.) → nezapočítají se.
             ['IDS' => $head->ID, 'Date' => '260118', 'Time' => '1230', 'CallSign' => 'C', 'Received-WWL' => 'JN88AA', 'QSO-Points' => 1],
             ['IDS' => $head->ID, 'Date' => '260117', 'Time' => '0900', 'CallSign' => 'D', 'Received-WWL' => 'JN77AA', 'QSO-Points' => 1],
@@ -101,10 +105,38 @@ class ScoringServiceTest extends TestCase
 
         $score = app(ScoringService::class)->scoreEdi($head);
 
-        // Jen 2 QSO v okně do cizích čtverců: pocet=2, nasobice=2+1=3, body=6.
+        // Domácí JN99. Body z lokátorů: JN89 (soused) = 3, JO70 (2 pásy) = 4.
+        // pocet=2, body za spojení = 3+4 = 7, nasobice = 2+1 = 3, body = 7 × 3 = 21.
         $this->assertSame(2, $score->pocet);
+        $this->assertSame(7, $score->boduZaQso);
         $this->assertSame(3, $score->nasobice);
-        $this->assertSame(6, $score->body);
+        $this->assertSame(21, $score->body);
+    }
+
+    public function test_score_edi_counts_own_square_qso(): void
+    {
+        // Spojení ve vlastním velkém čtverci se počítá (2 body) a vlastní čtverec
+        // je vždy násobičem – právě jednou, i když se v něm pracovalo.
+        $head = Edihead::create([
+            'TDate' => '20260118;20260118', 'PCall' => 'OK1TEST', 'PWWLo' => 'JN99AJ',
+            'PSect' => '', 'PBand' => '', 'RName' => '', 'RPhon' => '', 'RHBBS' => '', 'SPowe' => 100,
+        ]);
+        Ediline::insert([
+            // vlastní čtverec JN99 (2 body) + 2× cizí JN89 (3 body) ve stejném čtverci.
+            // QSO-Points v deníku jsou schválně 0 – přepočítáme je z lokátorů.
+            ['IDS' => $head->ID, 'Date' => '260118', 'Time' => '0830', 'CallSign' => 'A', 'Received-WWL' => 'JN99XX', 'QSO-Points' => 0],
+            ['IDS' => $head->ID, 'Date' => '260118', 'Time' => '0900', 'CallSign' => 'B', 'Received-WWL' => 'JN89AA', 'QSO-Points' => 0],
+            ['IDS' => $head->ID, 'Date' => '260118', 'Time' => '0930', 'CallSign' => 'C', 'Received-WWL' => 'JN89BB', 'QSO-Points' => 0],
+        ]);
+
+        $score = app(ScoringService::class)->scoreEdi($head);
+
+        // pocet=3, body za spojení = 2 (vlastní JN99) + 3 + 3 (soused JN89) = 8,
+        // nasobice = 1 cizí čtverec (JN89) + 1 vlastní (JN99) = 2, body = 8 × 2 = 16.
+        $this->assertSame(3, $score->pocet);
+        $this->assertSame(8, $score->boduZaQso);
+        $this->assertSame(2, $score->nasobice);
+        $this->assertSame(16, $score->body);
     }
 
     public function test_yearly_results_nullifies_non_edi_for_kola_above_threshold(): void
