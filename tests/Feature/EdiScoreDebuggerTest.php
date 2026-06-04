@@ -41,7 +41,7 @@ class EdiScoreDebuggerTest extends TestCase
             'PBand' => '144 MHz', 'PSect' => 'SINGLE', 'SPowe' => '100',
         ]);
 
-        return new EdiLog($header, $built, '', count($built));
+        return new EdiLog($header, array_values($built), '', count($built));
     }
 
     public function test_classifies_each_qso_line(): void
