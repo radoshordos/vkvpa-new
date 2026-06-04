@@ -16,6 +16,9 @@
     .vkv-select { border: 1px solid black; padding: 1px; background: white; font-size: 13px; }
     .vkv-text-area { border: 1px solid black; width: 100%; margin-top: 5px; background: white; font-family: Arial, sans-serif; }
     .vkv-error { background: #fff3f3; border: 1px solid #cc0000; color: #cc0000; padding: 10px; margin: 10px 0; font-family: Arial; font-size: 13px; font-weight: bold; }
+    .vkv-field-error { color: #cc0000; font-size: 11px; display: block; margin-top: 2px; }
+    .vkv-input-err { border: 1px solid #cc0000 !important; background: #fff8f8 !important; }
+    .vkv-select-err { border: 1px solid #cc0000 !important; background: #fff8f8 !important; }
     .vkv-edi-box { background: #eee; padding: 15px; border: 1px solid #ccc; margin-bottom: 20px; }
 </style>
 @endpush
@@ -86,12 +89,13 @@
         <tr>
             <td width="150">Kolo *<br>Period *</td>
             <td>
-                <select name="kolo" class="vkv-select" style="width: 250px;">
+                <select name="kolo" class="vkv-select @error('kolo') vkv-select-err @enderror" style="width: 250px;">
                     <option value="">--- vyberte kolo / select period ---</option>
                     @foreach ($kola as $k)
                         <option value="{{ $k->id }}" @selected((int) $val('kolo', $e->id_kola ?? 0) === $k->id)>{{ $k->nazev }}</option>
                     @endforeach
                 </select>
+                @error('kolo')<span class="vkv-field-error">{{ $message }}</span>@enderror
             </td>
             <td colspan="2"></td>
         </tr>
@@ -99,12 +103,13 @@
         <tr>
             <td>Kategorie *<br>Category *</td>
             <td>
-                <select name="kategorie" class="vkv-select" style="width: 250px;">
+                <select name="kategorie" class="vkv-select @error('kategorie') vkv-select-err @enderror" style="width: 250px;">
                     <option value="">--- vyberte kategorii / select ---</option>
                     @foreach ($kategorie as $cat)
                         <option value="{{ $cat->id }}" @selected((int) $val('kategorie', $e->id_kategorie ?? 0) === $cat->id)>{{ $cat->nazev }}</option>
                     @endforeach
                 </select>
+                @error('kategorie')<span class="vkv-field-error">{{ $message }}</span>@enderror
             </td>
             <td colspan="2">
                 <input type="checkbox" name="qrp" value="1" @checked($val('qrp', $e->qrp ?? false))>
@@ -114,9 +119,15 @@
 
         <tr>
             <td><strong>Volací znak *<br>Callsign *</strong></td>
-            <td><input name="znacka" type="text" class="vkv-input vkv-input-bold" value="{{ $val('znacka', $e->znacka ?? '') }}" size="25"></td>
+            <td>
+                <input name="znacka" type="text" class="vkv-input vkv-input-bold @error('znacka') vkv-input-err @enderror" value="{{ $val('znacka', $e->znacka ?? '') }}" size="25">
+                @error('znacka')<span class="vkv-field-error">{{ $message }}</span>@enderror
+            </td>
             <td width="100">Lokátor *<br>WWL *</td>
-            <td><input name="locator" type="text" class="vkv-input" value="{{ $val('locator', $e->locator ?? '') }}" size="15"></td>
+            <td>
+                <input name="locator" type="text" class="vkv-input @error('locator') vkv-input-err @enderror" value="{{ $val('locator', $e->locator ?? '') }}" size="15">
+                @error('locator')<span class="vkv-field-error">{{ $message }}</span>@enderror
+            </td>
         </tr>
 
         <tr>
@@ -124,13 +135,25 @@
                 <table width="100%" cellpadding="0" cellspacing="0" style="border:none;">
                     <tr>
                         <td style="border:none;">Počet QSO *</td>
-                        <td style="border:none;"><input name="pocet" type="text" class="vkv-input" value="{{ (int) $val('pocet', $e->pocet ?? 0, 0) }}" size="6"></td>
+                        <td style="border:none;">
+                            <input name="pocet" type="text" class="vkv-input @error('pocet') vkv-input-err @enderror" value="{{ (int) $val('pocet', $e->pocet ?? 0, 0) }}" size="6">
+                            @error('pocet')<span class="vkv-field-error">{{ $message }}</span>@enderror
+                        </td>
                         <td style="border:none;">Bodů za QSO</td>
-                        <td style="border:none;"><input name="bodu_za_qso" type="text" class="vkv-input" value="{{ (int) $val('bodu_za_qso', $e->bodu_za_qso ?? 0, 0) }}" size="6"></td>
+                        <td style="border:none;">
+                            <input name="bodu_za_qso" type="text" class="vkv-input @error('bodu_za_qso') vkv-input-err @enderror" value="{{ (int) $val('bodu_za_qso', $e->bodu_za_qso ?? 0, 0) }}" size="6">
+                            @error('bodu_za_qso')<span class="vkv-field-error">{{ $message }}</span>@enderror
+                        </td>
                         <td style="border:none;">Násobiče *</td>
-                        <td style="border:none;"><input name="nasobice" type="text" class="vkv-input" value="{{ (int) $val('nasobice', $e->nasobice ?? 0, 0) }}" size="6"></td>
+                        <td style="border:none;">
+                            <input name="nasobice" type="text" class="vkv-input @error('nasobice') vkv-input-err @enderror" value="{{ (int) $val('nasobice', $e->nasobice ?? 0, 0) }}" size="6">
+                            @error('nasobice')<span class="vkv-field-error">{{ $message }}</span>@enderror
+                        </td>
                         <td style="border:none;">Celkem bodů *</td>
-                        <td style="border:none;"><input name="body" type="text" class="vkv-input vkv-input-bold" value="{{ (int) $val('body', $e->body ?? 0, 0) }}" size="10" style="background-color: #ffffcc;"></td>
+                        <td style="border:none;">
+                            <input name="body" type="text" class="vkv-input vkv-input-bold @error('body') vkv-input-err @enderror" value="{{ (int) $val('body', $e->body ?? 0, 0) }}" size="10" style="background-color: #ffffcc;">
+                            @error('body')<span class="vkv-field-error">{{ $message }}</span>@enderror
+                        </td>
                     </tr>
                 </table>
             </td>
@@ -142,9 +165,15 @@
         </tr>
         <tr>
             <td>Kontakt / Contact:*</td>
-            <td><input name="email" type="text" class="vkv-input" value="{{ $val('email', $e->mail ?? '') }}" style="width: 280px;"></td>
+            <td>
+                <input name="email" type="text" class="vkv-input @error('email') vkv-input-err @enderror" value="{{ $val('email', $e->mail ?? '') }}" style="width: 280px;">
+                @error('email')<span class="vkv-field-error">{{ $message }}</span>@enderror
+            </td>
             <td align="right">telefon</td>
-            <td><input name="telefon" type="text" class="vkv-input" value="{{ $val('telefon', $e->telefon ?? '') }}" style="width: 200px;"></td>
+            <td>
+                <input name="telefon" type="text" class="vkv-input @error('telefon') vkv-input-err @enderror" value="{{ $val('telefon', $e->telefon ?? '') }}" style="width: 200px;">
+                @error('telefon')<span class="vkv-field-error">{{ $message }}</span>@enderror
+            </td>
         </tr>
 
         <tr>
