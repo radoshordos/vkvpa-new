@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Services\Scoring;
 
+use App\Exceptions\UnknownBandException;
+use App\Models\VkvpaKategorie;
+use App\Services\Edi\CategoryResolver;
 use App\Services\Edi\EdiLog;
 use App\Support\ContestWindow;
 use App\Support\Maidenhead;
@@ -27,6 +30,8 @@ use App\Support\Maidenhead;
  */
 final class EdiScoreDebugger
 {
+    public function __construct(private readonly CategoryResolver $categoryResolver) {}
+
     public function analyze(EdiLog $log): EdiDebugReport
     {
         $header = $log->header;
@@ -117,6 +122,20 @@ final class EdiScoreDebugger
 
         $nasobice = count($foreignSquares) + 1;
 
+        try {
+            $categoryId = $this->categoryResolver->resolve(
+                $header->pCall(),
+                $header->pBand(),
+                $header->pSect(),
+            );
+            $categoryName = $categoryId !== null
+                ? VkvpaKategorie::find($categoryId)?->nazev
+                : null;
+        } catch (UnknownBandException) {
+            $categoryId = null;
+            $categoryName = null;
+        }
+
         return new EdiDebugReport(
             call: $header->pCall(),
             locator: $header->pWWLo(),
@@ -143,6 +162,8 @@ final class EdiScoreDebugger
             ownSquareCount: $ownSquare,
             excludedEmpty: $emptyWwl,
             duplicateCount: $duplicates,
+            categoryId: $categoryId,
+            categoryName: $categoryName,
         );
     }
 }

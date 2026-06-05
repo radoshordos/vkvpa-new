@@ -44,5 +44,7 @@ final readonly class EdiDebugReport
         public int $ownSquareCount,
         public int $excludedEmpty,
         public int $duplicateCount,
+        public ?int $categoryId = null,
+        public ?string $categoryName = null,
     ) {}
 }

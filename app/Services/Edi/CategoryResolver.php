@@ -64,6 +64,26 @@ final class CategoryResolver
     ];
 
     /**
+     * Vrátí všechna ID kategorií použitá v matici CATEGORIES.
+     * Slouží k ověření konzistence s tabulkou vkvpa_kategorie.
+     *
+     * @return list<int>
+     */
+    public static function allCategoryIds(): array
+    {
+        $ids = [];
+        foreach (self::CATEGORIES as $sections) {
+            foreach ($sections as $variants) {
+                foreach ($variants as $id) {
+                    $ids[] = $id;
+                }
+            }
+        }
+
+        return array_values(array_unique($ids));
+    }
+
+    /**
      * @param  string  $pcall  volací značka (PCall) – pro určení DX
      * @param  string  $pBand  pásmo z hlavičky (PBand)
      * @param  string  $pSect  sekce z hlavičky (PSect)
@@ -112,11 +132,17 @@ final class CategoryResolver
         return null;
     }
 
-    /** DX = značka nezačíná na „OK" ani „OL" (cizí stanice). */
+    /** DX = značka nezačíná žádným z tuzemských prefixů (config vkvpa.domestic_prefixes). */
     private function isDx(string $pcall): bool
     {
         $p = strtoupper(trim($pcall));
 
-        return ! str_starts_with($p, 'OK') && ! str_starts_with($p, 'OL');
+        foreach (config('vkvpa.domestic_prefixes', ['OK', 'OL']) as $prefix) {
+            if (str_starts_with($p, strtoupper((string) $prefix))) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

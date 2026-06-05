@@ -46,7 +46,7 @@ class EdiScoreDebuggerTest extends TestCase
 
     public function test_classifies_each_qso_line(): void
     {
-        $report = new EdiScoreDebugger()->analyze($this->log(
+        $report = app(EdiScoreDebugger::class)->analyze($this->log(
             ['260118', '0830', 'OK1A', 'JN89AA', ''],   // započteno, nový násobič
             ['260118', '0930', 'OK1B', 'JN89BB', ''],   // započteno, stejný čtverec JN89
             ['260118', '1000', 'OK1C', 'JO70AA', ''],   // započteno, nový násobič
@@ -93,7 +93,7 @@ class EdiScoreDebuggerTest extends TestCase
         $edi = (string) file_get_contents(__DIR__.'/../fixtures/sample.edi');
         $log = new EdiParser()->parse($edi);
 
-        $report = new EdiScoreDebugger()->analyze($log);
+        $report = app(EdiScoreDebugger::class)->analyze($log);
 
         // Debug rozpad musí dát stejné skóre jako ostrý výpočet přes DB.
         $head = new EdiImportService()->import($log);

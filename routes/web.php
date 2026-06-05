@@ -38,7 +38,7 @@ Route::get('/mail-image', [MailImageController::class, 'show'])->name('mail.imag
 
 // Nahrání EDI deníku (využívá EdiParser/EdiImportService z Fáze 5).
 Route::get('/edi', [EdiController::class, 'create'])->name('edi.create');
-Route::post('/edi', [EdiController::class, 'store'])->name('edi.store');
+Route::post('/edi', [EdiController::class, 'store'])->middleware('throttle:10,1')->name('edi.store');
 
 // Zobrazení EDI deníku (sloupec „Akce / EDI" ve výsledkové listině):
 //   EDI  – původní EDI soubor,

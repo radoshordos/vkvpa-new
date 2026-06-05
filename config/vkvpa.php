@@ -20,6 +20,9 @@ return [
     // Od tohoto kola se hlášení bez EDI do ročního součtu nezapočítávají.
     'non_edi_nullify_from_kolo' => 91,
 
+    // Prefixy tuzemských stanic (určuje DX vs. domácí kategorie).
+    'domestic_prefixes' => ['OK', 'OL'],
+
     // Závodní časové okno (UTC, formát HHMM). QSO mimo se nezapočítávají.
     'contest_window' => [
         'from' => '0800',
