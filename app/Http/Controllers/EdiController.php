@@ -108,5 +108,4 @@ class EdiController extends Controller
             'Content-Disposition' => 'inline; filename="'.$filename.'"',
         ]);
     }
-
 }

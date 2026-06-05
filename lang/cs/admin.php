@@ -66,7 +66,7 @@ return [
     'debug_card_cat' => 'Kategorie',
     'debug_card_power' => 'Výkon',
     'debug_card_window' => 'Závodní okno (UTC)',
-    'debug_card_maps'   => 'Mapy',
+    'debug_card_maps' => 'Mapy',
     'debug_score_pts' => 'body za spojení',
     'debug_score_mult' => 'násobič',
     'debug_score_total' => 'bodů',
