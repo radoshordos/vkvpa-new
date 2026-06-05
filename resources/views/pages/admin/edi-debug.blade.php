@@ -9,7 +9,12 @@
     .edx-qso tr.r-warn  td:first-child { box-shadow: inset 3px 0 0 var(--warn); }
     .edx-qso tr.r-skip  td:first-child { box-shadow: inset 3px 0 0 var(--muted); }
     .edx-qso tr.r-skip  td { color: var(--muted); }
+    /* Přepínač karet map M / N / S. */
+    .dbg-mapa { height: 45vh; width: 100%; border-radius: 0.4rem; }
+    .sq-label { background: transparent; border: none; box-shadow: none; color: #fff; font-weight: bold; font-size: 12px; }
 </style>
+<link rel="preconnect" href="https://tile.openstreetmap.org">
+@vite('resources/js/debug-map.js')
 @endpush
 
 @section('content')
@@ -112,6 +117,59 @@
         @if ($report->excludedEmpty)<span class="badge badge-brand">{{ __('admin.debug_badge_empty') }} <b>{{ $report->excludedEmpty }}</b></span>@endif
         @if (count($report->ignoredLines))<span class="badge badge-danger">{{ __('admin.debug_badge_ignored') }} <b>{{ count($report->ignoredLines) }}</b></span>@endif
         @if ($report->duplicateCount)<span class="badge badge-danger">{{ __('admin.debug_badge_dup') }} <b>{{ $report->duplicateCount }}</b></span>@endif
+    </section>
+
+    {{-- Mapy M / N / S (data počítána z naparsovaných QSO, bez DB) --}}
+    @php
+        $mapHome   = \App\Support\Maidenhead::toLatLon($report->locator);
+        $mapPoints = [];
+        $sqCounts  = [];
+        foreach ($report->rows as $r) {
+            if (! $r->counted) { continue; }
+            $coords = \App\Support\Maidenhead::toLatLon($r->receivedWwl);
+            if ($coords) {
+                $mapPoints[] = [
+                    'lat'    => $coords['lat'],
+                    'lon'    => $coords['lon'],
+                    'call'   => $r->callSign,
+                    'wwl'    => $r->receivedWwl,
+                    'points' => $r->points,
+                    'dist'   => $mapHome ? (int) round(\App\Support\Maidenhead::distanceKm($mapHome['lat'], $mapHome['lon'], $coords['lat'], $coords['lon'])) : null,
+                    'azimut' => $mapHome ? (int) round(\App\Support\Maidenhead::bearingDeg($mapHome['lat'], $mapHome['lon'], $coords['lat'], $coords['lon'])) : null,
+                ];
+            }
+            if ($r->bigSquare !== '') {
+                $sqCounts[$r->bigSquare] = ($sqCounts[$r->bigSquare] ?? 0) + 1;
+            }
+        }
+        $mapSquares = [];
+        foreach ($sqCounts as $sq => $cnt) {
+            $center = \App\Support\Maidenhead::bigSquareCenter((string) $sq);
+            if ($center) {
+                $mapSquares[] = ['square' => $sq, 'count' => $cnt, 'lat' => $center['lat'], 'lon' => $center['lon']];
+            }
+        }
+    @endphp
+    <script>
+        window.__debugMapCfg = {
+            home:    @json($mapHome),
+            points:  @json($mapPoints),
+            squares: @json($mapSquares),
+            pcall:   @json($report->call),
+            homeLoc: @json($report->locator),
+        };
+    </script>
+    <section class="mb-5">
+        <div class="mb-2 flex gap-2">
+            <button id="dbg-tab-m" class="btn btn-sm btn-primary" type="button">M – ježek</button>
+            <button id="dbg-tab-n" class="btn btn-sm btn-ghost"   type="button">N – špendlíky</button>
+            <button id="dbg-tab-s" class="btn btn-sm btn-ghost"   type="button">S – lokátory</button>
+        </div>
+        <div class="table-wrap p-1">
+            <div id="dbg-panel-m"><div id="dbg-mapa-m" class="dbg-mapa"></div></div>
+            <div id="dbg-panel-n" class="hidden"><div id="dbg-mapa-n" class="dbg-mapa"></div></div>
+            <div id="dbg-panel-s" class="hidden"><div id="dbg-mapa-s" class="dbg-mapa"></div></div>
+        </div>
     </section>
 
     {{-- Ignorované řádky (neprošly parserem) --}}
