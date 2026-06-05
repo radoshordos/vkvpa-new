@@ -12,8 +12,11 @@
    Duch původní aplikace zachován: levandulová pro navigaci, modré nadpisy,
    vínové (maroon) odkazy. */
 @theme inline {
-    --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif,
+    --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif,
         'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    /* Tabulková / technická data: značky, lokátory, čísla. */
+    --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', 'Cascadia Mono', 'Segoe UI Mono', 'Roboto Mono', Menlo,
+        Consolas, 'Liberation Mono', monospace;
 
     --color-bg: var(--bg);
     --color-surface: var(--surface);
@@ -100,6 +103,8 @@
     body {
         background-color: var(--bg);
         color: var(--ink);
+        font-size: 0.9rem;
+        line-height: 1.45;
     }
 
     /* Nadpisy v obsahu – jednotné, nahrazují inline styly stránek. */
@@ -307,23 +312,25 @@
     table.data-table {
         width: 100%;
         border-collapse: collapse;
-        font-size: 0.82rem;
+        font-size: 0.8125rem;
+        line-height: 1.35;
         background-color: var(--surface);
+        font-variant-numeric: tabular-nums;
     }
     table.data-table thead th {
         background-color: var(--surface-2);
         color: var(--heading);
         text-align: left;
         font-weight: 600;
-        font-size: 0.72rem;
+        font-size: 0.7rem;
         text-transform: uppercase;
         letter-spacing: 0.02em;
-        padding: 0.5rem 0.7rem;
+        padding: 0.4rem 0.6rem;
         border-bottom: 1px solid var(--line);
         white-space: nowrap;
     }
     table.data-table td {
-        padding: 0.5rem 0.7rem;
+        padding: 0.35rem 0.6rem;
         border-bottom: 1px solid var(--line);
         vertical-align: top;
         color: var(--ink);
@@ -340,6 +347,14 @@
     .num {
         text-align: right;
         font-variant-numeric: tabular-nums;
+    }
+
+    /* Technická data – značky, lokátory, čísla – monospace pro líc sloupců. */
+    .mono {
+        font-family: var(--font-mono);
+        font-variant-numeric: tabular-nums;
+        font-size: 0.95em;
+        letter-spacing: -0.01em;
     }
 
     /* Kategorie / sekce ve výsledkové listině. */

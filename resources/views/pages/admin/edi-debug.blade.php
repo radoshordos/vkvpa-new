@@ -160,9 +160,9 @@
                         <td class="num text-muted">{{ $row->index }}</td>
                         <td class="num">{{ $fmtDate($row->date) }}</td>
                         <td class="num">{{ $fmtTime($row->time) }}</td>
-                        <td class="font-bold">{{ $row->callSign }}</td>
-                        <td>{{ $row->receivedWwl !== '' ? $row->receivedWwl : '—' }}</td>
-                        <td>{{ $row->bigSquare !== '' ? $row->bigSquare : '—' }}</td>
+                        <td class="mono font-bold">{{ $row->callSign }}</td>
+                        <td class="mono">{{ $row->receivedWwl !== '' ? $row->receivedWwl : '—' }}</td>
+                        <td class="mono">{{ $row->bigSquare !== '' ? $row->bigSquare : '—' }}</td>
                         <td class="num">{{ $row->counted ? $row->points : '—' }}</td>
                         <td class="whitespace-nowrap">
                             @switch($row->reason)

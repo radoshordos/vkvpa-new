@@ -35,7 +35,7 @@
         @foreach ($radky as $i => $r)
           <tr>
             <td class="num">{{ $i + 1 }}.</td>
-            <td class="font-semibold">{{ $r->znacka }}</td>
+            <td class="mono font-semibold">{{ $r->znacka }}</td>
             <td class="num">{{ (int) $r->celkem }}</td>
           </tr>
         @endforeach

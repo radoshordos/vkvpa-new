@@ -88,11 +88,11 @@
                     <tr @class(['row-pending' => ! $r->schvaleno])>
                         <td class="num font-bold">{{ $poradi }}.</td>
                         <td>
-                            <span class="font-bold">{{ $r->znacka }}</span>@if ($r->qrp)<span class="badge badge-qrp ml-1">QRP</span>@endif
+                            <span class="mono font-bold">{{ $r->znacka }}</span>@if ($r->qrp)<span class="badge badge-qrp ml-1">QRP</span>@endif
                             @if ($r->jmeno)<br><span class="text-muted">{{ $r->jmeno }}</span>@endif
                             @if ($r->timestamp)<br><span class="text-xs text-muted">{{ $r->timestamp->format('d.m. H:i') }}</span>@endif
                         </td>
-                        <td class="whitespace-nowrap">{{ $r->locator }}</td>
+                        <td class="mono whitespace-nowrap">{{ $r->locator }}</td>
                         <td class="num">{{ $r->pocet }}</td>
                         <td class="num">{{ $r->nasobice }}</td>
                         <td class="num">

@@ -88,13 +88,13 @@
 
         <div class="field">
             <label class="label" for="f-znacka">Volací znak / Callsign *</label>
-            <input id="f-znacka" name="znacka" type="text" class="input font-bold @error('znacka') input-err @enderror" value="{{ $val('znacka', $e->znacka ?? '') }}">
+            <input id="f-znacka" name="znacka" type="text" class="input mono font-bold @error('znacka') input-err @enderror" value="{{ $val('znacka', $e->znacka ?? '') }}">
             @error('znacka')<span class="field-error">{{ $message }}</span>@enderror
         </div>
 
         <div class="field">
             <label class="label" for="f-loc">Lokátor / WWL *</label>
-            <input id="f-loc" name="locator" type="text" class="input @error('locator') input-err @enderror" value="{{ $val('locator', $e->locator ?? '') }}">
+            <input id="f-loc" name="locator" type="text" class="input mono @error('locator') input-err @enderror" value="{{ $val('locator', $e->locator ?? '') }}">
             @error('locator')<span class="field-error">{{ $message }}</span>@enderror
         </div>
     </div>
@@ -189,8 +189,8 @@
             @foreach ($radky as $i => $r)
                 <tr @class(['row-pending' => ! $r->schvaleno])>
                     <td class="num font-bold">{{ $i + 1 }}.</td>
-                    <td class="font-bold">{{ $r->znacka }}{{ $r->qrp ? ' /QRP' : '' }}</td>
-                    <td class="whitespace-nowrap">{{ $r->locator }}</td>
+                    <td class="mono font-bold">{{ $r->znacka }}{{ $r->qrp ? ' /QRP' : '' }}</td>
+                    <td class="mono whitespace-nowrap">{{ $r->locator }}</td>
                     <td class="num">{{ (int) $r->pocet }}</td>
                     <td class="num">{{ (int) $r->nasobice }}</td>
                     <td class="num font-bold">{{ (int) $r->body }}</td>
