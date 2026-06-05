@@ -65,7 +65,7 @@
                 [__('admin.debug_card_loc'), $report->locator !== '' ? $report->locator : '—', __('admin.debug_card_square').' '.($report->homeSquare !== '' ? $report->homeSquare : '—')],
                 [__('admin.debug_card_day'), $fmtDate($report->contestDay), null],
                 [__('admin.debug_card_band'), $report->band !== '' ? $report->band : '—', $report->section !== '' ? $report->section : '—'],
-                [__('admin.debug_card_cat'), $categoryLabel, $report->categoryId !== null ? 'ID '.$report->categoryId : null],
+                [__('admin.debug_card_cat').($report->categoryId !== null ? ' #'.$report->categoryId : ''), $categoryLabel, null],
                 [__('admin.debug_card_power'), $report->power.' W', $report->qrp ? 'QRP' : null],
                 [__('admin.debug_card_window'), $fmtTime($report->windowFrom).'–'.$fmtTime($report->windowTo), null],
             ];
