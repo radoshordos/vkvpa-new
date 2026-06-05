@@ -2,17 +2,24 @@
 @section('title', 'Načíst EDI – VKV PA')
 @section('content')
 <h1>Načíst EDI soubor / Import EDI file</h1>
+
 @if ($errors->any())
-  <p class="red">{{ $errors->first('upload') }}</p>
-  @if (session('lineErrors'))
-    @foreach (session('lineErrors') as $le)
-      <span class="small">Chybný řádek: {{ $le }}</span><br>
-    @endforeach
-  @endif
+  <div class="alert alert-error">
+    {{ $errors->first('upload') }}
+    @if (session('lineErrors'))
+      @foreach (session('lineErrors') as $le)
+        <br><span class="font-normal">Chybný řádek: {{ $le }}</span>
+      @endforeach
+    @endif
+  </div>
 @endif
-<form action="{{ route('edi.store') }}" method="post" enctype="multipart/form-data">
+
+<form action="{{ route('edi.store') }}" method="post" enctype="multipart/form-data" class="card flex flex-wrap items-end gap-3 p-4">
   @csrf
-  EDI soubor / EDI file: <input type="file" name="upload" size="50"><br>
-  <input type="submit" value="nahrát / upload">
+  <div class="field mb-0">
+    <label class="label" for="upload">EDI soubor / EDI file</label>
+    <input id="upload" type="file" name="upload" class="text-sm">
+  </div>
+  <button type="submit" class="btn btn-primary">nahrát / upload</button>
 </form>
 @endsection

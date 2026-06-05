@@ -3,112 +3,12 @@
 
 @push('head')
 <style>
-    /* ── EDI debug – samostatný, izolovaný vzhled (prefix .edx) ─────────── */
-    .edx { color: #1f2733; line-height: 1.45; }
-    .edx * { box-sizing: border-box; }
-    .edx__title { font-size: 22px; margin: 0 0 4px; color: #2a2360; }
-    .edx__lead { margin: 0 0 18px; color: #5b6470; font-size: 13px; max-width: 60ch; }
-
-    /* Upload panel */
-    .edx-uploader {
-        display: flex; flex-wrap: wrap; align-items: flex-end; gap: 14px;
-        background: linear-gradient(135deg, #f4f3fe 0%, #eef1f7 100%);
-        border: 1px solid #ddd9f3; border-radius: 12px; padding: 16px 18px; margin-bottom: 20px;
-    }
-    .edx-uploader__field { display: flex; flex-direction: column; gap: 6px; }
-    .edx-uploader__label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: #6a6480; }
-    .edx-uploader input[type=file] { font-size: 13px; }
-    .edx-uploader__hint { font-size: 12px; color: #8a8597; margin: 2px 0 0; }
-    .edx-btn {
-        appearance: none; border: 0; cursor: pointer; font: inherit; font-size: 13px; font-weight: 600;
-        background: #6b7280; color: #fff; padding: 6px 14px; border-radius: 7px;
-        transition: background .15s ease;
-    }
-    .edx-btn:hover { background: #565e6b; color: #fff; }
-
-    /* Alert */
-    .edx-alert { border-radius: 10px; padding: 12px 16px; margin-bottom: 18px; font-size: 13px; }
-    .edx-alert--error { background: #fdeceb; border: 1px solid #f4c4bf; color: #8d231a; }
-    .edx-alert p { margin: 4px 0 0; }
-    .edx-alert__list { margin: 8px 0 0; padding-left: 18px; }
-    .edx-alert__list code { background: #fff; padding: 1px 5px; border-radius: 4px; }
-
-    /* Karty hlavičky */
-    .edx-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-bottom: 18px; }
-    .edx-card { background: #fff; border: 1px solid #e4e7ee; border-radius: 10px; padding: 10px 12px; }
-    .edx-card__k { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: #8a909c; margin-bottom: 3px; }
-    .edx-card__v { display: block; font-size: 15px; font-weight: 700; color: #28303d; }
-    .edx-card__v small { font-weight: 400; color: #8a909c; font-size: 12px; }
-
-    /* Skóre headline */
-    .edx-score {
-        background: radial-gradient(120% 140% at 0% 0%, #2a2360 0%, #4f46b8 100%);
-        color: #fff; border-radius: 14px; padding: 18px 22px; margin-bottom: 18px;
-    }
-    .edx-score__formula { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-    .edx-score__factor { display: flex; flex-direction: column; line-height: 1.1; }
-    .edx-score__factor b { font-size: 30px; }
-    .edx-score__factor span { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; opacity: .8; margin-top: 2px; }
-    .edx-score__factor--total b { font-size: 38px; color: #ffe27a; }
-    .edx-score__op { font-size: 22px; opacity: .55; }
-    .edx-score__note { margin: 10px 0 0; font-size: 12px; opacity: .8; }
-
-    /* Souhrn parsování + důvody vyloučení */
-    .edx-stats { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
-    .edx-stat { display: inline-flex; align-items: baseline; gap: 6px; font-size: 12px; padding: 6px 12px; border-radius: 20px; background: #eef1f4; color: #475063; border: 1px solid #e0e4ea; }
-    .edx-stat b { font-size: 14px; font-weight: 800; }
-    .edx-stat--ok { background: #e7f6ec; color: #1c7c3d; border-color: #bfe6cb; }
-    .edx-stat--warn { background: #fff6e0; color: #8a5d00; border-color: #f1d68f; }
-    .edx-stat--bad { background: #fde9e7; color: #a5281c; border-color: #f3c2bc; }
-
-    /* Ignorované řádky */
-    .edx-ignored { background: #fff8ec; border: 1px solid #f1d68f; border-radius: 10px; padding: 10px 14px; margin-bottom: 18px; font-size: 12px; }
-    .edx-ignored > summary { cursor: pointer; font-weight: 700; color: #8a5d00; }
-    .edx-ignored ul { margin: 8px 0 0; padding-left: 18px; }
-    .edx-ignored code { background: #fff; padding: 1px 5px; border-radius: 4px; word-break: break-all; }
-
-    /* Legenda */
-    .edx-legend { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; font-size: 11px; color: #6a7180; }
-    .edx-legend span { display: inline-flex; align-items: center; gap: 5px; }
-    .edx-legend i { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
-    .edx-legend .sw-ok { background: #2ea35a; }
-    .edx-legend .sw-warn { background: #e8a517; }
-    .edx-legend .sw-skip { background: #aab2bf; }
-
-    /* Tabulka QSO */
-    .edx-tablewrap { overflow-x: auto; border: 1px solid #e4e7ee; border-radius: 10px; }
-    table.edx-qso { width: 100%; border-collapse: collapse; font-size: 12.5px; }
-    table.edx-qso thead th {
-        position: sticky; top: 0; background: #f3f4f9; color: #4a5161; text-align: left;
-        font-size: 11px; text-transform: uppercase; letter-spacing: .03em; padding: 4px 10px;
-        border-bottom: 2px solid #e1e4ec; white-space: nowrap;
-    }
-    table.edx-qso td { padding: 2px 10px; border-bottom: 1px solid #eef0f4; vertical-align: middle; }
-    table.edx-qso tbody tr:last-child td { border-bottom: 0; }
-    table.edx-qso .num { font-variant-numeric: tabular-nums; color: #4a5161; }
-    table.edx-qso .call { font-weight: 700; }
-    table.edx-qso .sq { font-variant-numeric: tabular-nums; letter-spacing: .02em; }
-    table.edx-qso .idx { color: #aab0bd; font-variant-numeric: tabular-nums; }
-
-    /* Stavy řádků – levý barevný proužek + jemné pozadí */
-    .edx-qso tr.r-ok td:first-child { box-shadow: inset 3px 0 0 #2ea35a; }
-    .edx-qso tr.r-warn td:first-child { box-shadow: inset 3px 0 0 #e8a517; }
-    .edx-qso tr.r-skip td:first-child { box-shadow: inset 3px 0 0 #aab2bf; }
-    .edx-qso tr.r-ok { background: #fbfefc; }
-    .edx-qso tr.r-warn { background: #fffdf6; }
-    .edx-qso tr.r-skip { background: #fafbfc; color: #7a818d; }
-    .edx-qso tr:hover { background: #f5f7ff; }
-
-    /* Odznaky stavu */
-    .b { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
-    .b--ok { background: #e3f5ea; color: #1c7c3d; }
-    .b--warn { background: #fdf0d6; color: #8a5d00; }
-    .b--skip { background: #eceef2; color: #69707d; }
-    .b--mult { background: #ece6fb; color: #5b3fa6; margin-left: 4px; }
-    .b--dup { background: #fde7e5; color: #a5281c; margin-left: 4px; }
-    .b--own { background: #e6eefb; color: #2a4a86; margin-left: 4px; }
-
-    .edx-empty { color: #8a909c; font-style: italic; padding: 14px 0; }
+    /* Stavové proužky řádků a sticky hlavička tabulky QSO. */
+    .edx-qso thead th { position: sticky; top: 0; }
+    .edx-qso tr.r-ok    td:first-child { box-shadow: inset 3px 0 0 var(--ok); }
+    .edx-qso tr.r-warn  td:first-child { box-shadow: inset 3px 0 0 var(--warn); }
+    .edx-qso tr.r-skip  td:first-child { box-shadow: inset 3px 0 0 var(--muted); }
+    .edx-qso tr.r-skip  td { color: var(--muted); }
 </style>
 @endpush
 
@@ -121,194 +21,166 @@
         ? substr($t, 0, 2).':'.substr($t, 2, 2)
         : ($t !== '' ? $t : '—');
 @endphp
-<div class="edx">
-    <h1 class="edx__title">EDI debug – kontrola bodování</h1>
-    <p class="edx__lead">
-        Nahraj EDI deník a zkontroluj řádek po řádku, jak vzniká skóre – které QSO se započítává,
-        které spadá mimo závodní okno či den a které přináší nový násobič. Slouží jen pro náhled,
-        do databáze se nic neukládá.
-    </p>
 
-    @if ($errors->any())
-        <div class="edx-alert edx-alert--error">
-            <strong>Soubor se nepodařilo zpracovat.</strong>
-            <p>{{ $errors->first('upload') }}</p>
-            @if (session('lineErrors'))
-                <ul class="edx-alert__list">
-                    @foreach (session('lineErrors') as $le)
-                        <li><code>{{ $le }}</code></li>
-                    @endforeach
-                </ul>
-            @endif
-        </div>
-    @endif
+<h1>EDI debug – kontrola bodování</h1>
+<p class="max-w-prose text-sm text-muted">
+    Nahraj EDI deník a zkontroluj řádek po řádku, jak vzniká skóre – které QSO se započítává,
+    které spadá mimo závodní okno či den a které přináší nový násobič. Slouží jen pro náhled,
+    do databáze se nic neukládá.
+</p>
 
-    <form class="edx-uploader" action="{{ route('edi.debug.store') }}" method="post" enctype="multipart/form-data">
-        @csrf
-        <div class="edx-uploader__field">
-            <span class="edx-uploader__label">EDI soubor</span>
-            <input type="file" name="upload" accept=".edi,.txt" required>
-            <p class="edx-uploader__hint">Max 500 kB. Analyzuje se lokálně, nic se neukládá.</p>
-        </div>
-        <button type="submit" class="edx-btn">Analyzovat deník</button>
-    </form>
-
-    @if ($report)
-        {{-- Hlavička deníku --}}
-        <section class="edx-cards">
-            <div class="edx-card">
-                <span class="edx-card__k">Značka</span>
-                <span class="edx-card__v">{{ $report->call !== '' ? $report->call : '—' }}</span>
-            </div>
-            <div class="edx-card">
-                <span class="edx-card__k">Lokátor</span>
-                <span class="edx-card__v">
-                    {{ $report->locator !== '' ? $report->locator : '—' }}
-                    <small>čtverec {{ $report->homeSquare !== '' ? $report->homeSquare : '—' }}</small>
-                </span>
-            </div>
-            <div class="edx-card">
-                <span class="edx-card__k">Den závodu</span>
-                <span class="edx-card__v">{{ $fmtDate($report->contestDay) }}</span>
-            </div>
-            <div class="edx-card">
-                <span class="edx-card__k">Pásmo / sekce</span>
-                <span class="edx-card__v">
-                    {{ $report->band !== '' ? $report->band : '—' }}
-                    <small>{{ $report->section !== '' ? $report->section : '—' }}</small>
-                </span>
-            </div>
-            <div class="edx-card">
-                <span class="edx-card__k">Výkon</span>
-                <span class="edx-card__v">
-                    {{ $report->power }} W
-                    @if ($report->qrp)<small style="color:#1c7c3d;font-weight:700">QRP</small>@endif
-                </span>
-            </div>
-            <div class="edx-card">
-                <span class="edx-card__k">Závodní okno (UTC)</span>
-                <span class="edx-card__v">{{ $fmtTime($report->windowFrom) }}–{{ $fmtTime($report->windowTo) }}</span>
-            </div>
-        </section>
-
-        {{-- Skóre --}}
-        <section class="edx-score">
-            <div class="edx-score__formula">
-                <div class="edx-score__factor"><b>{{ $report->boduZaQso }}</b><span>body za spojení</span></div>
-                <span class="edx-score__op">×</span>
-                <div class="edx-score__factor"><b>{{ $report->nasobice }}</b><span>násobič</span></div>
-                <span class="edx-score__op">=</span>
-                <div class="edx-score__factor edx-score__factor--total"><b>{{ $report->body }}</b><span>bodů</span></div>
-            </div>
-            <p class="edx-score__note">
-                Body za spojení = přepočítáno z lokátorů {{ $report->pocet }} započtených QSO
-                (vlastní čtverec 2, sousední 3, každý další pás o bod víc; QSO-Points z deníku se ignoruje).
-                Násobič = {{ $report->nasobice - 1 }} různých cizích velkých čtverců + 1 domácí.
-            </p>
-        </section>
-
-        {{-- Souhrn parsování a vyloučení --}}
-        <section class="edx-stats">
-            <span class="edx-stat">deklarováno&nbsp;<b>{{ $report->declaredTotal }}</b></span>
-            <span class="edx-stat">naparsováno&nbsp;<b>{{ $report->parsedCount }}</b></span>
-            <span class="edx-stat edx-stat--ok">započteno&nbsp;<b>{{ $report->pocet }}</b></span>
-            @if ($report->excludedOutOfWindow)
-                <span class="edx-stat edx-stat--warn">mimo okno&nbsp;<b>{{ $report->excludedOutOfWindow }}</b></span>
-            @endif
-            @if ($report->excludedWrongDate)
-                <span class="edx-stat edx-stat--warn">jiný den&nbsp;<b>{{ $report->excludedWrongDate }}</b></span>
-            @endif
-            @if ($report->ownSquareCount)
-                <span class="edx-stat edx-stat--ok">vlastní čtverec (2 b.)&nbsp;<b>{{ $report->ownSquareCount }}</b></span>
-            @endif
-            @if ($report->excludedEmpty)
-                <span class="edx-stat">bez lokátoru&nbsp;<b>{{ $report->excludedEmpty }}</b></span>
-            @endif
-            @if (count($report->ignoredLines))
-                <span class="edx-stat edx-stat--bad">ignorováno&nbsp;<b>{{ count($report->ignoredLines) }}</b></span>
-            @endif
-            @if ($report->duplicateCount)
-                <span class="edx-stat edx-stat--bad">duplikátů&nbsp;<b>{{ $report->duplicateCount }}</b></span>
-            @endif
-        </section>
-
-        {{-- Ignorované řádky (neprošly parserem) --}}
-        @if (count($report->ignoredLines))
-            <details class="edx-ignored" open>
-                <summary>Ignorované řádky ({{ count($report->ignoredLines) }}) – neprošly parserem, do bodů se nezapočítávají</summary>
-                <ul>
-                    @foreach ($report->ignoredLines as $line)
-                        <li><code>{{ $line }}</code></li>
-                    @endforeach
-                </ul>
-            </details>
+@if ($errors->any())
+    <div class="alert alert-error mt-3">
+        <strong>Soubor se nepodařilo zpracovat.</strong>
+        <p class="mt-1">{{ $errors->first('upload') }}</p>
+        @if (session('lineErrors'))
+            <ul class="mt-2 list-disc pl-5">
+                @foreach (session('lineErrors') as $le)
+                    <li><code>{{ $le }}</code></li>
+                @endforeach
+            </ul>
         @endif
+    </div>
+@endif
 
-        {{-- Legenda --}}
-        <div class="edx-legend">
-            <span><i class="sw-ok"></i> započteno</span>
-            <span><i class="sw-warn"></i> mimo okno / jiný den</span>
-            <span><i class="sw-skip"></i> bez lokátoru</span>
-            <span><span class="b b--own">vlastní čtverec</span></span>
-            <span><span class="b b--mult">★ nový násobič</span></span>
-            <span><span class="b b--dup">duplikát</span></span>
-        </div>
+<form class="card mt-4 mb-5 flex flex-wrap items-end gap-4 p-4" action="{{ route('edi.debug.store') }}" method="post" enctype="multipart/form-data">
+    @csrf
+    <div class="field mb-0">
+        <span class="label">EDI soubor</span>
+        <input type="file" name="upload" accept=".edi,.txt" class="text-sm" required>
+        <p class="mt-1 text-xs text-muted">Max 500 kB. Analyzuje se lokálně, nic se neukládá.</p>
+    </div>
+    <button type="submit" class="btn btn-primary">Analyzovat deník</button>
+</form>
 
-        {{-- Rozpad QSO --}}
-        <div class="edx-tablewrap">
-            <table class="edx-qso">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Datum</th>
-                        <th>Čas</th>
-                        <th>Stanice</th>
-                        <th>Přijatý WWL</th>
-                        <th>Čtverec</th>
-                        <th>Body</th>
-                        <th>Stav</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse ($report->rows as $row)
-                        @php
-                            $cls = $row->counted
-                                ? 'r-ok'
-                                : (in_array($row->reason, ['out_of_window', 'wrong_date'], true) ? 'r-warn' : 'r-skip');
-                        @endphp
-                        <tr class="{{ $cls }}">
-                            <td class="idx">{{ $row->index }}</td>
-                            <td class="num">{{ $fmtDate($row->date) }}</td>
-                            <td class="num">{{ $fmtTime($row->time) }}</td>
-                            <td class="call">{{ $row->callSign }}</td>
-                            <td class="sq">{{ $row->receivedWwl !== '' ? $row->receivedWwl : '—' }}</td>
-                            <td class="sq">{{ $row->bigSquare !== '' ? $row->bigSquare : '—' }}</td>
-                            <td class="num">{{ $row->counted ? $row->points : '—' }}</td>
-                            <td>
-                                @switch($row->reason)
-                                    @case('counted')
-                                        <span class="b b--ok">✓ započteno</span>
-                                        @break
-                                    @case('out_of_window')
-                                        <span class="b b--warn">mimo okno</span>
-                                        @break
-                                    @case('wrong_date')
-                                        <span class="b b--warn">jiný den</span>
-                                        @break
-                                    @default
-                                        <span class="b b--skip">bez lokátoru</span>
-                                @endswitch
-                                @if ($row->isOwnSquare && $row->counted)<span class="b b--own">vlastní čtverec</span>@endif
-                                @if ($row->newMultiplier)<span class="b b--mult">★ nový násobič</span>@endif
-                                @if ($row->duplicate)<span class="b b--dup">duplikát</span>@endif
-                            </td>
-                        </tr>
-                    @empty
-                        <tr><td colspan="8" class="edx-empty">Deník neobsahuje žádné naparsovatelné QSO.</td></tr>
-                    @endforelse
-                </tbody>
-            </table>
+@if ($report)
+    {{-- Hlavička deníku --}}
+    <section class="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        @php
+            $cards = [
+                ['Značka', $report->call !== '' ? $report->call : '—', null],
+                ['Lokátor', $report->locator !== '' ? $report->locator : '—', 'čtverec '.($report->homeSquare !== '' ? $report->homeSquare : '—')],
+                ['Den závodu', $fmtDate($report->contestDay), null],
+                ['Pásmo / sekce', $report->band !== '' ? $report->band : '—', $report->section !== '' ? $report->section : '—'],
+                ['Výkon', $report->power.' W', $report->qrp ? 'QRP' : null],
+                ['Závodní okno (UTC)', $fmtTime($report->windowFrom).'–'.$fmtTime($report->windowTo), null],
+            ];
+        @endphp
+        @foreach ($cards as [$k, $v, $sub])
+            <div class="card p-3">
+                <span class="block text-xs uppercase tracking-wide text-muted">{{ $k }}</span>
+                <span class="block text-base font-bold text-ink">{{ $v }}@if ($sub)<small class="ml-1 font-normal text-muted">{{ $sub }}</small>@endif</span>
+            </div>
+        @endforeach
+    </section>
+
+    {{-- Skóre --}}
+    <section class="mb-5 rounded-xl bg-brand p-5 text-brand-fg">
+        <div class="flex flex-wrap items-center gap-4">
+            <div class="flex flex-col leading-none">
+                <b class="text-3xl">{{ $report->boduZaQso }}</b>
+                <span class="mt-1 text-xs uppercase tracking-wide opacity-80">body za spojení</span>
+            </div>
+            <span class="text-xl opacity-60">×</span>
+            <div class="flex flex-col leading-none">
+                <b class="text-3xl">{{ $report->nasobice }}</b>
+                <span class="mt-1 text-xs uppercase tracking-wide opacity-80">násobič</span>
+            </div>
+            <span class="text-xl opacity-60">=</span>
+            <div class="flex flex-col leading-none">
+                <b class="text-4xl text-amber-300">{{ $report->body }}</b>
+                <span class="mt-1 text-xs uppercase tracking-wide opacity-80">bodů</span>
+            </div>
         </div>
+        <p class="mt-3 text-xs opacity-80">
+            Body za spojení = přepočítáno z lokátorů {{ $report->pocet }} započtených QSO
+            (vlastní čtverec 2, sousední 3, každý další pás o bod víc; QSO-Points z deníku se ignoruje).
+            Násobič = {{ $report->nasobice - 1 }} různých cizích velkých čtverců + 1 domácí.
+        </p>
+    </section>
+
+    {{-- Souhrn parsování a vyloučení --}}
+    <section class="mb-5 flex flex-wrap gap-2">
+        <span class="badge badge-brand">deklarováno <b>{{ $report->declaredTotal }}</b></span>
+        <span class="badge badge-brand">naparsováno <b>{{ $report->parsedCount }}</b></span>
+        <span class="badge badge-ok">započteno <b>{{ $report->pocet }}</b></span>
+        @if ($report->excludedOutOfWindow)<span class="badge badge-warn">mimo okno <b>{{ $report->excludedOutOfWindow }}</b></span>@endif
+        @if ($report->excludedWrongDate)<span class="badge badge-warn">jiný den <b>{{ $report->excludedWrongDate }}</b></span>@endif
+        @if ($report->ownSquareCount)<span class="badge badge-ok">vlastní čtverec (2 b.) <b>{{ $report->ownSquareCount }}</b></span>@endif
+        @if ($report->excludedEmpty)<span class="badge badge-brand">bez lokátoru <b>{{ $report->excludedEmpty }}</b></span>@endif
+        @if (count($report->ignoredLines))<span class="badge badge-danger">ignorováno <b>{{ count($report->ignoredLines) }}</b></span>@endif
+        @if ($report->duplicateCount)<span class="badge badge-danger">duplikátů <b>{{ $report->duplicateCount }}</b></span>@endif
+    </section>
+
+    {{-- Ignorované řádky (neprošly parserem) --}}
+    @if (count($report->ignoredLines))
+        <details class="alert mb-5" open style="background-color:var(--warn-soft);border-color:color-mix(in oklab, var(--warn) 45%, transparent);color:var(--warn);">
+            <summary class="cursor-pointer font-bold">Ignorované řádky ({{ count($report->ignoredLines) }}) – neprošly parserem, do bodů se nezapočítávají</summary>
+            <ul class="mt-2 list-disc pl-5">
+                @foreach ($report->ignoredLines as $line)
+                    <li><code class="break-all">{{ $line }}</code></li>
+                @endforeach
+            </ul>
+        </details>
     @endif
-</div>
+
+    {{-- Legenda --}}
+    <div class="mb-2 flex flex-wrap items-center gap-3 text-xs text-muted">
+        <span class="inline-flex items-center gap-1"><i class="inline-block h-3 w-3 rounded-sm" style="background:var(--ok)"></i> započteno</span>
+        <span class="inline-flex items-center gap-1"><i class="inline-block h-3 w-3 rounded-sm" style="background:var(--warn)"></i> mimo okno / jiný den</span>
+        <span class="inline-flex items-center gap-1"><i class="inline-block h-3 w-3 rounded-sm" style="background:var(--muted)"></i> bez lokátoru</span>
+        <span class="badge badge-brand">vlastní čtverec</span>
+        <span class="badge badge-brand">★ nový násobič</span>
+        <span class="badge badge-danger">duplikát</span>
+    </div>
+
+    {{-- Rozpad QSO --}}
+    <div class="table-wrap">
+        <table class="data-table edx-qso">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Datum</th>
+                    <th>Čas</th>
+                    <th>Stanice</th>
+                    <th>Přijatý WWL</th>
+                    <th>Čtverec</th>
+                    <th class="num">Body</th>
+                    <th>Stav</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse ($report->rows as $row)
+                    @php
+                        $cls = $row->counted
+                            ? 'r-ok'
+                            : (in_array($row->reason, ['out_of_window', 'wrong_date'], true) ? 'r-warn' : 'r-skip');
+                    @endphp
+                    <tr class="{{ $cls }}">
+                        <td class="num text-muted">{{ $row->index }}</td>
+                        <td class="num">{{ $fmtDate($row->date) }}</td>
+                        <td class="num">{{ $fmtTime($row->time) }}</td>
+                        <td class="font-bold">{{ $row->callSign }}</td>
+                        <td>{{ $row->receivedWwl !== '' ? $row->receivedWwl : '—' }}</td>
+                        <td>{{ $row->bigSquare !== '' ? $row->bigSquare : '—' }}</td>
+                        <td class="num">{{ $row->counted ? $row->points : '—' }}</td>
+                        <td class="whitespace-nowrap">
+                            @switch($row->reason)
+                                @case('counted')<span class="badge badge-ok">✓ započteno</span>@break
+                                @case('out_of_window')<span class="badge badge-warn">mimo okno</span>@break
+                                @case('wrong_date')<span class="badge badge-warn">jiný den</span>@break
+                                @default<span class="badge badge-brand">bez lokátoru</span>
+                            @endswitch
+                            @if ($row->isOwnSquare && $row->counted)<span class="badge badge-brand ml-1">vlastní čtverec</span>@endif
+                            @if ($row->newMultiplier)<span class="badge badge-brand ml-1">★ nový násobič</span>@endif
+                            @if ($row->duplicate)<span class="badge badge-danger ml-1">duplikát</span>@endif
+                        </td>
+                    </tr>
+                @empty
+                    <tr><td colspan="8" class="text-muted italic">Deník neobsahuje žádné naparsovatelné QSO.</td></tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+@endif
 @endsection

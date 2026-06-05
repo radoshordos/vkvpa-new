@@ -2,8 +2,434 @@
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
+@source '../views';
 
-@theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+/* Ruční přepínání tmavého režimu třídou .dark na <html>. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ── Designové tokeny ──────────────────────────────────────────────────────
+   Sémantické barvy odkazují na CSS proměnné, které se v .dark přepíší.
+   Duch původní aplikace zachován: levandulová pro navigaci, modré nadpisy,
+   vínové (maroon) odkazy. */
+@theme inline {
+    --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif,
+        'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+
+    --color-bg: var(--bg);
+    --color-surface: var(--surface);
+    --color-surface-2: var(--surface-2);
+    --color-line: var(--line);
+    --color-ink: var(--ink);
+    --color-muted: var(--muted);
+
+    --color-brand: var(--brand);
+    --color-brand-fg: var(--brand-fg);
+    --color-brand-soft: var(--brand-soft);
+    --color-brand-softer: var(--brand-softer);
+
+    --color-heading: var(--heading);
+    --color-link: var(--link);
+
+    --color-ok: var(--ok);
+    --color-ok-soft: var(--ok-soft);
+    --color-warn: var(--warn);
+    --color-warn-soft: var(--warn-soft);
+    --color-danger: var(--danger);
+    --color-danger-soft: var(--danger-soft);
+    --color-pending: var(--pending);
+}
+
+:root {
+    --bg: #eef0f8;
+    --surface: #ffffff;
+    --surface-2: #f5f5fb;
+    --line: #e2e3ef;
+    --ink: #232733;
+    --muted: #6a7080;
+
+    --brand: #4338ca;
+    --brand-fg: #ffffff;
+    --brand-soft: #e7e6fb;
+    --brand-softer: #f3f2fd;
+
+    --heading: #22108b;
+    --link: #9c2a35;
+
+    --ok: #15803d;
+    --ok-soft: #e4f5ea;
+    --warn: #b45309;
+    --warn-soft: #fdf0d9;
+    --danger: #c62828;
+    --danger-soft: #fde8e7;
+    --pending: #ffe1c7; /* „meruňková" – nepřevzatý záznam */
+}
+
+.dark {
+    --bg: #0e0f15;
+    --surface: #181a22;
+    --surface-2: #20222d;
+    --line: #2c2f3b;
+    --ink: #e6e7ef;
+    --muted: #99a0b0;
+
+    --brand: #9a93f7;
+    --brand-fg: #14121f;
+    --brand-soft: #272552;
+    --brand-softer: #1e1d36;
+
+    --heading: #b9b2ff;
+    --link: #e79aa0;
+
+    --ok: #4ade80;
+    --ok-soft: #16301f;
+    --warn: #f0b34d;
+    --warn-soft: #3a2c12;
+    --danger: #f08a85;
+    --danger-soft: #3a1d1c;
+    --pending: #4a3322;
+}
+
+@layer base {
+    html {
+        background-color: var(--bg);
+        color-scheme: light;
+    }
+    html.dark {
+        color-scheme: dark;
+    }
+    body {
+        background-color: var(--bg);
+        color: var(--ink);
+    }
+
+    /* Nadpisy v obsahu – jednotné, nahrazují inline styly stránek. */
+    .content h1 {
+        font-size: 1.35rem;
+        line-height: 1.25;
+        font-weight: 700;
+        color: var(--heading);
+        padding-bottom: 0.35rem;
+        margin-bottom: 0.9rem;
+        border-bottom: 2px solid var(--line);
+    }
+    .content h2 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--heading);
+        margin: 1.25rem 0 0.6rem;
+    }
+    .content h3 {
+        font-size: 0.98rem;
+        font-weight: 600;
+        color: var(--ink);
+        margin: 1rem 0 0.4rem;
+    }
+    .content p {
+        margin-bottom: 0.6rem;
+    }
+    .content a:not(.btn):not(.icon-btn):not(.nav-link):not(.action-link) {
+        color: var(--link);
+        text-decoration: underline;
+        text-underline-offset: 2px;
+    }
+    .content a:not(.btn):not(.icon-btn):not(.nav-link):not(.action-link):hover {
+        color: var(--brand);
+    }
+}
+
+@layer components {
+    /* ── Karta / panel ───────────────────────────────────────────── */
+    .card {
+        background-color: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 0.75rem;
+        box-shadow: 0 1px 2px rgb(20 22 40 / 0.04);
+    }
+
+    /* ── Tlačítka ────────────────────────────────────────────────── */
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        line-height: 1;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        border: 1px solid transparent;
+        cursor: pointer;
+        transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+        text-decoration: none;
+    }
+    .btn-sm {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.8rem;
+        border-radius: 0.4rem;
+    }
+    .btn-primary {
+        background-color: var(--brand);
+        color: var(--brand-fg);
+    }
+    .btn-primary:hover {
+        background-color: color-mix(in oklab, var(--brand) 85%, black);
+        color: var(--brand-fg);
+    }
+    .btn-ghost {
+        background-color: var(--surface);
+        border-color: var(--line);
+        color: var(--ink);
+    }
+    .btn-ghost:hover {
+        background-color: var(--surface-2);
+        color: var(--ink);
+    }
+    .btn-danger {
+        background-color: var(--danger);
+        color: #fff;
+    }
+    .btn-danger:hover {
+        background-color: color-mix(in oklab, var(--danger) 85%, black);
+        color: #fff;
+    }
+
+    /* ── Formulářové prvky ───────────────────────────────────────── */
+    .field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+        margin-bottom: 0.85rem;
+    }
+    .label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        color: var(--muted);
+    }
+    .input,
+    .select,
+    .textarea {
+        width: 100%;
+        font: inherit;
+        font-size: 0.875rem;
+        padding: 0.45rem 0.6rem;
+        color: var(--ink);
+        background-color: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 0.5rem;
+        transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .textarea {
+        resize: vertical;
+        min-height: 3rem;
+    }
+    .input:focus,
+    .select:focus,
+    .textarea:focus {
+        outline: none;
+        border-color: var(--brand);
+        box-shadow: 0 0 0 3px color-mix(in oklab, var(--brand) 22%, transparent);
+    }
+    .input-err {
+        border-color: var(--danger) !important;
+        background-color: var(--danger-soft);
+    }
+    .field-error {
+        color: var(--danger);
+        font-size: 0.72rem;
+        font-weight: 500;
+    }
+
+    /* ── Hlášky ──────────────────────────────────────────────────── */
+    .alert {
+        border-radius: 0.6rem;
+        padding: 0.7rem 0.95rem;
+        font-size: 0.85rem;
+        margin-bottom: 1rem;
+        border: 1px solid transparent;
+    }
+    .alert-error {
+        background-color: var(--danger-soft);
+        border-color: color-mix(in oklab, var(--danger) 45%, transparent);
+        color: var(--danger);
+    }
+    .alert-success {
+        background-color: var(--ok-soft);
+        border-color: color-mix(in oklab, var(--ok) 45%, transparent);
+        color: var(--ok);
+    }
+    .alert-info {
+        background-color: var(--brand-softer);
+        border-color: color-mix(in oklab, var(--brand) 35%, transparent);
+        color: var(--ink);
+    }
+
+    /* ── Odznaky ─────────────────────────────────────────────────── */
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 0.7rem;
+        font-weight: 700;
+        padding: 0.1rem 0.5rem;
+        border-radius: 999px;
+        white-space: nowrap;
+    }
+    .badge-ok {
+        background-color: var(--ok-soft);
+        color: var(--ok);
+    }
+    .badge-warn {
+        background-color: var(--warn-soft);
+        color: var(--warn);
+    }
+    .badge-danger {
+        background-color: var(--danger-soft);
+        color: var(--danger);
+    }
+    .badge-qrp {
+        background-color: var(--ok);
+        color: #fff;
+    }
+    .badge-brand {
+        background-color: var(--brand-soft);
+        color: var(--brand);
+    }
+
+    /* ── Tabulky ─────────────────────────────────────────────────── */
+    .table-wrap {
+        width: 100%;
+        overflow-x: auto;
+        border: 1px solid var(--line);
+        border-radius: 0.6rem;
+    }
+    table.data-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.82rem;
+        background-color: var(--surface);
+    }
+    table.data-table thead th {
+        background-color: var(--surface-2);
+        color: var(--heading);
+        text-align: left;
+        font-weight: 600;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+        padding: 0.5rem 0.7rem;
+        border-bottom: 1px solid var(--line);
+        white-space: nowrap;
+    }
+    table.data-table td {
+        padding: 0.5rem 0.7rem;
+        border-bottom: 1px solid var(--line);
+        vertical-align: top;
+        color: var(--ink);
+    }
+    table.data-table tbody tr:last-child td {
+        border-bottom: 0;
+    }
+    table.data-table tbody tr:nth-child(even) td {
+        background-color: color-mix(in oklab, var(--surface-2) 55%, transparent);
+    }
+    table.data-table tr.row-pending td {
+        background-color: var(--pending) !important;
+    }
+    .num {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* Kategorie / sekce ve výsledkové listině. */
+    .section-head {
+        background-color: var(--brand);
+        color: var(--brand-fg);
+        font-weight: 700;
+        font-size: 0.95rem;
+        padding: 0.45rem 0.85rem;
+        border-radius: 0.5rem;
+        margin: 1.25rem 0 0.6rem;
+    }
+
+    /* ── Písmenková tlačítka akcí (P / U / X) – zachovaný systém ──── */
+    .icon-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.3rem;
+        height: 1.3rem;
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: #fff;
+        border: none;
+        border-radius: 0.3rem;
+        cursor: pointer;
+        text-decoration: none;
+        padding: 0;
+    }
+    .icon-btn-p {
+        background-color: var(--ok);
+    }
+    .icon-btn-u {
+        background-color: var(--brand);
+    }
+    .icon-btn-x {
+        background-color: var(--danger);
+    }
+    .icon-btn:hover {
+        filter: brightness(0.92);
+        color: #fff;
+    }
+
+    /* Odkazy EDI / mapy (EDI / EDIR / M / N / S). */
+    .action-link {
+        display: inline-block;
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: var(--brand);
+        text-decoration: none;
+        padding: 0.05rem 0.3rem;
+        border: 1px solid var(--line);
+        border-radius: 0.3rem;
+        margin: 0 0.15rem 0.15rem 0;
+    }
+    .action-link:hover {
+        background-color: var(--brand-soft);
+        color: var(--brand);
+    }
+
+    /* ── Navigace ────────────────────────────────────────────────── */
+    .nav-link {
+        display: block;
+        padding: 0.4rem 0.65rem;
+        margin-bottom: 0.15rem;
+        font-size: 0.82rem;
+        line-height: 1.25;
+        color: var(--ink);
+        background-color: var(--brand-softer);
+        border-radius: 0.45rem;
+        text-decoration: none;
+        transition: background-color 0.15s, color 0.15s;
+    }
+    .nav-link:hover {
+        background-color: var(--brand-soft);
+        color: var(--brand);
+    }
+    .nav-link.active {
+        background-color: var(--brand);
+        color: var(--brand-fg);
+        font-weight: 600;
+    }
+    .nav-heading {
+        font-size: 0.68rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--brand);
+        padding: 0.2rem 0.65rem;
+        margin: 0.85rem 0 0.3rem;
+        border-bottom: 1px solid var(--brand-soft);
+    }
 }

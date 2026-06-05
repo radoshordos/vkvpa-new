@@ -1,19 +1,17 @@
-{{-- Hlavní menu. --}}
-<div id="mainmenu">
-<ul class="menu">
+{{-- Hlavní navigace. Použito ve dvou kontextech (desktop sidebar + mobilní drawer). --}}
+<nav>
 @unless($isAdmin)
     @foreach(config('navigation.public') as $item)
         @include('partials.menu-item', $item)
     @endforeach
-    <br>
-    <li><a href="{{ route('login') }}">Přihlášení admin</a></li>
+    <a href="{{ route('login') }}" class="nav-link mt-3">Přihlášení admin</a>
 @else
-    <li class="menu-heading">Veřejná část</li>
+    <p class="nav-heading">Veřejná část</p>
     @foreach(config('navigation.public') as $item)
         @include('partials.menu-item', $item)
     @endforeach
 
-    <li class="menu-heading">Administrace</li>
+    <p class="nav-heading">Administrace</p>
     @foreach(config('navigation.admin') as $item)
         @include('partials.menu-item', $item)
     @endforeach
@@ -21,14 +19,12 @@
         @include('partials.menu-item', $item)
     @endforeach
 
-    <br>
-    <li>Přihlášen: {{ $adminName }}</li>
-    <li>
-      <form action="{{ route('logout') }}" method="post" style="display:inline;">
-        @csrf
-        <a href="#" onclick="this.closest('form').submit();return false;">Odhlásit</a>
-      </form>
-    </li>
+    <div class="mt-4 border-t border-line pt-3 text-xs text-muted">
+        <p class="mb-2">Přihlášen: <span class="font-medium text-ink">{{ $adminName }}</span></p>
+        <form action="{{ route('logout') }}" method="post">
+            @csrf
+            <button type="submit" class="btn btn-ghost btn-sm w-full">Odhlásit</button>
+        </form>
+    </div>
 @endunless
-</ul>
-</div>
+</nav>
