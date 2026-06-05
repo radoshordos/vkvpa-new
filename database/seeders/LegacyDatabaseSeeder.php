@@ -15,11 +15,11 @@ class LegacyDatabaseSeeder extends Seeder
             EdilinesTableSeeder::class,
             PrefixesTableSeeder::class,
             VkvpaConfigTableSeeder::class,
-            VkvpaDataTableSeeder::class,
-            DiskuseSeeder::class,
             VkvpaKategorieTableSeeder::class,
             VkvpaKolaTableSeeder::class,
+            VkvpaDataTableSeeder::class,
             VkvpaPrihlaseniTableSeeder::class,
+            DiskuseSeeder::class,
         ]);
     }
 }
