@@ -31,24 +31,24 @@ class AuthorizationEdgeCasesTest extends TestCase
     private function zaznam(): VkvpaData
     {
         $kolo = VkvpaKola::create([
-            'datum_konani'   => now()->subDay(),
+            'datum_konani' => now()->subDay(),
             'datum_uzaverky' => now()->addDays(5),
-            'nazev'          => 'Testovací kolo',
-            'aktivni'        => true,
-            'poznamka'       => '',
+            'nazev' => 'Testovací kolo',
+            'aktivni' => true,
+            'poznamka' => '',
         ]);
         $kat = VkvpaKategorie::create(['nazev' => '144 MHz SO', 'popis' => '', 'zkratka' => 'A', 'dxid' => 0]);
 
         return VkvpaData::create([
-            'id_kola'      => $kolo->id,
+            'id_kola' => $kolo->id,
             'id_kategorie' => $kat->id,
-            'znacka'       => 'OK1CIZI',
-            'locator'      => 'JO70AA',
-            'mail'         => 'cizi@example.com',
-            'pocet'        => 5,
-            'nasobice'     => 3,
-            'body'         => 15,
-            'schvaleno'    => true,
+            'znacka' => 'OK1CIZI',
+            'locator' => 'JO70AA',
+            'mail' => 'cizi@example.com',
+            'pocet' => 5,
+            'nasobice' => 3,
+            'body' => 15,
+            'schvaleno' => true,
         ]);
     }
 
@@ -97,26 +97,26 @@ class AuthorizationEdgeCasesTest extends TestCase
 
         // Session má owned_data_id = jiné ID (simulujeme jiný záznam, který si vytvořili).
         $vlastni = VkvpaData::create([
-            'id_kola'      => $cizi->id_kola,
+            'id_kola' => $cizi->id_kola,
             'id_kategorie' => $cizi->id_kategorie,
-            'znacka'       => 'OK1MOJE',
-            'locator'      => 'JN99AJ',
-            'mail'         => 'moje@example.com',
-            'pocet'        => 1,
-            'nasobice'     => 1,
-            'body'         => 1,
-            'schvaleno'    => false,
+            'znacka' => 'OK1MOJE',
+            'locator' => 'JN99AJ',
+            'mail' => 'moje@example.com',
+            'pocet' => 1,
+            'nasobice' => 1,
+            'body' => 1,
+            'schvaleno' => false,
         ]);
 
         // Session říká: vlastním $vlastni, ale formulář posílá id_zaznamu = $cizi.
         $this->withSession(['owned_data_id' => $vlastni->id])
             ->post('/hlaseni', [
-                'id_zaznamu'  => $cizi->id,
-                'kolo'        => $cizi->id_kola,
-                'kategorie'   => $cizi->id_kategorie,
-                'znacka'      => 'OK1UTOCNIK',
-                'locator'     => 'JN99AJ',
-                'email'       => 'utok@example.com',
+                'id_zaznamu' => $cizi->id,
+                'kolo' => $cizi->id_kola,
+                'kategorie' => $cizi->id_kategorie,
+                'znacka' => 'OK1UTOCNIK',
+                'locator' => 'JN99AJ',
+                'email' => 'utok@example.com',
             ])
             ->assertForbidden();
 
@@ -131,11 +131,11 @@ class AuthorizationEdgeCasesTest extends TestCase
         $this->withSession([])
             ->post('/hlaseni', [
                 'id_zaznamu' => $cizi->id,
-                'kolo'       => $cizi->id_kola,
-                'kategorie'  => $cizi->id_kategorie,
-                'znacka'     => 'OK1UTOCNIK',
-                'locator'    => 'JN99AJ',
-                'email'      => 'utok@example.com',
+                'kolo' => $cizi->id_kola,
+                'kategorie' => $cizi->id_kategorie,
+                'znacka' => 'OK1UTOCNIK',
+                'locator' => 'JN99AJ',
+                'email' => 'utok@example.com',
             ])
             ->assertForbidden();
 
@@ -148,11 +148,11 @@ class AuthorizationEdgeCasesTest extends TestCase
 
         $this->post('/hlaseni', [
             'id_zaznamu' => $zaznam->id,
-            'kolo'       => $zaznam->id_kola,
-            'kategorie'  => $zaznam->id_kategorie,
-            'znacka'     => 'OK1UTOCNIK',
-            'locator'    => 'JN99AJ',
-            'email'      => 'utok@example.com',
+            'kolo' => $zaznam->id_kola,
+            'kategorie' => $zaznam->id_kategorie,
+            'znacka' => 'OK1UTOCNIK',
+            'locator' => 'JN99AJ',
+            'email' => 'utok@example.com',
         ])->assertForbidden();
 
         $this->assertSame('OK1CIZI', $zaznam->refresh()->znacka);
@@ -164,20 +164,20 @@ class AuthorizationEdgeCasesTest extends TestCase
     public function test_anyone_can_create_new_record_without_session(): void
     {
         $kolo = VkvpaKola::create([
-            'datum_konani'   => now()->subDay(),
+            'datum_konani' => now()->subDay(),
             'datum_uzaverky' => now()->addDays(5),
-            'nazev'          => 'Aktivní kolo',
-            'aktivni'        => true,
-            'poznamka'       => '',
+            'nazev' => 'Aktivní kolo',
+            'aktivni' => true,
+            'poznamka' => '',
         ]);
         $kat = VkvpaKategorie::create(['nazev' => 'A', 'popis' => '', 'zkratka' => 'A', 'dxid' => 0]);
 
         $this->post('/hlaseni', [
-            'kolo'     => $kolo->id,
+            'kolo' => $kolo->id,
             'kategorie' => $kat->id,
-            'znacka'   => 'OK1NOVY',
-            'locator'  => 'JN99AJ',
-            'email'    => 'novy@example.com',
+            'znacka' => 'OK1NOVY',
+            'locator' => 'JN99AJ',
+            'email' => 'novy@example.com',
         ])->assertRedirect(route('vysledkova_listina', ['kolo' => $kolo->id]));
 
         $this->assertSame(1, VkvpaData::count());

@@ -11,9 +11,11 @@ use App\Models\VkvpaData;
 use App\Models\VkvpaKola;
 use App\Services\Scoring\ScoringService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Response;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
 /**
@@ -35,8 +37,8 @@ class EdiPipelineIntegrationTest extends TestCase
         $this->sampleEdi = (string) file_get_contents(__DIR__.'/../fixtures/sample.edi');
     }
 
-    /** @return \Illuminate\Testing\TestResponse<\Illuminate\Http\Response> */
-    private function upload(): \Illuminate\Testing\TestResponse
+    /** @return TestResponse<Response> */
+    private function upload(): TestResponse
     {
         $file = UploadedFile::fake()->createWithContent('sample.edi', $this->sampleEdi);
 
@@ -46,11 +48,11 @@ class EdiPipelineIntegrationTest extends TestCase
     private function koloProBrezen2026(): VkvpaKola
     {
         return VkvpaKola::create([
-            'datum_konani'  => '2026-03-15',
+            'datum_konani' => '2026-03-15',
             'datum_uzaverky' => '2026-04-01',
-            'nazev'         => '1. kolo 2026',
-            'aktivni'       => true,
-            'poznamka'      => '',
+            'nazev' => '1. kolo 2026',
+            'aktivni' => true,
+            'poznamka' => '',
         ]);
     }
 
@@ -74,25 +76,25 @@ class EdiPipelineIntegrationTest extends TestCase
 
         // sample.edi: home JN99, QSO do JN99BP (vlastní, 2 b.) a JN89PV (soused, 3 b.)
         // pocet=2, boduZaQso=5, nasobice=2 (JN89+JN99), body=10
-        $this->assertSame(2, $row->pocet,      'pocet QSO');
+        $this->assertSame(2, $row->pocet, 'pocet QSO');
         $this->assertSame(5, $row->bodu_za_qso, 'body za spojení');
-        $this->assertSame(2, $row->nasobice,   'násobič');
-        $this->assertSame(10, $row->body,      'celkové body');
+        $this->assertSame(2, $row->nasobice, 'násobič');
+        $this->assertSame(10, $row->body, 'celkové body');
     }
 
     public function test_upload_scoring_matches_direct_service_calculation(): void
     {
         $this->upload();
 
-        $row  = VkvpaData::firstOrFail();
+        $row = VkvpaData::firstOrFail();
         $head = Edihead::findOrFail((int) $row->EDI_ID);
 
         $direct = app(ScoringService::class)->scoreEdi($head);
 
-        $this->assertSame($direct->pocet,      $row->pocet);
-        $this->assertSame($direct->boduZaQso,  $row->bodu_za_qso);
-        $this->assertSame($direct->nasobice,   $row->nasobice);
-        $this->assertSame($direct->body,       $row->body);
+        $this->assertSame($direct->pocet, $row->pocet);
+        $this->assertSame($direct->boduZaQso, $row->bodu_za_qso);
+        $this->assertSame($direct->nasobice, $row->nasobice);
+        $this->assertSame($direct->body, $row->body);
     }
 
     public function test_upload_stores_edi_flag_and_edi_id(): void
@@ -100,7 +102,7 @@ class EdiPipelineIntegrationTest extends TestCase
         $this->upload();
 
         $row = VkvpaData::firstOrFail();
-        $this->assertTrue($row->EDI,          'EDI příznak musí být true');
+        $this->assertTrue($row->EDI, 'EDI příznak musí být true');
         $this->assertGreaterThan(0, $row->EDI_ID, 'EDI_ID musí odkazovat na edihead');
         $this->assertNotNull(Edihead::find($row->EDI_ID), 'Edihead musí existovat');
     }
@@ -162,17 +164,17 @@ class EdiPipelineIntegrationTest extends TestCase
         // Krok 2: uživatel vyplní formulář a odešle → záznam finalizován.
         $this->withSession(['owned_data_id' => $ownedId])
             ->post('/hlaseni', [
-                'id_zaznamu'  => $row->id,
-                'kolo'        => $row->id_kola,
-                'kategorie'   => $row->id_kategorie,
-                'znacka'      => 'OK2KJT',
-                'locator'     => 'JN99AJ',
-                'email'       => 'test@example.com',
-                'pocet'       => $row->pocet,
+                'id_zaznamu' => $row->id,
+                'kolo' => $row->id_kola,
+                'kategorie' => $row->id_kategorie,
+                'znacka' => 'OK2KJT',
+                'locator' => 'JN99AJ',
+                'email' => 'test@example.com',
+                'pocet' => $row->pocet,
                 'bodu_za_qso' => $row->bodu_za_qso,
-                'nasobice'    => $row->nasobice,
-                'body'        => $row->body,
-                'EDIID'       => $row->EDI_ID,
+                'nasobice' => $row->nasobice,
+                'body' => $row->body,
+                'EDIID' => $row->EDI_ID,
             ])
             ->assertRedirect(route('vysledkova_listina', ['kolo' => $row->id_kola]));
 
