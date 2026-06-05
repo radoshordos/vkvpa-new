@@ -44,6 +44,7 @@ class VysledkyController extends Controller
                     fn ($w) => $w->where('znacka', 'like', sprintf('%%%s%%', $hledat))
                         ->orWhere('locator', 'like', sprintf('%%%s%%', $hledat)),
                 ))
+                ->with('kategorie')
                 ->orderBy('id_kategorie')->orderBy('poradi')->orderByDesc('body')
                 ->limit($maxRows)
                 ->get()

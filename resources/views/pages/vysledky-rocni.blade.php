@@ -6,19 +6,31 @@
 <form method="get" action="{{ route('rocni_vysledky') }}" class="card mb-4 flex flex-wrap items-end gap-4 p-3">
   <div class="field mb-0">
     <label class="label" for="rok">Rok / Year</label>
-    <select id="rok" name="rok" class="select w-auto" onchange="this.form.submit()">
+    <select id="rok" name="rok" class="select w-auto">
       @for ($y = (int) date('Y'); $y >= 2006; $y--)
         <option value="{{ $y }}" @selected($y === $rok)>{{ $y }}</option>
       @endfor
     </select>
   </div>
   <label class="flex items-center gap-2 pb-1 text-sm">
-    <input type="checkbox" name="qrp" value="1" @checked(request()->boolean('qrp')) onchange="this.form.submit()"> jen QRP
+    <input id="qrp-rocni" type="checkbox" name="qrp" value="1" @checked(request()->boolean('qrp'))> jen QRP
   </label>
   <button type="submit" class="btn btn-primary">Vypsat</button>
 </form>
 
 <h2>Výsledková listina za rok {{ $rok }}</h2>
+
+@push('scripts')
+<script>
+(function () {
+    var form = document.getElementById('rok')?.closest('form');
+    if (form) {
+        document.getElementById('rok').addEventListener('change', function () { form.submit(); });
+        document.getElementById('qrp-rocni').addEventListener('change', function () { form.submit(); });
+    }
+}());
+</script>
+@endpush
 
 @forelse ($vysledky as $kategorieId => $radky)
   <div class="section-head">{{ $kategorie[$kategorieId]->nazev ?? ('Kategorie ' . $kategorieId) }}</div>
