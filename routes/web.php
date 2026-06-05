@@ -80,4 +80,5 @@ Route::middleware('admin')->group(function (): void {
     Route::get('/admin/kategorie', [KategorieController::class, 'index'])->name('kategorie.index');
     Route::post('/admin/kategorie', [KategorieController::class, 'store'])->name('kategorie.store');
     Route::get('/admin/importy', [ImportController::class, 'index'])->name('importy.index');
+    Route::post('/admin/importy', [ImportController::class, 'store'])->name('importy.store');
 });

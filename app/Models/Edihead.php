@@ -28,7 +28,9 @@ use Override;
  * @property string|null $src
  * @property Carbon|null $stamp
  * @property Carbon|null $d_cas
+ * @property string $PBand
  * @property-read Collection<int, Ediline> $lines
+ * @property-read int $lines_count
  */
 #[Fillable([
     'id_kola', 'TDate', 'PCall', 'PWWLo', 'PSect', 'PBand',
