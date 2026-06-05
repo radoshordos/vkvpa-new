@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\ServiceProvider;
 use Override;
@@ -25,6 +26,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Mimo produkci běží Eloquent ve striktním režimu: lazy loading vztahů
+        // (zdroj N+1) a tiché zahazování nevyplnitelných atributů vyhodí výjimku,
+        // takže se chyby odhalí už ve vývoji/testech, ne až podle výkonu v provozu.
+        // preventAccessingMissingAttributes ZÁMĚRNĚ nezapínáme – legacy modely
+        // (Edihead/Ediline) pracují s dynamickými sloupci typu `Received-WWL`.
+        Model::preventLazyLoading(! $this->app->isProduction());
+        Model::preventSilentlyDiscardingAttributes(! $this->app->isProduction());
+
         if ($this->app->isProduction()) {
             foreach (['vkvpa.contact_mail', 'vkvpa.contact_name'] as $key) {
                 if (blank(Config::get($key))) {

@@ -12,8 +12,10 @@ use App\Support\ContestWindow;
 use App\Support\Maidenhead;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schedule;
 
 /**
  * Vyhodnocení a skóre dle pravidel VKV PA.
@@ -52,11 +54,33 @@ final class ScoringService
                 }
             }
         });
+
+        // Pořadí (a tím roční součty) se změnilo → zahodit cache ročních výsledků daného roku.
+        $this->forgetYearlyCache($this->yearOfRound($koloId));
     }
 
     public function closeRound(int $koloId): void
     {
         VkvpaKola::query()->whereKey($koloId)->update(['vyhodnoceno' => Carbon::now()]);
+    }
+
+    /**
+     * Deaktivuje kola, jimž už uplynula uzávěrka (`datum_uzaverky` < teď).
+     *
+     * Slouží naplánované úloze ({@see Schedule} v
+     * routes/console.php) – po uzávěrce se kolo přestane nabízet pro příjem
+     * hlášení. Záložní logika {@see VkvpaKola::isActive()} (čerstvá neschválená
+     * data) zůstává nedotčena, takže rozpracované deníky se neztratí.
+     *
+     * @return int počet deaktivovaných kol
+     */
+    public function deactivateExpiredRounds(): int
+    {
+        return VkvpaKola::query()
+            ->where('aktivni', true)
+            ->whereNotNull('datum_uzaverky')
+            ->where('datum_uzaverky', '<', Carbon::now())
+            ->update(['aktivni' => false]);
     }
 
     /**
@@ -129,6 +153,22 @@ final class ScoringService
      */
     public function yearlyResults(int $year, bool $qrpOnly = false): Collection
     {
+        // Roční výsledky jsou drahá agregace, která se mezi vyhodnoceními kol nemění.
+        // Cache::flexible (stale-while-revalidate): do `fresh` s vrací z cache, do
+        // `stale` s vrací starou hodnotu a obnoví ji na pozadí. Invaliduje se cíleně
+        // v {@see self::rankRound()} přes forgetYearlyCache().
+        return Cache::flexible(
+            $this->yearlyCacheKey($year, $qrpOnly),
+            [Config::integer('vkvpa.yearly_cache_fresh', 300), Config::integer('vkvpa.yearly_cache_stale', 1800)],
+            fn (): Collection => $this->computeYearlyResults($year, $qrpOnly),
+        );
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Collection<int, VkvpaData>
+     */
+    private function computeYearlyResults(int $year, bool $qrpOnly): Collection
+    {
         $query = VkvpaData::query()
             ->join('vkvpa_kola', 'vkvpa_data.id_kola', '=', 'vkvpa_kola.id')
             ->where('vkvpa_data.schvaleno', true)
@@ -147,5 +187,36 @@ final class ScoringService
         }
 
         return $query->get();
+    }
+
+    /** Klíč cache ročních výsledků pro daný rok a QRP filtr. */
+    private function yearlyCacheKey(int $year, bool $qrpOnly): string
+    {
+        return sprintf('vkvpa:yearly:%d:%d', $year, $qrpOnly ? 1 : 0);
+    }
+
+    /** Zahodí cache ročních výsledků daného roku (obě varianty QRP). */
+    private function forgetYearlyCache(?int $year): void
+    {
+        if ($year === null) {
+            return;
+        }
+
+        Cache::forget($this->yearlyCacheKey($year, false));
+        Cache::forget($this->yearlyCacheKey($year, true));
+    }
+
+    /**
+     * Rok kola pro invalidaci cache – stejná konvence jako yearlyResults()
+     * (rok je na konci `nazev`, např. „1. kolo 2026").
+     */
+    private function yearOfRound(int $koloId): ?int
+    {
+        $nazev = VkvpaKola::query()->whereKey($koloId)->value('nazev');
+        if (! is_string($nazev) || preg_match('/(\d{4})\s*$/', $nazev, $m) !== 1) {
+            return null;
+        }
+
+        return (int) $m[1];
     }
 }
