@@ -8,12 +8,13 @@ use App\Http\Requests\StorePrispevekRequest;
 use App\Models\Prispevek;
 use App\Models\VkvpaKola;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class DiskuseController extends Controller
 {
-    public function index(\Illuminate\Http\Request $request): RedirectResponse
+    public function index(Request $request): RedirectResponse
     {
         $id = $request->integer('kolo', 0);
 

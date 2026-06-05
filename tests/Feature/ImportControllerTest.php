@@ -176,7 +176,7 @@ class ImportControllerTest extends TestCase
 
         $zip = $this->makeZip([
             'ok2kjt.edi' => $this->sampleEdi('OK2KJT'),
-            'readme.txt' => "Ignoruj mě",
+            'readme.txt' => 'Ignoruj mě',
             'photo.jpg' => 'fake-image-data',
         ]);
 
