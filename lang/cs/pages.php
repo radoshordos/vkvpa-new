@@ -54,6 +54,28 @@ return [
         'interim_results' => 'Průběžné výsledky kola',
     ],
 
+    'pribezne' => [
+        'title' => 'Průběžné výsledky – VKV PA',
+        'heading' => 'Průběžné výsledky kola',
+        'notice' => 'Průběžné výsledky zahrnují veškerá převzatá hlášení. Pořadí se může změnit po oficiálním vyhodnocení kola.',
+        'not_evaluated' => 'Kolo zatím nebylo vyhodnoceno.',
+        'evaluated_on' => 'Vyhodnoceno :date.',
+        'filter_round' => 'Kolo',
+        'filter_category' => 'Kategorie',
+        'filter_all' => 'Vše',
+        'filter_qrp' => 'jen QRP',
+        'btn_show' => 'Zobrazit',
+        'no_round' => 'Žádné kolo k zobrazení.',
+        'no_results' => 'Pro toto kolo zatím nejsou žádná převzatá hlášení.',
+        'col_pos' => 'Poř.',
+        'col_callsign' => 'Značka / Jméno',
+        'col_locator' => 'Locator',
+        'col_qso' => 'QSO',
+        'col_mult' => 'Nás.',
+        'col_total' => 'Body',
+        'col_soapbox' => 'Soapbox',
+    ],
+
     'vysledky' => [
         'title' => 'Výsledková listina – VKV PA',
         'heading' => 'Výsledková listina',

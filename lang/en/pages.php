@@ -54,6 +54,28 @@ return [
         'interim_results' => 'Interim results',
     ],
 
+    'pribezne' => [
+        'title' => 'Interim results – VKV PA',
+        'heading' => 'Interim round results',
+        'notice' => 'Interim results include all accepted log entries. Rankings may change after official round evaluation.',
+        'not_evaluated' => 'Round has not been evaluated yet.',
+        'evaluated_on' => 'Evaluated on :date.',
+        'filter_round' => 'Round',
+        'filter_category' => 'Category',
+        'filter_all' => 'All',
+        'filter_qrp' => 'QRP only',
+        'btn_show' => 'Show',
+        'no_round' => 'No round available.',
+        'no_results' => 'No accepted log entries for this round yet.',
+        'col_pos' => 'Pos.',
+        'col_callsign' => 'Callsign / Name',
+        'col_locator' => 'Locator',
+        'col_qso' => 'QSO',
+        'col_mult' => 'Mult.',
+        'col_total' => 'Points',
+        'col_soapbox' => 'Soapbox',
+    ],
+
     'vysledky' => [
         'title' => 'Results – VKV PA',
         'heading' => 'Results',

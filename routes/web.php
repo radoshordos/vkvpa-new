@@ -41,6 +41,7 @@ Route::post('/hlaseni', [HlaseniController::class, 'store'])->name('hlaseni.stor
 Route::get('/kola', [KolaController::class, 'index'])->name('kola.index');
 
 Route::get('/vysledky', [VysledkyController::class, 'listina'])->name('vysledkova_listina');
+Route::get('/vysledky/pribezne', [VysledkyController::class, 'pribezne'])->name('pribezne_vysledky');
 Route::get('/vysledky/rocni', [VysledkyController::class, 'rocni'])->name('rocni_vysledky');
 
 // Obfuskovaný e-mail jako obrázek (footer) – nahrazuje mail.php

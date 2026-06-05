@@ -61,6 +61,36 @@ class VysledkyController extends Controller
         ]);
     }
 
+    public function pribezne(Request $request): View
+    {
+        $koloId = $request->integer('kolo');
+        $kolo = $koloId !== 0
+            ? VkvpaKola::find($koloId)
+            : VkvpaKola::query()->orderByDesc('datum_konani')->first();
+
+        $katId = $request->integer('kategorie');
+
+        $radky = $kolo
+            ? VkvpaData::query()
+                ->where('id_kola', $kolo->id)
+                ->where('schvaleno', true)
+                ->when($request->boolean('qrp'), fn ($q) => $q->where('qrp', true))
+                ->when($katId !== 0, fn ($q) => $q->where('id_kategorie', $katId))
+                ->with('kategorie')
+                ->orderBy('id_kategorie')->orderByDesc('body')
+                ->get()
+            : collect();
+
+        return view('pages.pribezne-vysledky', [
+            'active' => 'pribezne_vysledky',
+            'kola' => VkvpaKola::query()->orderByDesc('datum_konani')->get(),
+            'kolo' => $kolo,
+            'kategorie' => VkvpaKategorie::query()->orderBy('id')->get()->keyBy('id'),
+            'katId' => $katId,
+            'radky' => $radky,
+        ]);
+    }
+
     public function rocni(Request $request): View
     {
         $rok = $request->integer('rok', (int) date('Y'));

@@ -5,6 +5,7 @@ declare(strict_types=1);
 return [
     'contest_periods' => 'Contest periods',
     'log_import' => 'Submit log',
+    'interim_results' => 'Interim results',
     'results' => 'Results',
     'year_results' => 'Year results',
     'discussion' => 'Discussion',
