@@ -10,6 +10,7 @@ Webový systém pro správu a vyhodnocování závodů v pásmu VKV (Very High F
 
 - [Technologie](#technologie)
 - [Funkce](#funkce)
+- [Náhledy aplikace](#náhledy-aplikace)
 - [Architektura](#architektura)
 - [Instalace](#instalace)
 - [Docker](#docker)
@@ -58,6 +59,34 @@ Webový systém pro správu a vyhodnocování závodů v pásmu VKV (Very High F
 - **EDI debug** – analýza bodování bez uložení (pro adminy)
 - **Emailové notifikace** – potvrzení závodníkovi + notifikace rozhodcům
 - **Token přihlášení** – jednorázový odkaz s platností 5 dní
+
+---
+
+## Náhledy aplikace
+
+### Veřejná část
+
+| Kola závodu | Nahrání EDI deníku |
+|:-----------:|:------------------:|
+| ![Kola závodu](docs/screenshots/kola.png) | ![Nahrání EDI souboru](docs/screenshots/edi-upload.png) |
+
+| Výsledková listina | Roční výsledky |
+|:-----------------:|:--------------:|
+| ![Výsledková listina](docs/screenshots/vysledky.png) | ![Roční výsledky](docs/screenshots/vysledky-rocni.png) |
+
+### Administrace
+
+| Přihlášení admina | Nahrané EDI deníky |
+|:-----------------:|:-----------------:|
+| ![Přihlášení](docs/screenshots/login.png) | ![Nahrané deníky](docs/screenshots/admin-deniky.png) |
+
+| EDI debug – kontrola bodování | Správa kategorií |
+|:-----------------------------:|:----------------:|
+| ![EDI debug](docs/screenshots/admin-edi-debug.png) | ![Správa kategorií](docs/screenshots/admin-kategorie.png) |
+
+| Hromadný import ZIP |
+|:-------------------:|
+| ![Hromadný import](docs/screenshots/admin-importy.png) |
 
 ---
 
