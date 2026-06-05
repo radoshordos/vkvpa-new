@@ -37,7 +37,7 @@ Webový systém pro správu a vyhodnocování závodů v pásmu VKV (Very High F
 | Fronty | Laravel Queue (database driver) |
 | Kontejnerizace | Docker + Docker Compose |
 | Testy | PHPUnit 12 / Pest |
-| Statická analýza | PHPStan level 9 (Larastan) |
+| Statická analýza | PHPStan level 10 (Larastan) |
 | Code style | Laravel Pint |
 | Správa DB | Adminer (HTTP Basic Auth) |
 
@@ -47,7 +47,7 @@ Webový systém pro správu a vyhodnocování závodů v pásmu VKV (Very High F
 
 - **Registrace deníků** – formulář pro odeslání závodního deníku (volací znak, kategorie, kolo)
 - **EDI import** – upload a parsování `.edi` souborů (REF 01 formát), podpora Windows-1250 kódování
-- **Automatické bodování** – výpočet skóre (`pocet × nasobice`) dle závodních pravidel
+- **Automatické bodování** – výpočet skóre (`boduZaQso × nasobice`) dle závodních pravidel
 - **Výsledkové listiny** – přehled výsledků dle kola, kategorie a volacího znaku; vyhledávání
 - **Roční výsledky** – kumulativní skóre přes všechna kola v roce
 - **Mapové vizualizace** – tři typy Leaflet map pro každý deník:
@@ -75,7 +75,7 @@ EdiParser::parse(string) ──► EdiLog (EdiHeader + EdiQso[] + raw)
 EdiImportService::import(EdiLog) ──► edihead + edilines (transakce)
         │
         ▼
-ScoringService::scoreEdi(Edihead) ──► EdiScore (pocet × nasobice = body)
+ScoringService::scoreEdi(Edihead) ──► EdiScore (boduZaQso × nasobice = body)
         │
         ▼
 EdiController::store() ──► VkvpaData row + EDI_ID
@@ -266,7 +266,7 @@ composer test
 php artisan test --filter EdiParserTest
 php artisan test tests/Unit/EdiParserTest.php
 
-# PHPStan – statická analýza (level 9)
+# PHPStan – statická analýza (level 10)
 composer stan
 
 # Pint – kontrola code style (bez zápisů)
@@ -330,14 +330,13 @@ VkvpaKola ──► VkvpaData ◄── VkvpaKategorie
 
 | Metoda | URI | Controller | Název |
 |--------|-----|------------|-------|
-| GET | `/` | `HlaseniController@index` | `edit_hlaseni` |
-| GET | `/kola` | `KolaController@index` | `edit_kola` |
-| GET | `/hlaseni` | `HlaseniController@index` | `hlaseni.index` |
+| GET | `/` | `HlaseniController@index` | `hlaseni.index` |
 | POST | `/hlaseni` | `HlaseniController@store` | `hlaseni.store` |
+| GET | `/kola` | `KolaController@index` | `kola.index` |
 | GET | `/vysledky` | `VysledkyController@listina` | `vysledkova_listina` |
 | GET | `/vysledky/rocni` | `VysledkyController@rocni` | `rocni_vysledky` |
-| GET | `/edi` | `EdiController@create` | `read_edi` |
-| POST | `/edi` | `EdiController@store` | `read_edi.store` |
+| GET | `/edi` | `EdiController@create` | `edi.create` |
+| POST | `/edi` | `EdiController@store` | `edi.store` |
 | GET | `/edi/{head}/soubor` | `EdiController@zobrazit` | `edi.soubor` |
 | GET | `/edi/{head}/soubor-redukovany` | `EdiController@zobrazitRedukovany` | `edi.soubor.redukovany` |
 | GET | `/edi/{head}/mapa/jezek` | `MapController@jezek` | `edi.mapa.jezek` |
@@ -351,14 +350,15 @@ VkvpaKola ──► VkvpaData ◄── VkvpaKategorie
 
 | Metoda | URI | Controller | Název |
 |--------|-----|------------|-------|
-| POST | `/admin/kolo/{kolo}/vyhodnotit` | `VyhodnoceniController@vyhodnotit` | `kolo.vyhodnotit` |
-| POST | `/admin/kolo/{kolo}/uzavrit` | `VyhodnoceniController@uzavrit` | `kolo.uzavrit` |
-| POST | `/admin/zaznam/{zaznam}/prevzit` | `ZaznamController@prevzit` | `zaznam.prevzit` |
-| POST | `/admin/zaznam/{zaznam}/smazat` | `ZaznamController@smazat` | `zaznam.smazat` |
-| GET/POST | `/admin/edi-debug` | `EdiDebugController` | `edit_edi_debug` |
-| GET | `/admin/deniky` | `DenikyController@index` | `edit_deniky` |
-| GET | `/admin/kategorie` | `KategorieController@index` | `edit_kategorie` |
-| GET | `/admin/importy` | `ImportController@index` | `edit_import` |
+| POST | `/admin/kola/{kolo}/vyhodnotit` | `VyhodnoceniController@vyhodnotit` | `kola.vyhodnotit` |
+| POST | `/admin/kola/{kolo}/uzavrit` | `VyhodnoceniController@uzavrit` | `kola.uzavrit` |
+| PATCH | `/admin/zaznamy/{zaznam}` | `ZaznamController@update` | `zaznam.update` |
+| DELETE | `/admin/zaznamy/{zaznam}` | `ZaznamController@destroy` | `zaznam.destroy` |
+| GET | `/admin/edi-debug` | `EdiDebugController@create` | `edi.debug.create` |
+| POST | `/admin/edi-debug` | `EdiDebugController@analyze` | `edi.debug.store` |
+| GET | `/admin/deniky` | `DenikyController@index` | `deniky.index` |
+| GET | `/admin/kategorie` | `KategorieController@index` | `kategorie.index` |
+| GET | `/admin/importy` | `ImportController@index` | `importy.index` |
 
 ---
 
@@ -371,7 +371,7 @@ Přihlášení je session-based se dvěma způsoby vstupu:
 
 Admin trasy jsou chráněny middleware `EnsureAdmin` (`middleware('admin')`). Admin práva se řídí atributem `User::is_admin` (boolean).
 
-Struktura navigačního menu je deklarována v `config/navigation.php` – pro veřejné (`public`) i admin (`admin`) sekce zvlášť.
+Struktura navigačního menu je deklarována v `config/navigation.php` – pro veřejnou (`public`) a admin (`admin`) sekci zvlášť.
 
 ---
 
@@ -414,11 +414,12 @@ Vzorové EDI soubory jsou v `resources/edi/` a slouží jako fixture pro unit te
 ### Vzorec
 
 ```
-body = pocet × nasobice
+body = boduZaQso × nasobice
 ```
 
-- **`pocet`** – počet QSO v závodním okně (08:00–11:00 UTC) mimo vlastní velký čtverec (první 4 znaky `PWWLo`)
-- **`nasobice`** – počet unikátních cizích velkých čtverců + 1
+- **`pocet`** – počet QSO v závodním okně (den závodu dle `TDate`, čas 08:00–11:00 UTC); QSO do vlastního velkého čtverce jsou **započítána**
+- **`boduZaQso`** – součet bodů za spojení přepočítaný z lokátorů (hodnota `QSO-Points` z deníku se ignoruje): vlastní velký čtverec = 2 body, každý sousední pás o bod více (`Maidenhead::qsoPoints()`)
+- **`nasobice`** – počet různých velkých čtverců (4-znakový Maidenhead) včetně vlastního; vlastní se počítá vždy, i pokud s ním nebylo pracováno žádné QSO
 
 Konstanta `NON_EDI_NULLIFY_FROM_KOLO = 91`: záznamy bez EDI souboru se v ročních výsledcích počítají jako 0 bodů pro kola ≥ 91.
 
