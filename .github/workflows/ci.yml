@@ -45,6 +45,12 @@ jobs:
           cp .env.example .env
           php artisan key:generate --ansi
 
+      - name: Install frontend dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Build frontend assets
+        run: npm run build
+
       - name: Run tests
         run: composer test
 
@@ -53,9 +59,3 @@ jobs:
 
       - name: Check PHP style
         run: composer lint
-
-      - name: Install frontend dependencies
-        run: npm ci --ignore-scripts
-
-      - name: Build frontend assets
-        run: npm run build
