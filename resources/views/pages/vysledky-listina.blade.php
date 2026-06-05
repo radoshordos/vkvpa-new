@@ -14,7 +14,7 @@
         <label class="label" for="kolo">{{ __('pages.vysledky.filter_round') }}</label>
         <select id="kolo" name="kolo" class="select w-auto">
             @foreach ($kola as $k)
-                <option value="{{ $k->id }}" @selected($kolo && $k->id === $kolo->id)>{{ $k->nazev }} ({{ $k->datum_konani?->format('j.n.Y') }})</option>
+                <option value="{{ $k->id }}" @selected($kolo && $k->id === $kolo->id)>{{ $k->nazev }} ({{ $k->datum_konani?->format('j. n. Y') }})</option>
             @endforeach
         </select>
     </div>
@@ -68,7 +68,7 @@
                         <td>
                             <span class="mono font-bold">{{ $r->znacka }}</span>@if ($r->qrp)<span class="badge badge-qrp ml-1">QRP</span>@endif
                             @if ($r->jmeno)<br><span class="text-muted">{{ $r->jmeno }}</span>@endif
-                            @if ($r->timestamp)<br><span class="text-xs text-muted">{{ $r->timestamp->format('d.m. H:i') }}</span>@endif
+                            @if ($r->timestamp)<br><span class="text-xs text-muted">{{ $r->timestamp->format('j. n. H:i') }}</span>@endif
                         </td>
                         <td class="mono whitespace-nowrap">{{ $r->locator }}</td>
                         <td class="num">{{ $r->pocet }}</td>

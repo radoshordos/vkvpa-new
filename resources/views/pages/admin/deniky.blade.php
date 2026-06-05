@@ -29,7 +29,7 @@
                     @php
                         $tdate = $d->TDate ?? '';
                         $datum = strlen($tdate) >= 8
-                            ? \Illuminate\Support\Carbon::createFromFormat('Ymd', substr($tdate, 0, 8))?->format('d.m.Y') ?? $tdate
+                            ? \Illuminate\Support\Carbon::createFromFormat('Ymd', substr($tdate, 0, 8))?->format('j. n. Y') ?? $tdate
                             : ($tdate ?: '—');
                     @endphp
                     <tr>
@@ -39,7 +39,7 @@
                         <td class="mono text-sm">{{ $d->PBand ?: '—' }}</td>
                         <td class="text-sm">{{ $kola->get($d->id_kola, '—') }}</td>
                         <td class="num">{{ $d->lines_count }}</td>
-                        <td class="whitespace-nowrap text-sm text-muted">{{ $d->stamp?->format('d.m.Y H:i') ?? '—' }}</td>
+                        <td class="whitespace-nowrap text-sm text-muted">{{ $d->stamp?->format('j. n. Y H:i') ?? '—' }}</td>
                     </tr>
                 @endforeach
             </tbody>
