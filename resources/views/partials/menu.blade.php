@@ -15,9 +15,6 @@
     @foreach(config('navigation.admin') as $item)
         @include('partials.menu-item', $item)
     @endforeach
-    @foreach(config('navigation.admin_external') as $item)
-        @include('partials.menu-item', $item)
-    @endforeach
 
     <div class="mt-4 border-t border-line pt-3 text-xs text-muted">
         <p class="mb-2">Přihlášen: <span class="font-medium text-ink">{{ $adminName }}</span></p>
