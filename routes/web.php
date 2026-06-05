@@ -24,6 +24,15 @@ use Illuminate\Support\Facades\Route;
 
 require __DIR__.'/auth.php'; // Fáze 4
 
+// Přepínání jazyka (cs / en) – ukládá volbu do session.
+Route::get('/lang/{locale}', function (string $locale) {
+    if (in_array($locale, ['cs', 'en'], true)) {
+        session(['locale' => $locale]);
+    }
+
+    return redirect()->back();
+})->name('lang.switch');
+
 // Výchozí stránka = formulář hlášení.
 Route::get('/', [HlaseniController::class, 'index'])->name('hlaseni.index');
 Route::post('/hlaseni', [HlaseniController::class, 'store'])->name('hlaseni.store');

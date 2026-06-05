@@ -1,29 +1,27 @@
 @extends('layouts.app')
-@section('title', 'Nahrané EDI deníky – Administrace VKV PA')
+@section('title', __('admin.deniky_title'))
 @section('content')
 
-<h1>Nahrané EDI deníky</h1>
+<h1>{{ __('admin.deniky_heading') }}</h1>
 
-<p class="mb-4 text-sm text-muted max-w-prose">
-    Přehled všech deníků uložených v tabulce <code>edihead</code>.
-    Podrobnosti (score, mapy, akce) jsou dostupné přes
-    <a href="{{ route('vysledkova_listina') }}" class="link">výsledkovou listinu</a>.
+<p class="mb-4 max-w-prose text-sm text-muted">
+    {!! __('admin.deniky_desc', ['link' => '<a href="'.route('vysledkova_listina').'" class="link">'.__('admin.deniky_desc_link').'</a>']) !!}
 </p>
 
 @if ($deniky->isEmpty())
-    <p class="text-muted">Žádné deníky zatím nebyly nahrány.</p>
+    <p class="text-muted">{{ __('admin.deniky_empty') }}</p>
 @else
     <div class="table-wrap">
         <table class="data-table">
             <thead>
                 <tr>
                     <th class="num">ID</th>
-                    <th>Značka</th>
-                    <th>Datum závodu</th>
-                    <th>Pásmo</th>
-                    <th>Kolo</th>
-                    <th class="num">QSO</th>
-                    <th>Nahráno</th>
+                    <th>{{ __('admin.deniky_col_call') }}</th>
+                    <th>{{ __('admin.deniky_col_date') }}</th>
+                    <th>{{ __('admin.deniky_col_band') }}</th>
+                    <th>{{ __('admin.deniky_col_round') }}</th>
+                    <th class="num">{{ __('admin.deniky_col_qso') }}</th>
+                    <th>{{ __('admin.deniky_col_upload') }}</th>
                 </tr>
             </thead>
             <tbody>

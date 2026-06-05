@@ -6,31 +6,32 @@ declare(strict_types=1);
  * Struktura hlavního menu.
  *
  * Položky s 'key' jsou interní (pojmenovaná routa, podporují aktivní stav).
- * Položky s 'url' jsou externí. 'label' může obsahovat statické HTML (<br>).
+ * Položky s 'url' jsou externí.
+ * 'trans' je klíč do překladového souboru nav.php (zobrazí se v aktuálním jazyce).
  */
 
 return [
 
     'public' => [
-        ['key' => 'kola.index',         'label' => 'kola závodu <br> contest period'],
-        ['key' => 'hlaseni.index',      'label' => 'odeslat deník<br>log import'],
-        ['key' => 'vysledkova_listina', 'label' => 'výsledková listina<br>results'],
-        ['key' => 'rocni_vysledky',     'label' => 'roční výsledky<br>year results'],
-        ['key' => 'diskuse.index',      'label' => 'diskuse<br>discussion'],
-        ['url' => 'https://vkvpa.hamradio.cz/rules/PA_VKV_2023–2022_12_23_en.pdf', 'label' => 'contest rules (pdf eng)'],
-        ['url' => 'https://vkvpa.hamradio.cz/rules/PA_VKV_2023–2022_12_23_cz.pdf', 'label' => 'podmínky závodu(pdf cz)', 'target' => '_blank'],
-        ['url' => 'http://www.ok1kpa.com/pa-podminky.htm', 'label' => 'Oficiální podmínky závodu', 'target' => '_blank'],
-        ['url' => 'http://www.ok1kpa.com/',                'label' => 'Oficiální archiv výsledků',  'target' => '_blank'],
-        ['url' => 'http://www.crk.cz/',                    'label' => 'Oficiální web pořadatele',    'target' => '_blank'],
+        ['key' => 'kola.index',         'trans' => 'nav.contest_periods'],
+        ['key' => 'hlaseni.index',      'trans' => 'nav.log_import'],
+        ['key' => 'vysledkova_listina', 'trans' => 'nav.results'],
+        ['key' => 'rocni_vysledky',     'trans' => 'nav.year_results'],
+        ['key' => 'diskuse.index',      'trans' => 'nav.discussion'],
+        ['url' => 'https://vkvpa.hamradio.cz/rules/PA_VKV_2023–2022_12_23_en.pdf', 'trans' => 'nav.rules_en', 'target' => '_blank'],
+        ['url' => 'https://vkvpa.hamradio.cz/rules/PA_VKV_2023–2022_12_23_cz.pdf', 'trans' => 'nav.rules_cz', 'target' => '_blank'],
+        ['url' => 'http://www.ok1kpa.com/pa-podminky.htm', 'trans' => 'nav.official_rules',   'target' => '_blank'],
+        ['url' => 'http://www.ok1kpa.com/',                'trans' => 'nav.official_archive',  'target' => '_blank'],
+        ['url' => 'http://www.crk.cz/',                    'trans' => 'nav.official_web',      'target' => '_blank'],
     ],
 
     'admin' => [
-        ['key' => 'kola.index',         'label' => 'kola závodu'],
-        ['key' => 'hlaseni.index',      'label' => 'hlášení'],
-        ['key' => 'deniky.index',       'label' => 'deníky - upload'],
-        ['key' => 'edi.debug.create',   'label' => 'EDI debug / kontrola bodů'],
-        ['key' => 'kategorie.index',    'label' => 'správa kategorií, konfigurace'],
-        ['key' => 'importy.index',      'label' => 'importy'],
+        ['key' => 'kola.index',       'trans' => 'admin.nav_rounds'],
+        ['key' => 'hlaseni.index',    'trans' => 'admin.nav_reports'],
+        ['key' => 'deniky.index',     'trans' => 'admin.nav_logs'],
+        ['key' => 'edi.debug.create', 'trans' => 'admin.nav_edi_debug'],
+        ['key' => 'kategorie.index',  'trans' => 'admin.nav_categories'],
+        ['key' => 'importy.index',    'trans' => 'admin.nav_imports'],
     ],
 
 ];
