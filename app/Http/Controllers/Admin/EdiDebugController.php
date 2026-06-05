@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Admin;
 use App\Exceptions\EdiParseException;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\EdiController;
+use App\Models\Edihead;
 use App\Services\Edi\EdiParser;
 use App\Services\Scoring\EdiScoreDebugger;
 use Illuminate\Http\RedirectResponse;
@@ -29,9 +30,10 @@ class EdiDebugController extends Controller
     public function create(): View
     {
         return view('pages.admin.edi-debug', [
-            'active' => 'edit_edi_debug',
-            'report' => null,
+            'active'   => 'edit_edi_debug',
+            'report'   => null,
             'filename' => null,
+            'edihead'  => null,
         ]);
     }
 
@@ -52,10 +54,16 @@ class EdiDebugController extends Controller
                 ->with('lineErrors', $ediParseException->lineErrors);
         }
 
+        $edihead = Edihead::where('PCall', $log->header->pCall())
+            ->where('TDate', $log->header->tDate())
+            ->latest('ID')
+            ->first();
+
         return view('pages.admin.edi-debug', [
-            'active' => 'edit_edi_debug',
-            'report' => $this->debugger->analyze($log),
+            'active'   => 'edit_edi_debug',
+            'report'   => $this->debugger->analyze($log),
             'filename' => $request->file('upload')->getClientOriginalName(),
+            'edihead'  => $edihead,
         ]);
     }
 }

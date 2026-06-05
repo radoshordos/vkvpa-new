@@ -66,6 +66,7 @@ return [
     'debug_card_cat' => 'Category',
     'debug_card_power' => 'Power',
     'debug_card_window' => 'Contest window (UTC)',
+    'debug_card_maps'   => 'Maps',
     'debug_score_pts' => 'QSO points',
     'debug_score_mult' => 'multiplier',
     'debug_score_total' => 'points',
