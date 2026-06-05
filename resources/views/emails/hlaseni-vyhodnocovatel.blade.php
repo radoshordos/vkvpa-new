@@ -2,7 +2,7 @@
 <p style="font-weight: bold">
   {{ $hlaseni->znacka }} {{ $hlaseni->pocet }} {{ $hlaseni->bodu_za_qso }}
   {{ $hlaseni->nasobice }} {{ $hlaseni->body }} {{ $kategorieNazev }} {{ $hlaseni->poznamka }}<br>
-  {!! $hlaseni->soapbox !!}
+  {{ $hlaseni->soapbox }}
 </p>
 <p>
   <a href="{{ $prevzitUrl }}">převzít tento záznam</a><br>

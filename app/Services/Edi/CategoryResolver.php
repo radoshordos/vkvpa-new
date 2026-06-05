@@ -112,11 +112,17 @@ final class CategoryResolver
         return null;
     }
 
-    /** DX = značka nezačíná na „OK" ani „OL" (cizí stanice). */
+    /** DX = značka nezačíná žádným z tuzemských prefixů (config vkvpa.domestic_prefixes). */
     private function isDx(string $pcall): bool
     {
         $p = strtoupper(trim($pcall));
 
-        return ! str_starts_with($p, 'OK') && ! str_starts_with($p, 'OL');
+        foreach (config('vkvpa.domestic_prefixes', ['OK', 'OL']) as $prefix) {
+            if (str_starts_with($p, strtoupper((string) $prefix))) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

@@ -35,7 +35,7 @@ class MapTest extends TestCase
             ->assertOk()
             ->assertSeeHtml('Mapa spojení')
             ->assertSeeHtml('OK2KJT')
-            ->assertSeeHtml('leaflet@1.9.4')
+            ->assertSeeHtml('window.__mapConfig')
             ->assertSee('ježek');
     }
 

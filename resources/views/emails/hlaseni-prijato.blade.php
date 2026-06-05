@@ -10,7 +10,7 @@
   <strong>Jméno:</strong> {{ $hlaseni->jmeno }}<br>
   <strong>Kontakt:</strong> {{ $hlaseni->mail }} {{ $hlaseni->telefon }}<br>
   <strong>Poznámka:</strong> {{ $hlaseni->poznamka }}<br>
-  <strong>Soapbox:</strong> {!! $hlaseni->soapbox !!}
+  <strong>Soapbox:</strong> {{ $hlaseni->soapbox }}
 </p>
 <p>Po kontrole a převzetí hlášení vyhodnocovatelem budeš informován(a) e-mailem.</p>
 <p>73 {{ config('vkvpa.contact_name') }}</p>

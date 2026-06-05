@@ -34,7 +34,7 @@
 <form method="get" action="{{ route('vysledkova_listina') }}" class="card mb-4 flex flex-wrap items-end gap-4 p-3">
     <div class="field mb-0">
         <label class="label" for="kolo">Kolo / Round</label>
-        <select id="kolo" name="kolo" class="select w-auto" onchange="this.form.submit()">
+        <select id="kolo" name="kolo" class="select w-auto">
             @foreach ($kola as $k)
                 <option value="{{ $k->id }}" @selected($kolo && $k->id === $kolo->id)>{{ $k->nazev }} ({{ $k->datum_konani?->format('j.n.Y') }})</option>
             @endforeach
@@ -45,7 +45,7 @@
         <input id="hledat" type="text" name="hledat" value="{{ $hledat }}" placeholder="Callsign / Locator…" class="input w-48">
     </div>
     <label class="flex items-center gap-2 pb-2 text-sm">
-        <input type="checkbox" name="qrp" value="1" @checked(request()->boolean('qrp')) onchange="this.form.submit()"> jen QRP
+        <input id="qrp" type="checkbox" name="qrp" value="1" @checked(request()->boolean('qrp'))> jen QRP
     </label>
     <button type="submit" class="btn btn-primary">Zobrazit / Show</button>
 </form>
@@ -155,6 +155,15 @@
 </div>
 
 @push('scripts')
+<script>
+(function () {
+    var filterForm = document.getElementById('kolo')?.closest('form');
+    if (filterForm) {
+        document.getElementById('kolo').addEventListener('change', function () { filterForm.submit(); });
+        document.getElementById('qrp').addEventListener('change', function () { filterForm.submit(); });
+    }
+}());
+</script>
 <script>
 (function () {
     var overlay    = document.getElementById('del-overlay');
