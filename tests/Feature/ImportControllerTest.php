@@ -32,7 +32,11 @@ class ImportControllerTest extends TestCase
         ]);
     }
 
-    /** Vytvoří ZIP soubor s danými položkami a vrátí ho jako UploadedFile. */
+    /**
+     * Vytvoří ZIP soubor s danými položkami a vrátí ho jako UploadedFile.
+     *
+     * @param  array<string, string>  $files
+     */
     private function makeZip(array $files): UploadedFile
     {
         $path = tempnam(sys_get_temp_dir(), 'test_import_').'.zip';
@@ -83,6 +87,7 @@ class ImportControllerTest extends TestCase
             ->assertRedirect(route('importy.index'))
             ->assertSessionHas('import_results');
 
+        /** @var array<string, int> $results */
         $results = session('import_results');
         $this->assertSame(1, $results['total']);
         $this->assertSame(1, $results['imported']);
@@ -104,6 +109,7 @@ class ImportControllerTest extends TestCase
             ->post(route('importy.store'), ['zip' => $zip])
             ->assertRedirect(route('importy.index'));
 
+        /** @var array<string, int> $results */
         $results = session('import_results');
         $this->assertSame(2, $results['total']);
         $this->assertSame(2, $results['imported']);
@@ -127,6 +133,7 @@ class ImportControllerTest extends TestCase
         $this->actingAs($this->admin())
             ->post(route('importy.store'), ['zip' => $zip]);
 
+        /** @var array<string, int> $results */
         $results = session('import_results');
         $this->assertSame(1, $results['skipped']);
         $this->assertSame(0, $results['imported']);
@@ -145,6 +152,7 @@ class ImportControllerTest extends TestCase
         $this->actingAs($this->admin())
             ->post(route('importy.store'), ['zip' => $zip]);
 
+        /** @var array<string, int> $results */
         $results = session('import_results');
         $this->assertSame(1, $results['errors']);
         $this->assertSame(0, $results['imported']);
@@ -157,6 +165,7 @@ class ImportControllerTest extends TestCase
         $this->actingAs($this->admin())
             ->post(route('importy.store'), ['zip' => $zip]);
 
+        /** @var array<string, int> $results */
         $results = session('import_results');
         $this->assertSame(1, $results['errors']);
     }
@@ -176,6 +185,7 @@ class ImportControllerTest extends TestCase
 
         // readme.txt je .txt → může se zpracovat (chyba parsování), photo.jpg se ignoruje.
         // Klíčové: celkový počet nezahrnuje .jpg soubor.
+        /** @var array<string, int> $results */
         $results = session('import_results');
         $this->assertArrayHasKey('total', $results);
         $total = $results['total'];
@@ -200,6 +210,7 @@ class ImportControllerTest extends TestCase
         $this->actingAs($this->admin())
             ->post(route('importy.store'), ['zip' => $zip]);
 
+        /** @var array<string, int> $results */
         $results = session('import_results');
         $this->assertLessThanOrEqual(200, $results['total'], 'Limit 200 souborů musí být dodržen');
     }

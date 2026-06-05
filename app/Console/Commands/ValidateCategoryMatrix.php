@@ -27,7 +27,12 @@ class ValidateCategoryMatrix extends Command
         /** @var list<int> $existing */
         $existing = DB::table('vkvpa_kategorie')
             ->pluck('id')
-            ->map(static fn (mixed $id): int => (int) $id)
+            ->map(static function (mixed $id): int {
+                if (is_numeric($id)) {
+                    return (int) $id;
+                }
+                throw new \UnexpectedValueException('Non-numeric category ID: '.get_debug_type($id));
+            })
             ->sort()
             ->values()
             ->all();
