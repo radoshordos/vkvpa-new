@@ -6,4 +6,6 @@
     $href     = isset($key) ? route($key) : ($url ?? '#');
     $isActive = isset($key) && request()->routeIs($key);
 @endphp
-<li><a href="{{ $href }}"@class(['active' => $isActive])@isset($target) target="{{ $target }}"@endisset>{!! $label !!}</a></li>
+<a href="{{ $href }}"
+   @class(['nav-link', 'active' => $isActive])
+   @isset($target) target="{{ $target }}" rel="noopener" @endisset>{!! $label !!}</a>

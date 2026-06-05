@@ -6,23 +6,6 @@
 
 @section('title', 'Hlášení / Log import – VKV PA')
 
-@push('head')
-<style>
-    .vkv-table { width: 100%; border-collapse: collapse; background-color: #D6ECF3; font-family: Arial, sans-serif; font-size: 13px; color: black; }
-    .vkv-table td { padding: 6px 10px; border-bottom: 2px solid white; vertical-align: middle; }
-    .vkv-table tr:last-child td { border-bottom: none; }
-    .vkv-input { border: 1px solid black; padding: 2px; font-size: 13px; background: white; }
-    .vkv-input-bold { font-weight: bold; }
-    .vkv-select { border: 1px solid black; padding: 1px; background: white; font-size: 13px; }
-    .vkv-text-area { border: 1px solid black; width: 100%; margin-top: 5px; background: white; font-family: Arial, sans-serif; }
-    .vkv-error { background: #fff3f3; border: 1px solid #cc0000; color: #cc0000; padding: 10px; margin: 10px 0; font-family: Arial; font-size: 13px; font-weight: bold; }
-    .vkv-field-error { color: #cc0000; font-size: 11px; display: block; margin-top: 2px; }
-    .vkv-input-err { border: 1px solid #cc0000 !important; background: #fff8f8 !important; }
-    .vkv-select-err { border: 1px solid #cc0000 !important; background: #fff8f8 !important; }
-    .vkv-edi-box { background: #eee; padding: 15px; border: 1px solid #ccc; margin-bottom: 20px; }
-</style>
-@endpush
-
 @section('content')
 @php
     $e = $edit ?? null;
@@ -30,48 +13,43 @@
 @endphp
 
 @if (session('announcement'))
-    <div style="background:#f0fff0;border:1px solid #2a2;color:#161;padding:10px;margin:10px 0;font-family:Arial;font-size:13px;">
-        {{ session('announcement') }}
-    </div>
+    <div class="alert alert-success">{{ session('announcement') }}</div>
 @endif
 
 @if ($maAktivniKolo)
-{{-- ===== EDI upload box (tpl_form_edi.php) ===== --}}
-<div class="vkv-edi-box">
-    <h1 style="color: #000080; font-size: 20px; margin-top: 0;">Načíst EDI soubor / Import EDI file</h1>
+{{-- ===== EDI upload box ===== --}}
+<div class="card mb-6 p-5">
+    <h1 class="!mb-3">Načíst EDI soubor / Import EDI file</h1>
 
     @if ($errors->has('upload'))
-        <div class="vkv-error">
+        <div class="alert alert-error">
             {{ $errors->first('upload') }}
             @foreach (session('lineErrors', []) as $le)
-                <br><span style="font-weight:normal;">Chybný řádek: {{ $le }}</span>
+                <br><span class="font-normal">Chybný řádek: {{ $le }}</span>
             @endforeach
         </div>
     @endif
 
-    <form action="{{ route('edi.store') }}" method="post" enctype="multipart/form-data">
+    <form action="{{ route('edi.store') }}" method="post" enctype="multipart/form-data" class="flex flex-wrap items-center gap-3">
         @csrf
-        EDI soubor: <input type="file" name="upload" size="30" style="border: 1px solid #777; background: white;">
-        <input type="submit" value="nahrát / upload" style="font-weight: bold; cursor: pointer;">
-        <p style="font-size: 11px; color: #333; line-height: 1.4; margin-top: 10px;">
-            Lze použít jakýkoli logovací software, který umí edi export a nezáleží na tom, jestli samotný deník umí počítat body pro PA, nebo ne. Zcela vyhoví standardní konfigurace pro závody, ve kterých je jeden bod za kilometr, robot si spočítá body dle pravidel PA i vyhledá v deníku násobiče.<br><br>
-            You can use any logging software that can export edi, and it doesn't matter whether the log itself can count points for OK Activity or not. You can use the standard VHF/UHF contest configuration, where one point per kilometer, robot calculates the points according to the OK Activity rules and looks up the multipliers in the log.
-        </p>
+        <input type="file" name="upload" class="text-sm">
+        <button type="submit" class="btn btn-primary">nahrát / upload</button>
     </form>
 
-    <div style="margin-top: 10px; border-top: 1px solid #ccc; padding-top: 5px;">
-        <b style="color: #A52A2A;">
-            <a href="{{ route('hlaseni.index', ['showfrm' => 1]) }}" style="color: #A52A2A; text-decoration: underline;">Nemám EDI soubor (vyplním hlášení ručně) / No EDI file</a>
-        </b>
+    <p class="mt-3 text-xs leading-relaxed text-muted">
+        Lze použít jakýkoli logovací software, který umí edi export a nezáleží na tom, jestli samotný deník umí počítat body pro PA, nebo ne. Zcela vyhoví standardní konfigurace pro závody, ve kterých je jeden bod za kilometr, robot si spočítá body dle pravidel PA i vyhledá v deníku násobiče.<br><br>
+        You can use any logging software that can export edi, and it doesn't matter whether the log itself can count points for OK Activity or not. You can use the standard VHF/UHF contest configuration, where one point per kilometer, robot calculates the points according to the OK Activity rules and looks up the multipliers in the log.
+    </p>
+
+    <div class="mt-3 border-t border-line pt-3">
+        <a href="{{ route('hlaseni.index', ['showfrm' => 1]) }}" class="font-semibold">Nemám EDI soubor (vyplním hlášení ručně) / No EDI file</a>
     </div>
 </div>
 
-{{-- ===== Ruční formulář (tpl_form_manual.php) – jen když je potřeba ===== --}}
+{{-- ===== Ruční formulář – jen když je potřeba ===== --}}
 @if ($showManual)
-<hr>
-
 @if ($errors->any() && ! ($errors->count() === 1 && $errors->has('upload')))
-    <div class="vkv-error">
+    <div class="alert alert-error">
         @foreach ($errors->all() as $err)
             @if ($err !== $errors->first('upload'))
                 {{ $err }}<br>
@@ -80,125 +58,107 @@
     </div>
 @endif
 
-<form action="{{ route('hlaseni.store') }}" method="post">
+<form action="{{ route('hlaseni.store') }}" method="post" class="card p-5">
     @csrf
     <input type="hidden" name="id_zaznamu" value="{{ (int) ($e->id ?? 0) }}">
     <input type="hidden" name="EDIID" value="{{ (int) $val('EDIID', $e->EDI_ID ?? 0, 0) }}">
 
-    <table class="vkv-table">
-        <tr>
-            <td width="150">Kolo *<br>Period *</td>
-            <td>
-                <select name="kolo" class="vkv-select @error('kolo') vkv-select-err @enderror" style="width: 250px;">
-                    <option value="">--- vyberte kolo / select period ---</option>
-                    @foreach ($kola as $k)
-                        <option value="{{ $k->id }}" @selected((int) $val('kolo', $e->id_kola ?? 0) === $k->id)>{{ $k->nazev }}</option>
-                    @endforeach
-                </select>
-                @error('kolo')<span class="vkv-field-error">{{ $message }}</span>@enderror
-            </td>
-            <td colspan="2"></td>
-        </tr>
+    <div class="grid gap-x-5 sm:grid-cols-2">
+        <div class="field">
+            <label class="label" for="f-kolo">Kolo / Period *</label>
+            <select id="f-kolo" name="kolo" class="select @error('kolo') input-err @enderror">
+                <option value="">--- vyberte kolo / select period ---</option>
+                @foreach ($kola as $k)
+                    <option value="{{ $k->id }}" @selected((int) $val('kolo', $e->id_kola ?? 0) === $k->id)>{{ $k->nazev }}</option>
+                @endforeach
+            </select>
+            @error('kolo')<span class="field-error">{{ $message }}</span>@enderror
+        </div>
 
-        <tr>
-            <td>Kategorie *<br>Category *</td>
-            <td>
-                <select name="kategorie" class="vkv-select @error('kategorie') vkv-select-err @enderror" style="width: 250px;">
-                    <option value="">--- vyberte kategorii / select ---</option>
-                    @foreach ($kategorie as $cat)
-                        <option value="{{ $cat->id }}" @selected((int) $val('kategorie', $e->id_kategorie ?? 0) === $cat->id)>{{ $cat->nazev }}</option>
-                    @endforeach
-                </select>
-                @error('kategorie')<span class="vkv-field-error">{{ $message }}</span>@enderror
-            </td>
-            <td colspan="2">
-                <input type="checkbox" name="qrp" value="1" @checked($val('qrp', $e->qrp ?? false))>
-                QRP (zaškrtněte, pokud jste v závodě použili výkon QRP)
-            </td>
-        </tr>
+        <div class="field">
+            <label class="label" for="f-kat">Kategorie / Category *</label>
+            <select id="f-kat" name="kategorie" class="select @error('kategorie') input-err @enderror">
+                <option value="">--- vyberte kategorii / select ---</option>
+                @foreach ($kategorie as $cat)
+                    <option value="{{ $cat->id }}" @selected((int) $val('kategorie', $e->id_kategorie ?? 0) === $cat->id)>{{ $cat->nazev }}</option>
+                @endforeach
+            </select>
+            @error('kategorie')<span class="field-error">{{ $message }}</span>@enderror
+        </div>
 
-        <tr>
-            <td><strong>Volací znak *<br>Callsign *</strong></td>
-            <td>
-                <input name="znacka" type="text" class="vkv-input vkv-input-bold @error('znacka') vkv-input-err @enderror" value="{{ $val('znacka', $e->znacka ?? '') }}" size="25">
-                @error('znacka')<span class="vkv-field-error">{{ $message }}</span>@enderror
-            </td>
-            <td width="100">Lokátor *<br>WWL *</td>
-            <td>
-                <input name="locator" type="text" class="vkv-input @error('locator') vkv-input-err @enderror" value="{{ $val('locator', $e->locator ?? '') }}" size="15">
-                @error('locator')<span class="vkv-field-error">{{ $message }}</span>@enderror
-            </td>
-        </tr>
+        <div class="field">
+            <label class="label" for="f-znacka">Volací znak / Callsign *</label>
+            <input id="f-znacka" name="znacka" type="text" class="input mono font-bold @error('znacka') input-err @enderror" value="{{ $val('znacka', $e->znacka ?? '') }}">
+            @error('znacka')<span class="field-error">{{ $message }}</span>@enderror
+        </div>
 
-        <tr>
-            <td colspan="4">
-                <table width="100%" cellpadding="0" cellspacing="0" style="border:none;">
-                    <tr>
-                        <td style="border:none;">Počet QSO *</td>
-                        <td style="border:none;">
-                            <input name="pocet" type="text" class="vkv-input @error('pocet') vkv-input-err @enderror" value="{{ (int) $val('pocet', $e->pocet ?? 0, 0) }}" size="6">
-                            @error('pocet')<span class="vkv-field-error">{{ $message }}</span>@enderror
-                        </td>
-                        <td style="border:none;">Bodů za QSO</td>
-                        <td style="border:none;">
-                            <input name="bodu_za_qso" type="text" class="vkv-input @error('bodu_za_qso') vkv-input-err @enderror" value="{{ (int) $val('bodu_za_qso', $e->bodu_za_qso ?? 0, 0) }}" size="6">
-                            @error('bodu_za_qso')<span class="vkv-field-error">{{ $message }}</span>@enderror
-                        </td>
-                        <td style="border:none;">Násobiče *</td>
-                        <td style="border:none;">
-                            <input name="nasobice" type="text" class="vkv-input @error('nasobice') vkv-input-err @enderror" value="{{ (int) $val('nasobice', $e->nasobice ?? 0, 0) }}" size="6">
-                            @error('nasobice')<span class="vkv-field-error">{{ $message }}</span>@enderror
-                        </td>
-                        <td style="border:none;">Celkem bodů *</td>
-                        <td style="border:none;">
-                            <input name="body" type="text" class="vkv-input vkv-input-bold @error('body') vkv-input-err @enderror" value="{{ (int) $val('body', $e->body ?? 0, 0) }}" size="10" style="background-color: #ffffcc;">
-                            @error('body')<span class="vkv-field-error">{{ $message }}</span>@enderror
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
+        <div class="field">
+            <label class="label" for="f-loc">Lokátor / WWL *</label>
+            <input id="f-loc" name="locator" type="text" class="input mono @error('locator') input-err @enderror" value="{{ $val('locator', $e->locator ?? '') }}">
+            @error('locator')<span class="field-error">{{ $message }}</span>@enderror
+        </div>
+    </div>
 
-        <tr>
-            <td>Jméno / Name</td>
-            <td colspan="3"><input name="jmeno" type="text" class="vkv-input" value="{{ $val('jmeno', $e->jmeno ?? '') }}" style="width: 300px;"></td>
-        </tr>
-        <tr>
-            <td>Kontakt / Contact:*</td>
-            <td>
-                <input name="email" type="text" class="vkv-input @error('email') vkv-input-err @enderror" value="{{ $val('email', $e->mail ?? '') }}" style="width: 280px;">
-                @error('email')<span class="vkv-field-error">{{ $message }}</span>@enderror
-            </td>
-            <td align="right">telefon</td>
-            <td>
-                <input name="telefon" type="text" class="vkv-input @error('telefon') vkv-input-err @enderror" value="{{ $val('telefon', $e->telefon ?? '') }}" style="width: 200px;">
-                @error('telefon')<span class="vkv-field-error">{{ $message }}</span>@enderror
-            </td>
-        </tr>
+    <label class="mb-4 flex items-center gap-2 text-sm">
+        <input type="checkbox" name="qrp" value="1" @checked($val('qrp', $e->qrp ?? false))>
+        QRP (zaškrtněte, pokud jste v závodě použili výkon QRP)
+    </label>
 
-        <tr>
-            <td colspan="4">
-                <strong>Poznámka / Note</strong><br>
-                <textarea name="poznamka" class="vkv-text-area" style="height: 40px;">{{ $val('poznamka', $e->poznamka ?? '') }}</textarea>
-            </td>
-        </tr>
+    {{-- Body / počty --}}
+    <div class="grid grid-cols-2 gap-x-5 sm:grid-cols-4">
+        <div class="field">
+            <label class="label" for="f-pocet">Počet QSO *</label>
+            <input id="f-pocet" name="pocet" type="text" class="input num @error('pocet') input-err @enderror" value="{{ (int) $val('pocet', $e->pocet ?? 0, 0) }}">
+            @error('pocet')<span class="field-error">{{ $message }}</span>@enderror
+        </div>
+        <div class="field">
+            <label class="label" for="f-bzq">Bodů za QSO</label>
+            <input id="f-bzq" name="bodu_za_qso" type="text" class="input num @error('bodu_za_qso') input-err @enderror" value="{{ (int) $val('bodu_za_qso', $e->bodu_za_qso ?? 0, 0) }}">
+            @error('bodu_za_qso')<span class="field-error">{{ $message }}</span>@enderror
+        </div>
+        <div class="field">
+            <label class="label" for="f-nas">Násobiče *</label>
+            <input id="f-nas" name="nasobice" type="text" class="input num @error('nasobice') input-err @enderror" value="{{ (int) $val('nasobice', $e->nasobice ?? 0, 0) }}">
+            @error('nasobice')<span class="field-error">{{ $message }}</span>@enderror
+        </div>
+        <div class="field">
+            <label class="label" for="f-body">Celkem bodů *</label>
+            <input id="f-body" name="body" type="text" class="input num font-bold @error('body') input-err @enderror" value="{{ (int) $val('body', $e->body ?? 0, 0) }}">
+            @error('body')<span class="field-error">{{ $message }}</span>@enderror
+        </div>
+    </div>
 
-        <tr>
-            <td colspan="4">
-                <strong>Soapbox:</strong><br>
-                <textarea name="soapbox" class="vkv-text-area" style="height: 80px;">{{ $val('soapbox', $e->soapbox ?? '') }}</textarea>
-            </td>
-        </tr>
+    <div class="grid gap-x-5 sm:grid-cols-2">
+        <div class="field">
+            <label class="label" for="f-jmeno">Jméno / Name</label>
+            <input id="f-jmeno" name="jmeno" type="text" class="input" value="{{ $val('jmeno', $e->jmeno ?? '') }}">
+        </div>
+        <div class="field">
+            <label class="label" for="f-email">Kontakt / Contact *</label>
+            <input id="f-email" name="email" type="text" class="input @error('email') input-err @enderror" value="{{ $val('email', $e->mail ?? '') }}">
+            @error('email')<span class="field-error">{{ $message }}</span>@enderror
+        </div>
+        <div class="field">
+            <label class="label" for="f-tel">Telefon</label>
+            <input id="f-tel" name="telefon" type="text" class="input @error('telefon') input-err @enderror" value="{{ $val('telefon', $e->telefon ?? '') }}">
+            @error('telefon')<span class="field-error">{{ $message }}</span>@enderror
+        </div>
+    </div>
 
-        <tr>
-            <td colspan="2">
-                <a href="{{ route('hlaseni.index') }}" style="color: #CC0000; text-decoration: underline;">vymazat formulář</a>
-            </td>
-            <td colspan="2" align="right">
-                <input type="submit" name="Odeslat" value="Odeslat / Send" style="padding: 5px 20px; font-weight: bold; cursor: pointer;">
-            </td>
-        </tr>
-    </table>
+    <div class="field">
+        <label class="label" for="f-pozn">Poznámka / Note</label>
+        <textarea id="f-pozn" name="poznamka" class="textarea" rows="2">{{ $val('poznamka', $e->poznamka ?? '') }}</textarea>
+    </div>
+
+    <div class="field">
+        <label class="label" for="f-soap">Soapbox</label>
+        <textarea id="f-soap" name="soapbox" class="textarea" rows="4">{{ $val('soapbox', $e->soapbox ?? '') }}</textarea>
+    </div>
+
+    <div class="mt-2 flex items-center justify-between">
+        <a href="{{ route('hlaseni.index') }}" class="text-sm">vymazat formulář</a>
+        <button type="submit" name="Odeslat" value="Odeslat / Send" class="btn btn-primary">Odeslat / Send</button>
+    </div>
 </form>
 @endif
 
@@ -206,44 +166,47 @@
     @include('partials.no-active-period')
 @endif
 
-{{-- ===== Průběžné výsledky vybraného kola (styl vysledky.php) ===== --}}
+{{-- ===== Průběžné výsledky vybraného kola ===== --}}
 @if ($vysledky->isNotEmpty())
 @php $katMap = $kategorie->keyBy('id'); @endphp
 @foreach ($vysledky->groupBy('id_kategorie') as $katId => $radky)
-    <h1 style="font-size: 1.2em; margin-top: 15px; margin-bottom: 5px; color: #22108b; border-bottom: 3px solid #bababa; text-align: left;">
-        Průběžné výsledky kola — {{ $katMap[$katId]->nazev ?? ('kategorie ' . $katId) }}
-    </h1>
-    <table width="100%" cellpadding="4" cellspacing="1" bgcolor="#b4b4b4" style="font-size: 0.9em; border-collapse: separate; margin-top: 5px;">
-        <tr bgcolor="#e6e6fa" style="color: #000080; font-weight: bold;">
-            <th align="center" width="40">Poř.</th>
-            <th align="left" width="100">Značka</th>
-            <th align="center" width="80">Lokátor</th>
-            <th align="right" width="70">QSO</th>
-            <th align="right" width="80">Násobiče</th>
-            <th align="right" width="80">Celkem bodů</th>
-            <th align="left">Jméno / Poznámka</th>
-            <th align="center" width="60">Stav</th>
-        </tr>
-        @foreach ($radky as $i => $r)
-            @php $bg = ! $r->schvaleno ? '#ffdab9' : (($i % 2) ? '#d6ecf3' : '#ffffff'); @endphp
-            <tr bgcolor="{{ $bg }}" style="color: black;">
-                <td align="center"><b>{{ $i + 1 }}.</b></td>
-                <td align="left"><b>{{ $r->znacka }}</b>{{ $r->qrp ? ' /QRP' : '' }}</td>
-                <td align="center">{{ $r->locator }}</td>
-                <td align="right">{{ (int) $r->pocet }}</td>
-                <td align="right">{{ (int) $r->nasobice }}</td>
-                <td align="right"><b>{{ (int) $r->body }}</b></td>
-                <td align="left" class="small">{{ $r->jmeno }} @if ($r->poznamka)<i>({{ $r->poznamka }})</i>@endif</td>
-                <td align="center">
-                    @if ($r->schvaleno)
-                        <font color="#2db62f"><b>OK</b></font>
-                    @else
-                        <font color="#ff6347">Čeká</font>
-                    @endif
-                </td>
-            </tr>
-        @endforeach
-    </table>
+    <div class="section-head">Průběžné výsledky kola — {{ $katMap[$katId]->nazev ?? ('kategorie ' . $katId) }}</div>
+    <div class="table-wrap mb-4">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th class="num">Poř.</th>
+                    <th>Značka</th>
+                    <th>Lokátor</th>
+                    <th class="num">QSO</th>
+                    <th class="num">Násobiče</th>
+                    <th class="num">Celkem bodů</th>
+                    <th>Jméno / Poznámka</th>
+                    <th>Stav</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach ($radky as $i => $r)
+                <tr @class(['row-pending' => ! $r->schvaleno])>
+                    <td class="num font-bold">{{ $i + 1 }}.</td>
+                    <td class="mono font-bold">{{ $r->znacka }}{{ $r->qrp ? ' /QRP' : '' }}</td>
+                    <td class="mono whitespace-nowrap">{{ $r->locator }}</td>
+                    <td class="num">{{ (int) $r->pocet }}</td>
+                    <td class="num">{{ (int) $r->nasobice }}</td>
+                    <td class="num font-bold">{{ (int) $r->body }}</td>
+                    <td class="text-muted">{{ $r->jmeno }} @if ($r->poznamka)<i>({{ $r->poznamka }})</i>@endif</td>
+                    <td>
+                        @if ($r->schvaleno)
+                            <span class="badge badge-ok">OK</span>
+                        @else
+                            <span class="badge badge-warn">Čeká</span>
+                        @endif
+                    </td>
+                </tr>
+            @endforeach
+            </tbody>
+        </table>
+    </div>
 @endforeach
 @endif
 @endsection

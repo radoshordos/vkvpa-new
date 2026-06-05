@@ -8,5 +8,5 @@
 
 @section('content')
     <h1>Odeslat deník</h1>
-    <p>Sem přijde obsah konkrétní stránky (formulář, výpis, tabulka…).</p>
+    <p class="text-muted">Sem přijde obsah konkrétní stránky (formulář, výpis, tabulka…).</p>
 @endsection

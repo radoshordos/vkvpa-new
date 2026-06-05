@@ -19,7 +19,7 @@
           integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
           crossorigin=""></script>
   <style>
-    #mapa { height: 70vh; width: 100%; max-width: 900px; }
+    #mapa { height: 70vh; width: 100%; border-radius: 0.6rem; }
     /* Popisek s počtem protistanic ve velkém čtverci (režim „lokatory"). */
     .sq-label { background: transparent; border: none; box-shadow: none; color: #fff; font-weight: bold; font-size: 12px; }
   </style>
@@ -27,8 +27,8 @@
 
 @section('content')
 <h1>Mapa spojení {{ $pcall }} ({{ $homeLoc }})</h1>
-<p style="color:#555;font-size:13px;margin-top:-8px;">{{ $mode->label() }}</p>
-<div id="mapa"></div>
+<p class="-mt-2 mb-3 text-sm text-muted">{{ $mode->label() }}</p>
+<div class="table-wrap p-1"><div id="mapa"></div></div>
 
 <script>
   (function () {
