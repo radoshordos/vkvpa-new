@@ -76,6 +76,16 @@
                 <span class="block text-base font-bold text-ink">{{ $v }}@if ($sub)<small class="ml-1 font-normal text-muted">{{ $sub }}</small>@endif</span>
             </div>
         @endforeach
+        @if ($edihead)
+            <div class="card p-3">
+                <span class="block text-xs uppercase tracking-wide text-muted">{{ __('admin.debug_card_maps') }}</span>
+                <div class="mt-1 flex flex-wrap gap-1">
+                    <a href="{{ route('edi.mapa.jezek', $edihead) }}" target="_blank" class="action-link">M</a>
+                    <a href="{{ route('edi.mapa.spendliky', $edihead) }}" target="_blank" class="action-link">N</a>
+                    <a href="{{ route('edi.mapa.lokatory', $edihead) }}" target="_blank" class="action-link">S</a>
+                </div>
+            </div>
+        @endif
     </section>
 
     {{-- Skóre --}}
@@ -113,20 +123,6 @@
         @if (count($report->ignoredLines))<span class="badge badge-danger">{{ __('admin.debug_badge_ignored') }} <b>{{ count($report->ignoredLines) }}</b></span>@endif
         @if ($report->duplicateCount)<span class="badge badge-danger">{{ __('admin.debug_badge_dup') }} <b>{{ $report->duplicateCount }}</b></span>@endif
     </section>
-
-    {{-- Mapy M / N / S – proklik na existující mapové stránky (jen pokud je deník v DB) --}}
-    @if ($edihead)
-        <section class="mb-5">
-            <div class="card p-3">
-                <span class="block text-xs uppercase tracking-wide text-muted">{{ __('admin.debug_card_maps') }}</span>
-                <div class="mt-2 flex flex-wrap gap-1">
-                    <a href="{{ route('edi.mapa.jezek', $edihead) }}" target="_blank" class="action-link">M</a>
-                    <a href="{{ route('edi.mapa.spendliky', $edihead) }}" target="_blank" class="action-link">N</a>
-                    <a href="{{ route('edi.mapa.lokatory', $edihead) }}" target="_blank" class="action-link">S</a>
-                </div>
-            </div>
-        </section>
-    @endif
 
     {{-- Ignorované řádky (neprošly parserem) --}}
     @if (count($report->ignoredLines))
