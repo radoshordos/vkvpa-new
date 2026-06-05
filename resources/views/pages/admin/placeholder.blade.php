@@ -3,7 +3,7 @@
 @section('content')
 <h1>{{ $nazev }}</h1>
 <div class="alert alert-info max-w-2xl">
-    Tato sekce zatím není implementována.
+    {{ __('admin.not_implemented') }}
     @if (! empty($popis))
         <br><br>{{ $popis }}
     @endif

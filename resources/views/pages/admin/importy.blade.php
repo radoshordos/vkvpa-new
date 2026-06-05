@@ -1,15 +1,11 @@
 @extends('layouts.app')
-@section('title', 'Hromadný import – Administrace VKV PA')
+@section('title', __('admin.importy_title'))
 @section('content')
 
-<h1>Hromadný import EDI deníků</h1>
+<h1>{{ __('admin.importy_heading') }}</h1>
 
-<p class="mb-4 text-sm text-muted max-w-prose">
-    Nahraj ZIP archiv obsahující EDI soubory (<code>.edi</code> / <code>.txt</code>).
-    Každý soubor se zpracuje stejnou logikou jako individuální nahrání přes formulář hlášení.
-    Kolo závodu se určí automaticky z <code>TDate</code> v hlavičce každého deníku.
-    Chybné soubory se přeskočí a ve výsledku se zobrazí důvod.
-    Maximálně 200 souborů na jeden import.
+<p class="mb-4 max-w-prose text-sm text-muted">
+    {!! __('admin.importy_desc') !!}
 </p>
 
 @if ($errors->any())
@@ -22,18 +18,18 @@
     </div>
 @endif
 
-<div class="card p-5 max-w-xl mb-8">
+<div class="card mb-8 max-w-xl p-5">
     <form method="post" action="{{ route('importy.store') }}" enctype="multipart/form-data" class="flex flex-wrap items-end gap-4">
         @csrf
-        <div class="field mb-0 flex-1 min-w-48">
-            <label class="label" for="zip">ZIP archiv (max 20 MB)</label>
+        <div class="field mb-0 min-w-48 flex-1">
+            <label class="label" for="zip">{{ __('admin.importy_zip_label') }}</label>
             <input id="zip" name="zip" type="file" accept=".zip,application/zip"
                    class="input @error('zip') input-err @enderror" required>
             @error('zip')
                 <span class="field-error">{{ $message }}</span>
             @enderror
         </div>
-        <button type="submit" class="btn btn-primary">Importovat</button>
+        <button type="submit" class="btn btn-primary">{{ __('admin.importy_btn') }}</button>
     </form>
 </div>
 
@@ -43,13 +39,13 @@
     @endphp
 
     <div class="alert {{ $statusColor }} mb-4 flex flex-wrap gap-4">
-        <span><b>{{ $results['total'] }}</b> souborů zpracováno</span>
-        <span class="text-ok font-bold">✓ {{ $results['imported'] }} importováno</span>
+        <span><b>{{ $results['total'] }}</b> {{ __('admin.importy_processed') }}</span>
+        <span class="font-bold text-ok">✓ {{ $results['imported'] }} {{ __('admin.importy_imported') }}</span>
         @if ($results['skipped'] > 0)
-            <span class="text-muted">⟳ {{ $results['skipped'] }} přeskočeno (duplikát)</span>
+            <span class="text-muted">⟳ {{ $results['skipped'] }} {{ __('admin.importy_skipped') }}</span>
         @endif
         @if ($results['errors'] > 0)
-            <span class="text-danger font-bold">✕ {{ $results['errors'] }} chyb</span>
+            <span class="font-bold text-danger">✕ {{ $results['errors'] }} {{ __('admin.importy_errors') }}</span>
         @endif
     </div>
 
@@ -58,12 +54,12 @@
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>Soubor</th>
-                        <th>Stav</th>
-                        <th>Značka</th>
-                        <th>Kolo</th>
-                        <th class="num">Body</th>
-                        <th>Poznámka</th>
+                        <th>{{ __('admin.importy_col_file') }}</th>
+                        <th>{{ __('admin.importy_col_status') }}</th>
+                        <th>{{ __('admin.importy_col_call') }}</th>
+                        <th>{{ __('admin.importy_col_round') }}</th>
+                        <th class="num">{{ __('admin.importy_col_pts') }}</th>
+                        <th>{{ __('admin.importy_col_note') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -73,13 +69,13 @@
                             <td>
                                 @switch($item['status'])
                                     @case('ok')
-                                        <span class="badge badge-ok">✓ importováno</span>
+                                        <span class="badge badge-ok">{{ __('admin.importy_status_ok') }}</span>
                                         @break
                                     @case('skip')
-                                        <span class="badge badge-brand">přeskočeno</span>
+                                        <span class="badge badge-brand">{{ __('admin.importy_status_skip') }}</span>
                                         @break
                                     @default
-                                        <span class="badge badge-danger">chyba</span>
+                                        <span class="badge badge-danger">{{ __('admin.importy_status_err') }}</span>
                                 @endswitch
                             </td>
                             <td class="mono font-bold">{{ $item['znacka'] ?? '—' }}</td>

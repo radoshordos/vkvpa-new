@@ -26,12 +26,12 @@ return [
     ],
 
     'admin' => [
-        ['key' => 'kola.index',         'label' => 'kola závodu'],
-        ['key' => 'hlaseni.index',      'label' => 'hlášení'],
-        ['key' => 'deniky.index',       'label' => 'deníky - upload'],
-        ['key' => 'edi.debug.create',   'label' => 'EDI debug / kontrola bodů'],
-        ['key' => 'kategorie.index',    'label' => 'správa kategorií, konfigurace'],
-        ['key' => 'importy.index',      'label' => 'importy'],
+        ['key' => 'kola.index',       'trans' => 'admin.nav_rounds'],
+        ['key' => 'hlaseni.index',    'trans' => 'admin.nav_reports'],
+        ['key' => 'deniky.index',     'trans' => 'admin.nav_logs'],
+        ['key' => 'edi.debug.create', 'trans' => 'admin.nav_edi_debug'],
+        ['key' => 'kategorie.index',  'trans' => 'admin.nav_categories'],
+        ['key' => 'importy.index',    'trans' => 'admin.nav_imports'],
     ],
 
 ];
