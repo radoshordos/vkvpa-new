@@ -23,10 +23,10 @@
     <tbody>
       @foreach ($kola as $k)
         <tr>
-          <td class="whitespace-nowrap">{{ $k->datum_konani?->format('d.m.Y') }}</td>
-          <td class="whitespace-nowrap">{{ $k->datum_uzaverky?->format('d.m.Y H:i') }}</td>
+          <td class="whitespace-nowrap">{{ $k->datum_konani?->format('j. n. Y') }}</td>
+          <td class="whitespace-nowrap">{{ $k->datum_uzaverky?->format('j. n. Y H:i') }}</td>
           <td>{{ $k->nazev }}</td>
-          <td class="whitespace-nowrap">{{ $k->vyhodnoceno?->format('d.m.Y H:i') ?? '—' }}</td>
+          <td class="whitespace-nowrap">{{ $k->vyhodnoceno?->format('j. n. Y H:i') ?? '—' }}</td>
           @if ($isAdmin)
             <td>
               @unless ($k->vyhodnoceno)

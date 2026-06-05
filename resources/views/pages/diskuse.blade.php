@@ -15,7 +15,7 @@
                     onchange="this.form.submit()">
                 @foreach ($kola as $k)
                     <option value="{{ $k->id }}" @selected($k->id === $kolo->id)>
-                        {{ $k->nazev }} ({{ $k->datum_konani?->format('j.n.Y') }})
+                        {{ $k->nazev }} ({{ $k->datum_konani?->format('j. n. Y') }})
                     </option>
                 @endforeach
             </select>
@@ -49,7 +49,7 @@
                         @if ($p->jmeno)
                             <span class="text-sm text-muted">{{ $p->jmeno }}</span>
                         @endif
-                        <span class="text-xs text-muted">{{ $p->created_at?->format('d.m.Y H:i') }}</span>
+                        <span class="text-xs text-muted">{{ $p->created_at?->format('j. n. Y H:i') }}</span>
                     </div>
                     @if ($isAdmin)
                         <form method="post" action="{{ route('diskuse.destroy', $p->id) }}" class="shrink-0">

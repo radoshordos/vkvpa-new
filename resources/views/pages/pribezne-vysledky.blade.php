@@ -15,7 +15,7 @@
         <label class="label" for="kolo">{{ __('pages.pribezne.filter_round') }}</label>
         <select id="kolo" name="kolo" class="select w-auto">
             @foreach ($kola as $k)
-                <option value="{{ $k->id }}" @selected($kolo && $k->id === $kolo->id)>{{ $k->nazev }} ({{ $k->datum_konani?->format('j.n.Y') }})</option>
+                <option value="{{ $k->id }}" @selected($kolo && $k->id === $kolo->id)>{{ $k->nazev }} ({{ $k->datum_konani?->format('j. n. Y') }})</option>
             @endforeach
         </select>
     </div>

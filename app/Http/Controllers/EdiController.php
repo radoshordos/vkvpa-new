@@ -176,7 +176,7 @@ class EdiController extends Controller
     private function formatEdiDate(string $yymmdd): string
     {
         return strlen($yymmdd) === 6
-            ? sprintf('%s.%s.20%s', substr($yymmdd, 4, 2), substr($yymmdd, 2, 2), substr($yymmdd, 0, 2))
+            ? sprintf('%d. %d. 20%s', (int) substr($yymmdd, 4, 2), (int) substr($yymmdd, 2, 2), substr($yymmdd, 0, 2))
             : $yymmdd;
     }
 }
