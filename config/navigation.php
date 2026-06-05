@@ -16,6 +16,7 @@ return [
         ['key' => 'hlaseni.index',      'label' => 'odeslat deník<br>log import'],
         ['key' => 'vysledkova_listina', 'label' => 'výsledková listina<br>results'],
         ['key' => 'rocni_vysledky',     'label' => 'roční výsledky<br>year results'],
+        ['key' => 'diskuse.index',      'label' => 'diskuse<br>discussion'],
         ['url' => 'https://vkvpa.hamradio.cz/rules/PA_VKV_2023–2022_12_23_en.pdf', 'label' => 'contest rules (pdf eng)'],
         ['url' => 'https://vkvpa.hamradio.cz/rules/PA_VKV_2023–2022_12_23_cz.pdf', 'label' => 'podmínky závodu(pdf cz)', 'target' => '_blank'],
         ['url' => 'http://www.ok1kpa.com/pa-podminky.htm', 'label' => 'Oficiální podmínky závodu', 'target' => '_blank'],
