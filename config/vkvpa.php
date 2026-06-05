@@ -20,6 +20,11 @@ return [
     // Od tohoto kola se hlášení bez EDI do ročního součtu nezapočítávají.
     'non_edi_nullify_from_kolo' => 91,
 
+    // Cache ročních výsledků (Cache::flexible): doba „čerstvosti" a krajní doba
+    // platnosti staré hodnoty (stale-while-revalidate), v sekundách.
+    'yearly_cache_fresh' => (int) env('YEARLY_CACHE_FRESH', 300),
+    'yearly_cache_stale' => (int) env('YEARLY_CACHE_STALE', 1800),
+
     // Prefixy tuzemských stanic (určuje DX vs. domácí kategorie).
     'domestic_prefixes' => ['OK', 'OL'],
 
