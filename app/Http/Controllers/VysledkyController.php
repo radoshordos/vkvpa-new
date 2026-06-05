@@ -83,11 +83,15 @@ class VysledkyController extends Controller
                 ->get()
             : collect();
 
+        $obsazeneKatIds = $kolo
+            ? VkvpaData::query()->where('id_kola', $kolo->id)->distinct()->pluck('id_kategorie')
+            : collect();
+
         return view('pages.pribezne-vysledky', [
             'active' => 'pribezne_vysledky',
             'kola' => $aktivniKola,
             'kolo' => $kolo,
-            'kategorie' => VkvpaKategorie::query()->orderBy('id')->get()->keyBy('id'),
+            'kategorie' => VkvpaKategorie::query()->orderBy('id')->whereIn('id', $obsazeneKatIds)->get()->keyBy('id'),
             'katId' => $katId,
             'vysledky' => $vysledky,
         ]);
