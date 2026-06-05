@@ -16,7 +16,7 @@ class LegacyDatabaseSeeder extends Seeder
             PrefixesTableSeeder::class,
             VkvpaConfigTableSeeder::class,
             VkvpaDataTableSeeder::class,
-            VkvpaDiskuseTableSeeder::class,
+            DiskuseSeeder::class,
             VkvpaKategorieTableSeeder::class,
             VkvpaKolaTableSeeder::class,
             VkvpaPrihlaseniTableSeeder::class,

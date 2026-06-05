@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\ImportController;
 use App\Http\Controllers\Admin\KategorieController;
 use App\Http\Controllers\Admin\VyhodnoceniController;
 use App\Http\Controllers\Admin\ZaznamController;
+use App\Http\Controllers\DiskuseController;
 use App\Http\Controllers\EdiController;
 use App\Http\Controllers\HlaseniController;
 use App\Http\Controllers\KolaController;
@@ -36,6 +37,11 @@ Route::get('/vysledky/rocni', [VysledkyController::class, 'rocni'])->name('rocni
 // Obfuskovaný e-mail jako obrázek (footer) – nahrazuje mail.php
 Route::get('/mail-image', [MailImageController::class, 'show'])->name('mail.image');
 
+// Diskuse k závodnímu kolu
+Route::get('/diskuse', [DiskuseController::class, 'index'])->name('diskuse.index');
+Route::get('/diskuse/{kolo}', [DiskuseController::class, 'show'])->name('diskuse.show');
+Route::post('/diskuse/{kolo}', [DiskuseController::class, 'store'])->middleware('throttle:5,1')->name('diskuse.store');
+
 // Nahrání EDI deníku (využívá EdiParser/EdiImportService z Fáze 5).
 Route::get('/edi', [EdiController::class, 'create'])->name('edi.create');
 Route::post('/edi', [EdiController::class, 'store'])->middleware('throttle:10,1')->name('edi.store');
@@ -63,6 +69,8 @@ Route::middleware('admin')->group(function (): void {
     //   P – převzít (PATCH), X – smazat (DELETE). U = editace přes GET hlaseni.index?id=
     Route::patch('/admin/zaznamy/{zaznam}', [ZaznamController::class, 'update'])->name('zaznam.update');
     Route::delete('/admin/zaznamy/{zaznam}', [ZaznamController::class, 'destroy'])->name('zaznam.destroy');
+
+    Route::delete('/admin/diskuse/{prispevek}', [DiskuseController::class, 'destroy'])->name('diskuse.destroy');
 
     // EDI debug – nahrání deníku a rozpad bodování řádek po řádku (jen náhled).
     Route::get('/admin/edi-debug', [EdiDebugController::class, 'create'])->name('edi.debug.create');

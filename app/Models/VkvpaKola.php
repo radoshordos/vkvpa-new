@@ -26,7 +26,7 @@ use Override;
  * @property Carbon|null $vyhodnoceno
  * @property string $poznamka
  * @property-read Collection<int, VkvpaData> $hlaseni
- * @property-read Collection<int, VkvpaDiskuse> $diskuse
+ * @property-read Collection<int, Prispevek> $diskuse
  */
 #[Fillable(['datum_konani', 'datum_uzaverky', 'nazev', 'poznamka', 'vyhodnoceno', 'aktivni'])]
 #[Table(name: 'vkvpa_kola', key: 'id')]
@@ -39,10 +39,10 @@ class VkvpaKola extends Model
         return $this->hasMany(VkvpaData::class, 'id_kola', 'id');
     }
 
-    /** @return HasMany<VkvpaDiskuse, $this> */
+    /** @return HasMany<Prispevek, $this> */
     public function diskuse(): HasMany
     {
-        return $this->hasMany(VkvpaDiskuse::class, 'id_kola', 'id');
+        return $this->hasMany(Prispevek::class, 'kolo_id', 'id');
     }
 
     /**
