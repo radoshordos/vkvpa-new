@@ -63,10 +63,12 @@ class VysledkyController extends Controller
 
     public function pribezne(Request $request): View
     {
+        $aktivniKola = VkvpaKola::query()->active()->orderByDesc('datum_konani')->get();
+
         $koloId = $request->integer('kolo');
         $kolo = $koloId !== 0
-            ? VkvpaKola::find($koloId)
-            : VkvpaKola::query()->orderByDesc('datum_konani')->first();
+            ? $aktivniKola->firstWhere('id', $koloId)
+            : $aktivniKola->first();
 
         $katId = $request->integer('kategorie');
 
@@ -83,7 +85,7 @@ class VysledkyController extends Controller
 
         return view('pages.pribezne-vysledky', [
             'active' => 'pribezne_vysledky',
-            'kola' => VkvpaKola::query()->orderByDesc('datum_konani')->get(),
+            'kola' => $aktivniKola,
             'kolo' => $kolo,
             'kategorie' => VkvpaKategorie::query()->orderBy('id')->get()->keyBy('id'),
             'katId' => $katId,
