@@ -25,8 +25,6 @@ return [
         ['key' => 'hlaseni.index',      'label' => 'hlášení'],
         ['key' => 'deniky.index',       'label' => 'deníky - upload'],
         ['key' => 'edi.debug.create',   'label' => 'EDI debug / kontrola bodů'],
-        ['key' => 'vysledkova_listina', 'label' => 'výsledková listina'],
-        ['key' => 'rocni_vysledky',     'label' => 'roční výsledky'],
         ['key' => 'kategorie.index',    'label' => 'správa kategorií, konfigurace'],
         ['key' => 'importy.index',      'label' => 'importy'],
     ],
