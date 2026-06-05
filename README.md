@@ -32,7 +32,7 @@ Webový systém pro správu a vyhodnocování závodů v pásmu VKV (Very High F
 
 | Vrstva | Technologie |
 |--------|-------------|
-| Backend | PHP 8.5, Laravel 13 |
+| Backend | PHP 8.4, Laravel 13 |
 | Frontend | Blade, Tailwind CSS 4.3, Vite 8 |
 | Databáze | MySQL 8.0 (s `ALLOW_INVALID_DATES`) |
 | Fronty | Laravel Queue (database driver) |
@@ -153,7 +153,7 @@ resources/
 
 ### Požadavky
 
-- PHP 8.5 s rozšířeními: `pdo`, `gd`, `mbstring`, `intl`
+- PHP 8.4 s rozšířeními: `pdo`, `gd`, `mbstring`, `intl`
 - Composer
 - Node.js 20+
 - MySQL 8.0
@@ -498,7 +498,7 @@ GitHub Actions workflow (`.github/workflows/ci.yml`) – job `quality`:
 | Code style | `composer lint` |
 | Frontend build | `npm ci && npm run build` |
 
-Běží na `ubuntu-latest`, PHP 8.5, Node 22. Timeout 15 minut.
+Běží na `ubuntu-latest`, PHP 8.4, Node 22. Timeout 15 minut.
 
 ---
 

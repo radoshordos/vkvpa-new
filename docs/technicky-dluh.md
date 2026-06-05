@@ -2,6 +2,9 @@
 
 > Stav k **2026-06-05**, větev `claude/tech-debt-analysis-ZAweo`.
 > Hodnoceno: PHP 8.4.19, Laravel 13, ~2 370 řádků PHP v `app/`, 27 testovacích souborů.
+>
+> **Rychlé výhry P2, P4 a P5 jsou v této větvi již vyřešeny** (viz ✅ níže).
+> Otevřené zůstává P1 (refaktor), P3 (jen pokud schéma není v produkci) a P6 (volitelné).
 
 ## Shrnutí
 
@@ -59,7 +62,7 @@ existuje jen jednou. Odhad: ~1–2 h včetně přesměrování testů.
 
 ---
 
-## P2 – Kolize názvů migrací
+## P2 – Kolize názvů migrací ✅ vyřešeno
 
 **Kde:** `database/migrations/`
 
@@ -73,9 +76,11 @@ celého názvu souboru, takže pořadí dnes určuje až abecední porovnání z
 (`add_…` < `create_…`). Funguje to náhodou; jakékoli přejmenování nebo přidání
 další migrace se stejným prefixem pořadí tiše změní.
 
-**Náprava:** přečíslovat jednu z nich (např. `…_000002_create_diskuse_table.php`).
-Protože schéma ještě není v produkci, je to bezpečné. Drobnost: v řadě chybí číslo
-`000006` (mezi `…000005_create_vkvpa_data` a `…000007_create_vkvpa_kategorie`) – kosmetické.
+**Náprava (provedeno):** `create_diskuse_table` přečíslováno na
+`2026_06_05_000002_create_diskuse_table.php`. Migrace jsou na sobě nezávislé
+(`add_performance_indexes` sahá jen na `vkvpa_data`/`edihead`), pořadí je teď
+deterministické; ověřeno čistým `php artisan migrate`. Drobnost: v řadě chybí číslo
+`000006` (mezi `…000005_create_vkvpa_data` a `…000007_create_vkvpa_kategorie`) – kosmetické, ponecháno.
 
 ---
 
@@ -100,7 +105,7 @@ zrušit – jedna migrace = jedna pravda o schématu.
 
 ---
 
-## P4 – Mrtvý kód: výchozí Laravel `welcome`
+## P4 – Mrtvý kód: výchozí Laravel `welcome` ✅ vyřešeno
 
 **Kde:** `resources/views/welcome.blade.php` (223 řádků).
 
@@ -108,11 +113,11 @@ Jde o **defaultní uvítací stránku Laravelu**. Kořenová cesta `/` směřuje
 `HlaseniController@index`; `welcome` není referencováno z žádné routy ani `view()`
 volání (ověřeno grepem). Je to největší Blade soubor v projektu a přitom nedostupný.
 
-**Náprava:** smazat. Triviální.
+**Náprava (provedeno):** `resources/views/welcome.blade.php` smazán.
 
 ---
 
-## P5 – Rozjetá dokumentace verzí a kvality
+## P5 – Rozjetá dokumentace verzí a kvality ✅ vyřešeno
 
 Tři zdroje pravdy si **odporují**:
 
@@ -128,8 +133,10 @@ Tři zdroje pravdy si **odporují**:
 v CI a selhat lokálně (nebo naopak); `CLAUDE.md` navádí budoucího přispěvatele na
 nesprávnou úroveň analýzy.
 
-**Náprava:** sjednotit. Buď zvednout `composer.json` na `^8.5` a doplnit instalaci
-8.5 do dev prostředí, nebo srovnat CI/README zpět na 8.4. Opravit level v `CLAUDE.md`.
+**Náprava (provedeno):** sjednoceno na **PHP 8.4** všude – CI (`ci.yml`),
+README (3 místa) i `CLAUDE.md` teď souhlasí s `composer.json` (`^8.4`) a běhovým
+prostředím. (Varianta „zvednout na `^8.5`" by rozbila `composer install` na 8.4 –
+proto volba dolů.) Level PHPStanu v `CLAUDE.md` opraven z 9 na **10**.
 
 ---
 
@@ -165,14 +172,14 @@ se píší „magické" stringy, a umožnila typovou kontrolu.
 
 ## Doporučené pořadí prací
 
-| # | Úkol | Náklad | Dopad |
-|---|------|--------|-------|
-| 1 | P4 – smazat `welcome.blade.php` | triviální | čistota |
-| 2 | P2 – přečíslovat kolidující migraci | triviální | stabilita pořadí |
-| 3 | P5 – sjednotit verze PHP + level v dokumentaci | nízký | konzistence CI/dev |
-| 4 | P1 – vyjmout `IngestEdiLog` z obou controllerů | střední | **odstranění duplikace** |
-| 5 | P3 – konsolidovat migrace (jen pokud není v produkci) | střední | údržba schématu |
-| 6 | P6 – accessor vrstva nad legacy sloupci (volitelně) | střední | typová bezpečnost |
+| # | Úkol | Náklad | Dopad | Stav |
+|---|------|--------|-------|------|
+| 1 | P4 – smazat `welcome.blade.php` | triviální | čistota | ✅ hotovo |
+| 2 | P2 – přečíslovat kolidující migraci | triviální | stabilita pořadí | ✅ hotovo |
+| 3 | P5 – sjednotit verze PHP + level v dokumentaci | nízký | konzistence CI/dev | ✅ hotovo |
+| 4 | P1 – vyjmout `IngestEdiLog` z obou controllerů | střední | **odstranění duplikace** | otevřeno |
+| 5 | P3 – konsolidovat migrace (jen pokud není v produkci) | střední | údržba schématu | otevřeno |
+| 6 | P6 – accessor vrstva nad legacy sloupci (volitelně) | střední | typová bezpečnost | otevřeno |
 
-Body 1–3 jsou rychlé výhry bez rizika. Bod 4 je jediný strukturální dluh, který se
+Rychlé výhry (1–3) jsou hotové. Bod 4 je jediný strukturální dluh, který se
 **vyplatí udělat dřív, než kód přijme třetí cestu příjmu deníku**.

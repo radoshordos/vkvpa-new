@@ -12,7 +12,7 @@ VKV Provozní aktiv – a Laravel 13 / PHP 8.4 web application for managing amat
 composer setup      # first-time setup: install deps, copy .env, migrate, npm build
 composer dev        # dev server: php artisan serve + queue + pail logs + vite (all concurrently)
 composer test       # run PHPUnit test suite (clears config cache first)
-composer stan       # PHPStan level-9 static analysis (Larastan)
+composer stan       # PHPStan level-10 static analysis (Larastan)
 composer lint       # Pint code-style check (--test, no writes)
 ./vendor/bin/pint   # auto-fix code style
 
@@ -84,4 +84,4 @@ Two Mailable classes: `HlaseniPrijato` (confirmation to contestant) and `Hlaseni
 
 ### Code Style
 
-All files use `declare(strict_types=1)`. PHPStan runs at level 9. Pint enforces code style. CI runs tests + stan + lint + frontend build in one job.
+All files use `declare(strict_types=1)`. PHPStan runs at level 10. Pint enforces code style. CI runs tests + stan + lint + frontend build in one job.
