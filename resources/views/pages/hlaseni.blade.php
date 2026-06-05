@@ -4,7 +4,7 @@
 --}}
 @extends('layouts.app')
 
-@section('title', 'Hlášení / Log import – VKV PA')
+@section('title', __('pages.hlaseni.title'))
 
 @section('content')
 @php
@@ -19,13 +19,13 @@
 @if ($maAktivniKolo)
 {{-- ===== EDI upload box ===== --}}
 <div class="card mb-6 p-5">
-    <h1 class="!mb-3">Načíst EDI soubor / Import EDI file</h1>
+    <h1 class="!mb-3">{{ __('pages.hlaseni.heading_edi') }}</h1>
 
     @if ($errors->has('upload'))
         <div class="alert alert-error">
             {{ $errors->first('upload') }}
             @foreach (session('lineErrors', []) as $le)
-                <br><span class="font-normal">Chybný řádek: {{ $le }}</span>
+                <br><span class="font-normal">{{ __('pages.hlaseni.error_line') }}: {{ $le }}</span>
             @endforeach
         </div>
     @endif
@@ -33,16 +33,15 @@
     <form action="{{ route('edi.store') }}" method="post" enctype="multipart/form-data" class="flex flex-wrap items-center gap-3">
         @csrf
         <input type="file" name="upload" class="text-sm">
-        <button type="submit" class="btn btn-primary">nahrát / upload</button>
+        <button type="submit" class="btn btn-primary">{{ __('pages.hlaseni.btn_upload') }}</button>
     </form>
 
     <p class="mt-3 text-xs leading-relaxed text-muted">
-        Lze použít jakýkoli logovací software, který umí edi export a nezáleží na tom, jestli samotný deník umí počítat body pro PA, nebo ne. Zcela vyhoví standardní konfigurace pro závody, ve kterých je jeden bod za kilometr, robot si spočítá body dle pravidel PA i vyhledá v deníku násobiče.<br><br>
-        You can use any logging software that can export edi, and it doesn't matter whether the log itself can count points for OK Activity or not. You can use the standard VHF/UHF contest configuration, where one point per kilometer, robot calculates the points according to the OK Activity rules and looks up the multipliers in the log.
+        {{ __('pages.hlaseni.edi_info') }}
     </p>
 
     <div class="mt-3 border-t border-line pt-3">
-        <a href="{{ route('hlaseni.index', ['showfrm' => 1]) }}" class="font-semibold">Nemám EDI soubor (vyplním hlášení ručně) / No EDI file</a>
+        <a href="{{ route('hlaseni.index', ['showfrm' => 1]) }}" class="font-semibold">{{ __('pages.hlaseni.no_edi_link') }}</a>
     </div>
 </div>
 
@@ -65,9 +64,9 @@
 
     <div class="grid gap-x-5 sm:grid-cols-2">
         <div class="field">
-            <label class="label" for="f-kolo">Kolo / Period *</label>
+            <label class="label" for="f-kolo">{{ __('pages.hlaseni.field_period') }} *</label>
             <select id="f-kolo" name="kolo" class="select @error('kolo') input-err @enderror">
-                <option value="">--- vyberte kolo / select period ---</option>
+                <option value="">{{ __('pages.hlaseni.select_period') }}</option>
                 @foreach ($kola as $k)
                     <option value="{{ $k->id }}" @selected((int) $val('kolo', $e->id_kola ?? 0) === $k->id)>{{ $k->nazev }}</option>
                 @endforeach
@@ -76,9 +75,9 @@
         </div>
 
         <div class="field">
-            <label class="label" for="f-kat">Kategorie / Category *</label>
+            <label class="label" for="f-kat">{{ __('pages.hlaseni.field_category') }} *</label>
             <select id="f-kat" name="kategorie" class="select @error('kategorie') input-err @enderror">
-                <option value="">--- vyberte kategorii / select ---</option>
+                <option value="">{{ __('pages.hlaseni.select_category') }}</option>
                 @foreach ($kategorie as $cat)
                     <option value="{{ $cat->id }}" @selected((int) $val('kategorie', $e->id_kategorie ?? 0) === $cat->id)>{{ $cat->nazev }}</option>
                 @endforeach
@@ -87,13 +86,13 @@
         </div>
 
         <div class="field">
-            <label class="label" for="f-znacka">Volací znak / Callsign *</label>
+            <label class="label" for="f-znacka">{{ __('pages.hlaseni.field_callsign') }} *</label>
             <input id="f-znacka" name="znacka" type="text" class="input mono font-bold @error('znacka') input-err @enderror" value="{{ $val('znacka', $e->znacka ?? '') }}">
             @error('znacka')<span class="field-error">{{ $message }}</span>@enderror
         </div>
 
         <div class="field">
-            <label class="label" for="f-loc">Lokátor / WWL *</label>
+            <label class="label" for="f-loc">{{ __('pages.hlaseni.field_locator') }} *</label>
             <input id="f-loc" name="locator" type="text" class="input mono @error('locator') input-err @enderror" value="{{ $val('locator', $e->locator ?? '') }}">
             @error('locator')<span class="field-error">{{ $message }}</span>@enderror
         </div>
@@ -101,28 +100,28 @@
 
     <label class="mb-4 flex items-center gap-2 text-sm">
         <input type="checkbox" name="qrp" value="1" @checked($val('qrp', $e->qrp ?? false))>
-        QRP (zaškrtněte, pokud jste v závodě použili výkon QRP)
+        {{ __('pages.hlaseni.field_qrp') }}
     </label>
 
     {{-- Body / počty --}}
     <div class="grid grid-cols-2 gap-x-5 sm:grid-cols-4">
         <div class="field">
-            <label class="label" for="f-pocet">Počet QSO *</label>
+            <label class="label" for="f-pocet">{{ __('pages.hlaseni.field_qso') }} *</label>
             <input id="f-pocet" name="pocet" type="text" class="input num @error('pocet') input-err @enderror" value="{{ (int) $val('pocet', $e->pocet ?? 0, 0) }}">
             @error('pocet')<span class="field-error">{{ $message }}</span>@enderror
         </div>
         <div class="field">
-            <label class="label" for="f-bzq">Bodů za QSO</label>
+            <label class="label" for="f-bzq">{{ __('pages.hlaseni.field_qso_pts') }}</label>
             <input id="f-bzq" name="bodu_za_qso" type="text" class="input num @error('bodu_za_qso') input-err @enderror" value="{{ (int) $val('bodu_za_qso', $e->bodu_za_qso ?? 0, 0) }}">
             @error('bodu_za_qso')<span class="field-error">{{ $message }}</span>@enderror
         </div>
         <div class="field">
-            <label class="label" for="f-nas">Násobiče *</label>
+            <label class="label" for="f-nas">{{ __('pages.hlaseni.field_mult') }} *</label>
             <input id="f-nas" name="nasobice" type="text" class="input num @error('nasobice') input-err @enderror" value="{{ (int) $val('nasobice', $e->nasobice ?? 0, 0) }}">
             @error('nasobice')<span class="field-error">{{ $message }}</span>@enderror
         </div>
         <div class="field">
-            <label class="label" for="f-body">Celkem bodů *</label>
+            <label class="label" for="f-body">{{ __('pages.hlaseni.field_total') }} *</label>
             <input id="f-body" name="body" type="text" class="input num font-bold @error('body') input-err @enderror" value="{{ (int) $val('body', $e->body ?? 0, 0) }}">
             @error('body')<span class="field-error">{{ $message }}</span>@enderror
         </div>
@@ -130,34 +129,34 @@
 
     <div class="grid gap-x-5 sm:grid-cols-2">
         <div class="field">
-            <label class="label" for="f-jmeno">Jméno / Name</label>
+            <label class="label" for="f-jmeno">{{ __('pages.hlaseni.field_name') }}</label>
             <input id="f-jmeno" name="jmeno" type="text" class="input" value="{{ $val('jmeno', $e->jmeno ?? '') }}">
         </div>
         <div class="field">
-            <label class="label" for="f-email">Kontakt / Contact *</label>
+            <label class="label" for="f-email">{{ __('pages.hlaseni.field_contact') }} *</label>
             <input id="f-email" name="email" type="text" class="input @error('email') input-err @enderror" value="{{ $val('email', $e->mail ?? '') }}">
             @error('email')<span class="field-error">{{ $message }}</span>@enderror
         </div>
         <div class="field">
-            <label class="label" for="f-tel">Telefon</label>
+            <label class="label" for="f-tel">{{ __('pages.hlaseni.field_phone') }}</label>
             <input id="f-tel" name="telefon" type="text" class="input @error('telefon') input-err @enderror" value="{{ $val('telefon', $e->telefon ?? '') }}">
             @error('telefon')<span class="field-error">{{ $message }}</span>@enderror
         </div>
     </div>
 
     <div class="field">
-        <label class="label" for="f-pozn">Poznámka / Note</label>
+        <label class="label" for="f-pozn">{{ __('pages.hlaseni.field_note') }}</label>
         <textarea id="f-pozn" name="poznamka" class="textarea" rows="2">{{ $val('poznamka', $e->poznamka ?? '') }}</textarea>
     </div>
 
     <div class="field">
-        <label class="label" for="f-soap">Soapbox</label>
+        <label class="label" for="f-soap">{{ __('pages.hlaseni.field_soapbox') }}</label>
         <textarea id="f-soap" name="soapbox" class="textarea" rows="4">{{ $val('soapbox', $e->soapbox ?? '') }}</textarea>
     </div>
 
     <div class="mt-2 flex items-center justify-between">
-        <a href="{{ route('hlaseni.index') }}" class="text-sm">vymazat formulář</a>
-        <button type="submit" name="Odeslat" value="Odeslat / Send" class="btn btn-primary">Odeslat / Send</button>
+        <a href="{{ route('hlaseni.index') }}" class="text-sm">{{ __('pages.hlaseni.btn_clear') }}</a>
+        <button type="submit" name="Odeslat" value="Odeslat" class="btn btn-primary">{{ __('pages.hlaseni.btn_send') }}</button>
     </div>
 </form>
 @endif
@@ -170,19 +169,19 @@
 @if ($vysledky->isNotEmpty())
 @php $katMap = $kategorie->keyBy('id'); @endphp
 @foreach ($vysledky->groupBy('id_kategorie') as $katId => $radky)
-    <div class="section-head">Průběžné výsledky kola — {{ $katMap[$katId]->nazev ?? ('kategorie ' . $katId) }}</div>
+    <div class="section-head">{{ __('pages.hlaseni.interim_results') }} — {{ $katMap[$katId]->nazev ?? ('kategorie ' . $katId) }}</div>
     <div class="table-wrap mb-4">
         <table class="data-table">
             <thead>
                 <tr>
-                    <th class="num">Poř.</th>
-                    <th>Značka</th>
-                    <th>Lokátor</th>
-                    <th class="num">QSO</th>
-                    <th class="num">Násobiče</th>
-                    <th class="num">Celkem bodů</th>
-                    <th>Jméno / Poznámka</th>
-                    <th>Stav</th>
+                    <th class="num">{{ __('pages.hlaseni.col_pos') }}</th>
+                    <th>{{ __('pages.hlaseni.col_callsign') }}</th>
+                    <th>{{ __('pages.hlaseni.col_locator') }}</th>
+                    <th class="num">{{ __('pages.hlaseni.col_qso') }}</th>
+                    <th class="num">{{ __('pages.hlaseni.col_mult') }}</th>
+                    <th class="num">{{ __('pages.hlaseni.col_total') }}</th>
+                    <th>{{ __('pages.hlaseni.col_name_note') }}</th>
+                    <th>{{ __('pages.hlaseni.col_status') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -197,9 +196,9 @@
                     <td class="text-muted">{{ $r->jmeno }} @if ($r->poznamka)<i>({{ $r->poznamka }})</i>@endif</td>
                     <td>
                         @if ($r->schvaleno)
-                            <span class="badge badge-ok">OK</span>
+                            <span class="badge badge-ok">{{ __('pages.hlaseni.status_ok') }}</span>
                         @else
-                            <span class="badge badge-warn">Čeká</span>
+                            <span class="badge badge-warn">{{ __('pages.hlaseni.status_pending') }}</span>
                         @endif
                     </td>
                 </tr>
