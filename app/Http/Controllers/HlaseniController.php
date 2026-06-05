@@ -20,7 +20,10 @@ class HlaseniController extends Controller
     public function index(Request $request): View
     {
         $ownedId = $this->intFrom($request->session()->get('owned_data_id', 0));
-        $editId = $request->integer('id'); // editace adminem přes ?id
+        // Editace cizího záznamu přes ?id je povolena jen adminovi; běžný uživatel
+        // smí pracovat výhradně s vlastním rezervovaným řádkem ze session.
+        // Bez tohoto omezení by ?id=N vystavilo PII (e-mail, telefon) kohokoli.
+        $editId = $request->user()?->is_admin ? $request->integer('id') : 0;
 
         $targetId = $editId ?: $ownedId;
         $edit = $targetId > 0 ? VkvpaData::find($targetId) : null;

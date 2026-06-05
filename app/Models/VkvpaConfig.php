@@ -27,7 +27,11 @@ class VkvpaConfig extends Model
      */
     public static function get(string $key, ?string $default = null): ?string
     {
-        return static::query()->find($key)->cfg_value ?? $default;
+        // value() vrátí hodnotu sloupce, nebo null když klíč neexistuje – bez
+        // hydratace modelu a bez varování „read property on null".
+        $value = static::query()->where('cfg_key', $key)->value('cfg_value');
+
+        return is_string($value) ? $value : $default;
     }
 
     /**

@@ -208,4 +208,36 @@ class HlaseniTest extends TestCase
     {
         $this->get('/admin/kategorie')->assertRedirect(route('login'));
     }
+
+    public function test_anonymous_cannot_view_foreign_record_pii_via_id(): void
+    {
+        [$kolo, $kat] = $this->prepare();
+        $existing = VkvpaData::create([
+            'id_kola' => $kolo->id, 'id_kategorie' => $kat->id, 'znacka' => 'OK1PII',
+            'locator' => 'JO70AA', 'mail' => 'secret@example.com', 'telefon' => '+420123456789',
+            'jmeno' => 'Tajné Jméno', 'pocet' => 1, 'nasobice' => 1, 'body' => 1, 'schvaleno' => true,
+        ]);
+
+        // Anonym přes ?id nesmí dostat PII cizího záznamu do prefillu formuláře.
+        $resp = $this->get(route('hlaseni.index', ['id' => $existing->id]))->assertOk();
+        $resp->assertDontSee('secret@example.com');
+        $resp->assertDontSee('+420123456789');
+        $resp->assertDontSee('Tajné Jméno');
+    }
+
+    public function test_admin_can_view_record_pii_via_id(): void
+    {
+        [$kolo, $kat] = $this->prepare();
+        $existing = VkvpaData::create([
+            'id_kola' => $kolo->id, 'id_kategorie' => $kat->id, 'znacka' => 'OK1PII',
+            'locator' => 'JO70AA', 'mail' => 'secret@example.com', 'pocet' => 1,
+            'nasobice' => 1, 'body' => 1, 'schvaleno' => true,
+        ]);
+        $admin = User::create(['name' => 'Admin', 'password' => Hash::make('x'), 'is_admin' => true]);
+
+        $this->actingAs($admin)
+            ->get(route('hlaseni.index', ['id' => $existing->id]))
+            ->assertOk()
+            ->assertSee('secret@example.com');
+    }
 }

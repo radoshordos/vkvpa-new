@@ -30,10 +30,10 @@ class EdiDebugController extends Controller
     public function create(): View
     {
         return view('pages.admin.edi-debug', [
-            'active'   => 'edit_edi_debug',
-            'report'   => null,
+            'active' => 'edit_edi_debug',
+            'report' => null,
             'filename' => null,
-            'edihead'  => null,
+            'edihead' => null,
         ]);
     }
 
@@ -60,10 +60,10 @@ class EdiDebugController extends Controller
             ->first();
 
         return view('pages.admin.edi-debug', [
-            'active'   => 'edit_edi_debug',
-            'report'   => $this->debugger->analyze($log),
+            'active' => 'edit_edi_debug',
+            'report' => $this->debugger->analyze($log),
             'filename' => $request->file('upload')->getClientOriginalName(),
-            'edihead'  => $edihead,
+            'edihead' => $edihead,
         ]);
     }
 }

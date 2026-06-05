@@ -20,9 +20,9 @@ use App\Services\Scoring\ScoringService;
  *
  * Vyhodí výjimku při jakémkoli selhání; úspěch vrací nový VkvpaData řádek.
  *
- * @throws TDateMismatchException  TDate v hlavičce neodpovídá datům QSO
- * @throws DuplicateEdiException   Deník pro tuto stanici a kolo již existuje
- * @throws UnknownBandException    Pásmo z hlavičky EDI nelze přiřadit kategorii
+ * @throws TDateMismatchException TDate v hlavičce neodpovídá datům QSO
+ * @throws DuplicateEdiException Deník pro tuto stanici a kolo již existuje
+ * @throws UnknownBandException Pásmo z hlavičky EDI nelze přiřadit kategorii
  */
 final readonly class ImportEdiAction
 {
