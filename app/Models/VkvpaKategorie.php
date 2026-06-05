@@ -18,7 +18,9 @@ use Override;
  * @property string $nazev
  * @property string $popis
  * @property string $zkratka
- * @property int $dxid
+ * @property int $dxid  ID odpovídající tuzemské (OK/OL) kategorie; 0 = tato kategorie JE tuzemská.
+ *                      Příklad: kategorie id=23 „144 MHz single DX" má dxid=1 → id=1 „144 MHz single op".
+ *                      Slouží pro párování DX a tuzemských výsledků v administraci.
  */
 #[Fillable(['nazev', 'popis', 'zkratka', 'dxid'])]
 #[Table(name: 'vkvpa_kategorie', key: 'id')]

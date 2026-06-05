@@ -8,17 +8,20 @@
 
 {{-- Výběr kola --}}
 <div class="mb-5 flex flex-wrap items-end gap-3">
-    <div class="field mb-0">
+    <form method="get" action="{{ url('/diskuse') }}" class="field mb-0">
         <label class="label" for="kolo_sel">Kolo / Round</label>
-        <select id="kolo_sel" class="select w-auto"
-                onchange="window.location.href = '{{ url('/diskuse') }}/' + this.value">
-            @foreach ($kola as $k)
-                <option value="{{ $k->id }}" @selected($k->id === $kolo->id)>
-                    {{ $k->nazev }} ({{ $k->datum_konani?->format('j.n.Y') }})
-                </option>
-            @endforeach
-        </select>
-    </div>
+        <div class="flex items-center gap-2">
+            <select id="kolo_sel" name="kolo" class="select w-auto"
+                    onchange="this.form.submit()">
+                @foreach ($kola as $k)
+                    <option value="{{ $k->id }}" @selected($k->id === $kolo->id)>
+                        {{ $k->nazev }} ({{ $k->datum_konani?->format('j.n.Y') }})
+                    </option>
+                @endforeach
+            </select>
+            <noscript><button type="submit" class="btn btn-ghost btn-sm">Přejít</button></noscript>
+        </div>
+    </form>
     <span class="pb-1 text-sm text-muted">{{ $prispevky->count() }} {{ $prispevky->count() === 1 ? 'příspěvek' : ($prispevky->count() < 5 ? 'příspěvky' : 'příspěvků') }}</span>
 </div>
 

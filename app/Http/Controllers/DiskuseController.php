@@ -13,9 +13,12 @@ use Illuminate\View\View;
 
 class DiskuseController extends Controller
 {
-    public function index(): RedirectResponse
+    public function index(\Illuminate\Http\Request $request): RedirectResponse
     {
-        $kolo = VkvpaKola::query()->orderByDesc('datum_konani')->first();
+        $id = $request->integer('kolo', 0);
+
+        $kolo = ($id > 0 ? VkvpaKola::query()->find($id) : null)
+            ?? VkvpaKola::query()->orderByDesc('datum_konani')->first();
 
         if (! $kolo) {
             return redirect()->route('kola.index');

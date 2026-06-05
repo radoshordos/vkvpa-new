@@ -29,7 +29,7 @@ class KategorieController extends Controller
             'nazev' => ['required', 'string', 'max:50'],
             'popis' => ['nullable', 'string', 'max:250'],
             'zkratka' => ['required', 'string', 'max:20'],
-            'dxid' => ['required', 'integer', 'min:0'], // TODO: clarify dxid semantics
+            'dxid' => ['required', 'integer', 'min:0'], // 0 = tuzemská; nenulové = id odpovídající tuzemské kategorie
         ]);
 
         VkvpaKategorie::create([
