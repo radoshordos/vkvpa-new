@@ -55,13 +55,19 @@
 
 @if ($report)
     {{-- Hlavička deníku --}}
-    <section class="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+    <section class="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         @php
+            $categoryLabel = match(true) {
+                $report->categoryName !== null => $report->categoryName,
+                $report->categoryId !== null   => 'ID '.$report->categoryId.' (název nenalezen)',
+                default                        => '— (sekce nerozpoznána)',
+            };
             $cards = [
                 ['Značka', $report->call !== '' ? $report->call : '—', null],
                 ['Lokátor', $report->locator !== '' ? $report->locator : '—', 'čtverec '.($report->homeSquare !== '' ? $report->homeSquare : '—')],
                 ['Den závodu', $fmtDate($report->contestDay), null],
                 ['Pásmo / sekce', $report->band !== '' ? $report->band : '—', $report->section !== '' ? $report->section : '—'],
+                ['Kategorie', $categoryLabel, $report->categoryId !== null ? 'ID '.$report->categoryId : null],
                 ['Výkon', $report->power.' W', $report->qrp ? 'QRP' : null],
                 ['Závodní okno (UTC)', $fmtTime($report->windowFrom).'–'.$fmtTime($report->windowTo), null],
             ];

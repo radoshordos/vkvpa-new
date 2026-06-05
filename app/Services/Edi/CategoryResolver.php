@@ -64,6 +64,26 @@ final class CategoryResolver
     ];
 
     /**
+     * Vrátí všechna ID kategorií použitá v matici CATEGORIES.
+     * Slouží k ověření konzistence s tabulkou vkvpa_kategorie.
+     *
+     * @return list<int>
+     */
+    public static function allCategoryIds(): array
+    {
+        $ids = [];
+        foreach (self::CATEGORIES as $sections) {
+            foreach ($sections as $variants) {
+                foreach ($variants as $id) {
+                    $ids[] = $id;
+                }
+            }
+        }
+
+        return array_values(array_unique($ids));
+    }
+
+    /**
      * @param  string  $pcall  volací značka (PCall) – pro určení DX
      * @param  string  $pBand  pásmo z hlavičky (PBand)
      * @param  string  $pSect  sekce z hlavičky (PSect)
