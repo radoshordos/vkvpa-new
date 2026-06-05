@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\MapMode;
 use App\Models\Edihead;
+use App\Models\Ediline;
 use App\Support\ContestWindow;
 use App\Support\Maidenhead;
 use Illuminate\Support\Collection;
@@ -20,10 +21,6 @@ use Illuminate\View\View;
  *   S – {@see lokatory()}  velké čtverce (lokátory) s počtem protistanic v každém
  *
  * Všechny tři kreslí jen QSO uvnitř závodního okna 08:00–11:00 UTC.
- *
- * Pozn.: model Edihead/Ediline má sloupce s nestandardními názvy (PWWLo,
- * Received-WWL…), proto je tento soubor v phpstan.neon → ignoreErrors
- * (identifier property.notFound).
  *
  * @api  Endpointy budou popsány v OpenAPI/Swagger – komentáře drží strukturu.
  */
@@ -105,12 +102,13 @@ class MapController extends Controller
             ->whereBetween('Time', [ContestWindow::from(), ContestWindow::to()])
             ->orderBy('Received-WWL')
             ->get(['lon', 'lat', 'CallSign', 'Received-WWL', 'QSO-Points'])
-            ->map(function ($l) use ($home, $head): ?array {
+            ->map(function (Ediline $l) use ($home, $head): ?array {
                 $lat = $l->lat;
                 $lon = $l->lon;
                 // Když chybí lon/lat, dopočítej ze středu lokátoru.
-                if (($lat === null || $lon === null) && $l->{'Received-WWL'}) {
-                    $c = Maidenhead::toLatLon((string) $l->{'Received-WWL'});
+                $wwl = $l->receivedWwl();
+                if (($lat === null || $lon === null) && $wwl !== '') {
+                    $c = Maidenhead::toLatLon($wwl);
                     $lat = $c['lat'] ?? null;
                     $lon = $c['lon'] ?? null;
                 }
@@ -118,7 +116,7 @@ class MapController extends Controller
                     Log::debug('map.points.skip', [
                         'edihead_id' => $head->ID,
                         'call' => (string) $l->CallSign,
-                        'wwl' => (string) $l->{'Received-WWL'},
+                        'wwl' => $wwl,
                     ]);
 
                     return null;
@@ -133,8 +131,8 @@ class MapController extends Controller
                     'lat' => $lat,
                     'lon' => $lon,
                     'call' => (string) $l->CallSign,
-                    'wwl' => (string) $l->{'Received-WWL'},
-                    'points' => (int) $l->{'QSO-Points'},
+                    'wwl' => $wwl,
+                    'points' => $l->qsoPoints(),
                     'dist' => $dist,
                     'azimut' => $azimut,
                 ];
@@ -152,7 +150,7 @@ class MapController extends Controller
     {
         $counts = [];
         foreach ($head->lines()->whereBetween('Time', [ContestWindow::from(), ContestWindow::to()])->get(['Received-WWL']) as $l) {
-            $sq = strtoupper(substr(trim((string) $l->{'Received-WWL'}), 0, 4));
+            $sq = strtoupper(substr(trim($l->receivedWwl()), 0, 4));
             if (preg_match('/^[A-R]{2}\d{2}$/', $sq)) {
                 $counts[$sq] = ($counts[$sq] ?? 0) + 1;
             }

@@ -4,16 +4,14 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Actions\ImportEdiAction;
+use App\Exceptions\DuplicateEdiException;
 use App\Exceptions\EdiParseException;
+use App\Exceptions\TDateMismatchException;
 use App\Exceptions\UnknownBandException;
 use App\Models\Edihead;
-use App\Models\VkvpaData;
-use App\Services\Edi\CategoryResolver;
-use App\Services\Edi\EdiImportService;
 use App\Services\Edi\EdiParser;
-use App\Services\Edi\EdiQso;
 use App\Services\Edi\EdiReducer;
-use App\Services\Scoring\ScoringService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -29,10 +27,8 @@ class EdiController extends Controller
 {
     public function __construct(
         private readonly EdiParser $parser,
-        private readonly EdiImportService $importer,
-        private readonly ScoringService $scoring,
+        private readonly ImportEdiAction $action,
         private readonly EdiReducer $reducer,
-        private readonly CategoryResolver $categories,
     ) {}
 
     public function create(): View
@@ -50,73 +46,17 @@ class EdiController extends Controller
 
         try {
             $log = $this->parser->parse($content);
-        } catch (EdiParseException $ediParseException) {
+        } catch (EdiParseException $e) {
             return back()
-                ->withErrors(['upload' => $ediParseException->getMessage()])
-                ->with('lineErrors', $ediParseException->lineErrors);
+                ->withErrors(['upload' => $e->getMessage()])
+                ->with('lineErrors', $e->lineErrors);
         }
 
-        $h = $log->header;
-        $pcall = $h->pCall();
-
-        // Den závodu (YYMMDD) z hlavičky TDate – stejná konvence jako ScoringService::scoreEdi().
-        // Když ani jedno spojení není z tohoto dne, je TDate v hlavičce chybné a skóre by se
-        // počítalo z nuly QSO (pocet=0, nasobice=1, body=0). Takový deník odmítneme, ať odesílatel
-        // TDate opraví a nahraje znovu – jinak se mu uloží nulové body bez varování.
-        $tdateDay = substr(trim($h->tDate()), 2, 6);
-        $qsoDays = array_values(array_unique(array_map(static fn (EdiQso $q): string => $q->date, $log->qsos)));
-        if ($tdateDay !== '' && $qsoDays !== [] && ! in_array($tdateDay, $qsoDays, true)) {
-            return back()->withErrors([
-                'upload' => sprintf(
-                    'Datum závodu v hlavičce deníku (TDate=%s) neodpovídá datům spojení (%s). '
-                    .'Oprav prosím TDate v hlavičce EDI souboru a nahraj ho znovu.',
-                    $h->tDate(),
-                    implode(', ', array_map($this->formatEdiDate(...), array_slice($qsoDays, 0, 3))),
-                ),
-            ]);
-        }
-
-        $idKola = $this->scoring->koloForTDate($h->tDate()) ?? 0;
-
-        // Duplicitní deník: stejná značka už má pro toto kolo nahraný EDI deník.
-        if (VkvpaData::query()->where('EDI', true)->where('znacka', $pcall)->where('id_kola', $idKola)->exists()) {
-            return back()->withErrors([
-                'upload' => "Deník stanice {$pcall} už byl pro toto kolo nahrán – soubor již existuje.",
-            ]);
-        }
-
-        // Kategorie z hlavičky (pásmo + sekce + DX dle prefixu značky).
-        // Nerozpoznané pásmo → deník odmítneme; nerozpoznaná sekce → 0 (doplní admin).
         try {
-            $idKategorie = $this->categories->resolve($pcall, $h->pBand(), $h->pSect()) ?? 0;
-        } catch (UnknownBandException) {
-            return back()->withErrors([
-                'upload' => 'Nerozpoznané pásmo v deníku ('.$h->pBand().') – nelze určit kategorii. Oprav PBand a nahraj znovu.',
-            ]);
+            $row = $this->action->execute($log);
+        } catch (TDateMismatchException|DuplicateEdiException|UnknownBandException $e) {
+            return back()->withErrors(['upload' => $e->getMessage()]);
         }
-
-        $head = $this->importer->import($log);
-        $score = $this->scoring->scoreEdi($head);
-
-        // Rezervovaný řádek (schvaleno=0) – formulář ho převezme a doplní.
-        $row = VkvpaData::create([
-            'id_kola' => $idKola,
-            'id_kategorie' => $idKategorie,
-            'znacka' => $h->pCall(),
-            'locator' => $h->pWWLo(),
-            'jmeno' => $h->rName(),
-            'mail' => $h->rEmail(),
-            'telefon' => $h->rPhon(),
-            'soapbox' => $h->get('RSoap'),
-            'pocet' => $score->pocet,
-            'nasobice' => $score->nasobice,
-            'bodu_za_qso' => $score->boduZaQso,
-            'body' => $score->body,
-            'qrp' => $h->isQrp(),
-            'EDI' => true,
-            'EDI_ID' => $head->ID,
-            'schvaleno' => false,
-        ]);
 
         // ID vlastněného řádku v session – povolí jeho editaci i nepřihlášenému.
         $request->session()->put('owned_data_id', $row->id);
@@ -155,9 +95,6 @@ class EdiController extends Controller
         return $this->ediResponse($head, $reduced, $head->PCall, 'edir');
     }
 
-    /**
-     * Sestaví text/plain odpověď s EDI obsahem (zobrazení v prohlížeči, ne stažení).
-     */
     private function ediResponse(Edihead $head, string $content, string $pcall, string $variant): Response
     {
         if (trim($content) === '') {
@@ -172,11 +109,4 @@ class EdiController extends Controller
         ]);
     }
 
-    /** Datum spojení YYMMDD (např. „260118") → čitelné „18.01.2026" do chybové hlášky. */
-    private function formatEdiDate(string $yymmdd): string
-    {
-        return strlen($yymmdd) === 6
-            ? sprintf('%d. %d. 20%s', (int) substr($yymmdd, 4, 2), (int) substr($yymmdd, 2, 2), substr($yymmdd, 0, 2))
-            : $yymmdd;
-    }
 }

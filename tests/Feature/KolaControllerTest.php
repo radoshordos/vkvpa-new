@@ -64,7 +64,7 @@ class KolaControllerTest extends TestCase
 
         $this->get(route('kola.index'))
             ->assertOk()
-            ->assertSee('05.02.2026')
+            ->assertSee('5. 2. 2026')
             ->assertSee('—');
     }
 }
