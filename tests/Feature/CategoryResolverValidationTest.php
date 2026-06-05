@@ -25,7 +25,7 @@ class CategoryResolverValidationTest extends TestCase
         $this->seed(VkvpaKategorieTableSeeder::class);
 
         $ids = CategoryResolver::allCategoryIds();
-        $existing = VkvpaKategorie::whereIn('id', $ids)->pluck('id')->all();
+        $existing = VkvpaKategorie::whereIn('id', $ids)->get()->map(fn(VkvpaKategorie $k): int => $k->id)->all();
         $missing = array_values(array_diff($ids, $existing));
 
         $this->assertEmpty(

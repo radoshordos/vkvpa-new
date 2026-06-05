@@ -35,6 +35,7 @@ class EdiPipelineIntegrationTest extends TestCase
         $this->sampleEdi = (string) file_get_contents(__DIR__.'/../fixtures/sample.edi');
     }
 
+    /** @return \Illuminate\Testing\TestResponse<\Illuminate\Http\Response> */
     private function upload(): \Illuminate\Testing\TestResponse
     {
         $file = UploadedFile::fake()->createWithContent('sample.edi', $this->sampleEdi);
@@ -69,8 +70,7 @@ class EdiPipelineIntegrationTest extends TestCase
     {
         $this->upload();
 
-        $row = VkvpaData::first();
-        $this->assertNotNull($row);
+        $row = VkvpaData::firstOrFail();
 
         // sample.edi: home JN99, QSO do JN99BP (vlastní, 2 b.) a JN89PV (soused, 3 b.)
         // pocet=2, boduZaQso=5, nasobice=2 (JN89+JN99), body=10
@@ -84,8 +84,8 @@ class EdiPipelineIntegrationTest extends TestCase
     {
         $this->upload();
 
-        $row  = VkvpaData::first();
-        $head = Edihead::find($row->EDI_ID);
+        $row  = VkvpaData::firstOrFail();
+        $head = Edihead::findOrFail((int) $row->EDI_ID);
 
         $direct = app(ScoringService::class)->scoreEdi($head);
 
@@ -99,7 +99,7 @@ class EdiPipelineIntegrationTest extends TestCase
     {
         $this->upload();
 
-        $row = VkvpaData::first();
+        $row = VkvpaData::firstOrFail();
         $this->assertTrue($row->EDI,          'EDI příznak musí být true');
         $this->assertGreaterThan(0, $row->EDI_ID, 'EDI_ID musí odkazovat na edihead');
         $this->assertNotNull(Edihead::find($row->EDI_ID), 'Edihead musí existovat');
@@ -109,7 +109,7 @@ class EdiPipelineIntegrationTest extends TestCase
     {
         $this->upload();
 
-        $row = VkvpaData::first();
+        $row = VkvpaData::firstOrFail();
         $this->assertFalse((bool) $row->schvaleno, 'Rezervovaný řádek čeká na převzetí');
     }
 
@@ -123,7 +123,7 @@ class EdiPipelineIntegrationTest extends TestCase
 
         $this->upload();
 
-        $row = VkvpaData::first();
+        $row = VkvpaData::firstOrFail();
 
         // Nezveřejněný záznam není vidět pro anonymního uživatele.
         $this->get(route('vysledkova_listina', ['kolo' => $kolo->id]))
@@ -155,7 +155,7 @@ class EdiPipelineIntegrationTest extends TestCase
 
         // Krok 1: upload → rezervovaný řádek + session.
         $this->upload()->assertRedirect(route('hlaseni.index', ['import' => 'success']));
-        $row = VkvpaData::first();
+        $row = VkvpaData::firstOrFail();
         // session() helper čte ze session posledního requestu.
         $ownedId = session('owned_data_id');
 

@@ -136,9 +136,11 @@ final class CategoryResolver
     private function isDx(string $pcall): bool
     {
         $p = strtoupper(trim($pcall));
+        $raw = config('vkvpa.domestic_prefixes', ['OK', 'OL']);
+        $prefixes = is_array($raw) ? $raw : ['OK', 'OL'];
 
-        foreach (config('vkvpa.domestic_prefixes', ['OK', 'OL']) as $prefix) {
-            if (str_starts_with($p, strtoupper((string) $prefix))) {
+        foreach ($prefixes as $prefix) {
+            if (is_string($prefix) && str_starts_with($p, strtoupper($prefix))) {
                 return false;
             }
         }

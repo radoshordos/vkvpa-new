@@ -13,6 +13,12 @@ use Override;
 
 /**
  * Kategorie závodu.
+ *
+ * @property int $id
+ * @property string $nazev
+ * @property string $popis
+ * @property string $zkratka
+ * @property int $dxid
  */
 #[Fillable(['nazev', 'popis', 'zkratka', 'dxid'])]
 #[Table(name: 'vkvpa_kategorie', key: 'id')]
