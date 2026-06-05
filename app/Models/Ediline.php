@@ -16,8 +16,7 @@ use Override;
  *
  * Pozn.: řada sloupců má v původní DB nestandardní názvy (mezery, pomlčky,
  * závorky – např. `Mode-code`, `Sent QSO number`, `New-WWL-(N)`). Ponechány
- * kvůli kompatibilitě; přistupuje se k nim přes $model->{'Mode-code'} nebo
- * accessory doplněné v pozdější fázi.
+ * kvůli kompatibilitě; přistupuje se k nim přes typované accessor metody.
  *
  * @property int $ID
  * @property int $IDS
@@ -48,6 +47,21 @@ class Ediline extends Model
     public function head(): BelongsTo
     {
         return $this->belongsTo(Edihead::class, 'IDS', 'ID');
+    }
+
+    public function receivedWwl(): string
+    {
+        return (string) $this->{'Received-WWL'};
+    }
+
+    public function qsoPoints(): int
+    {
+        return (int) $this->{'QSO-Points'};
+    }
+
+    public function newWwl(): string
+    {
+        return (string) $this->{'New-WWL-(N)'};
     }
 
     #[Override]

@@ -31,7 +31,7 @@ final class ScoringService
             foreach (VkvpaKategorie::query()->pluck('id') as $kategorieId) {
                 $entries = VkvpaData::query()
                     ->where('id_kola', $koloId)
-                    ->where('schvaleno', true)
+                    ->approved()
                     ->where('id_kategorie', $kategorieId)
                     ->orderByDesc('body')
                     ->get(['id', 'body']);
@@ -106,7 +106,7 @@ final class ScoringService
             ->whereBetween('Time', [ContestWindow::from(), ContestWindow::to()])
             ->when($den !== '', fn ($q) => $q->where('Date', $den))
             ->get(['Received-WWL'])
-            ->map(static fn ($l): string => strtoupper(substr(trim((string) $l->{'Received-WWL'}), 0, 4)))
+            ->map(static fn ($l): string => strtoupper(substr(trim($l->receivedWwl()), 0, 4)))
             ->filter(static fn (string $sq): bool => $sq !== '')
             ->values();
 

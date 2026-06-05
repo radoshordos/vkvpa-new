@@ -6,8 +6,10 @@ namespace App\Models;
 
 use App\Services\Scoring\ScoringService;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Override;
@@ -75,6 +77,30 @@ class VkvpaData extends Model
     public function edihead(): BelongsTo
     {
         return $this->belongsTo(Edihead::class, 'EDI_ID', 'ID');
+    }
+
+    /**
+     * Scope: jen schválené záznamy (schvaleno = true).
+     *
+     * @param  Builder<VkvpaData>  $query
+     * @return Builder<VkvpaData>
+     */
+    #[Scope]
+    protected function approved(Builder $query): Builder
+    {
+        return $query->where('schvaleno', true);
+    }
+
+    /**
+     * Scope: záznamy nahrané přes EDI soubor (EDI = true).
+     *
+     * @param  Builder<VkvpaData>  $query
+     * @return Builder<VkvpaData>
+     */
+    #[Scope]
+    protected function hasEdi(Builder $query): Builder
+    {
+        return $query->where('EDI', true);
     }
 
     #[Override]
