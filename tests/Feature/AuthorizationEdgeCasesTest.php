@@ -28,11 +28,6 @@ class AuthorizationEdgeCasesTest extends TestCase
         return User::create(['name' => 'Uzivatel', 'password' => Hash::make('x'), 'is_admin' => false]);
     }
 
-    private function admin(): User
-    {
-        return User::create(['name' => 'Admin', 'password' => Hash::make('x'), 'is_admin' => true]);
-    }
-
     private function zaznam(): VkvpaData
     {
         $kolo = VkvpaKola::create([

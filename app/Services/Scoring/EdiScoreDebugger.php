@@ -128,9 +128,8 @@ final class EdiScoreDebugger
                 $header->pBand(),
                 $header->pSect(),
             );
-            $categoryName = $categoryId !== null
-                ? VkvpaKategorie::find($categoryId)?->nazev
-                : null;
+            $found = $categoryId !== null ? VkvpaKategorie::find($categoryId) : null;
+            $categoryName = $found !== null ? (string) $found->nazev : null;
         } catch (UnknownBandException) {
             $categoryId = null;
             $categoryName = null;
