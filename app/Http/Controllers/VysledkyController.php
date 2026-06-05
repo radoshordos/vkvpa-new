@@ -70,14 +70,14 @@ class VysledkyController extends Controller
 
         $katId = $request->integer('kategorie');
 
-        $radky = $kolo
+        // Průběžné výsledky vybraného kola – stejná data jako spodní část
+        // stránky „Načíst EDI soubor" (i nepřevzaté = stav „Čeká").
+        $vysledky = $kolo
             ? VkvpaData::query()
                 ->where('id_kola', $kolo->id)
-                ->where('schvaleno', true)
-                ->when($request->boolean('qrp'), fn ($q) => $q->where('qrp', true))
                 ->when($katId !== 0, fn ($q) => $q->where('id_kategorie', $katId))
-                ->with('kategorie')
-                ->orderBy('id_kategorie')->orderByDesc('body')
+                ->orderBy('id_kategorie')
+                ->orderByDesc('body')->orderByDesc('pocet')
                 ->get()
             : collect();
 
@@ -87,7 +87,7 @@ class VysledkyController extends Controller
             'kolo' => $kolo,
             'kategorie' => VkvpaKategorie::query()->orderBy('id')->get()->keyBy('id'),
             'katId' => $katId,
-            'radky' => $radky,
+            'vysledky' => $vysledky,
         ]);
     }
 

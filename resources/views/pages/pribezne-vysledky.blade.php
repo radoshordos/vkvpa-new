@@ -1,5 +1,7 @@
 {{--
-    Průběžné výsledky kola – všechna převzatá hlášení seřazená dle bodů.
+    Průběžné výsledky kola – samostatná veřejná stránka.
+    Tabulka je shodná se spodní částí stránky „Načíst EDI soubor"
+    (včetně nepřevzatých hlášení = stav „Čeká"), navíc s filtry kola a kategorie.
 --}}
 @extends('layouts.app')
 @section('title', __('pages.pribezne.title'))
@@ -7,8 +9,6 @@
 @section('content')
 
 <h1>{{ __('pages.pribezne.heading') }}</h1>
-
-<div class="alert alert-info mb-4 text-sm">{{ __('pages.pribezne.notice') }}</div>
 
 <form method="get" action="{{ route('pribezne_vysledky') }}" class="card mb-4 flex flex-wrap items-end gap-4 p-3">
     <div class="field mb-0">
@@ -28,63 +28,53 @@
             @endforeach
         </select>
     </div>
-    <label class="flex items-center gap-2 pb-2 text-sm">
-        <input id="qrp" type="checkbox" name="qrp" value="1" @checked(request()->boolean('qrp'))> {{ __('pages.pribezne.filter_qrp') }}
-    </label>
     <button type="submit" class="btn btn-primary">{{ __('pages.pribezne.btn_show') }}</button>
 </form>
 
 @if (! $kolo)
     <p class="text-muted">{{ __('pages.pribezne.no_round') }}</p>
+@elseif ($vysledky->isEmpty())
+    <p class="text-muted">{{ __('pages.pribezne.no_results') }}</p>
 @else
-    @if ($kolo->vyhodnoceno)
-        <p class="mb-3 text-sm text-muted">{{ __('pages.pribezne.evaluated_on', ['date' => $kolo->vyhodnoceno->format('j.n.Y')]) }}</p>
-    @else
-        <p class="mb-3 text-sm text-warn">{{ __('pages.pribezne.not_evaluated') }}</p>
-    @endif
-
-    @if ($radky->isEmpty())
-        <p class="text-muted">{{ __('pages.pribezne.no_results') }}</p>
-    @else
-        @foreach ($radky->groupBy('id_kategorie') as $katId => $skupina)
-            <div class="section-head">{{ $kategorie[$katId]->nazev ?? ('Kategorie ' . $katId) }}</div>
-            <div class="table-wrap mb-4">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th class="num">{{ __('pages.pribezne.col_pos') }}</th>
-                            <th>{{ __('pages.pribezne.col_callsign') }}</th>
-                            <th>{{ __('pages.pribezne.col_locator') }}</th>
-                            <th class="num">{{ __('pages.pribezne.col_qso') }}</th>
-                            <th class="num">{{ __('pages.pribezne.col_mult') }}</th>
-                            <th class="num">{{ __('pages.pribezne.col_total') }}</th>
-                            <th>{{ __('pages.pribezne.col_soapbox') }}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    @php $rank = 0; $prevBody = null; @endphp
-                    @foreach ($skupina as $r)
-                        @php
-                            if ($r->body !== $prevBody) { $rank++; $prevBody = $r->body; }
-                        @endphp
-                        <tr>
-                            <td class="num font-bold">{{ $rank }}.</td>
-                            <td>
-                                <span class="mono font-bold">{{ $r->znacka }}</span>@if ($r->qrp)<span class="badge badge-qrp ml-1">QRP</span>@endif
-                                @if ($r->jmeno)<br><span class="text-muted">{{ $r->jmeno }}</span>@endif
-                            </td>
-                            <td class="mono whitespace-nowrap">{{ $r->locator }}</td>
-                            <td class="num">{{ $r->pocet }}</td>
-                            <td class="num">{{ $r->nasobice }}</td>
-                            <td class="num font-bold text-warn">{{ $r->body }}</td>
-                            <td class="text-danger">{{ $r->soapbox }}</td>
-                        </tr>
-                    @endforeach
-                    </tbody>
-                </table>
-            </div>
-        @endforeach
-    @endif
+@foreach ($vysledky->groupBy('id_kategorie') as $katId => $radky)
+    <div class="section-head">{{ __('pages.hlaseni.interim_results') }} — {{ $kategorie[$katId]->nazev ?? ('kategorie ' . $katId) }}</div>
+    <div class="table-wrap mb-4">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th class="num">{{ __('pages.hlaseni.col_pos') }}</th>
+                    <th>{{ __('pages.hlaseni.col_callsign') }}</th>
+                    <th>{{ __('pages.hlaseni.col_locator') }}</th>
+                    <th class="num">{{ __('pages.hlaseni.col_qso') }}</th>
+                    <th class="num">{{ __('pages.hlaseni.col_mult') }}</th>
+                    <th class="num">{{ __('pages.hlaseni.col_total') }}</th>
+                    <th>{{ __('pages.hlaseni.col_name_note') }}</th>
+                    <th>{{ __('pages.hlaseni.col_status') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach ($radky as $i => $r)
+                <tr @class(['row-pending' => ! $r->schvaleno])>
+                    <td class="num font-bold">{{ $i + 1 }}.</td>
+                    <td class="mono font-bold">{{ $r->znacka }}{{ $r->qrp ? ' /QRP' : '' }}</td>
+                    <td class="mono whitespace-nowrap">{{ $r->locator }}</td>
+                    <td class="num">{{ (int) $r->pocet }}</td>
+                    <td class="num">{{ (int) $r->nasobice }}</td>
+                    <td class="num font-bold">{{ (int) $r->body }}</td>
+                    <td class="text-muted">{{ $r->jmeno }} @if ($r->poznamka)<i>({{ $r->poznamka }})</i>@endif</td>
+                    <td>
+                        @if ($r->schvaleno)
+                            <span class="badge badge-ok">{{ __('pages.hlaseni.status_ok') }}</span>
+                        @else
+                            <span class="badge badge-warn">{{ __('pages.hlaseni.status_pending') }}</span>
+                        @endif
+                    </td>
+                </tr>
+            @endforeach
+            </tbody>
+        </table>
+    </div>
+@endforeach
 @endif
 
 @push('scripts')
@@ -94,7 +84,6 @@
     if (form) {
         document.getElementById('kolo').addEventListener('change', function () { form.submit(); });
         document.getElementById('kategorie').addEventListener('change', function () { form.submit(); });
-        document.getElementById('qrp').addEventListener('change', function () { form.submit(); });
     }
 }());
 </script>
