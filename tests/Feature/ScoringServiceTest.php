@@ -178,6 +178,89 @@ class ScoringServiceTest extends TestCase
         $this->assertSame(100, (int) $row->celkem); // 100 + 0 (nulifikováno) = 100
     }
 
+    // ------------------------------------------------------------------
+    // Hraniční případy scoringu
+
+    public function test_score_edi_no_qso_lines_gives_zero_points(): void
+    {
+        // Deník bez QSO řádků: pocet=0, nasobice=1 (vlastní čtverec vždy), body=0.
+        $head = Edihead::create([
+            'TDate' => '20260118;20260118', 'PCall' => 'OK1TEST', 'PWWLo' => 'JN99AJ',
+            'PSect' => '', 'PBand' => '', 'RName' => '', 'RPhon' => '', 'RHBBS' => '', 'SPowe' => 100,
+        ]);
+        // Žádné edilines.
+
+        $score = app(ScoringService::class)->scoreEdi($head);
+
+        $this->assertSame(0, $score->pocet);
+        $this->assertSame(0, $score->boduZaQso);
+        $this->assertSame(1, $score->nasobice, 'Vlastní čtverec vždy počítá jako násobič');
+        $this->assertSame(0, $score->body);
+    }
+
+    public function test_score_edi_all_qsos_outside_window_gives_zero_points(): void
+    {
+        $head = Edihead::create([
+            'TDate' => '20260118;20260118', 'PCall' => 'OK1TEST', 'PWWLo' => 'JN99AJ',
+            'PSect' => '', 'PBand' => '', 'RName' => '', 'RPhon' => '', 'RHBBS' => '', 'SPowe' => 100,
+        ]);
+        Ediline::insert([
+            ['IDS' => $head->ID, 'Date' => '260118', 'Time' => '0759', 'CallSign' => 'A', 'Received-WWL' => 'JN89AA', 'QSO-Points' => 3],
+            ['IDS' => $head->ID, 'Date' => '260118', 'Time' => '1101', 'CallSign' => 'B', 'Received-WWL' => 'JO70AA', 'QSO-Points' => 4],
+            ['IDS' => $head->ID, 'Date' => '260118', 'Time' => '1230', 'CallSign' => 'C', 'Received-WWL' => 'JN88AA', 'QSO-Points' => 3],
+        ]);
+
+        $score = app(ScoringService::class)->scoreEdi($head);
+
+        $this->assertSame(0, $score->pocet);
+        $this->assertSame(0, $score->boduZaQso);
+        $this->assertSame(1, $score->nasobice);
+        $this->assertSame(0, $score->body);
+    }
+
+    public function test_score_edi_window_boundary_times_are_inclusive(): void
+    {
+        // 0800 a 1100 musí být započteny (BETWEEN je inclusive na obou koncích).
+        // 0759 a 1101 musí být vyřazeny.
+        $head = Edihead::create([
+            'TDate' => '20260118;20260118', 'PCall' => 'OK1TEST', 'PWWLo' => 'JN99AJ',
+            'PSect' => '', 'PBand' => '', 'RName' => '', 'RPhon' => '', 'RHBBS' => '', 'SPowe' => 100,
+        ]);
+        Ediline::insert([
+            ['IDS' => $head->ID, 'Date' => '260118', 'Time' => '0759', 'CallSign' => 'A', 'Received-WWL' => 'JN89AA', 'QSO-Points' => 0],
+            ['IDS' => $head->ID, 'Date' => '260118', 'Time' => '0800', 'CallSign' => 'B', 'Received-WWL' => 'JO70AA', 'QSO-Points' => 0],
+            ['IDS' => $head->ID, 'Date' => '260118', 'Time' => '1100', 'CallSign' => 'C', 'Received-WWL' => 'JN88AA', 'QSO-Points' => 0],
+            ['IDS' => $head->ID, 'Date' => '260118', 'Time' => '1101', 'CallSign' => 'D', 'Received-WWL' => 'JN77AA', 'QSO-Points' => 0],
+        ]);
+
+        $score = app(ScoringService::class)->scoreEdi($head);
+
+        // Pouze B (0800) a C (1100) jsou v okně.
+        // JO70: 2 pásy od JN99 = 4 body; JN88: 2 pásy od JN99 = 4 body.
+        // pocet=2, boduZaQso=8, nasobice=2 (JO70, JN88) + 1 (JN99 vlastní) = 3, body=24.
+        $this->assertSame(2, $score->pocet, 'Pouze QSO přesně na 0800 a 1100 se počítají');
+        $this->assertSame(3, $score->nasobice);
+    }
+
+    public function test_score_edi_empty_home_locator_still_scores(): void
+    {
+        // Prázdné PWWLo: domácí čtverec = '' → Maidenhead::qsoPoints vrací 0 za vlastní,
+        // ale QSO ve vzdálených čtvercích se stále počítají.
+        $head = Edihead::create([
+            'TDate' => '20260118;20260118', 'PCall' => 'OK1TEST', 'PWWLo' => '',
+            'PSect' => '', 'PBand' => '', 'RName' => '', 'RPhon' => '', 'RHBBS' => '', 'SPowe' => 100,
+        ]);
+        Ediline::insert([
+            ['IDS' => $head->ID, 'Date' => '260118', 'Time' => '0830', 'CallSign' => 'A', 'Received-WWL' => 'JN89AA', 'QSO-Points' => 0],
+        ]);
+
+        $score = app(ScoringService::class)->scoreEdi($head);
+
+        // Prázdný domácí čtverec → nasobice=1 (jen 1 cizí čtverec, vlastní '' se nepřidá).
+        $this->assertSame(1, $score->pocet);
+        $this->assertSame(1, $score->nasobice);
+    }
+
     public function test_yearly_results_aggregates_by_callsign(): void
     {
         $kat = $this->kategorie();
