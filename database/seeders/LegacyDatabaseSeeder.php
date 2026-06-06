@@ -14,7 +14,6 @@ class LegacyDatabaseSeeder extends Seeder
             EdiheadTableSeeder::class,
             EdilinesTableSeeder::class,
             PrefixesTableSeeder::class,
-            VkvpaConfigTableSeeder::class,
             VkvpaKategorieTableSeeder::class,
             VkvpaKolaTableSeeder::class,
             VkvpaDataTableSeeder::class,
