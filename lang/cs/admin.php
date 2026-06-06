@@ -22,9 +22,6 @@ return [
     'login_password' => 'Heslo',
     'login_btn' => 'šup tam',
 
-    // Placeholder
-    'not_implemented' => 'Tato sekce zatím není implementována.',
-
     // Kola – CRUD
     'kolo_create_title' => 'Nové kolo – Administrace VKV PA',
     'kolo_create_heading' => 'Přidat nové kolo závodu',
