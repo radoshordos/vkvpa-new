@@ -2,7 +2,7 @@
 
 Webový systém pro správu a vyhodnocování závodů v pásmu VKV (Very High Frequency) pro radioamatéry. Umožňuje registraci soutěžních deníků ve formátu EDI, automatické vyhodnocení, zobrazení výsledků a mapové vizualizace spojení.
 
-> **Jazyk domény:** česky/slovensky. Jména tras, databázové sloupce a terminologie jsou v češtině/slovenštině.
+> **Jazyk domény:** česky. Jména tras, databázové sloupce a terminologie jsou v češtině.
 
 ---
 
