@@ -33,7 +33,11 @@ final readonly class ImportEdiAction
         private CategoryResolver $categories,
     ) {}
 
-    public function execute(EdiLog $log): VkvpaData
+    /**
+     * @param  bool  $notify  rozeslat potvrzovací e-maily (jednotlivé nahrání ano,
+     *                        hromadný admin import ne)
+     */
+    public function execute(EdiLog $log, bool $notify = true): VkvpaData
     {
         $h = $log->header;
         $pcall = $h->pCall();
@@ -76,7 +80,9 @@ final readonly class ImportEdiAction
             'schvaleno' => false,
         ]);
 
-        EdiImported::dispatch($data);
+        if ($notify) {
+            EdiImported::dispatch($data);
+        }
 
         return $data;
     }
