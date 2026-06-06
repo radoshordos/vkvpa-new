@@ -7,11 +7,11 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\VkvpaPrihlaseni;
+use App\Support\VkvpaSettings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
@@ -20,12 +20,6 @@ use Illuminate\View\View;
  */
 class AuthController extends Controller
 {
-    /** Dní platnosti přihlašovacího kódu – čte se z config('vkvpa.token_ttl_days'). */
-    private function tokenTtlDays(): int
-    {
-        return Config::integer('vkvpa.token_ttl_days', 5);
-    }
-
     public function showLoginForm(Request $request): View|RedirectResponse
     {
         if (Auth::check()) {
@@ -68,7 +62,7 @@ class AuthController extends Controller
     public function loginViaToken(string $kod): RedirectResponse
     {
         VkvpaPrihlaseni::query()
-            ->where('time', '<', Carbon::now()->subDays($this->tokenTtlDays()))
+            ->where('time', '<', Carbon::now()->subDays(VkvpaSettings::tokenTtlDays()))
             ->delete();
 
         // lockForUpdate + delete v transakci: paralelní požadavky (prefetch prohlížeče,

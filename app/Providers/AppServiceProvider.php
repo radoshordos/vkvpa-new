@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Events\EdiImported;
+use App\Listeners\SendEdiMailsListener;
+use App\Support\VkvpaSettings;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Override;
 use RuntimeException;
@@ -34,10 +37,12 @@ class AppServiceProvider extends ServiceProvider
         Model::preventLazyLoading(! $this->app->isProduction());
         Model::preventSilentlyDiscardingAttributes(! $this->app->isProduction());
 
+        Event::listen(EdiImported::class, SendEdiMailsListener::class);
+
         if ($this->app->isProduction()) {
-            foreach (['vkvpa.contact_mail', 'vkvpa.contact_name'] as $key) {
-                if (blank(Config::get($key))) {
-                    throw new RuntimeException("Required config '{$key}' is not configured for production.");
+            foreach ([VkvpaSettings::contactMail(), VkvpaSettings::contactName()] as $value) {
+                if (blank($value)) {
+                    throw new RuntimeException('Required vkvpa contact config is not set for production.');
                 }
             }
         }

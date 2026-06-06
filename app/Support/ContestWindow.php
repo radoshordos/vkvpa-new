@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace App\Support;
 
-use Illuminate\Support\Facades\Config;
-
 /**
  * Závodní časové okno (UTC) – QSO mimo se nezapočítávají.
  *
@@ -16,11 +14,11 @@ final class ContestWindow
 {
     public static function from(): string
     {
-        return Config::string('vkvpa.contest_window.from', '0800');
+        return VkvpaSettings::contestWindowFrom();
     }
 
     public static function to(): string
     {
-        return Config::string('vkvpa.contest_window.to', '1100');
+        return VkvpaSettings::contestWindowTo();
     }
 }

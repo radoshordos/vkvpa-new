@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\RankRoundJob;
 use App\Models\VkvpaKola;
 use App\Services\Scoring\ScoringService;
 use Illuminate\Http\RedirectResponse;
@@ -21,7 +22,7 @@ class VyhodnoceniController extends Controller
     /** Přepočítá pořadí v kole (vyhodnoceni.php). */
     public function vyhodnotit(VkvpaKola $kolo): RedirectResponse
     {
-        $this->scoring->rankRound($kolo->id);
+        RankRoundJob::dispatch($kolo->id);
 
         Log::info('admin.kolo.vyhodnotit', [
             'kolo_id' => $kolo->id,
@@ -36,7 +37,7 @@ class VyhodnoceniController extends Controller
     /** Uzavře kolo (uzavreni.php) – přepočítá pořadí a nastaví vyhodnoceno. */
     public function uzavrit(VkvpaKola $kolo): RedirectResponse
     {
-        $this->scoring->rankRound($kolo->id);
+        RankRoundJob::dispatch($kolo->id);
         $this->scoring->closeRound($kolo->id);
 
         Log::info('admin.kolo.uzavrit', [
