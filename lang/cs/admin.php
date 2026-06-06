@@ -5,12 +5,14 @@ declare(strict_types=1);
 return [
 
     // Navigace
+    'nav_dashboard' => 'dashboard / statistiky',
     'nav_rounds' => 'kola závodu',
     'nav_reports' => 'hlášení',
     'nav_logs' => 'deníky - upload',
     'nav_edi_debug' => 'EDI debug / kontrola bodů',
     'nav_categories' => 'správa kategorií, konfigurace',
     'nav_imports' => 'importy',
+    'nav_api_docs' => 'API dokumentace',
 
     // Login
     'login_title' => 'Přihlášení – VKV PA',

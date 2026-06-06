@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Edi;
 
 use App\Exceptions\EdiParseException;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Parser EDI deníku (formát REG1TEST). Čistá, testovatelná služba bez DB a výstupu.
@@ -33,6 +34,8 @@ final class EdiParser
             $converted = iconv('Windows-1250', 'UTF-8//TRANSLIT', $content);
             if ($converted !== false) {
                 $content = $converted;
+            } else {
+                Log::warning('EdiParser: iconv() failed to convert EDI content from Windows-1250 to UTF-8; output may be garbled.');
             }
         }
 

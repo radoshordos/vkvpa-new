@@ -101,11 +101,14 @@ class EdiController extends Controller
             abort(404, 'EDI soubor není pro tento deník k dispozici.');
         }
 
-        $filename = sprintf('%s-%d-%s.edi', $pcall !== '' ? $pcall : 'denik', $head->ID, $variant);
+        $base = $pcall !== '' ? $pcall : 'denik';
+        // Sanitize: keep only safe ASCII chars to prevent header injection.
+        $safe = preg_replace('/[^A-Za-z0-9\-]/', '_', $base) ?? 'denik';
+        $filename = sprintf('%s-%d-%s.edi', $safe, $head->ID, $variant);
 
         return response($content, 200, [
             'Content-Type' => 'text/plain; charset=utf-8',
-            'Content-Disposition' => 'inline; filename="'.$filename.'"',
+            'Content-Disposition' => "inline; filename=\"{$filename}\"; filename*=UTF-8''{$filename}",
         ]);
     }
 }

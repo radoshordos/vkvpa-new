@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Route;
  */
 
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');
 
 // Legacy přihlášení přes jednorázový kód (?kod=) – nyní bezpečně:
 Route::get('/login/token/{kod}', [AuthController::class, 'loginViaToken'])
