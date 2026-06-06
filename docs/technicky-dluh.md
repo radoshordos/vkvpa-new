@@ -32,32 +32,19 @@ Dluh je seřazen podle poměru dopad/náklad.
 
 ---
 
-## D1 – Duplikace mapové/vizualizační logiky (nově nejvýznamnější)
+## D1 – Duplikace mapové/vizualizační logiky ✅ vyřešeno
 
-**Kde:** `app/Http/Controllers/EdiVizualizaceController.php` (239 ř.) a
-`app/Http/Controllers/MapController.php` (175 ř.).
+`EdiVizualizaceController` a `MapController` měly **prakticky stejný kód**: dotaz
+`lines()` v závodním okně + dopočet lat/lon ze středu lokátoru, výpočet `dist`
+(haversine) a `azimut` (bearing) a agregaci velkých čtverců (metoda `squares()`
+byla v obou téměř znak po znaku totožná).
 
-Vizualizační stránka znovu implementuje **prakticky stejný kód**, který už má
-`MapController`:
-
-| Logika | MapController | EdiVizualizaceController |
-|--------|---------------|--------------------------|
-| dotaz `lines()` v závodním okně + dopočet lat/lon ze středu lokátoru | `points()` ř. 99–142 | `enrichedLines()` ř. 53–101 |
-| výpočet `dist` (haversine) a `azimut` (bearing) | ř. 127–128 | ř. 78–79 |
-| agregace velkých čtverců (4 znaky) s počtem QSO + střed | `squares()` ř. 149–174 | `squares()` ř. 104–128 |
-
-Metoda `squares()` je v obou souborech **téměř znak po znaku totožná**. Resolving
-souřadnic protistanice (lat/lon → fallback `Maidenhead::toLatLon` → skip + log) je
-zkopírovaný také.
-
-**Riziko:** stejný typ tichého rozdílu jako u starého P1 – oprava v jedné mapě se
-neprojeví ve druhé a testy to nechytí (mapy mají jen render-testy, vizualizace
-nemá test žádný – viz D3).
-
-**Náprava:** vyjmout sdílené jádro do služby, např.
-`app/Services/Edi/QsoGeometry.php` s metodami `enrichedQsos(Edihead, $home)` a
-`bigSquares(Edihead)` vracejícími typované value objekty / `Collection`. Oba
-controllery (i případné budoucí mapy) z ní jen čtou. Odhad: ~2 h.
+**Náprava (provedeno):** sdílené jádro vyjmuto do `app/Services/Edi/QsoGeometry.php`
+s metodami `enrichedQsos(Edihead, $home, $orderColumn)` a `bigSquares(Edihead)`
+vracejícími typované value objekty `EnrichedQso` a `BigSquareCount`. Oba controllery
+(i případné budoucí mapy) z ní jen čtou; grafové metody vizualizace pracují s value
+objekty. JSON kontrakt pro Leaflet/Chart.js zůstal beze změny. Pokryto testy
+`QsoGeometryTest`.
 
 ---
 
@@ -92,48 +79,30 @@ Sloupec `QSO-Points` se nikde nečte. Zbývající plnou deduplikaci řeší D1.
 
 ---
 
-## D3 – Vizualizace bez testů
+## D3 – Vizualizace bez testů ✅ vyřešeno
 
-**Kde:** `EdiVizualizaceController` (239 ř., **největší soubor v `app/`**) nemá
-žádný testovací soubor (`tests/Feature/EdiVizualizace*` neexistuje).
+`EdiVizualizaceController` (největší soubor v `app/`) neměl žádný test.
 
-Obsahuje netriviální čistou logiku, kterou se vyplatí pokrýt unit-testy: bucketing
-časové osy (`timeline()`, 15min intervaly 08:00–11:00), azimutová růžice
-(8 sektorů), histogram vzdáleností, agregace statistik. Tyhle metody jsou ideální
-kandidáti na rychlé, levné testy – a chytily by i bug z D2.
-
-**Náprava:** feature-test na render `/edi/{head}/vizualizace` + unit-testy na
-`timeline/azimuthRose/distHistogram` (nejlépe až budou v sdílené službě z D1).
-Odhad: ~1 h.
+**Náprava (provedeno):** přidán `tests/Feature/EdiVizualizaceTest` (render stránky
+`/edi/{head}/vizualizace` + obsah configu) a `tests/Feature/QsoGeometryTest`
+(výpočet bodů z lokátorů, vzdálenost/azimut, agregace velkých čtverců). Sada má
+nově 166 testů.
 
 ---
 
-## P1 – Duplikace EDI import pipeline (z poloviny vyřešeno)
+## P1 – Duplikace EDI import pipeline ✅ vyřešeno
 
-**Kde:** `app/Actions/ImportEdiAction.php` vs.
-`app/Http/Controllers/Admin/ImportController.php::importFile()` (ř. 95–161).
+Jádro příjmu deníku (validace shody `TDate` s QSO, `koloForTDate`, dedup, resolve
+kategorie, `import` + `scoreEdi`, `VkvpaData::create`) bylo dříve zkopírované do
+`ImportEdiAction` (jednotlivý upload) i `ImportController::importFile()` (hromadný).
 
-**Pokrok od minula:** jádro příjmu deníku bylo vyjmuto do `ImportEdiAction`
-a **jednotlivý** upload (`EdiController::store()`) ho už používá (ř. 56). 👍
-
-**Co zůstává:** **hromadný** import (`ImportController::importFile()`)
-`ImportEdiAction` **nevyužívá** – má vlastní kopii celého toku:
-
-1. validace shody `TDate` s daty QSO (ř. 106–112) ↔ `ImportEdiAction::assertTDateMatchesQsos()`,
-2. `koloForTDate()` (ř. 114),
-3. kontrola duplicity (ř. 116),
-4. `CategoryResolver::resolve()` + odchyt `UnknownBandException` (ř. 120–124),
-5. `import()` + `scoreEdi()` (ř. 126–131),
-6. **stejný `VkvpaData::create([...])` payload** (ř. 133–150).
-
-Drobná nekonzistence: `ImportController` testuje duplicitu přes
-`->where('EDI', true)`, zatímco `ImportEdiAction` přes scope `->hasEdi()`
-(stejný dotaz, dvě formy).
-
-**Náprava:** `ImportEdiAction::execute()` zobecnit tak, aby místo vyhazování
-výjimek mohl vracet i strukturovaný výsledek (ok | skip | error), a hromadný import
-ho jen volal ve smyčce a mapoval na řádek souhrnu. Payload `VkvpaData::create`
-existuje pak jen jednou. Odhad: ~1–1,5 h.
+**Náprava (provedeno):** `ImportController::importFile()` už tok neduplikuje –
+deleguje na `ImportEdiAction` a jen mapuje výsledek/výjimku na řádek souhrnu
+importu. Payload `VkvpaData::create` existuje na jediném místě. `execute()` dostal
+parametr `notify` (default `true`); hromadný import ho volá s `notify: false`, takže
+se při backfillu **nerozesílají potvrzovací e-maily** účastníkům (zachované původní
+chování). Z controlleru odstraněny nepotřebné závislosti (`EdiImportService`,
+`ScoringService`, `CategoryResolver`).
 
 ---
 
@@ -219,7 +188,10 @@ plochu rizika dál zužuje.
 
 | Bod | Stav |
 |-----|------|
+| D1 – duplikace map/vizualizace | ✅ sdílená služba `QsoGeometry` + value objekty |
 | D2 – výpočet bodů sjednocen + bug `preg_match` | ✅ všude `Maidenhead::qsoPoints`, fallback/bug odstraněn |
+| D3 – testy vizualizace | ✅ `EdiVizualizaceTest` + `QsoGeometryTest` (166 testů) |
+| P1 – hromadný import přes `ImportEdiAction` | ✅ delegace + `notify: false` (bez mailů) |
 | P6 (zbytek) – `Mode-code` leak | ✅ accessor `Ediline::modeCode()` |
 | Drobnost – duplikovaný dotaz „průběžné" | ✅ scope `VkvpaData::prubezne()` |
 | Drobnost – hardcoded import limity | ✅ přesunuto do `config/vkvpa.php` |
@@ -232,12 +204,13 @@ plochu rizika dál zužuje.
 |---|------|--------|-------|------|
 | 1 | D2 – sjednotit výpočet bodů + bug `preg_match` | triviální | **korektnost** | ✅ hotovo |
 | 2 | P6 (zbytek) + drobnosti (dotaz, limity do configu) | nízký | čistota | ✅ hotovo |
-| 3 | D1 – vyjmout sdílenou `QsoGeometry` z Map/Vizualizace controllerů | střední | **odstranění duplikace** | otevřeno |
-| 4 | D3 – testy pro vizualizaci | nízký | regrese | otevřeno |
-| 5 | P1 – hromadný import přes `ImportEdiAction` | střední | dokončení dedup | otevřeno |
+| 3 | D1 – sdílená `QsoGeometry` z Map/Vizualizace controllerů | střední | **odstranění duplikace** | ✅ hotovo |
+| 4 | D3 – testy pro vizualizaci | nízký | regrese | ✅ hotovo |
+| 5 | P1 – hromadný import přes `ImportEdiAction` | střední | dokončení dedup | ✅ hotovo |
 | 6 | P3 – konsolidace migrací (jen pokud není v produkci) | střední | údržba schématu | otevřeno |
 
-Rychlé výhry (1–2) jsou hotové. Zbývají tři strukturální body: **D1** (sdílená
-geometrická služba) a **P1** (dokončení `ImportEdiAction`) odstraní poslední dvě
-velká místa kopírovaného kódu; **D3** je levné dotestování vizualizace, nejlépe až
-po D1. P3 je volitelné a jen mimo produkci.
+**Veškerý strukturální dluh z tohoto auditu je vyřešen.** Poslední dvě velká místa
+kopírovaného kódu (mapy/vizualizace a import) jsou odstraněna a pokryta testy.
+Otevřené zůstává jen volitelné **P3** (konsolidace migrací) – a to výhradně tehdy,
+pokud schéma ještě neběží v produkci. Volitelný kosmetický krok: nahradit `mode`
+(`int` 1/2) enumem SSB/CW.
