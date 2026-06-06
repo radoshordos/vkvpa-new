@@ -26,6 +26,15 @@ class AuthTest extends TestCase
         ]);
     }
 
+    /** Uloží token jako SHA-256 hash (stejně jako SendEdiMailsListener). */
+    private function createToken(string $plaintext, mixed $time = null): void
+    {
+        VkvpaPrihlaseni::create([
+            'time' => $time ?? now(),
+            'kod' => hash('sha256', $plaintext),
+        ]);
+    }
+
     public function test_login_form_renders(): void
     {
         $this->get('/login')->assertOk()->assertSeeHtml('šup tam');
@@ -76,7 +85,7 @@ class AuthTest extends TestCase
     public function test_valid_token_logs_in_admin(): void
     {
         $admin = $this->admin();
-        VkvpaPrihlaseni::create(['time' => now(), 'kod' => 'abc123']);
+        $this->createToken('abc123');
 
         $this->get(route('login.token', ['kod' => 'abc123']))
             ->assertRedirect('/');
@@ -100,7 +109,7 @@ class AuthTest extends TestCase
     public function test_expired_token_is_cleaned_and_rejected(): void
     {
         $this->admin();
-        VkvpaPrihlaseni::create(['time' => now()->subDays(6), 'kod' => 'stary123']);
+        $this->createToken('stary123', now()->subDays(6));
 
         $this->get(route('login.token', ['kod' => 'stary123']))
             ->assertRedirect(route('login'))
@@ -113,7 +122,7 @@ class AuthTest extends TestCase
     public function test_token_with_confirm_redirects_to_record(): void
     {
         $admin = $this->admin();
-        VkvpaPrihlaseni::create(['time' => now(), 'kod' => 'xyz789']);
+        $this->createToken('xyz789');
 
         $this->get(route('login.token', ['kod' => 'xyz789', 'confirm' => 42]))
             ->assertRedirect(route('hlaseni.index', ['id' => 42]));

@@ -50,6 +50,10 @@ class AppServiceProvider extends ServiceProvider
                     throw new RuntimeException('Required vkvpa contact config is not set for production.');
                 }
             }
+
+            if (! config('session.secure')) {
+                throw new RuntimeException('SESSION_SECURE_COOKIE must be true in production (HTTPS required).');
+            }
         }
     }
 

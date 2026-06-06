@@ -34,7 +34,7 @@ final class SendEdiMailsListener implements ShouldQueue
         $contactMail = VkvpaSettings::contactMail();
         if ($contactMail !== '') {
             $kod = Str::password(32, letters: true, numbers: true, symbols: false);
-            VkvpaPrihlaseni::create(['kod' => $kod, 'time' => now()]);
+            VkvpaPrihlaseni::create(['kod' => hash('sha256', $kod), 'time' => now()]);
 
             Mail::to($contactMail)->queue(
                 new HlaseniProVyhodnocovatele($data, $koloNazev, $kategorieNazev, $kod),
