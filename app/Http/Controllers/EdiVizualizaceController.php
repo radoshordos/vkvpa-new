@@ -31,6 +31,7 @@ class EdiVizualizaceController extends Controller
                 'lat' => $l['lat'], 'lon' => $l['lon'],
                 'call' => $l['call'], 'wwl' => $l['wwl'],
                 'points' => $l['points'], 'dist' => $l['dist'], 'azimut' => $l['azimut'],
+                'mode' => $l['mode'],
             ]),
             'squares' => $this->squares($head),
             'timeline' => $this->timeline($enriched),
@@ -46,7 +47,7 @@ class EdiVizualizaceController extends Controller
         return $head->lines()
             ->whereBetween('Time', [ContestWindow::from(), ContestWindow::to()])
             ->orderBy('Time')
-            ->get(['lon', 'lat', 'CallSign', 'Received-WWL', 'QSO-Points', 'Time'])
+            ->get(['lon', 'lat', 'CallSign', 'Received-WWL', 'QSO-Points', 'Time', 'Mode-code'])
             ->map(function (Ediline $l) use ($home, $head, $homeSq): ?array {
                 $lat = $l->lat;
                 $lon = $l->lon;
@@ -83,6 +84,7 @@ class EdiVizualizaceController extends Controller
                     'dist' => $dist,
                     'azimut' => $azimut,
                     'timeMinutes' => $timeMinutes,
+                    'mode' => (int) $l->{'Mode-code'}, // 1=SSB, 2=CW
                 ];
             })
             ->filter()

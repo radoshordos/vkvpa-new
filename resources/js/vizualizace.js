@@ -32,27 +32,54 @@ const spendlikyLayer = L.layerGroup();
 // Vrstva: lokátory (velké čtverce)
 const lokatoryLayer = L.layerGroup();
 
+// Barvy dle druhu provozu: 1=SSB (modrá), 2=CW (oranžová), ostatní (šedá)
+function modeColor(mode) {
+    if (mode === 1) return { stroke: '#1d4ed8', fill: '#60a5fa' }; // SSB – modrá
+    if (mode === 2) return { stroke: '#b45309', fill: '#fbbf24' }; // CW  – oranžová
+    return { stroke: '#4b5563', fill: '#9ca3af' };                 // neznámý
+}
+function modeLabel(mode) {
+    if (mode === 1) return 'SSB';
+    if (mode === 2) return 'CW';
+    return '?';
+}
+
 cfg.points.forEach(function (p) {
     bounds.push([p.lat, p.lon]);
+    const mc = modeColor(p.mode);
 
-    // ježek: čára + bod
+    // ježek: čára + barevný bod dle modu
     if (cfg.home) {
         L.polyline([[cfg.home.lat, cfg.home.lon], [p.lat, p.lon]], {
-            color: '#22c55e', weight: 1.2, opacity: 0.55,
+            color: mc.fill, weight: 1.2, opacity: 0.55,
         }).addTo(jezekLayer);
     }
-    L.circleMarker([p.lat, p.lon], { radius: 4, color: '#16a34a', fillOpacity: 0.85 })
-        .addTo(jezekLayer)
-        .bindPopup(`<strong>${p.call}</strong><br>${p.wwl}<br>${p.points} b.`);
+    L.circleMarker([p.lat, p.lon], {
+        radius: 5, color: mc.stroke, fillColor: mc.fill, fillOpacity: 0.9, weight: 1.5,
+    }).addTo(jezekLayer)
+        .bindPopup(`<strong>${p.call}</strong> <span style="font-size:.8em;opacity:.7">${modeLabel(p.mode)}</span><br>${p.wwl}<br>${p.points} b.`);
 
-    // špendlíky
-    const popupSpend = `<strong>${p.call}</strong><br>${p.wwl}`
+    // špendlíky – taktéž rozlišené barevně
+    const popupSpend = `<strong>${p.call}</strong> <span style="font-size:.8em;opacity:.7">${modeLabel(p.mode)}</span><br>${p.wwl}`
         + (p.dist !== null ? `<br>${p.dist} km` : '')
         + (p.azimut !== null ? `<br>azimut ${p.azimut}°` : '');
-    L.circleMarker([p.lat, p.lon], { radius: 5, color: '#ea580c', fillColor: '#f97316', fillOpacity: 0.85 })
-        .addTo(spendlikyLayer)
+    L.circleMarker([p.lat, p.lon], {
+        radius: 5, color: mc.stroke, fillColor: mc.fill, fillOpacity: 0.9, weight: 1.5,
+    }).addTo(spendlikyLayer)
         .bindPopup(popupSpend);
 });
+
+// Legenda módů v ježek/špendlíky vrstvě
+const modeLegend = L.control({ position: 'bottomright' });
+modeLegend.onAdd = function () {
+    const div = L.DomUtil.create('div');
+    div.style.cssText = 'background:rgba(255,255,255,.9);padding:6px 10px;border-radius:6px;font-size:12px;line-height:1.7;box-shadow:0 1px 4px rgba(0,0,0,.2)';
+    div.innerHTML = '<strong style="display:block;margin-bottom:2px">Druh provozu</strong>'
+        + '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#60a5fa;margin-right:5px;vertical-align:middle"></span>SSB<br>'
+        + '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#fbbf24;margin-right:5px;vertical-align:middle"></span>CW';
+    return div;
+};
+modeLegend.addTo(map);
 
 cfg.squares.forEach(function (s) {
     bounds.push([s.lat, s.lon]);
