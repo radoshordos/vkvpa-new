@@ -13,6 +13,7 @@ use App\Http\Controllers\EdiController;
 use App\Http\Controllers\HlaseniController;
 use App\Http\Controllers\KolaController;
 use App\Http\Controllers\MailImageController;
+use App\Http\Controllers\EdiVizualizaceController;
 use App\Http\Controllers\MapController;
 use App\Http\Controllers\VysledkyController;
 use Illuminate\Support\Facades\Route;
@@ -68,6 +69,9 @@ Route::get('/edi/{head}/soubor-redukovany', [EdiController::class, 'zobrazitRedu
 Route::get('/edi/{head}/mapa/jezek', [MapController::class, 'jezek'])->name('edi.mapa.jezek');
 Route::get('/edi/{head}/mapa/spendliky', [MapController::class, 'spendliky'])->name('edi.mapa.spendliky');
 Route::get('/edi/{head}/mapa/lokatory', [MapController::class, 'lokatory'])->name('edi.mapa.lokatory');
+
+// Technologické demo: všechny vizualizace na jedné stránce (Leaflet + Chart.js).
+Route::get('/edi/{head}/vizualizace', [EdiVizualizaceController::class, 'show'])->name('edi.vizualizace');
 
 // --- Administrace (chráněno middleware z Fáze 4) ---
 Route::middleware('admin')->group(function (): void {
