@@ -5,12 +5,14 @@ declare(strict_types=1);
 return [
 
     // Navigation
+    'nav_dashboard' => 'dashboard / statistics',
     'nav_rounds' => 'contest rounds',
     'nav_reports' => 'reports',
     'nav_logs' => 'logs – upload',
     'nav_edi_debug' => 'EDI debug / score check',
     'nav_categories' => 'category management, config',
     'nav_imports' => 'bulk import',
+    'nav_api_docs' => 'API documentation',
 
     // Login
     'login_title' => 'Login – VKV PA',
