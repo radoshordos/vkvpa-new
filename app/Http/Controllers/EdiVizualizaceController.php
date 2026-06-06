@@ -157,11 +157,12 @@ class EdiVizualizaceController extends Controller
      * 8 světových stran (45° sektorů) po směru hodinových ručiček od severu → počty QSO.
      *
      * @param  Collection<int, EnrichedLine>  $lines
-     * @return array{labels: list<string>, data: list<int>}
+     * @return array{labels: array<string>, data: array<int, int>}
      */
     private function azimuthRose(Collection $lines): array
     {
         $labels = ['S', 'SV', 'V', 'JV', 'J', 'JZ', 'Z', 'SZ'];
+        /** @var array<int, int> $counts */
         $counts = array_fill(0, 8, 0);
 
         foreach ($lines as $l) {
@@ -211,14 +212,28 @@ class EdiVizualizaceController extends Controller
      */
     private function stats(Collection $lines): array
     {
-        /** @var Collection<int, int> $dists */
-        $dists = $lines->pluck('dist')->filter()->map(fn (mixed $v): int => (int) $v)->values();
+        // Iterate directly so PHPStan can track EnrichedLine field types without pluck().
+        $dists = [];
+
+        foreach ($lines as $l) {
+            if ($l['dist'] !== null) {
+                $dists[] = $l['dist'];
+            }
+        }
+
+        $maxDist = array_reduce($dists, fn (int $carry, int $d): int => max($carry, $d), 0);
+        $avgDist = count($dists) > 0 ? (int) round(array_sum($dists) / count($dists)) : 0;
+
+        $uniqueSq = $lines
+            ->map(fn (array $l): string => strtoupper(substr($l['wwl'], 0, 4)))
+            ->unique()
+            ->count();
 
         return [
             'pocet' => $lines->count(),
-            'maxDist' => (int) ($dists->max() ?? 0),
-            'avgDist' => $dists->isNotEmpty() ? (int) round((float) $dists->average()) : 0,
-            'uniqueSq' => $lines->pluck('wwl')->map(fn (mixed $w): string => strtoupper(substr((string) $w, 0, 4)))->unique()->count(),
+            'maxDist' => $maxDist,
+            'avgDist' => $avgDist,
+            'uniqueSq' => $uniqueSq,
         ];
     }
 }
