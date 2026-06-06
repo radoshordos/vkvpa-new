@@ -6,11 +6,10 @@ namespace App\Http\Controllers;
 
 use App\Enums\MapMode;
 use App\Models\Edihead;
-use App\Models\Ediline;
-use App\Support\ContestWindow;
+use App\Services\Edi\EnrichedQso;
+use App\Services\Edi\QsoGeometry;
 use App\Support\Maidenhead;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 /**
@@ -20,12 +19,15 @@ use Illuminate\View\View;
  *   N – {@see spendliky()} špendlíky protistanic; popup = značka, vzdálenost, azimut
  *   S – {@see lokatory()}  velké čtverce (lokátory) s počtem protistanic v každém
  *
- * Všechny tři kreslí jen QSO uvnitř závodního okna 08:00–11:00 UTC.
+ * Všechny tři kreslí jen QSO uvnitř závodního okna 08:00–11:00 UTC. Geometrii
+ * (souřadnice, vzdálenost, azimut, čtverce) počítá sdílená {@see QsoGeometry}.
  *
  * @api  Endpointy budou popsány v OpenAPI/Swagger – komentáře drží strukturu.
  */
 class MapController extends Controller
 {
+    public function __construct(private readonly QsoGeometry $geometry) {}
+
     /**
      * Mapa „M" – ježek.
      *
@@ -66,7 +68,7 @@ class MapController extends Controller
      */
     private function mapView(Edihead $head, MapMode $mode): View
     {
-        $home = $this->home($head);
+        $home = Maidenhead::toLatLon((string) $head->PWWLo);
         $withPoints = $mode !== MapMode::Lokatory;
 
         return view('pages.map', [
@@ -76,18 +78,8 @@ class MapController extends Controller
             'homeLoc' => (string) $head->PWWLo,
             'home' => $home,
             'points' => $withPoints ? $this->points($head, $home) : collect(),
-            'squares' => $withPoints ? collect() : $this->squares($head),
+            'squares' => $withPoints ? collect() : $this->geometry->bigSquares($head),
         ]);
-    }
-
-    /**
-     * Souřadnice domácího stanoviště (střed lokátoru z hlavičky), nebo null.
-     *
-     * @return array{lat: float, lon: float}|null
-     */
-    private function home(Edihead $head): ?array
-    {
-        return Maidenhead::toLatLon((string) $head->PWWLo);
     }
 
     /**
@@ -98,84 +90,15 @@ class MapController extends Controller
      */
     private function points(Edihead $head, ?array $home): Collection
     {
-        $homeSq = strtoupper(substr((string) $head->PWWLo, 0, 4));
-
-        return $head->lines()
-            ->whereBetween('Time', [ContestWindow::from(), ContestWindow::to()])
-            ->orderBy('Received-WWL')
-            ->get(['lon', 'lat', 'CallSign', 'Received-WWL'])
-            ->map(function (Ediline $l) use ($home, $head, $homeSq): ?array {
-                $lat = $l->lat;
-                $lon = $l->lon;
-                // Když chybí lon/lat, dopočítej ze středu lokátoru.
-                $wwl = $l->receivedWwl();
-                if (($lat === null || $lon === null) && $wwl !== '') {
-                    $c = Maidenhead::toLatLon($wwl);
-                    $lat = $c['lat'] ?? null;
-                    $lon = $c['lon'] ?? null;
-                }
-                if ($lat === null || $lon === null) {
-                    Log::debug('map.points.skip', [
-                        'edihead_id' => $head->ID,
-                        'call' => (string) $l->CallSign,
-                        'wwl' => $wwl,
-                    ]);
-
-                    return null;
-                }
-                $lat = (float) $lat;
-                $lon = (float) $lon;
-
-                $dist = $home === null ? null : (int) round(Maidenhead::distanceKm($home['lat'], $home['lon'], $lat, $lon));
-                $azimut = $home === null ? null : (int) round(Maidenhead::bearingDeg($home['lat'], $home['lon'], $lat, $lon));
-
-                // Body za spojení přepočítáme z lokátorů (shodně se ScoringService);
-                // sloupec QSO-Points z deníku se ignoruje.
-                $workedSq = strtoupper(substr(trim($wwl), 0, 4));
-
-                return [
-                    'lat' => $lat,
-                    'lon' => $lon,
-                    'call' => (string) $l->CallSign,
-                    'wwl' => $wwl,
-                    'points' => Maidenhead::qsoPoints($homeSq, $workedSq),
-                    'dist' => $dist,
-                    'azimut' => $azimut,
-                ];
-            })
-            ->filter()
-            ->values();
-    }
-
-    /**
-     * Agregace protistanic do velkých čtverců (4 znaky lokátoru) s počtem QSO.
-     *
-     * @return Collection<int, array{square: string, count: int, lat: float, lon: float}>
-     */
-    private function squares(Edihead $head): Collection
-    {
-        $counts = [];
-        foreach ($head->lines()->whereBetween('Time', [ContestWindow::from(), ContestWindow::to()])->get(['Received-WWL']) as $l) {
-            $sq = strtoupper(substr(trim($l->receivedWwl()), 0, 4));
-            if (preg_match('/^[A-R]{2}\d{2}$/', $sq)) {
-                $counts[$sq] = ($counts[$sq] ?? 0) + 1;
-            }
-        }
-
-        $out = [];
-        foreach ($counts as $sq => $count) {
-            $center = Maidenhead::bigSquareCenter($sq);
-            if ($center === null) {
-                Log::debug('map.squares.skip', [
-                    'edihead_id' => $head->ID,
-                    'square' => $sq,
-                ]);
-
-                continue;
-            }
-            $out[] = ['square' => (string) $sq, 'count' => $count, 'lat' => $center['lat'], 'lon' => $center['lon']];
-        }
-
-        return collect($out);
+        return $this->geometry->enrichedQsos($head, $home, 'Received-WWL')
+            ->map(fn (EnrichedQso $q): array => [
+                'lat' => $q->lat,
+                'lon' => $q->lon,
+                'call' => $q->call,
+                'wwl' => $q->wwl,
+                'points' => $q->points,
+                'dist' => $q->dist,
+                'azimut' => $q->azimut,
+            ]);
     }
 }
