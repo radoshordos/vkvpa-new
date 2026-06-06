@@ -12,6 +12,11 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
+/**
+ * @phpstan-type EnrichedLine array{lat: float, lon: float, call: string, wwl: string, points: int, dist: int|null, azimut: int|null, timeMinutes: int, mode: int}
+ * @phpstan-type MapPoint array{lat: float, lon: float, call: string, wwl: string, points: int, dist: int|null, azimut: int|null, mode: int}
+ * @phpstan-type Square array{square: string, count: int, lat: float, lon: float}
+ */
 class EdiVizualizaceController extends Controller
 {
     public function show(Edihead $head): View
@@ -27,7 +32,7 @@ class EdiVizualizaceController extends Controller
             'pcall' => (string) $head->PCall,
             'homeLoc' => (string) $head->PWWLo,
             'home' => $home,
-            'mapPoints' => $enriched->map(fn (array $l) => [
+            'mapPoints' => $enriched->map(fn (array $l): array => [
                 'lat' => $l['lat'], 'lon' => $l['lon'],
                 'call' => $l['call'], 'wwl' => $l['wwl'],
                 'points' => $l['points'], 'dist' => $l['dist'], 'azimut' => $l['azimut'],
@@ -41,7 +46,10 @@ class EdiVizualizaceController extends Controller
         ]);
     }
 
-    /** @return Collection<int, array{lat: float, lon: float, call: string, wwl: string, points: int, dist: int|null, azimut: int|null, timeMinutes: int}> */
+    /**
+     * @param  array{lat: float, lon: float}|null  $home
+     * @return Collection<int, EnrichedLine>
+     */
     private function enrichedLines(Edihead $head, ?array $home, string $homeSq): Collection
     {
         return $head->lines()
@@ -72,7 +80,8 @@ class EdiVizualizaceController extends Controller
                 $time = (string) $l->Time;
                 $timeMinutes = (int) substr($time, 0, 2) * 60 + (int) substr($time, 2, 2);
                 $workedSq = strtoupper(substr(trim($wwl), 0, 4));
-                $points = preg_match('/^[A-R]{2}\d{2}$/', $homeSq) && preg_match('/^[A-R]{2}\d{2}$/', $workedSq)
+                $points = preg_match('/^[A-R]{2}\d{2}$/', $homeSq) !== false
+                    && preg_match('/^[A-R]{2}\d{2}$/', $workedSq) !== false
                     ? Maidenhead::qsoPoints($homeSq, $workedSq)
                     : $l->qsoPoints();
 
@@ -91,7 +100,7 @@ class EdiVizualizaceController extends Controller
             ->values();
     }
 
-    /** @return Collection<int, array{square: string, count: int, lat: float, lon: float}> */
+    /** @return Collection<int, Square> */
     private function squares(Edihead $head): Collection
     {
         $counts = [];
@@ -118,7 +127,12 @@ class EdiVizualizaceController extends Controller
         return collect($out);
     }
 
-    /** 15-minutové intervaly 08:00–11:00 → počty QSO. */
+    /**
+     * 15-minutové intervaly 08:00–11:00 → počty QSO.
+     *
+     * @param  Collection<int, EnrichedLine>  $lines
+     * @return array<string, int>
+     */
     private function timeline(Collection $lines): array
     {
         $buckets = [];
@@ -139,7 +153,12 @@ class EdiVizualizaceController extends Controller
         return $buckets;
     }
 
-    /** 8 světových stran (45° sektorů) po směru hodinových ručiček od severu → počty QSO. */
+    /**
+     * 8 světových stran (45° sektorů) po směru hodinových ručiček od severu → počty QSO.
+     *
+     * @param  Collection<int, EnrichedLine>  $lines
+     * @return array{labels: list<string>, data: list<int>}
+     */
     private function azimuthRose(Collection $lines): array
     {
         $labels = ['S', 'SV', 'V', 'JV', 'J', 'JZ', 'Z', 'SZ'];
@@ -156,7 +175,12 @@ class EdiVizualizaceController extends Controller
         return ['labels' => $labels, 'data' => $counts];
     }
 
-    /** Histogram vzdáleností v km → počty QSO. */
+    /**
+     * Histogram vzdáleností v km → počty QSO.
+     *
+     * @param  Collection<int, EnrichedLine>  $lines
+     * @return array<string, int>
+     */
     private function distHistogram(Collection $lines): array
     {
         $buckets = ['0–50' => 0, '50–100' => 0, '100–200' => 0, '200–400' => 0, '400–700' => 0, '700+' => 0];
@@ -181,15 +205,20 @@ class EdiVizualizaceController extends Controller
         return $buckets;
     }
 
+    /**
+     * @param  Collection<int, EnrichedLine>  $lines
+     * @return array{pocet: int, maxDist: int, avgDist: int, uniqueSq: int}
+     */
     private function stats(Collection $lines): array
     {
-        $dists = $lines->pluck('dist')->filter()->values();
+        /** @var Collection<int, int> $dists */
+        $dists = $lines->pluck('dist')->filter()->map(fn (mixed $v): int => (int) $v)->values();
 
         return [
             'pocet' => $lines->count(),
-            'maxDist' => $dists->max() ?? 0,
-            'avgDist' => $dists->isNotEmpty() ? (int) round($dists->average()) : 0,
-            'uniqueSq' => $lines->pluck('wwl')->map(fn (string $w) => strtoupper(substr($w, 0, 4)))->unique()->count(),
+            'maxDist' => (int) ($dists->max() ?? 0),
+            'avgDist' => $dists->isNotEmpty() ? (int) round((float) $dists->average()) : 0,
+            'uniqueSq' => $lines->pluck('wwl')->map(fn (mixed $w): string => strtoupper(substr((string) $w, 0, 4)))->unique()->count(),
         ];
     }
 }
