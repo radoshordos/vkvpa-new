@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions;
 
+use App\Events\EdiImported;
 use App\Exceptions\DuplicateEdiException;
 use App\Exceptions\TDateMismatchException;
 use App\Exceptions\UnknownBandException;
@@ -56,7 +57,7 @@ final readonly class ImportEdiAction
         $head = $this->importer->import($log);
         $score = $this->scoring->scoreEdi($head);
 
-        return VkvpaData::create([
+        $data = VkvpaData::create([
             'id_kola' => $idKola,
             'id_kategorie' => $idKategorie,
             'znacka' => $pcall,
@@ -74,6 +75,10 @@ final readonly class ImportEdiAction
             'EDI_ID' => $head->ID,
             'schvaleno' => false,
         ]);
+
+        EdiImported::dispatch($data);
+
+        return $data;
     }
 
     /**

@@ -8,8 +8,8 @@ use App\Models\VkvpaData;
 use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
 use App\Services\Scoring\ScoringService;
+use App\Support\VkvpaSettings;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Config;
 use Illuminate\View\View;
 
 /**
@@ -33,7 +33,7 @@ class VysledkyController extends Controller
         // (meruňkové) záznamy, aby je mohl tlačítkem „P" převzít.
         $jenPrevzate = ! (bool) ($request->user()?->is_admin);
 
-        $maxRows = Config::integer('vkvpa.listina_max_rows', 1000);
+        $maxRows = VkvpaSettings::listaMaxRows();
 
         $radky = $kolo
             ? VkvpaData::query()

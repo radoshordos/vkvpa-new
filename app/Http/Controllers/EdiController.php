@@ -12,10 +12,10 @@ use App\Exceptions\UnknownBandException;
 use App\Models\Edihead;
 use App\Services\Edi\EdiParser;
 use App\Services\Edi\EdiReducer;
+use App\Support\VkvpaSettings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Config;
 use Illuminate\View\View;
 
 /**
@@ -39,7 +39,7 @@ class EdiController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'upload' => ['required', 'file', 'max:'.Config::integer('vkvpa.edi_max_size_kb'), 'extensions:edi,txt'],
+            'upload' => ['required', 'file', 'max:'.VkvpaSettings::ediMaxSizeKb(), 'extensions:edi,txt'],
         ]);
 
         $content = (string) file_get_contents($request->file('upload')->getRealPath());

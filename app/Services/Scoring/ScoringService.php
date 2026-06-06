@@ -10,10 +10,10 @@ use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
 use App\Support\ContestWindow;
 use App\Support\Maidenhead;
+use App\Support\VkvpaSettings;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schedule;
 
@@ -159,7 +159,7 @@ final class ScoringService
         // v {@see self::rankRound()} přes forgetYearlyCache().
         return Cache::flexible(
             $this->yearlyCacheKey($year, $qrpOnly),
-            [Config::integer('vkvpa.yearly_cache_fresh', 300), Config::integer('vkvpa.yearly_cache_stale', 1800)],
+            [VkvpaSettings::yearlyCacheFresh(), VkvpaSettings::yearlyCacheStale()],
             fn (): Collection => $this->computeYearlyResults($year, $qrpOnly),
         );
     }
@@ -177,7 +177,7 @@ final class ScoringService
             ->selectRaw('vkvpa_data.id_kategorie as kategorie_id, vkvpa_data.znacka')
             ->selectRaw(
                 'SUM(CASE WHEN vkvpa_data.EDI_ID = 0 AND vkvpa_data.id_kola >= ? THEN 0 ELSE vkvpa_data.body END) as celkem',
-                [Config::integer('vkvpa.non_edi_nullify_from_kolo', 91)],
+                [VkvpaSettings::nonEdiNullifyFromKolo()],
             )
             ->groupBy('vkvpa_data.id_kategorie', 'vkvpa_data.znacka')
             ->orderByDesc('celkem');

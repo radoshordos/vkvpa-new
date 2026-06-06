@@ -5,11 +5,10 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\RankRoundJob;
 use App\Models\VkvpaData;
-use App\Services\Scoring\ScoringService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -31,8 +30,6 @@ use Illuminate\Support\Facades\Log;
  */
 class ZaznamController extends Controller
 {
-    public function __construct(private readonly ScoringService $scoring) {}
-
     /**
      * Převezme záznam – tlačítko „P" ve výsledkové listině.
      *
@@ -48,10 +45,8 @@ class ZaznamController extends Controller
         $idKola = $zaznam->id_kola;
         $znacka = $zaznam->znacka;
 
-        DB::transaction(function () use ($zaznam, $idKola): void {
-            $zaznam->update(['schvaleno' => true]);
-            $this->scoring->rankRound($idKola);
-        });
+        $zaznam->update(['schvaleno' => true]);
+        RankRoundJob::dispatch($idKola);
 
         Log::info('admin.zaznam.prevzit', [
             'zaznam_id' => $zaznam->id,
@@ -81,10 +76,8 @@ class ZaznamController extends Controller
         $idKola = $zaznam->id_kola;
         $znacka = $zaznam->znacka;
 
-        DB::transaction(function () use ($zaznam, $idKola): void {
-            $zaznam->delete();
-            $this->scoring->rankRound($idKola);
-        });
+        $zaznam->delete();
+        RankRoundJob::dispatch($idKola);
 
         Log::info('admin.zaznam.smazat', [
             'zaznam_id' => $zaznam->id,

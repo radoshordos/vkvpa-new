@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Edi;
 
 use App\Exceptions\UnknownBandException;
+use App\Support\VkvpaSettings;
 
 /**
  * Určení kategorie závodu z hlavičky EDI deníku.
@@ -136,11 +137,9 @@ final class CategoryResolver
     private function isDx(string $pcall): bool
     {
         $p = strtoupper(trim($pcall));
-        $raw = config('vkvpa.domestic_prefixes', ['OK', 'OL']);
-        $prefixes = is_array($raw) ? $raw : ['OK', 'OL'];
 
-        foreach ($prefixes as $prefix) {
-            if (is_string($prefix) && str_starts_with($p, strtoupper($prefix))) {
+        foreach (VkvpaSettings::domesticPrefixes() as $prefix) {
+            if (str_starts_with($p, strtoupper($prefix))) {
                 return false;
             }
         }
