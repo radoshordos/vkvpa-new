@@ -4,6 +4,38 @@ declare(strict_types=1);
 
 return [
 
+    'home' => [
+        'title'               => 'VKV Provozní aktiv',
+        'heading'             => 'VKV Provozní aktiv',
+        'subtitle'            => 'Elektronické hlášení výsledků závodů VKV PA',
+        'state_upcoming'      => 'Nadcházející kolo',
+        'state_active'        => 'Aktuální kolo – přijímáme hlášení',
+        'state_deadline'      => 'Probíhá příjem hlášení',
+        'state_evaluating'    => 'Zpracování výsledků',
+        'state_evaluated'     => 'Výsledky jsou k dispozici',
+        'contest_date'        => 'Datum závodu',
+        'deadline'            => 'Uzávěrka',
+        'evaluated_at'        => 'Vyhodnoceno',
+        'evaluating_note'     => 'Výsledky jsou zpracovávány – tabulka se automaticky obnovuje.',
+        'countdown_to_start'  => 'do začátku závodu',
+        'countdown_to_deadline' => 'do uzávěrky hlášení',
+        'btn_submit'          => 'Odeslat deník',
+        'btn_interim'         => 'Průběžné výsledky',
+        'btn_results'         => 'Výsledková listina',
+        'live_heading'        => 'Průběžné výsledky',
+        'live_refresh_in'     => 'Aktualizace za',
+        'live_no_entries'     => 'Zatím nebyla přijata žádná hlášení.',
+        'quick_links'         => 'Sekce',
+        'ql_submit'           => 'Odeslat deník',
+        'ql_submit_desc'      => 'Nahrát EDI soubor',
+        'ql_interim'          => 'Průběžné výsledky',
+        'ql_interim_desc'     => 'Aktuální pořadí v kole',
+        'ql_results'          => 'Výsledková listina',
+        'ql_results_desc'     => 'Uzavřená kola',
+        'ql_yearly'           => 'Roční výsledky',
+        'ql_yearly_desc'      => 'Přehled za rok',
+    ],
+
     'kola' => [
         'title' => 'Kola závodu – VKV PA',
         'heading' => 'Kola závodu',

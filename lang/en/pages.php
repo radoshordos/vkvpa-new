@@ -4,6 +4,38 @@ declare(strict_types=1);
 
 return [
 
+    'home' => [
+        'title'               => 'VKV Provozní aktiv',
+        'heading'             => 'VKV Provozní aktiv',
+        'subtitle'            => 'Electronic log submission for VKV PA contests',
+        'state_upcoming'      => 'Upcoming contest',
+        'state_active'        => 'Contest round – accepting logs',
+        'state_deadline'      => 'Log submission open',
+        'state_evaluating'    => 'Processing results',
+        'state_evaluated'     => 'Results available',
+        'contest_date'        => 'Contest date',
+        'deadline'            => 'Deadline',
+        'evaluated_at'        => 'Evaluated',
+        'evaluating_note'     => 'Results are being processed – the table refreshes automatically.',
+        'countdown_to_start'  => 'until contest start',
+        'countdown_to_deadline' => 'until log deadline',
+        'btn_submit'          => 'Submit log',
+        'btn_interim'         => 'Interim results',
+        'btn_results'         => 'Results',
+        'live_heading'        => 'Interim results',
+        'live_refresh_in'     => 'Refresh in',
+        'live_no_entries'     => 'No logs received yet.',
+        'quick_links'         => 'Sections',
+        'ql_submit'           => 'Submit log',
+        'ql_submit_desc'      => 'Upload EDI file',
+        'ql_interim'          => 'Interim results',
+        'ql_interim_desc'     => 'Current standings',
+        'ql_results'          => 'Results',
+        'ql_results_desc'     => 'Closed contest rounds',
+        'ql_yearly'           => 'Yearly results',
+        'ql_yearly_desc'      => 'Annual overview',
+    ],
+
     'kola' => [
         'title' => 'Contest periods – VKV PA',
         'heading' => 'Contest periods',

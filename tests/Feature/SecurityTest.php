@@ -153,7 +153,7 @@ class SecurityTest extends TestCase
     {
         $this->kolo(); // aktivní kolo zpřístupní formulář hlášení
 
-        $this->get('/')
+        $this->get('/hlaseni')
             ->assertOk()
             ->assertSee('name="_token"', false);
     }

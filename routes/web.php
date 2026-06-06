@@ -14,6 +14,7 @@ use App\Http\Controllers\DiskuseController;
 use App\Http\Controllers\EdiController;
 use App\Http\Controllers\EdiVizualizaceController;
 use App\Http\Controllers\HlaseniController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\KolaController;
 use App\Http\Controllers\MailImageController;
 use App\Http\Controllers\MapController;
@@ -36,8 +37,11 @@ Route::get('/lang/{locale}', function (string $locale) {
     return redirect()->back();
 })->name('lang.switch');
 
-// Výchozí stránka = formulář hlášení.
-Route::get('/', [HlaseniController::class, 'index'])->name('hlaseni.index');
+// Výchozí stránka = úvodní obrazovka.
+Route::get('/', [HomeController::class, 'index'])->name('home');
+
+// Formulář hlášení.
+Route::get('/hlaseni', [HlaseniController::class, 'index'])->name('hlaseni.index');
 Route::post('/hlaseni', [HlaseniController::class, 'store'])->middleware('throttle:hlaseni')->name('hlaseni.store');
 
 // --- Veřejné ---
