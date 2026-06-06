@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://tile.openstreetmap.org">
   @vite('resources/js/vizualizace.js')
   <style>
-    #viz-mapa { height: 52vh; width: 100%; border-radius: .5rem; }
+    #viz-mapa { height: 52vh; width: 100%; border-radius: .5rem; isolation: isolate; }
     .sq-label { background: transparent; border: none; box-shadow: none; color: #fff; font-weight: 700; font-size: 11px; }
     .map-tab { padding: .25rem .75rem; border-radius: .375rem; font-size: .8rem; font-weight: 600; cursor: pointer;
                border: 1px solid var(--color-line, #e2e8f0); background: var(--color-surface, #fff);
