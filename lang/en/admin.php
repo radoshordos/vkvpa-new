@@ -22,9 +22,6 @@ return [
     'login_password' => 'Password',
     'login_btn' => 'Log in',
 
-    // Placeholder
-    'not_implemented' => 'This section is not yet implemented.',
-
     // Kola – CRUD
     'kolo_create_title' => 'New round – VKV PA Admin',
     'kolo_create_heading' => 'Add new contest round',
