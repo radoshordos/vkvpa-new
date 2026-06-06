@@ -31,6 +31,16 @@ final class VkvpaSettings
         return Config::integer('vkvpa.edi_max_size_kb', 500);
     }
 
+    public static function importMaxSizeKb(): int
+    {
+        return Config::integer('vkvpa.import_max_size_kb', 20480);
+    }
+
+    public static function importMaxFiles(): int
+    {
+        return Config::integer('vkvpa.import_max_files', 200);
+    }
+
     public static function listaMaxRows(): int
     {
         return Config::integer('vkvpa.listina_max_rows', 1000);

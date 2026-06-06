@@ -37,12 +37,7 @@ class HlaseniController extends Controller
 
         // Průběžné výsledky vybraného kola (i nezveřejněné = stav „Čeká").
         $vysledky = $idKola
-            ? VkvpaData::query()
-                ->where('id_kola', $idKola)
-                ->when($idKategorie, fn ($q) => $q->where('id_kategorie', $idKategorie))
-                ->orderBy('id_kategorie')
-                ->orderByDesc('body')->orderByDesc('pocet')
-                ->get()
+            ? VkvpaData::prubezne($idKola, $idKategorie)->get()
             : collect();
 
         return view('pages.hlaseni', [

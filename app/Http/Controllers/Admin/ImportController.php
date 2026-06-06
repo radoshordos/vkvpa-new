@@ -4,30 +4,33 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\ImportEdiAction;
+use App\Exceptions\DuplicateEdiException;
 use App\Exceptions\EdiParseException;
+use App\Exceptions\TDateMismatchException;
 use App\Exceptions\UnknownBandException;
 use App\Http\Controllers\Controller;
-use App\Models\VkvpaData;
 use App\Models\VkvpaKola;
-use App\Services\Edi\CategoryResolver;
-use App\Services\Edi\EdiImportService;
 use App\Services\Edi\EdiParser;
-use App\Services\Edi\EdiQso;
-use App\Services\Scoring\ScoringService;
+use App\Support\VkvpaSettings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\View\View;
 use ZipArchive;
 
-/** Administrace – Hromadný import EDI deníků ze ZIP archivu. */
+/**
+ * Administrace – Hromadný import EDI deníků ze ZIP archivu.
+ *
+ * Sdílí jádro příjmu deníku s jednotlivým nahráním ({@see ImportEdiAction});
+ * navíc jen rozbaluje ZIP, mapuje výsledek na řádek souhrnu a (na rozdíl od
+ * jednotlivého nahrání) nerozesílá potvrzovací e-maily.
+ */
 class ImportController extends Controller
 {
     public function __construct(
         private readonly EdiParser $parser,
-        private readonly EdiImportService $importer,
-        private readonly ScoringService $scoring,
-        private readonly CategoryResolver $categories,
+        private readonly ImportEdiAction $action,
     ) {}
 
     public function index(): View
@@ -41,7 +44,7 @@ class ImportController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'zip' => ['required', 'file', 'max:20480', 'mimes:zip'],
+            'zip' => ['required', 'file', 'max:'.VkvpaSettings::importMaxSizeKb(), 'mimes:zip'],
         ]);
 
         /** @var UploadedFile $file */
@@ -53,7 +56,7 @@ class ImportController extends Controller
         }
 
         $items = [];
-        $limit = 200;
+        $limit = VkvpaSettings::importMaxFiles();
 
         for ($i = 0; $i < $zip->count() && count($items) < $limit; $i++) {
             $stat = $zip->statIndex($i);
@@ -90,6 +93,9 @@ class ImportController extends Controller
     }
 
     /**
+     * Naparsuje a importuje jeden deník přes sdílenou {@see ImportEdiAction}
+     * a přeloží výsledek (nebo výjimku) na řádek souhrnu importu.
+     *
      * @return array{file: string, status: string, znacka?: string, kolo?: string, body?: int, reason?: string}
      */
     private function importFile(string $filename, string $content): array
@@ -100,63 +106,28 @@ class ImportController extends Controller
             return ['file' => $filename, 'status' => 'error', 'reason' => $e->getMessage()];
         }
 
-        $h = $log->header;
-        $pcall = $h->pCall();
+        $pcall = $log->header->pCall();
 
-        $tdateDay = substr(trim($h->tDate()), 2, 6);
-        $qsoDays = array_values(array_unique(
-            array_map(static fn (EdiQso $q): string => $q->date, $log->qsos)
-        ));
-        if ($tdateDay !== '' && $qsoDays !== [] && ! in_array($tdateDay, $qsoDays, true)) {
-            return ['file' => $filename, 'status' => 'error', 'reason' => "TDate ({$h->tDate()}) neodpovídá datům QSO."];
-        }
-
-        $idKola = $this->scoring->koloForTDate($h->tDate()) ?? 0;
-
-        if (VkvpaData::query()->where('EDI', true)->where('znacka', $pcall)->where('id_kola', $idKola)->exists()) {
+        try {
+            $data = $this->action->execute($log, notify: false);
+        } catch (DuplicateEdiException) {
             return ['file' => $filename, 'status' => 'skip', 'znacka' => $pcall, 'reason' => 'Deník pro toto kolo již existuje.'];
-        }
-
-        try {
-            $idKategorie = $this->categories->resolve($pcall, $h->pBand(), $h->pSect()) ?? 0;
+        } catch (TDateMismatchException $e) {
+            return ['file' => $filename, 'status' => 'error', 'reason' => $e->getMessage()];
         } catch (UnknownBandException) {
-            return ['file' => $filename, 'status' => 'error', 'reason' => "Nerozpoznané pásmo ({$h->pBand()})."];
-        }
-
-        try {
-            $head = $this->importer->import($log);
-            $score = $this->scoring->scoreEdi($head);
+            return ['file' => $filename, 'status' => 'error', 'reason' => "Nerozpoznané pásmo ({$log->header->pBand()})."];
         } catch (\Throwable $e) {
             return ['file' => $filename, 'status' => 'error', 'reason' => 'Chyba při importu: '.$e->getMessage()];
         }
 
-        VkvpaData::create([
-            'id_kola' => $idKola,
-            'id_kategorie' => $idKategorie,
-            'znacka' => $pcall,
-            'locator' => $h->pWWLo(),
-            'jmeno' => $h->rName(),
-            'mail' => $h->rEmail(),
-            'telefon' => $h->rPhon(),
-            'soapbox' => $h->get('RSoap'),
-            'pocet' => $score->pocet,
-            'nasobice' => $score->nasobice,
-            'bodu_za_qso' => $score->boduZaQso,
-            'body' => $score->body,
-            'qrp' => $h->isQrp(),
-            'EDI' => true,
-            'EDI_ID' => $head->ID,
-            'schvaleno' => false,
-        ]);
-
-        $kolo = VkvpaKola::query()->find($idKola);
+        $kolo = VkvpaKola::query()->find($data->id_kola);
 
         return [
             'file' => $filename,
             'status' => 'ok',
             'znacka' => $pcall,
             'kolo' => $kolo instanceof VkvpaKola ? $kolo->nazev : '—',
-            'body' => $score->body,
+            'body' => $data->body,
         ];
     }
 }

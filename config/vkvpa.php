@@ -14,6 +14,10 @@ return [
     // Maximální velikost nahrávaného EDI souboru v kilobajtech.
     'edi_max_size_kb' => (int) env('EDI_MAX_SIZE_KB', 500),
 
+    // Hromadný import (ZIP): max. velikost archivu v kB a max. počet zpracovaných souborů.
+    'import_max_size_kb' => (int) env('IMPORT_MAX_SIZE_KB', 20480),
+    'import_max_files' => (int) env('IMPORT_MAX_FILES', 200),
+
     // Maximální počet řádků výsledkové listiny jednoho kola (ochrana před přetížením paměti).
     'listina_max_rows' => (int) env('LISTINA_MAX_ROWS', 1000),
 

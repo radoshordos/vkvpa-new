@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\QsoMode;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
@@ -57,6 +58,18 @@ class Ediline extends Model
     public function qsoPoints(): int
     {
         return (int) $this->{'QSO-Points'};
+    }
+
+    /** Druh provozu jako kód z deníku: 1 = SSB, 2 = CW, jiné/0 = neznámý. */
+    public function modeCode(): int
+    {
+        return (int) $this->{'Mode-code'};
+    }
+
+    /** Druh provozu jako enum (neznámý/chybějící kód → QsoMode::Other). */
+    public function mode(): QsoMode
+    {
+        return QsoMode::fromCode($this->modeCode());
     }
 
     public function newWwl(): string
