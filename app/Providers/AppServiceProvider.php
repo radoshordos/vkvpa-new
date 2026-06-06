@@ -54,6 +54,10 @@ class AppServiceProvider extends ServiceProvider
             if (! config('session.secure')) {
                 throw new RuntimeException('SESSION_SECURE_COOKIE must be true in production (HTTPS required).');
             }
+
+            if (! config('session.encrypt')) {
+                throw new RuntimeException('SESSION_ENCRYPT must be true in production.');
+            }
         }
     }
 
