@@ -33,7 +33,7 @@ final class SendEdiMailsListener implements ShouldQueue
 
         $contactMail = VkvpaSettings::contactMail();
         if ($contactMail !== '') {
-            $kod = Str::random(32);
+            $kod = Str::password(32, letters: true, numbers: true, symbols: false);
             VkvpaPrihlaseni::create(['kod' => $kod, 'time' => now()]);
 
             Mail::to($contactMail)->queue(

@@ -8,6 +8,12 @@ use App\Services\Edi\CategoryResolver;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
+use function Laravel\Prompts\error;
+use function Laravel\Prompts\intro;
+use function Laravel\Prompts\outro;
+use function Laravel\Prompts\table;
+use function Laravel\Prompts\warning;
+
 /**
  * Ověří, že všechna ID kategorií z CategoryResolver::CATEGORIES existují v tabulce vkvpa_kategorie.
  *
@@ -21,6 +27,8 @@ class ValidateCategoryMatrix extends Command
 
     public function handle(): int
     {
+        intro('Validace matice kategorií CategoryResolver ↔ vkvpa_kategorie');
+
         $expected = CategoryResolver::allCategoryIds();
         sort($expected);
 
@@ -41,17 +49,25 @@ class ValidateCategoryMatrix extends Command
         $extra = array_diff($existing, $expected);
 
         if ($missing === [] && $extra === []) {
-            $this->info(sprintf('OK – všechna %d ID kategorií existují v databázi.', count($expected)));
+            outro(sprintf('OK – všechna %d ID kategorií existují v databázi.', count($expected)));
 
             return self::SUCCESS;
         }
 
         if ($missing !== []) {
-            $this->error('Chybějící ID (jsou v matici, ale ne v DB): '.implode(', ', $missing));
+            error('Chybějící ID (jsou v matici, ale ne v DB):');
+            table(
+                ['ID', 'Stav'],
+                array_map(fn (int $id): array => [(string) $id, 'chybí v DB'], array_values($missing)),
+            );
         }
 
         if ($extra !== []) {
-            $this->warn('Navíc v DB (nejsou v matici): '.implode(', ', $extra));
+            warning('Navíc v DB (nejsou v matici):');
+            table(
+                ['ID', 'Stav'],
+                array_map(fn (int $id): array => [(string) $id, 'navíc v DB'], array_values($extra)),
+            );
         }
 
         return self::FAILURE;

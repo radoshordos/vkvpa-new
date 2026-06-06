@@ -120,9 +120,8 @@ final class ScoringService
             $unique[] = $home;
         }
         $nasobice = count(array_unique($unique));
-        $body = $boduZaQso * $nasobice;
 
-        return new EdiScore(pocet: $pocet, boduZaQso: $boduZaQso, nasobice: $nasobice, body: $body);
+        return new EdiScore(pocet: $pocet, boduZaQso: $boduZaQso, nasobice: $nasobice);
     }
 
     /**
