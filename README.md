@@ -23,6 +23,7 @@ Webový systém pro správu a vyhodnocování závodů v pásmu VKV (Very High F
 - [EDI pipeline](#edi-pipeline)
 - [Bodování](#bodování)
 - [Mapové pohledy](#mapové-pohledy)
+- [EDI vizualizace](#edi-vizualizace)
 - [Emaily](#emaily)
 - [CI/CD](#cicd)
 
@@ -34,6 +35,8 @@ Webový systém pro správu a vyhodnocování závodů v pásmu VKV (Very High F
 |--------|-------------|
 | Backend | PHP 8.4, Laravel 13 |
 | Frontend | Blade, Tailwind CSS 4.3, Vite 8 |
+| Mapy | Leaflet 1.9.4 |
+| Grafy | Chart.js 4.5 |
 | Databáze | MySQL 8.0 (s `ALLOW_INVALID_DATES`) |
 | Fronty | Laravel Queue (database driver) |
 | Kontejnerizace | Docker + Docker Compose |
@@ -55,6 +58,12 @@ Webový systém pro správu a vyhodnocování závodů v pásmu VKV (Very High F
   - **Ježek** – čáry z domácí stanice na všechna pracovaná QSO
   - **Špendlíky** – pin na každé QSO s vzdáleností a azimutem
   - **Lokátory** – velké čtverce (4-znakový Maidenhead) s počtem QSO
+- **EDI vizualizace (demo)** – komplexní analytická stránka na jedné URL (`/edi/{head}/vizualizace`):
+  - Statistické karty – počet QSO, unique lokátory, max/průměr vzdálenost
+  - Interaktivní Leaflet mapa s přepínatelnými vrstvami (ježek / špendlíky / lokátory), body rozlišeny barvou dle druhu provozu (**modrá = SSB**, **oranžová = CW**)
+  - Azimutová růžice – Chart.js PolarArea chart, 8 světových stran (45° sektory)
+  - Časová osa QSO – Chart.js Bar chart, 15minutové intervaly v závodním okně 08:00–11:00 UTC
+  - Histogram vzdáleností – Chart.js Bar chart, pásma 0–50 / 50–100 / 100–200 / 200–400 / 400–700 / 700+ km
 - **Admin rozhraní** – uzavření kola, schválení/smazání záznamu, EDI debug, správa kategorií
 - **EDI debug** – analýza bodování bez uložení (pro adminy)
 - **Emailové notifikace** – potvrzení závodníkovi + notifikace rozhodcům
@@ -138,7 +147,10 @@ database/
 └── seeders/
 resources/
 ├── css/app.css             # Tailwind 4 (@import 'tailwindcss', @theme)
-├── js/app.js
+├── js/
+│   ├── app.js              # Dark mode, mobilní menu
+│   ├── map.js              # Leaflet – tři samostatné mapové pohledy
+│   └── vizualizace.js      # Leaflet + Chart.js – komplexní EDI vizualizace
 └── views/
     ├── auth/               # Přihlašovací formulář
     ├── emails/             # Šablony emailů
@@ -146,6 +158,8 @@ resources/
     ├── pages/              # Stránky (hlaseni, kola, vysledky, map, edi-upload, admin/*)
     └── partials/           # menu, footer, menu-item, no-active-period
 ```
+
+Vite kompiluje tři oddělené JS entry-pointy (`app.js`, `map.js`, `vizualizace.js`) – každá stránka načítá jen co potřebuje.
 
 ---
 
@@ -371,6 +385,7 @@ VkvpaKola ──► VkvpaData ◄── VkvpaKategorie
 | GET | `/edi/{head}/mapa/jezek` | `MapController@jezek` | `edi.mapa.jezek` |
 | GET | `/edi/{head}/mapa/spendliky` | `MapController@spendliky` | `edi.mapa.spendliky` |
 | GET | `/edi/{head}/mapa/lokatory` | `MapController@lokatory` | `edi.mapa.lokatory` |
+| GET | `/edi/{head}/vizualizace` | `EdiVizualizaceController@show` | `edi.vizualizace` |
 | GET | `/login` | `AuthController` | `login` |
 | GET | `/login/token/{kod}` | token login | – |
 | GET | `/mail-image` | `MailImageController@show` | `mail.image` |
@@ -469,6 +484,113 @@ Tři Leaflet-based mapové pohledy pro každý `Edihead`:
 | `/edi/{head}/mapa/lokatory` | Velké čtverce (4-znakový Maidenhead) s počtem QSO |
 
 Podpůrná třída `Maidenhead` zajišťuje převod lokátor ↔ lat/lon, výpočet vzdálenosti (Haversine) a azimutu (stupně).
+
+---
+
+## EDI vizualizace
+
+Trasa `GET /edi/{head}/vizualizace` (`edi.vizualizace`) zobrazí komplexní analytickou stránku pro konkrétní EDI deník. Na rozdíl od tří samostatných mapových pohledů kombinuje vše dohromady na jedné URL.
+
+### Komponenty stránky
+
+#### Statistické karty
+
+Čtyři souhrnné metriky vypočítané ze záznamů v závodním okně:
+
+| Metrika | Popis |
+|---------|-------|
+| Počet QSO | Celkový počet spojení v závodním okně (08:00–11:00 UTC) |
+| Unique lokátory | Počet různých 4-znakových Maidenhead čtverců protistanic |
+| Max. vzdálenost | Nejdelší spojení v km (Haversine) |
+| Průměr vzdálenost | Průměrná vzdálenost přes všechna QSO v km |
+
+#### Interaktivní mapa (Leaflet)
+
+Jeden mapový widget s přepínatelnými vrstvami bez reload stránky:
+
+| Vrstva | Popis | Barvy |
+|--------|-------|-------|
+| **Ježek** | Čáry z domácí stanice + body protistanic | modrá = SSB, oranžová = CW |
+| **Špendlíky** | Body protistanic s popupem (volací znak, WWL, vzdálenost, azimut) | modrá = SSB, oranžová = CW |
+| **Lokátory** | Velké čtverce s počtem QSO jako popisek | fialová |
+
+Body jsou barevně rozlišeny dle sloupce `Mode-code` v `edilines`:
+- **Modrá** (`#60a5fa`) – SSB (`Mode-code = 1`)
+- **Oranžová** (`#fbbf24`) – CW (`Mode-code = 2`)
+- **Šedá** – neznámý mód
+
+Pravý dolní roh mapy obsahuje legendu módů. Domácí stanoviště je označeno větším modrým kruhem.
+
+#### Azimutová růžice (Chart.js PolarArea)
+
+Polární graf rozdělující QSO do 8 sektorů po 45°, počítáno po směru hodinových ručiček od severu:
+
+```
+S (0°) → SV (45°) → V (90°) → JV (135°) → J (180°) → JZ (225°) → Z (270°) → SZ (315°)
+```
+
+Každý sektor je barevně odlišen. Velikost výseče odpovídá počtu QSO daným směrem – umožňuje okamžitě vidět hlavní směr provozu.
+
+#### Časová osa QSO (Chart.js Bar)
+
+Sloupcový graf s 12 intervaly po 15 minutách pokrývajícími závodní okno:
+
+```
+08:00 | 08:15 | 08:30 | 08:45 | 09:00 | 09:15 | 09:30 | 09:45 | 10:00 | 10:15 | 10:30 | 10:45
+```
+
+Zobrazuje, ve které části závodu byl nejvyšší provoz (peak aktivity, „pozdní start" apod.).
+
+#### Histogram vzdáleností (Chart.js Bar)
+
+Sloupcový graf s 6 vzdálenostními pásmy:
+
+| Pásmo | Typický dosah |
+|-------|---------------|
+| 0–50 km | Místní provoz |
+| 50–100 km | Regionální |
+| 100–200 km | Střední vzdálenosti |
+| 200–400 km | Dlouhé trasy |
+| 400–700 km | Výjimečné podmínky |
+| 700+ km | Rekordní spojenía (Es/troposféra) |
+
+### Architektura
+
+```
+GET /edi/{head}/vizualizace
+        │
+        ▼
+EdiVizualizaceController::show(Edihead)
+        │
+        ├── enrichedLines()  ─► QSO z DB + lat/lon + dist + azimut + mode
+        │                        (jeden DB dotaz, vše spočítáno v PHP)
+        ├── squares()        ─► agregace do 4-znakových čtverců
+        ├── timeline()       ─► array<string, int>  (label → počet QSO)
+        ├── azimuthRose()    ─► array{labels, data} (8 sektorů)
+        ├── distHistogram()  ─► array<string, int>  (pásmo → počet QSO)
+        └── stats()          ─► array{pocet, maxDist, avgDist, uniqueSq}
+                │
+                ▼
+        pages/vizualizace.blade.php
+                │
+                ├── window.__vizConfig = { ...vše jako JSON }
+                └── @vite('resources/js/vizualizace.js')
+                            │
+                            ├── Leaflet – mapa s vrstvami + legenda
+                            └── Chart.js – 3 grafy
+```
+
+### Výpočet dat
+
+`EdiVizualizaceController` provádí veškeré výpočty server-side ze stejných dat jako `MapController` a `ScoringService`:
+
+- Souřadnice protistanic: `Maidenhead::toLatLon()` (fallback z `lon`/`lat` sloupců v `edilines`)
+- Vzdálenosti: `Maidenhead::distanceKm()` (Haversine, poloměr Země 6 371 km)
+- Azimuty: `Maidenhead::bearingDeg()` (0–360°, 0 = sever)
+- Body za QSO: `Maidenhead::qsoPoints()` (recomputed z lokátorů, ignoruje `QSO-Points` z EDI)
+- Filtrování: pouze QSO v závodním okně (`ContestWindow::from()` = `0800`, `to()` = `1100`)
+
+Typ PHPStan-annotace `EnrichedLine` (definovaná přes `@phpstan-type`) popisuje tvar každého obohaceného záznamu a zajišťuje typovou bezpečnost na level 10.
 
 ---
 
