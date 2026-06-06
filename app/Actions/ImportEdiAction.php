@@ -43,13 +43,12 @@ final readonly class ImportEdiAction
     {
         $h = $log->header;
         $pcall = $h->pCall();
-
-        $this->assertTDateMatchesQsos($h->tDate(), $log->qsos);
-
         $idKola = $this->scoring->koloForTDate($h->tDate()) ?? 0;
 
         Context::add('znacka', $pcall);
         Context::add('id_kola', $idKola);
+
+        $this->assertTDateMatchesQsos($h->tDate(), $log->qsos);
 
         if (VkvpaData::query()->hasEdi()->where('znacka', $pcall)->where('id_kola', $idKola)->exists()) {
             throw new DuplicateEdiException($pcall);
