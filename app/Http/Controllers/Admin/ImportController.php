@@ -71,7 +71,7 @@ class ImportController extends Controller
 
             // Guard against zip entries with inflated size far exceeding EDI limits.
             $maxBytes = VkvpaSettings::ediMaxSizeKb() * 1024;
-            if (($stat['size'] ?? 0) > $maxBytes) {
+            if ($stat['size'] > $maxBytes) {
                 $items[] = ['file' => basename($stat['name']), 'status' => 'error', 'reason' => 'Soubor přesahuje povolenou velikost.'];
 
                 continue;

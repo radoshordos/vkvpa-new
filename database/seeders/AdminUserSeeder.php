@@ -6,6 +6,7 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Config;
 use RuntimeException;
 
 /**
@@ -15,15 +16,15 @@ use RuntimeException;
  * ho při uložení zahashuje (bcrypt), takže se zde nevolá Hash::make (jinak by
  * došlo ke dvojímu hashování). Idempotentní: opakovaný seed účet jen aktualizuje.
  *
- * Vyžaduje proměnné prostředí ADMIN_USER a ADMIN_PASS.
+ * Vyžaduje proměnné prostředí ADMIN_USER a ADMIN_PASS (přes config/vkvpa.php).
  */
 class AdminUserSeeder extends Seeder
 {
     public function run(): void
     {
-        $name = env('ADMIN_USER');
-        $pass = env('ADMIN_PASS');
-        $email = env('ADMIN_EMAIL', 'admin@example.com');
+        $name = Config::string('vkvpa.admin_user', '');
+        $pass = Config::string('vkvpa.admin_pass', '');
+        $email = Config::string('vkvpa.admin_email', 'admin@example.com');
 
         if (blank($name) || blank($pass)) {
             throw new RuntimeException('ADMIN_USER a ADMIN_PASS musí být nastaveny v .env před spuštěním seederu.');
