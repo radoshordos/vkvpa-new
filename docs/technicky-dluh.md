@@ -211,6 +211,6 @@ plochu rizika dál zužuje.
 
 **Veškerý strukturální dluh z tohoto auditu je vyřešen.** Poslední dvě velká místa
 kopírovaného kódu (mapy/vizualizace a import) jsou odstraněna a pokryta testy.
-Otevřené zůstává jen volitelné **P3** (konsolidace migrací) – a to výhradně tehdy,
-pokud schéma ještě neběží v produkci. Volitelný kosmetický krok: nahradit `mode`
-(`int` 1/2) enumem SSB/CW.
+Druh provozu je nově typovaný enumem `App\Enums\QsoMode` (SSB/CW/Other) místo
+volného `int`. Otevřené zůstává jen volitelné **P3** (konsolidace migrací) – a to
+výhradně tehdy, pokud schéma ještě neběží v produkci.

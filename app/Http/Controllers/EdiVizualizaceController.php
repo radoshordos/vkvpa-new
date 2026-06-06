@@ -40,7 +40,7 @@ class EdiVizualizaceController extends Controller
                 'points' => $q->points,
                 'dist' => $q->dist,
                 'azimut' => $q->azimut,
-                'mode' => $q->mode,
+                'mode' => $q->mode->value,
             ]),
             'squares' => $this->geometry->bigSquares($head),
             'timeline' => $this->timeline($enriched),

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services\Edi;
 
+use App\Enums\QsoMode;
+
 /**
  * Jedno QSO obohacené o geometrii pro mapové a vizualizační pohledy:
  * souřadnice protistanice, body za spojení (z lokátorů), vzdálenost, azimut,
@@ -20,6 +22,6 @@ final readonly class EnrichedQso
         public ?int $dist,
         public ?int $azimut,
         public int $timeMinutes,
-        public int $mode, // 1 = SSB, 2 = CW
+        public QsoMode $mode,
     ) {}
 }

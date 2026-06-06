@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Enums\QsoMode;
 use App\Models\Edihead;
 use App\Services\Edi\BigSquareCount;
 use App\Services\Edi\EdiImportService;
@@ -45,7 +46,7 @@ class QsoGeometryTest extends TestCase
         // OK2IMH v JN99BP = vlastní velký čtverec JN99 → 2 body.
         $this->assertSame('JN99BP', $first->wwl);
         $this->assertSame(2, $first->points);
-        $this->assertSame(1, $first->mode); // SSB
+        $this->assertSame(QsoMode::Ssb, $first->mode);
         $this->assertSame(8 * 60, $first->timeMinutes); // 08:00
 
         $second = $qsos->firstWhere('call', 'OK2IWU');

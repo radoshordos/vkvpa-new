@@ -79,7 +79,7 @@ final class QsoGeometry
                     dist: $dist,
                     azimut: $azimut,
                     timeMinutes: $timeMinutes,
-                    mode: $l->modeCode(),
+                    mode: $l->mode(),
                 );
             })
             ->filter()
