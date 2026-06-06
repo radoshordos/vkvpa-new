@@ -68,7 +68,7 @@ class AuthController extends Controller
         // lockForUpdate + delete v transakci: paralelní požadavky (prefetch prohlížeče,
         // dvojité kliknutí) nemohou použít stejný token dvakrát.
         $used = DB::transaction(function () use ($kod): bool {
-            $token = VkvpaPrihlaseni::query()->where('kod', $kod)->lockForUpdate()->first();
+            $token = VkvpaPrihlaseni::query()->where('kod', hash('sha256', $kod))->lockForUpdate()->first();
             if ($token === null) {
                 return false;
             }

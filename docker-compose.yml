@@ -7,6 +7,11 @@ services:
             - ./:/var/www/html
         ports:
             - "8080:80"
+        environment:
+            DB_HOST: db
+            DB_DATABASE: ${DB_DATABASE:-digipa}
+            DB_USERNAME: ${DB_USERNAME:-vkvpa}
+            DB_PASSWORD: ${DB_PASSWORD:-secret}
         depends_on:
             db:
                 condition: service_healthy
@@ -15,7 +20,9 @@ services:
         command: --sql-mode="ALLOW_INVALID_DATES"
         environment:
             MYSQL_DATABASE: ${DB_DATABASE:-digipa}
-            MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-secret}
+            MYSQL_USER: ${DB_USERNAME:-vkvpa}
+            MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
+            MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootsecret}
         volumes:
             - dbdata:/var/lib/mysql
         ports:

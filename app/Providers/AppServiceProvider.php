@@ -50,6 +50,10 @@ class AppServiceProvider extends ServiceProvider
                     throw new RuntimeException('Required vkvpa contact config is not set for production.');
                 }
             }
+
+            if (! config('session.secure')) {
+                throw new RuntimeException('SESSION_SECURE_COOKIE must be true in production (HTTPS required).');
+            }
         }
     }
 
@@ -61,6 +65,10 @@ class AppServiceProvider extends ServiceProvider
 
         RateLimiter::for('diskuse', function (Request $request): Limit {
             return Limit::perMinute(5)->by($request->user()?->id ?: $request->ip());
+        });
+
+        RateLimiter::for('login-token', function (Request $request): Limit {
+            return Limit::perMinute(10)->by($request->ip());
         });
     }
 }

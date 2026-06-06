@@ -8,14 +8,13 @@ permissions:
   contents: read
 
 jobs:
-  quality:
-    name: Test, Analyze, Lint, Build
+  test:
+    name: Tests
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -23,12 +22,6 @@ jobs:
           php-version: '8.4'
           extensions: gd, intl, mbstring, pdo, pdo_sqlite, sqlite3, zip
           coverage: none
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
 
       - name: Cache Composer dependencies
         uses: actions/cache@v4
@@ -45,17 +38,56 @@ jobs:
           cp .env.example .env
           php artisan key:generate --ansi
 
-      - name: Install frontend dependencies
-        run: npm ci --ignore-scripts
-
-      - name: Build frontend assets
-        run: npm run build
-
       - name: Run tests
         run: composer test
+
+  analyse:
+    name: Static Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: gd, intl, mbstring, pdo, pdo_sqlite, sqlite3, zip
+          coverage: none
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
 
       - name: Run static analysis
         run: composer stan
 
       - name: Check PHP style
         run: composer lint
+
+  build:
+    name: Frontend Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install frontend dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Build frontend assets
+        run: npm run build
