@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://tile.openstreetmap.org">
   @vite('resources/js/map.js')
   <style>
-    #mapa { height: 70vh; width: 100%; border-radius: 0.6rem; }
+    #mapa { height: 70vh; width: 100%; border-radius: 0.6rem; isolation: isolate; }
     /* Popisek s počtem protistanic ve velkém čtverci (režim „lokatory"). */
     .sq-label { background: transparent; border: none; box-shadow: none; color: #fff; font-weight: bold; font-size: 12px; }
   </style>
