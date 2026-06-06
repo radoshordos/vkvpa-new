@@ -1,5 +1,5 @@
 {{--
-    Technologické demo: všechny vizualizace EDI deníku na jedné stránce.
+    Vizualizace EDI deníku: mapa, grafy, statistiky na jedné stránce.
     Leaflet (mapa, 3 přepínatelné vrstvy) + Chart.js (timeline, azimutová růžice, histogram vzdáleností).
 --}}
 @extends('layouts.app')
@@ -37,7 +37,7 @@ window.__vizConfig = {
 
 {{-- ── Hlavička ────────────────────────────────────────────────────────── --}}
 <h1 class="text-xl font-bold text-heading">Vizualizace deníku {{ $pcall }}</h1>
-<p class="text-sm text-muted mb-4">{{ $homeLoc }} · technologické demo (Leaflet + Chart.js)</p>
+<p class="text-sm text-muted mb-4">{{ $homeLoc }} · mapa a grafy (Leaflet + Chart.js)</p>
 
 {{-- ── Statistické karty ───────────────────────────────────────────────── --}}
 <div class="grid grid-cols-2 gap-3 sm:grid-cols-4 mb-5">

@@ -58,7 +58,7 @@ Webový systém pro správu a vyhodnocování závodů v pásmu VKV (Very High F
   - **Ježek** – čáry z domácí stanice na všechna pracovaná QSO
   - **Špendlíky** – pin na každé QSO s vzdáleností a azimutem
   - **Lokátory** – velké čtverce (4-znakový Maidenhead) s počtem QSO
-- **EDI vizualizace (demo)** – komplexní analytická stránka na jedné URL (`/edi/{head}/vizualizace`):
+- **EDI vizualizace** – komplexní analytická stránka na jedné URL (`/edi/{head}/vizualizace`):
   - Statistické karty – počet QSO, unique lokátory, max/průměr vzdálenost
   - Interaktivní Leaflet mapa s přepínatelnými vrstvami (ježek / špendlíky / lokátory), body rozlišeny barvou dle druhu provozu (**modrá = SSB**, **oranžová = CW**)
   - Azimutová růžice – Chart.js PolarArea chart, 8 světových stran (45° sektory)

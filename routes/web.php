@@ -70,7 +70,7 @@ Route::get('/edi/{head}/mapa/jezek', [MapController::class, 'jezek'])->name('edi
 Route::get('/edi/{head}/mapa/spendliky', [MapController::class, 'spendliky'])->name('edi.mapa.spendliky');
 Route::get('/edi/{head}/mapa/lokatory', [MapController::class, 'lokatory'])->name('edi.mapa.lokatory');
 
-// Technologické demo: všechny vizualizace na jedné stránce (Leaflet + Chart.js).
+// Komplexní vizualizace deníku: mapa + grafy na jedné stránce (Leaflet + Chart.js).
 Route::get('/edi/{head}/vizualizace', [EdiVizualizaceController::class, 'show'])->name('edi.vizualizace');
 
 // --- Administrace (chráněno middleware z Fáze 4) ---
