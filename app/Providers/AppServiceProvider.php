@@ -54,6 +54,10 @@ class AppServiceProvider extends ServiceProvider
             if (! config('session.secure')) {
                 throw new RuntimeException('SESSION_SECURE_COOKIE must be true in production (HTTPS required).');
             }
+
+            if (! config('session.encrypt')) {
+                throw new RuntimeException('SESSION_ENCRYPT must be true in production.');
+            }
         }
     }
 
@@ -67,8 +71,16 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(5)->by($request->user()?->id ?: $request->ip());
         });
 
+        RateLimiter::for('login', function (Request $request): Limit {
+            return Limit::perMinute(5)->by($request->ip());
+        });
+
         RateLimiter::for('login-token', function (Request $request): Limit {
             return Limit::perMinute(10)->by($request->ip());
+        });
+
+        RateLimiter::for('hlaseni', function (Request $request): Limit {
+            return Limit::perMinute(15)->by($request->user()?->id ?: $request->ip());
         });
 
         RateLimiter::for('api', function (Request $request): Limit {
