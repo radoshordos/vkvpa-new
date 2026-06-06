@@ -14,6 +14,7 @@ return [
     'administration' => 'Administration',
     'contact_evaluator' => 'Contest evaluator: Míla OK1VUM,',
     'hosted_by' => 'This application is hosted on',
+    'useful_links' => 'Useful links',
     'no_active_title' => 'No active contest period right now.',
     'no_active_body' => 'EDI files can only be submitted during an active period.',
 ];
