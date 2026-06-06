@@ -75,12 +75,7 @@ class VysledkyController extends Controller
         // Průběžné výsledky vybraného kola – stejná data jako spodní část
         // stránky „Načíst EDI soubor" (i nepřevzaté = stav „Čeká").
         $vysledky = $kolo
-            ? VkvpaData::query()
-                ->where('id_kola', $kolo->id)
-                ->when($katId !== 0, fn ($q) => $q->where('id_kategorie', $katId))
-                ->orderBy('id_kategorie')
-                ->orderByDesc('body')->orderByDesc('pocet')
-                ->get()
+            ? VkvpaData::prubezne($kolo->id, $katId ?: null)->get()
             : collect();
 
         $obsazeneKatIds = $kolo

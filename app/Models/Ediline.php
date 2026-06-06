@@ -59,6 +59,12 @@ class Ediline extends Model
         return (int) $this->{'QSO-Points'};
     }
 
+    /** Druh provozu: 1 = SSB, 2 = CW. */
+    public function modeCode(): int
+    {
+        return (int) $this->{'Mode-code'};
+    }
+
     public function newWwl(): string
     {
         return (string) $this->{'New-WWL-(N)'};

@@ -55,7 +55,7 @@ class EdiVizualizaceController extends Controller
         return $head->lines()
             ->whereBetween('Time', [ContestWindow::from(), ContestWindow::to()])
             ->orderBy('Time')
-            ->get(['lon', 'lat', 'CallSign', 'Received-WWL', 'QSO-Points', 'Time', 'Mode-code'])
+            ->get(['lon', 'lat', 'CallSign', 'Received-WWL', 'Time', 'Mode-code'])
             ->map(function (Ediline $l) use ($home, $head, $homeSq): ?array {
                 $lat = $l->lat;
                 $lon = $l->lon;
@@ -80,10 +80,9 @@ class EdiVizualizaceController extends Controller
                 $time = (string) $l->Time;
                 $timeMinutes = (int) substr($time, 0, 2) * 60 + (int) substr($time, 2, 2);
                 $workedSq = strtoupper(substr(trim($wwl), 0, 4));
-                $points = preg_match('/^[A-R]{2}\d{2}$/', $homeSq) !== false
-                    && preg_match('/^[A-R]{2}\d{2}$/', $workedSq) !== false
-                    ? Maidenhead::qsoPoints($homeSq, $workedSq)
-                    : $l->qsoPoints();
+                // Body za spojení přepočítáme z lokátorů (neplatný lokátor → 0),
+                // shodně se ScoringService; sloupec QSO-Points z deníku se ignoruje.
+                $points = Maidenhead::qsoPoints($homeSq, $workedSq);
 
                 return [
                     'lat' => $lat, 'lon' => $lon,
@@ -93,7 +92,7 @@ class EdiVizualizaceController extends Controller
                     'dist' => $dist,
                     'azimut' => $azimut,
                     'timeMinutes' => $timeMinutes,
-                    'mode' => (int) $l->{'Mode-code'}, // 1=SSB, 2=CW
+                    'mode' => $l->modeCode(), // 1=SSB, 2=CW
                 ];
             })
             ->filter()

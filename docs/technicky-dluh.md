@@ -61,40 +61,34 @@ controllery (i případné budoucí mapy) z ní jen čtou. Odhad: ~2 h.
 
 ---
 
-## D2 – Tři různé způsoby výpočtu bodů za QSO + tichý bug
+## D2 – Tři různé způsoby výpočtu bodů za QSO + tichý bug ✅ vyřešeno
 
-Body za jedno spojení se počítají **na třech místech třemi způsoby**:
+Body za jedno spojení se počítaly **na třech místech třemi způsoby**:
 
-| Místo | Jak | |
-|-------|-----|---|
-| `ScoringService::scoreEdi()` ř. 115 | vždy `Maidenhead::qsoPoints($home, $sq)` | ← kanonické (z lokátorů) |
-| `MapController::points()` ř. 135 | vždy `$l->qsoPoints()` (sloupec `QSO-Points` z deníku) | ← jiná hodnota! |
-| `EdiVizualizaceController::enrichedLines()` ř. 83–86 | `Maidenhead::qsoPoints()` s fallbackem na `$l->qsoPoints()` | ← rozbitý fallback |
+| Místo | Původně | |
+|-------|---------|---|
+| `ScoringService::scoreEdi()` | vždy `Maidenhead::qsoPoints($home, $sq)` | ← kanonické (z lokátorů) |
+| `MapController::points()` | vždy `$l->qsoPoints()` (sloupec `QSO-Points` z deníku) | ← jiná hodnota! |
+| `EdiVizualizaceController::enrichedLines()` | `Maidenhead::qsoPoints()` s rozbitým fallbackem | ← bug |
 
-Dvě věci:
+Dva problémy:
 
-1. **Nekonzistence:** mapa „N" (špendlíky) ukazuje v popupu body z deníku
-   (`QSO-Points`), zatímco skóre i vizualizace přepočítávají z lokátorů. CLAUDE.md
-   přitom výslovně říká, že **sloupec `QSO-Points` se má ignorovat**. Stejné QSO
-   tak může mít na dvou stránkách jiný počet bodů.
+1. **Nekonzistence:** mapa „N" (špendlíky) ukazovala v popupu body z deníku
+   (`QSO-Points`), zatímco skóre i vizualizace přepočítávaly z lokátorů. CLAUDE.md
+   přitom výslovně říká, že **sloupec `QSO-Points` se má ignorovat**.
 
-2. **Bug** (`EdiVizualizaceController.php:83-84`):
+2. **Bug** (`EdiVizualizaceController.php`, původně ř. 83–84):
    ```php
    $points = preg_match('/^[A-R]{2}\d{2}$/', $homeSq) !== false
-       && preg_match('/^[A-R]{2}\d{2}$/', $workedSq) !== false
-       ? Maidenhead::qsoPoints($homeSq, $workedSq)
-       : $l->qsoPoints();
+       && preg_match('/^[A-R]{2}\d{2}$/', $workedSq) !== false ? … : $l->qsoPoints();
    ```
-   `preg_match()` vrací `1` / `0` / `false`. Porovnání `!== false` je **pravdivé i
-   pro `0` (neshoda)**, takže podmínka je prakticky vždy `true` a větev
-   `: $l->qsoPoints()` je **mrtvý kód**. Při neplatném lokátoru se tiše použije
-   `Maidenhead::qsoPoints()` (vrátí 0) místo zamýšleného fallbacku. Mělo být
-   `=== 1`.
+   `preg_match()` vrací `1` / `0` / `false`; `!== false` je pravdivé i pro `0`, takže
+   podmínka byla prakticky vždy `true` a fallback `: $l->qsoPoints()` byl **mrtvý kód**.
 
-**Náprava:** sjednotit na jediný zdroj pravdy – `Maidenhead::qsoPoints()` z
-lokátorů všude (po dořešení D1 to vyjde samo, protože sdílená služba spočítá body
-jednou). Opravit `!== false` → `=== 1`. Odhad: triviální (15 min), vysoký dopad na
-korektnost zobrazení.
+**Náprava (provedeno):** všechna tři místa teď počítají body výhradně přes
+`Maidenhead::qsoPoints($homeSq, $workedSq)` (neplatný lokátor → 0). Rozbitá
+podmínka i mrtvý fallback odstraněny, mapa „N" teď ukazuje stejné body jako skóre.
+Sloupec `QSO-Points` se nikde nečte. Zbývající plnou deduplikaci řeší D1.
 
 ---
 
@@ -172,10 +166,11 @@ zapsat zpět do `create_*` migrací. Drobnost: `bodu_za_qso` má v základní mi
 správným bodem přístupu k magickým stringům `Received-WWL`, `QSO-Points`,
 `New-WWL-(N)`. `ScoringService` i `MapController` je už používají. 👍
 
-**Co zbývá:** jediný únik mimo accessory je
-`EdiVizualizaceController.php:96` – `(int) $l->{'Mode-code'}`. Měl by dostat
-accessor `Ediline::modeCode(): int` (nebo rovnou enum SSB/CW), aby byl
-`$line->{'...'}` přístup soustředěný **výhradně** v modelu.
+**Vyřešeno:** poslední únik mimo accessory (`$l->{'Mode-code'}` ve
+`EdiVizualizaceController`) je zacelen – `Ediline` má teď `modeCode(): int` a
+controller ho používá. Magický `$line->{'...'}` přístup je tak soustředěný
+**výhradně** v modelu `Ediline`. (Volitelný další krok: nahradit `int` enumem
+SSB/CW.)
 
 Zbytek dluhu je **vědomě přijatý**: kvůli kompatibilitě nelze zapnout
 `preventAccessingMissingAttributes` (komentář v `AppServiceProvider:35`), takže
@@ -184,15 +179,14 @@ plochu rizika dál zužuje.
 
 ---
 
-## Drobnosti (nízká priorita)
+## Drobnosti ✅ vyřešeno
 
-- **Duplikovaný dotaz „průběžné výsledky"** – `HlaseniController::index()`
-  (ř. 39–46) a `VysledkyController::pribezne()` (ř. 77–84) mají identický dotaz
-  (`where id_kola` + `when kategorie` + `orderBy id_kategorie, body desc,
-  pocet desc`). Patří do scope/metody na `VkvpaData`.
-- **Hardcoded limity v `ImportController`** – `max:20480` (ř. 44) a `$limit = 200`
-  (ř. 56) zapsané přímo, na rozdíl od ostatních limitů v `VkvpaSettings`.
-  Přesunout do `config/vkvpa.php`.
+- **Duplikovaný dotaz „průběžné výsledky"** – sloučen do scope
+  `VkvpaData::prubezne($idKola, $idKategorie)`; `HlaseniController` i
+  `VysledkyController::pribezne()` ho teď oba volají.
+- **Hardcoded limity v `ImportController`** – `max:20480` a `$limit = 200`
+  přesunuty do `config/vkvpa.php` (`import_max_size_kb`, `import_max_files`)
+  a čteny přes `VkvpaSettings::importMaxSizeKb()` / `importMaxFiles()`.
 
 ---
 
@@ -221,19 +215,29 @@ plochu rizika dál zužuje.
 | P1 (část) – jádro importu | ✅ vyjmuto do `ImportEdiAction`, používá `EdiController` |
 | P6 (část) – přístup k legacy sloupcům | ✅ accessory na `Ediline` |
 
+### Vyřešeno v této větvi (`claude/technical-debt-analysis-HKso4`)
+
+| Bod | Stav |
+|-----|------|
+| D2 – výpočet bodů sjednocen + bug `preg_match` | ✅ všude `Maidenhead::qsoPoints`, fallback/bug odstraněn |
+| P6 (zbytek) – `Mode-code` leak | ✅ accessor `Ediline::modeCode()` |
+| Drobnost – duplikovaný dotaz „průběžné" | ✅ scope `VkvpaData::prubezne()` |
+| Drobnost – hardcoded import limity | ✅ přesunuto do `config/vkvpa.php` |
+
 ---
 
 ## Doporučené pořadí prací
 
 | # | Úkol | Náklad | Dopad | Stav |
 |---|------|--------|-------|------|
-| 1 | D2 – opravit `preg_match !== false` + sjednotit výpočet bodů | triviální | **korektnost** | otevřeno |
-| 2 | D1 – vyjmout sdílenou `QsoGeometry` z Map/Vizualizace controllerů | střední | **odstranění duplikace** | otevřeno |
-| 3 | D3 – testy pro vizualizaci | nízký | regrese | otevřeno |
-| 4 | P1 – hromadný import přes `ImportEdiAction` | střední | dokončení dedup | otevřeno |
-| 5 | P6 – accessor `modeCode()` + drobnosti (dotaz, limity do configu) | nízký | typová bezpečnost / čistota | otevřeno |
+| 1 | D2 – sjednotit výpočet bodů + bug `preg_match` | triviální | **korektnost** | ✅ hotovo |
+| 2 | P6 (zbytek) + drobnosti (dotaz, limity do configu) | nízký | čistota | ✅ hotovo |
+| 3 | D1 – vyjmout sdílenou `QsoGeometry` z Map/Vizualizace controllerů | střední | **odstranění duplikace** | otevřeno |
+| 4 | D3 – testy pro vizualizaci | nízký | regrese | otevřeno |
+| 5 | P1 – hromadný import přes `ImportEdiAction` | střední | dokončení dedup | otevřeno |
 | 6 | P3 – konsolidace migrací (jen pokud není v produkci) | střední | údržba schématu | otevřeno |
 
-Body 1 a 3 jsou levné rychlé výhry. Body D1+1+4 spolu souvisí – sdílená geometrická
-služba (D1) a dokončení `ImportEdiAction` (P1) odstraní poslední dvě velká místa
-kopírovaného kódu v projektu.
+Rychlé výhry (1–2) jsou hotové. Zbývají tři strukturální body: **D1** (sdílená
+geometrická služba) a **P1** (dokončení `ImportEdiAction`) odstraní poslední dvě
+velká místa kopírovaného kódu; **D3** je levné dotestování vizualizace, nejlépe až
+po D1. P3 je volitelné a jen mimo produkci.

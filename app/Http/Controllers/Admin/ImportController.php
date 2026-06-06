@@ -14,6 +14,7 @@ use App\Services\Edi\EdiImportService;
 use App\Services\Edi\EdiParser;
 use App\Services\Edi\EdiQso;
 use App\Services\Scoring\ScoringService;
+use App\Support\VkvpaSettings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -41,7 +42,7 @@ class ImportController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'zip' => ['required', 'file', 'max:20480', 'mimes:zip'],
+            'zip' => ['required', 'file', 'max:'.VkvpaSettings::importMaxSizeKb(), 'mimes:zip'],
         ]);
 
         /** @var UploadedFile $file */
@@ -53,7 +54,7 @@ class ImportController extends Controller
         }
 
         $items = [];
-        $limit = 200;
+        $limit = VkvpaSettings::importMaxFiles();
 
         for ($i = 0; $i < $zip->count() && count($items) < $limit; $i++) {
             $stat = $zip->statIndex($i);

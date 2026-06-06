@@ -98,11 +98,13 @@ class MapController extends Controller
      */
     private function points(Edihead $head, ?array $home): Collection
     {
+        $homeSq = strtoupper(substr((string) $head->PWWLo, 0, 4));
+
         return $head->lines()
             ->whereBetween('Time', [ContestWindow::from(), ContestWindow::to()])
             ->orderBy('Received-WWL')
-            ->get(['lon', 'lat', 'CallSign', 'Received-WWL', 'QSO-Points'])
-            ->map(function (Ediline $l) use ($home, $head): ?array {
+            ->get(['lon', 'lat', 'CallSign', 'Received-WWL'])
+            ->map(function (Ediline $l) use ($home, $head, $homeSq): ?array {
                 $lat = $l->lat;
                 $lon = $l->lon;
                 // Když chybí lon/lat, dopočítej ze středu lokátoru.
@@ -127,12 +129,16 @@ class MapController extends Controller
                 $dist = $home === null ? null : (int) round(Maidenhead::distanceKm($home['lat'], $home['lon'], $lat, $lon));
                 $azimut = $home === null ? null : (int) round(Maidenhead::bearingDeg($home['lat'], $home['lon'], $lat, $lon));
 
+                // Body za spojení přepočítáme z lokátorů (shodně se ScoringService);
+                // sloupec QSO-Points z deníku se ignoruje.
+                $workedSq = strtoupper(substr(trim($wwl), 0, 4));
+
                 return [
                     'lat' => $lat,
                     'lon' => $lon,
                     'call' => (string) $l->CallSign,
                     'wwl' => $wwl,
-                    'points' => $l->qsoPoints(),
+                    'points' => Maidenhead::qsoPoints($homeSq, $workedSq),
                     'dist' => $dist,
                     'azimut' => $azimut,
                 ];

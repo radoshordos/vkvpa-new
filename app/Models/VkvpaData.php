@@ -103,6 +103,25 @@ class VkvpaData extends Model
         return $query->where('EDI', true);
     }
 
+    /**
+     * Scope: průběžné výsledky kola (i nepřevzaté = stav „Čeká"), volitelně
+     * filtrované kategorií, seřazené po kategoriích a bodech.
+     * Sdíleno mezi formulářem hlášení a stránkou průběžných výsledků.
+     *
+     * @param  Builder<VkvpaData>  $query
+     * @return Builder<VkvpaData>
+     */
+    #[Scope]
+    protected function prubezne(Builder $query, int $idKola, ?int $idKategorie = null): Builder
+    {
+        return $query
+            ->where('id_kola', $idKola)
+            ->when($idKategorie, fn (Builder $q): Builder => $q->where('id_kategorie', $idKategorie))
+            ->orderBy('id_kategorie')
+            ->orderByDesc('body')
+            ->orderByDesc('pocet');
+    }
+
     #[Override]
     protected function casts(): array
     {
