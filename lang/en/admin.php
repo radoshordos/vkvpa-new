@@ -23,17 +23,37 @@ return [
     // Placeholder
     'not_implemented' => 'This section is not yet implemented.',
 
+    // Kola – CRUD
+    'kolo_create_title' => 'New round – VKV PA Admin',
+    'kolo_create_heading' => 'Add new contest round',
+    'kolo_edit_title' => 'Edit round – VKV PA Admin',
+    'kolo_edit_heading' => 'Edit contest round',
+    'kolo_field_name' => 'Round name',
+    'kolo_field_date' => 'Contest date',
+    'kolo_field_deadline' => 'Deadline (date and time)',
+    'kolo_field_note' => 'Note',
+    'kolo_field_active' => 'Active (log submissions are open)',
+    'kolo_btn_create' => 'Create round',
+    'kolo_btn_save' => 'Save changes',
+
     // Kategorie
     'kategorie_title' => 'Category management – VKV PA Admin',
     'kategorie_heading' => 'Category management',
     'kategorie_empty' => 'No categories exist yet.',
     'kategorie_add' => 'Add category',
+    'kategorie_edit' => 'Edit category',
     'kategorie_col_name' => 'Name',
     'kategorie_col_abbr' => 'Abbreviation',
     'kategorie_col_desc' => 'Description',
+    'kategorie_col_actions' => 'Actions',
+    'kategorie_btn_edit' => 'Edit',
+    'kategorie_btn_save' => 'Save',
     'field_name' => 'Name',
     'field_abbr' => 'Abbreviation',
     'field_desc' => 'Description',
+
+    // Common
+    'btn_cancel' => 'Cancel',
 
     // Deníky
     'deniky_title' => 'Uploaded EDI logs – VKV PA Admin',

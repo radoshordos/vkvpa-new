@@ -102,11 +102,12 @@
                                         <a href="{{ route('edi.soubor', ['head' => $r->EDI_ID]) }}" class="action-link" title="Zobrazit původní EDI soubor">EDI</a>
                                         <a href="{{ route('edi.soubor.redukovany', ['head' => $r->EDI_ID]) }}" class="action-link" title="Zobrazit redukovaný EDI (08–11 UTC)">EDIR</a>
                                     </div>
-                                    {{-- 3. řádek: mapy M · N · S --}}
+                                    {{-- 3. řádek: mapy M · N · S · V --}}
                                     <div class="whitespace-nowrap">
                                         <a href="{{ route('edi.mapa.jezek', ['head' => $r->EDI_ID]) }}" class="action-link" title="Mapa – ježek (čáry do protistanic)">M</a>
                                         <a href="{{ route('edi.mapa.spendliky', ['head' => $r->EDI_ID]) }}" class="action-link" title="Mapa – špendlíky (značka, km, azimut)">N</a>
                                         <a href="{{ route('edi.mapa.lokatory', ['head' => $r->EDI_ID]) }}" class="action-link" title="Mapa – velké čtverce s počty protistanic">S</a>
+                                        <a href="{{ route('edi.vizualizace', ['head' => $r->EDI_ID]) }}" class="action-link" title="Vizualizace deníku (mapa + grafy)">V</a>
                                     </div>
                                 @endif
                             </td>

@@ -9,6 +9,12 @@
 
 @php $isAdmin = $isAdmin ?? (bool) (auth()->user()?->is_admin); @endphp
 
+@if ($isAdmin)
+  <div class="mb-4">
+    <a href="{{ route('kola.admin.create') }}" class="btn btn-primary btn-sm">{{ __('pages.kola.btn_create') }}</a>
+  </div>
+@endif
+
 <div class="table-wrap">
   <table class="data-table">
     <thead>
@@ -16,6 +22,7 @@
         <th>{{ __('pages.kola.col_date') }}</th>
         <th>{{ __('pages.kola.col_deadline') }}</th>
         <th>{{ __('pages.kola.col_name') }}</th>
+        <th class="num">{{ __('pages.kola.col_active') }}</th>
         <th>{{ __('pages.kola.col_evaluated') }}</th>
         @if ($isAdmin)<th>{{ __('pages.kola.col_actions') }}</th>@endif
       </tr>
@@ -26,15 +33,23 @@
           <td class="whitespace-nowrap">{{ $k->datum_konani?->format('j. n. Y') }}</td>
           <td class="whitespace-nowrap">{{ $k->datum_uzaverky?->format('j. n. Y H:i') }}</td>
           <td>{{ $k->nazev }}</td>
+          <td class="num">
+            @if ($k->aktivni)
+              <span class="badge badge-ok">{{ __('pages.kola.active_yes') }}</span>
+            @else
+              <span class="text-muted">—</span>
+            @endif
+          </td>
           <td class="whitespace-nowrap">{{ $k->vyhodnoceno?->format('j. n. Y H:i') ?? '—' }}</td>
           @if ($isAdmin)
             <td>
-              @unless ($k->vyhodnoceno)
-                <div class="flex flex-wrap gap-2">
+              <div class="flex flex-wrap gap-2">
+                <a href="{{ route('kola.admin.edit', $k->id) }}" class="btn btn-ghost btn-sm">{{ __('pages.kola.btn_edit') }}</a>
+                @unless ($k->vyhodnoceno)
                   <form action="{{ route('kola.vyhodnotit', $k->id) }}" method="post">@csrf<button type="submit" class="btn btn-primary btn-sm">{{ __('pages.kola.btn_evaluate') }}</button></form>
                   <form action="{{ route('kola.uzavrit', $k->id) }}" method="post">@csrf<button type="submit" class="btn btn-ghost btn-sm">{{ __('pages.kola.btn_close') }}</button></form>
-                </div>
-              @endunless
+                @endunless
+              </div>
             </td>
           @endif
         </tr>

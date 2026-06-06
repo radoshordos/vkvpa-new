@@ -23,17 +23,37 @@ return [
     // Placeholder
     'not_implemented' => 'Tato sekce zatím není implementována.',
 
+    // Kola – CRUD
+    'kolo_create_title' => 'Nové kolo – Administrace VKV PA',
+    'kolo_create_heading' => 'Přidat nové kolo závodu',
+    'kolo_edit_title' => 'Upravit kolo – Administrace VKV PA',
+    'kolo_edit_heading' => 'Upravit kolo závodu',
+    'kolo_field_name' => 'Název kola',
+    'kolo_field_date' => 'Datum konání',
+    'kolo_field_deadline' => 'Uzávěrka (datum a čas)',
+    'kolo_field_note' => 'Poznámka',
+    'kolo_field_active' => 'Aktivní (příjem hlášení je otevřen)',
+    'kolo_btn_create' => 'Vytvořit kolo',
+    'kolo_btn_save' => 'Uložit změny',
+
     // Kategorie
     'kategorie_title' => 'Správa kategorií – Administrace VKV PA',
     'kategorie_heading' => 'Správa kategorií',
     'kategorie_empty' => 'Žádné kategorie zatím neexistují.',
     'kategorie_add' => 'Přidat kategorii',
+    'kategorie_edit' => 'Upravit kategorii',
     'kategorie_col_name' => 'Název',
     'kategorie_col_abbr' => 'Zkratka',
     'kategorie_col_desc' => 'Popis',
+    'kategorie_col_actions' => 'Akce',
+    'kategorie_btn_edit' => 'Upravit',
+    'kategorie_btn_save' => 'Uložit',
     'field_name' => 'Název',
     'field_abbr' => 'Zkratka',
     'field_desc' => 'Popis',
+
+    // Společné
+    'btn_cancel' => 'Zrušit',
 
     // Deníky
     'deniky_title' => 'Nahrané EDI deníky – Administrace VKV PA',
