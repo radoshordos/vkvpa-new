@@ -19,10 +19,13 @@ return [
         ['key' => 'vysledkova_listina', 'trans' => 'nav.results'],
         ['key' => 'rocni_vysledky',     'trans' => 'nav.year_results'],
         ['key' => 'diskuse.index',      'trans' => 'nav.discussion'],
-        ['url' => 'https://vkvpa.hamradio.cz/rules/PA_VKV_2023–2022_12_23_cz.pdf', 'trans' => 'nav.rules_cz', 'target' => '_blank'],
-        ['url' => 'http://www.ok1kpa.com/pa-podminky.htm', 'trans' => 'nav.official_rules',   'target' => '_blank'],
-        ['url' => 'http://www.ok1kpa.com/',                'trans' => 'nav.official_archive',  'target' => '_blank'],
-        ['url' => 'http://www.crk.cz/',                    'trans' => 'nav.official_web',      'target' => '_blank'],
+    ],
+
+    'footer' => [
+        ['url' => 'https://vkvpa.hamradio.cz/rules/PA_VKV_2023–2022_12_23_cz.pdf', 'trans' => 'nav.rules_cz',       'target' => '_blank'],
+        ['url' => 'http://www.ok1kpa.com/pa-podminky.htm',                          'trans' => 'nav.official_rules',  'target' => '_blank'],
+        ['url' => 'http://www.ok1kpa.com/',                                          'trans' => 'nav.official_archive', 'target' => '_blank'],
+        ['url' => 'http://www.crk.cz/',                                              'trans' => 'nav.official_web',    'target' => '_blank'],
     ],
 
     'admin' => [

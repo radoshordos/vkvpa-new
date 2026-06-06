@@ -14,6 +14,7 @@ return [
     'administration' => 'Administrace',
     'contact_evaluator' => 'Kontakt na vyhodnocovatele: Míla OK1VUM,',
     'hosted_by' => 'Tato aplikace je hostována na serveru',
+    'useful_links' => 'Užitečné odkazy',
     'no_active_title' => 'Nyní není aktivní žádné kolo.',
     'no_active_body' => 'EDI je možné odeslat pouze do aktivních kol.',
 ];
