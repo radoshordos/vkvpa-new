@@ -19,4 +19,8 @@ Schedule::call(function (ScoringService $scoring): void {
     if ($pocet > 0) {
         Log::info('schedule.kola.deactivate_expired', ['pocet' => $pocet]);
     }
-})->hourly()->name('kola:deactivate-expired')->withoutOverlapping();
+})
+    ->hourly()
+    ->name('kola:deactivate-expired')
+    ->withoutOverlapping()
+    ->skip(fn (): bool => app()->runningUnitTests());

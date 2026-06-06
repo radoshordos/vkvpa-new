@@ -14,6 +14,8 @@ use App\Services\Edi\EdiImportService;
 use App\Services\Edi\EdiLog;
 use App\Services\Edi\EdiQso;
 use App\Services\Scoring\ScoringService;
+use Illuminate\Support\Facades\Context;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Orchestruje celý tok importu EDI deníku: validace business pravidel,
@@ -45,6 +47,9 @@ final readonly class ImportEdiAction
         $this->assertTDateMatchesQsos($h->tDate(), $log->qsos);
 
         $idKola = $this->scoring->koloForTDate($h->tDate()) ?? 0;
+
+        Context::add('znacka', $pcall);
+        Context::add('id_kola', $idKola);
 
         if (VkvpaData::query()->hasEdi()->where('znacka', $pcall)->where('id_kola', $idKola)->exists()) {
             throw new DuplicateEdiException($pcall);
@@ -81,7 +86,7 @@ final readonly class ImportEdiAction
         ]);
 
         if ($notify) {
-            EdiImported::dispatch($data);
+            DB::afterCommit(fn () => EdiImported::dispatch($data));
         }
 
         return $data;

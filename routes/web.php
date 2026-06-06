@@ -52,11 +52,11 @@ Route::get('/mail-image', [MailImageController::class, 'show'])->name('mail.imag
 // Diskuse k závodnímu kolu
 Route::get('/diskuse', [DiskuseController::class, 'index'])->name('diskuse.index');
 Route::get('/diskuse/{kolo}', [DiskuseController::class, 'show'])->name('diskuse.show');
-Route::post('/diskuse/{kolo}', [DiskuseController::class, 'store'])->middleware('throttle:5,1')->name('diskuse.store');
+Route::post('/diskuse/{kolo}', [DiskuseController::class, 'store'])->middleware('throttle:diskuse')->name('diskuse.store');
 
 // Nahrání EDI deníku (využívá EdiParser/EdiImportService z Fáze 5).
 Route::get('/edi', [EdiController::class, 'create'])->name('edi.create');
-Route::post('/edi', [EdiController::class, 'store'])->middleware('throttle:10,1')->name('edi.store');
+Route::post('/edi', [EdiController::class, 'store'])->middleware('throttle:edi-upload')->name('edi.store');
 
 // Zobrazení EDI deníku (sloupec „Akce / EDI" ve výsledkové listině):
 //   EDI  – původní EDI soubor,

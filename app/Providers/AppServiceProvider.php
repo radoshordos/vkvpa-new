@@ -7,8 +7,11 @@ namespace App\Providers;
 use App\Events\EdiImported;
 use App\Listeners\SendEdiMailsListener;
 use App\Support\VkvpaSettings;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Override;
 use RuntimeException;
@@ -39,6 +42,8 @@ class AppServiceProvider extends ServiceProvider
 
         Event::listen(EdiImported::class, SendEdiMailsListener::class);
 
+        $this->configureRateLimiters();
+
         if ($this->app->isProduction()) {
             foreach ([VkvpaSettings::contactMail(), VkvpaSettings::contactName()] as $value) {
                 if (blank($value)) {
@@ -46,5 +51,16 @@ class AppServiceProvider extends ServiceProvider
                 }
             }
         }
+    }
+
+    private function configureRateLimiters(): void
+    {
+        RateLimiter::for('edi-upload', function (Request $request): Limit {
+            return Limit::perMinute(10)->by($request->user()?->id ?: $request->ip());
+        });
+
+        RateLimiter::for('diskuse', function (Request $request): Limit {
+            return Limit::perMinute(5)->by($request->user()?->id ?: $request->ip());
+        });
     }
 }

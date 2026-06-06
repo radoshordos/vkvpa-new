@@ -70,11 +70,11 @@ final class VkvpaSettings
 
     public static function contestWindowFrom(): string
     {
-        return Config::string('vkvpa.contest_window.from', '0800');
+        return once(fn (): string => Config::string('vkvpa.contest_window.from', '0800'));
     }
 
     public static function contestWindowTo(): string
     {
-        return Config::string('vkvpa.contest_window.to', '1100');
+        return once(fn (): string => Config::string('vkvpa.contest_window.to', '1100'));
     }
 }
