@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DenikyController;
 use App\Http\Controllers\Admin\EdiDebugController;
 use App\Http\Controllers\Admin\ImportController;
@@ -37,7 +38,7 @@ Route::get('/lang/{locale}', function (string $locale) {
 
 // Výchozí stránka = formulář hlášení.
 Route::get('/', [HlaseniController::class, 'index'])->name('hlaseni.index');
-Route::post('/hlaseni', [HlaseniController::class, 'store'])->name('hlaseni.store');
+Route::post('/hlaseni', [HlaseniController::class, 'store'])->middleware('throttle:hlaseni')->name('hlaseni.store');
 
 // --- Veřejné ---
 Route::get('/kola', [KolaController::class, 'index'])->name('kola.index');
@@ -76,6 +77,9 @@ Route::get('/edi/{head}/vizualizace', [EdiVizualizaceController::class, 'show'])
 
 // --- Administrace (chráněno middleware z Fáze 4) ---
 Route::middleware('admin')->group(function (): void {
+    Route::get('/admin/dashboard', [DashboardController::class, 'index'])
+        ->name('admin.dashboard');
+
     // CRUD kol – vytvoření, editace (název, data, aktivní příznak).
     Route::get('/admin/kola/create', [KolaAdminController::class, 'create'])->name('kola.admin.create');
     Route::post('/admin/kola', [KolaAdminController::class, 'store'])->name('kola.admin.store');
