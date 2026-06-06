@@ -38,7 +38,7 @@ Route::get('/lang/{locale}', function (string $locale) {
 
 // Výchozí stránka = formulář hlášení.
 Route::get('/', [HlaseniController::class, 'index'])->name('hlaseni.index');
-Route::post('/hlaseni', [HlaseniController::class, 'store'])->name('hlaseni.store');
+Route::post('/hlaseni', [HlaseniController::class, 'store'])->middleware('throttle:hlaseni')->name('hlaseni.store');
 
 // --- Veřejné ---
 Route::get('/kola', [KolaController::class, 'index'])->name('kola.index');

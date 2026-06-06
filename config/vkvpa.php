@@ -9,6 +9,11 @@ return [
     'contact_mail' => env('CONTACT_MAIL', 'ok1vum@hamradio.cz'),
     'contact_name' => env('CONTACT_NAME', 'Míla OK1VUM'),
 
+    // Admin účet pro seeder – čtení přes config() je bezpečné i při kešování.
+    'admin_user' => env('ADMIN_USER'),
+    'admin_email' => env('ADMIN_EMAIL', 'admin@example.com'),
+    'admin_pass' => env('ADMIN_PASS'),
+
     'token_ttl_days' => 5,
 
     // Maximální velikost nahrávaného EDI souboru v kilobajtech.
