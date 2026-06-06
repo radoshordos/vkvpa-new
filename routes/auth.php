@@ -19,6 +19,7 @@ Route::post('/login', [AuthController::class, 'login']);
 // Legacy přihlášení přes jednorázový kód (?kod=) – nyní bezpečně:
 Route::get('/login/token/{kod}', [AuthController::class, 'loginViaToken'])
     ->name('login.token')
+    ->middleware('throttle:login-token')
     ->where('kod', '[A-Za-z0-9]+');
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
