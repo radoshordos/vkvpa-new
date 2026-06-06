@@ -164,4 +164,74 @@ class KategorieControllerTest extends TestCase
 
         $this->assertDatabaseMissing('vkvpa_kategorie', ['nazev' => 'Test']);
     }
+
+    // ------------------------------------------------------------------
+    // edit / update
+
+    public function test_edit_renders_form_with_existing_data(): void
+    {
+        $kat = VkvpaKategorie::create(['nazev' => '144 MHz SO', 'popis' => 'Popis', 'zkratka' => '144SO', 'dxid' => 0]);
+
+        $this->actingAs($this->admin())
+            ->get(route('kategorie.edit', $kat->id))
+            ->assertOk()
+            ->assertSee('144 MHz SO')
+            ->assertSee('144SO');
+    }
+
+    public function test_edit_requires_admin(): void
+    {
+        $kat = VkvpaKategorie::create(['nazev' => '144 MHz SO', 'popis' => '', 'zkratka' => '144SO', 'dxid' => 0]);
+
+        $this->get(route('kategorie.edit', $kat->id))
+            ->assertRedirect(route('login'));
+    }
+
+    public function test_update_saves_changes(): void
+    {
+        $kat = VkvpaKategorie::create(['nazev' => 'Stary nazev', 'popis' => '', 'zkratka' => 'OLD', 'dxid' => 0]);
+
+        $this->actingAs($this->admin())
+            ->patch(route('kategorie.update', $kat->id), [
+                'nazev' => 'Nový název',
+                'popis' => 'Nový popis',
+                'zkratka' => 'NEW',
+                'dxid' => 0,
+            ])
+            ->assertRedirect(route('kategorie.index'))
+            ->assertSessionHas('announcement');
+
+        $this->assertDatabaseHas('vkvpa_kategorie', [
+            'id' => $kat->id,
+            'nazev' => 'Nový název',
+            'zkratka' => 'NEW',
+        ]);
+    }
+
+    public function test_update_requires_admin(): void
+    {
+        $kat = VkvpaKategorie::create(['nazev' => 'Test', 'popis' => '', 'zkratka' => 'T', 'dxid' => 0]);
+
+        $this->patch(route('kategorie.update', $kat->id), [
+            'nazev' => 'Zmeneno',
+            'popis' => '',
+            'zkratka' => 'Z',
+            'dxid' => 0,
+        ])->assertRedirect(route('login'));
+
+        $this->assertDatabaseMissing('vkvpa_kategorie', ['nazev' => 'Zmeneno']);
+    }
+
+    public function test_update_validates_required_fields(): void
+    {
+        $kat = VkvpaKategorie::create(['nazev' => 'Test', 'popis' => '', 'zkratka' => 'T', 'dxid' => 0]);
+
+        $this->actingAs($this->admin())
+            ->patch(route('kategorie.update', $kat->id), [
+                'nazev' => '',
+                'zkratka' => '',
+                'dxid' => 0,
+            ])
+            ->assertSessionHasErrors(['nazev', 'zkratka']);
+    }
 }

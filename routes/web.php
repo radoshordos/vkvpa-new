@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\DenikyController;
 use App\Http\Controllers\Admin\EdiDebugController;
 use App\Http\Controllers\Admin\ImportController;
 use App\Http\Controllers\Admin\KategorieController;
+use App\Http\Controllers\Admin\KolaAdminController;
 use App\Http\Controllers\Admin\VyhodnoceniController;
 use App\Http\Controllers\Admin\ZaznamController;
 use App\Http\Controllers\DiskuseController;
@@ -75,6 +76,12 @@ Route::get('/edi/{head}/vizualizace', [EdiVizualizaceController::class, 'show'])
 
 // --- Administrace (chráněno middleware z Fáze 4) ---
 Route::middleware('admin')->group(function (): void {
+    // CRUD kol – vytvoření, editace (název, data, aktivní příznak).
+    Route::get('/admin/kola/create', [KolaAdminController::class, 'create'])->name('kola.admin.create');
+    Route::post('/admin/kola', [KolaAdminController::class, 'store'])->name('kola.admin.store');
+    Route::get('/admin/kola/{kolo}/edit', [KolaAdminController::class, 'edit'])->name('kola.admin.edit');
+    Route::patch('/admin/kola/{kolo}', [KolaAdminController::class, 'update'])->name('kola.admin.update');
+
     // Vyhodnocení a uzávěrka kola
     Route::post('/admin/kola/{kolo}/vyhodnotit', [VyhodnoceniController::class, 'vyhodnotit'])->name('kola.vyhodnotit');
     Route::post('/admin/kola/{kolo}/uzavrit', [VyhodnoceniController::class, 'uzavrit'])->name('kola.uzavrit');
@@ -93,6 +100,8 @@ Route::middleware('admin')->group(function (): void {
     Route::get('/admin/deniky', [DenikyController::class, 'index'])->name('deniky.index');
     Route::get('/admin/kategorie', [KategorieController::class, 'index'])->name('kategorie.index');
     Route::post('/admin/kategorie', [KategorieController::class, 'store'])->name('kategorie.store');
+    Route::get('/admin/kategorie/{kategorie}/edit', [KategorieController::class, 'edit'])->name('kategorie.edit');
+    Route::patch('/admin/kategorie/{kategorie}', [KategorieController::class, 'update'])->name('kategorie.update');
     Route::get('/admin/importy', [ImportController::class, 'index'])->name('importy.index');
     Route::post('/admin/importy', [ImportController::class, 'store'])->name('importy.store');
 });

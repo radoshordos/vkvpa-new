@@ -17,6 +17,7 @@
                 <th>{{ __('admin.kategorie_col_abbr') }}</th>
                 <th>{{ __('admin.kategorie_col_desc') }}</th>
                 <th class="num">dxid</th>
+                <th>{{ __('admin.kategorie_col_actions') }}</th>
             </tr>
         </thead>
         <tbody>
@@ -27,21 +28,92 @@
                     <td class="mono">{{ $k->zkratka }}</td>
                     <td class="text-sm text-muted">{{ $k->popis ?: '—' }}</td>
                     <td class="num">{{ $k->dxid }}</td>
+                    <td>
+                        <a href="{{ route('kategorie.edit', $k->id) }}" class="icon-btn icon-btn-u" title="{{ __('admin.kategorie_btn_edit') }}">U</a>
+                    </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="5" class="italic text-muted">{{ __('admin.kategorie_empty') }}</td>
+                    <td colspan="6" class="italic text-muted">{{ __('admin.kategorie_empty') }}</td>
                 </tr>
             @endforelse
         </tbody>
     </table>
 </div>
 
+{{-- Editační formulář (zobrazí se jen při edit akci) --}}
+@isset($editKategorie)
+<div class="card max-w-2xl p-5 mb-8 border-l-4 border-brand">
+    <h2>{{ __('admin.kategorie_edit') }}: <span class="mono">{{ $editKategorie->nazev }}</span></h2>
+
+    @if ($errors->any())
+        <div class="alert alert-error mb-4 mt-3">
+            <ul class="list-disc pl-5">
+                @foreach ($errors->all() as $err)
+                    <li>{{ $err }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    <form method="post" action="{{ route('kategorie.update', $editKategorie->id) }}" class="mt-3 space-y-3">
+        @csrf
+        @method('PATCH')
+
+        <div class="flex flex-wrap gap-3">
+            <div class="field mb-0 min-w-48 flex-1">
+                <label class="label" for="edit-nazev">{{ __('admin.field_name') }} *</label>
+                <input id="edit-nazev" name="nazev" type="text"
+                       class="input @error('nazev') input-err @enderror"
+                       value="{{ old('nazev', $editKategorie->nazev) }}" maxlength="50" required>
+                @error('nazev')
+                    <span class="field-error">{{ $message }}</span>
+                @enderror
+            </div>
+            <div class="field mb-0 w-32">
+                <label class="label" for="edit-zkratka">{{ __('admin.field_abbr') }} *</label>
+                <input id="edit-zkratka" name="zkratka" type="text"
+                       class="input mono @error('zkratka') input-err @enderror"
+                       value="{{ old('zkratka', $editKategorie->zkratka) }}" maxlength="20" required>
+                @error('zkratka')
+                    <span class="field-error">{{ $message }}</span>
+                @enderror
+            </div>
+            <div class="field mb-0 w-24">
+                {{-- dxid: 0 = tato kategorie je tuzemská; jinak ID odpovídající tuzemské kategorie --}}
+                <label class="label" for="edit-dxid">dxid *</label>
+                <input id="edit-dxid" name="dxid" type="number"
+                       class="input @error('dxid') input-err @enderror"
+                       value="{{ old('dxid', $editKategorie->dxid) }}" min="0" required>
+                @error('dxid')
+                    <span class="field-error">{{ $message }}</span>
+                @enderror
+            </div>
+        </div>
+
+        <div class="field mb-0">
+            <label class="label" for="edit-popis">{{ __('admin.field_desc') }}</label>
+            <input id="edit-popis" name="popis" type="text"
+                   class="input @error('popis') input-err @enderror"
+                   value="{{ old('popis', $editKategorie->popis) }}" maxlength="250">
+            @error('popis')
+                <span class="field-error">{{ $message }}</span>
+            @enderror
+        </div>
+
+        <div class="flex justify-end gap-3">
+            <a href="{{ route('kategorie.index') }}" class="btn btn-ghost">{{ __('admin.btn_cancel') }}</a>
+            <button type="submit" class="btn btn-primary">{{ __('admin.kategorie_btn_save') }}</button>
+        </div>
+    </form>
+</div>
+@endisset
+
 {{-- Formulář pro přidání nové kategorie --}}
 <div class="card max-w-2xl p-5">
     <h2>{{ __('admin.kategorie_add') }}</h2>
 
-    @if ($errors->any())
+    @if ($errors->any() && ! isset($editKategorie))
         <div class="alert alert-error mb-4 mt-3">
             <ul class="list-disc pl-5">
                 @foreach ($errors->all() as $err)
@@ -74,7 +146,6 @@
                 @enderror
             </div>
             <div class="field mb-0 w-24">
-                {{-- TODO: dxid semantics TBD --}}
                 <label class="label" for="dxid">dxid *</label>
                 <input id="dxid" name="dxid" type="number"
                        class="input @error('dxid') input-err @enderror"
