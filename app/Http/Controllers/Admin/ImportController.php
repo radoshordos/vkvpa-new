@@ -69,6 +69,14 @@ class ImportController extends Controller
                 continue;
             }
 
+            // Guard against zip entries with inflated size far exceeding EDI limits.
+            $maxBytes = VkvpaSettings::ediMaxSizeKb() * 1024;
+            if (($stat['size'] ?? 0) > $maxBytes) {
+                $items[] = ['file' => basename($stat['name']), 'status' => 'error', 'reason' => 'Soubor přesahuje povolenou velikost.'];
+
+                continue;
+            }
+
             $content = $zip->getFromIndex($i);
             if ($content === false || trim($content) === '') {
                 $items[] = ['file' => basename($stat['name']), 'status' => 'error', 'reason' => 'Prázdný nebo nečitelný soubor.'];

@@ -59,7 +59,7 @@ class AuthController extends Controller
     /**
      * Přihlášení přes jednorázový kód (?kod=).
      */
-    public function loginViaToken(string $kod): RedirectResponse
+    public function loginViaToken(string $kod, Request $request): RedirectResponse
     {
         VkvpaPrihlaseni::query()
             ->where('time', '<', Carbon::now()->subDays(VkvpaSettings::tokenTtlDays()))
@@ -90,11 +90,11 @@ class AuthController extends Controller
         }
 
         Auth::login($admin);
-        request()->session()->regenerate();
-        request()->session()->put('prihlasen', $admin->name);
+        $request->session()->regenerate();
+        $request->session()->put('prihlasen', $admin->name);
 
         // „Převzít záznam" odkaz z e-mailu vyhodnocovateli (?confirm=ID).
-        $confirm = request()->integer('confirm');
+        $confirm = $request->integer('confirm');
         if ($confirm > 0) {
             return redirect()->route('hlaseni.index', ['id' => $confirm]);
         }
