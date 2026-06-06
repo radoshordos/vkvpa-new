@@ -23,6 +23,11 @@ jobs:
           extensions: gd, intl, mbstring, pdo, pdo_sqlite, sqlite3, zip
           coverage: none
 
+      - name: Prepare Laravel environment
+        run: |
+          cp .env.example .env
+          echo "APP_KEY=base64:$(openssl rand -base64 32)" >> .env
+
       - name: Cache Composer dependencies
         uses: actions/cache@v4
         with:
@@ -32,11 +37,6 @@ jobs:
 
       - name: Install PHP dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
-
-      - name: Prepare Laravel environment
-        run: |
-          cp .env.example .env
-          php artisan key:generate --ansi
 
       - name: Run tests
         run: composer test
@@ -55,6 +55,11 @@ jobs:
           php-version: '8.4'
           extensions: gd, intl, mbstring, pdo, pdo_sqlite, sqlite3, zip
           coverage: none
+
+      - name: Prepare Laravel environment
+        run: |
+          cp .env.example .env
+          echo "APP_KEY=base64:$(openssl rand -base64 32)" >> .env
 
       - name: Cache Composer dependencies
         uses: actions/cache@v4
