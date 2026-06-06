@@ -14,7 +14,11 @@ return new class extends Migration
 
             $table->integer('id', true);
             $table->timestamp('time')->nullable()->useCurrent();
+            // Přihlašovací kódy musí být unikátní – kolize tokenu by jinak
+            // umožnila neoprávněné přihlášení.
             $table->string('kod', 32);
+
+            $table->unique('kod', 'vkvpa_prihlaseni_kod_unique');
         });
     }
 

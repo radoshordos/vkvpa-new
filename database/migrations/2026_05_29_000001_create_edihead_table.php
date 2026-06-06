@@ -33,6 +33,7 @@ return new class extends Migration
             $table->longText('SRCR')->nullable();
 
             $table->index('id_kola', 'edihead_id_kola_idx');
+            $table->index('PCall', 'edihead_pcall_idx');
         });
     }
 

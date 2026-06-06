@@ -106,25 +106,31 @@ chování). Z controlleru odstraněny nepotřebné závislosti (`EdiImportServic
 
 ---
 
-## P3 – Fragmentace migrací schématu (otevřeno, mírně narostlo)
+## P3 – Fragmentace migrací schématu ✅ vyřešeno
 
-**Kde:** `database/migrations/`
+Základní schéma z `2026_05_29` doplňovaly tři „opravné" migrace
+(`add_missing_indexes`, `fix_database_integrity`, `add_performance_indexes`), takže
+indexy i integritní pravidla byly roztroušené na více místech.
 
-Základní schéma je z `2026_05_29`, ale následují **čtyři** pozdější úpravy:
+**Náprava (provedeno – projekt zatím není v produkci):** úpravy zapsány zpět do
+původních `create_*` migrací a opravné migrace smazány – jedna migrace = jedna
+pravda o schématu:
 
-- `2026_06_03_000001_add_missing_indexes`
-- `2026_06_03_000002_fix_database_integrity`
-- `2026_06_05_000001_add_performance_indexes`
-- `2026_06_05_000002_create_diskuse_table`
+- `create_edihead` ← index `PCall`
+- `create_edilines` ← kompozitní index `(IDS, Time)`
+- `create_vkvpa_data` ← odstraněno redundantní `nullable()` u sloupců s DEFAULT
+  (NOT NULL + DEFAULT) a doplněny indexy `id_kategorie`, `(id_kola, schvaleno)`,
+  `(znacka, id_kola)`
+- `create_vkvpa_prihlaseni` ← UNIQUE na `kod`
 
-Indexy se spravují na třech místech a `fix_database_integrity` (mj. odstraňuje
-redundantní `nullable()` a opravuje `kod` na UNIQUE) napovídá, že základní migrace
-nebyly úplné. Pro projekt, který **ještě není v produkci**, je čistší tyto úpravy
-zapsat zpět do `create_*` migrací. Drobnost: `bodu_za_qso` má v základní migraci
-`->default(1)` (ostatní skóre `0`) – nekonzistentní výchozí hodnota.
+Net stav schématu zůstal identický; ověřeno `migrate:fresh` i celou testovací sadou.
+Ponechány legitimní `create_diskuse_table` a `add_aktivni_to_vkvpa_kola`.
+Drobnost ponechána beze změny: `bodu_za_qso` má `->default(1)` (ostatní skóre `0`) –
+aplikace hodnotu vždy nastavuje explicitně, default je bezvýznamný.
 
-> Pozn.: pokud schéma **už běží v produkci**, konsolidaci migrací **nedělat** –
-> je to po nasazení anti-vzor. Před zásahem ověřit.
+> Pozn.: protože šlo o přepis již aplikovaných migrací, je po této změně nutné
+> v dev prostředí spustit `php artisan migrate:fresh` (data se zahodí). Na
+> nasazeném schématu by se konsolidace **nedělala** – je to po nasazení anti-vzor.
 
 ---
 
@@ -207,10 +213,9 @@ plochu rizika dál zužuje.
 | 3 | D1 – sdílená `QsoGeometry` z Map/Vizualizace controllerů | střední | **odstranění duplikace** | ✅ hotovo |
 | 4 | D3 – testy pro vizualizaci | nízký | regrese | ✅ hotovo |
 | 5 | P1 – hromadný import přes `ImportEdiAction` | střední | dokončení dedup | ✅ hotovo |
-| 6 | P3 – konsolidace migrací (jen pokud není v produkci) | střední | údržba schématu | otevřeno |
+| 6 | P3 – konsolidace migrací (projekt není v produkci) | střední | údržba schématu | ✅ hotovo |
 
-**Veškerý strukturální dluh z tohoto auditu je vyřešen.** Poslední dvě velká místa
-kopírovaného kódu (mapy/vizualizace a import) jsou odstraněna a pokryta testy.
-Druh provozu je nově typovaný enumem `App\Enums\QsoMode` (SSB/CW/Other) místo
-volného `int`. Otevřené zůstává jen volitelné **P3** (konsolidace migrací) – a to
-výhradně tehdy, pokud schéma ještě neběží v produkci.
+**Veškerý dluh z tohoto auditu je vyřešen.** Poslední dvě velká místa kopírovaného
+kódu (mapy/vizualizace a import) jsou odstraněna a pokryta testy, druh provozu je
+typovaný enumem `App\Enums\QsoMode` a migrace jsou zkonsolidované do `create_*`
+(jedna pravda o schématu). Nezbývají žádné otevřené body.

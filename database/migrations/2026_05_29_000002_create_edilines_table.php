@@ -35,6 +35,8 @@ return new class extends Migration
 
             $table->index('IDS', 'IDS');
             $table->index('Received-WWL', 'Received-WWL');
+            // Dotazy QSO vždy filtrují podle deníku (IDS) i závodního okna (Time).
+            $table->index(['IDS', 'Time'], 'edilines_ids_time_idx');
             $table->foreign('IDS', 'edilines_ibfk_1')->references('ID')->on('edihead');
         });
     }
