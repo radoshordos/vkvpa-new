@@ -2,3 +2,13 @@ AuthType Basic
 AuthName "Database Admin"
 AuthUserFile /var/www/html/.htpasswd
 Require valid-user
+
+# Belt-and-suspenders: also deny from all non-localhost addresses.
+# To allow access from a specific IP, add: Allow from YOUR.IP.HERE
+<IfModule mod_authz_host.c>
+    Order Deny,Allow
+    Deny from all
+    Allow from 127.0.0.1
+    Allow from ::1
+    Satisfy All
+</IfModule>
