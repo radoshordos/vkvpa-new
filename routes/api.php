@@ -12,17 +12,19 @@ use Illuminate\Support\Facades\Route;
  * CORS: config/cors.php (GET, všechny originy).
  */
 
-Route::get('/kola', [VysledkyApiController::class, 'kola'])->name('api.kola');
+Route::middleware('throttle:api')->group(function (): void {
+    Route::get('/kola', [VysledkyApiController::class, 'kola'])->name('api.kola');
 
-Route::prefix('vysledky')->name('api.vysledky.')->group(function (): void {
-    Route::get('/rocni/{rok}', [VysledkyApiController::class, 'rocni'])
-        ->where('rok', '\d{4}')
-        ->name('rocni');
+    Route::prefix('vysledky')->name('api.vysledky.')->group(function (): void {
+        Route::get('/rocni/{rok}', [VysledkyApiController::class, 'rocni'])
+            ->where('rok', '\d{4}')
+            ->name('rocni');
 
-    Route::get('/{kolo}', [VysledkyApiController::class, 'kolo'])
-        ->whereNumber('kolo')
-        ->name('kolo');
+        Route::get('/{kolo}', [VysledkyApiController::class, 'kolo'])
+            ->whereNumber('kolo')
+            ->name('kolo');
+    });
+
+    Route::get('/docs', [ApiDocsController::class, 'index'])->name('api.docs');
+    Route::get('/docs/spec', [ApiDocsController::class, 'spec'])->name('api.docs.spec');
 });
-
-Route::get('/docs', [ApiDocsController::class, 'index'])->name('api.docs');
-Route::get('/docs/spec', [ApiDocsController::class, 'spec'])->name('api.docs.spec');

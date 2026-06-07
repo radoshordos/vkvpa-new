@@ -1,0 +1,16 @@
+{
+  "name": "VKV Provozní aktiv",
+  "short_name": "VKV PA",
+  "description": "Elektronické hlášení výsledků závodů VKV PA",
+  "lang": "cs",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#eef0f8",
+  "theme_color": "#4338ca",
+  "icons": [
+    { "src": "/icon.svg", "type": "image/svg+xml", "sizes": "any", "purpose": "any maskable" },
+    { "src": "/favicon.ico", "type": "image/x-icon", "sizes": "48x48" }
+  ]
+}

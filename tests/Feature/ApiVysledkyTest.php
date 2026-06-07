@@ -57,6 +57,14 @@ class ApiVysledkyTest extends TestCase
             ->assertJson(['data' => []]);
     }
 
+    public function test_api_routes_have_rate_limit_headers(): void
+    {
+        // throttle:api (60/min) přidá hlavičky o limitu – ověřuje, že limiter běží.
+        $this->getJson('/api/kola')
+            ->assertOk()
+            ->assertHeader('X-RateLimit-Limit', 60);
+    }
+
     // ── /api/vysledky/{kolo} ─────────────────────────────────────────────
 
     public function test_vysledky_kolo_returns_kolo_and_data(): void
