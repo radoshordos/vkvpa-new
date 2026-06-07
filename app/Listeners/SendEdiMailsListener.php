@@ -27,12 +27,12 @@ final class SendEdiMailsListener implements ShouldQueue
         $koloNazev = $data->kolo->nazev ?? '';
         $kategorieNazev = $data->kategorie->nazev ?? '';
 
-        if ($data->mail !== '') {
+        if (filter_var($data->mail, FILTER_VALIDATE_EMAIL) !== false) {
             Mail::to($data->mail)->queue(new HlaseniPrijato($data, $koloNazev, $kategorieNazev));
         }
 
         $contactMail = VkvpaSettings::contactMail();
-        if ($contactMail !== '') {
+        if (filter_var($contactMail, FILTER_VALIDATE_EMAIL) !== false) {
             $kod = Str::password(32, letters: true, numbers: true, symbols: false);
             VkvpaPrihlaseni::create(['kod' => hash('sha256', $kod), 'time' => now()]);
 
