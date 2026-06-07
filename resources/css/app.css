@@ -269,6 +269,11 @@
         border-color: color-mix(in oklab, var(--brand) 35%, transparent);
         color: var(--ink);
     }
+    .alert-warning {
+        background-color: var(--warn-soft);
+        border-color: color-mix(in oklab, var(--warn) 45%, transparent);
+        color: var(--warn);
+    }
 
     /* ── Odznaky ─────────────────────────────────────────────────── */
     .badge {

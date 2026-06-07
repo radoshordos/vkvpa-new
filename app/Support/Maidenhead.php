@@ -11,6 +11,15 @@ namespace App\Support;
 final class Maidenhead
 {
     /**
+     * Je řetězec platný Maidenhead lokátor? Akceptuje velký čtverec (4 znaky,
+     * např. „JN99") i plný lokátor se subčtvercem (6 znaků, např. „JN99AJ").
+     */
+    public static function isValidLocator(string $locator): bool
+    {
+        return preg_match('/^[A-R]{2}\d{2}([A-X]{2})?$/', strtoupper(trim($locator))) === 1;
+    }
+
+    /**
      * @return array{lat: float, lon: float}|null null při neplatném lokátoru
      */
     public static function toLatLon(string $locator): ?array

@@ -57,6 +57,7 @@ return [
         'title' => 'Hlášení – VKV PA',
         'heading_edi' => 'Načíst EDI soubor',
         'error_line' => 'Chybný řádek',
+        'import_warnings' => 'Deník byl načten, ale upozorňujeme na:',
         'btn_upload' => 'nahrát',
         'edi_info' => 'Lze použít jakýkoli logovací software, který umí edi export a nezáleží na tom, jestli samotný deník umí počítat body pro PA, nebo ne. Zcela vyhoví standardní konfigurace pro závody, ve kterých je jeden bod za kilometr, robot si spočítá body dle pravidel PA i vyhledá v deníku násobiče.',
         'no_edi_link' => 'Nemám EDI soubor (vyplním hlášení ručně)',

@@ -16,6 +16,17 @@
     <div class="alert alert-success">{{ session('announcement') }}</div>
 @endif
 
+@if (!empty(session('importWarnings')))
+    <div class="alert alert-warning">
+        <strong>{{ __('pages.hlaseni.import_warnings') }}</strong>
+        <ul class="mt-1 list-disc pl-5">
+            @foreach (session('importWarnings') as $w)
+                <li class="font-normal">{{ $w }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
 @if ($maAktivniKolo)
 {{-- ===== EDI upload box ===== --}}
 <div class="card mb-6 p-5">
