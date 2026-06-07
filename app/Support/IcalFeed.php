@@ -63,6 +63,12 @@ final class IcalFeed
                 'SUMMARY:'.self::escape((string) $k->nazev),
                 'DESCRIPTION:'.self::escape($popis),
                 'URL:'.route('kola.index'),
+                // Upomínka 2 dny před začátkem závodu.
+                'BEGIN:VALARM',
+                'ACTION:DISPLAY',
+                'DESCRIPTION:'.self::escape('VKV PA – '.((string) $k->nazev).' začíná za 2 dny'),
+                'TRIGGER:-P2D',
+                'END:VALARM',
                 'END:VEVENT',
             );
         }

@@ -71,6 +71,9 @@ class KolaControllerTest extends TestCase
         $this->assertStringContainsString('DTSTART:20260117T080000Z', $body);
         $this->assertStringContainsString('DTEND:20260117T110000Z', $body);
         $this->assertStringContainsString('UID:kolo-', $body);
+        // Upomínka 2 dny předem (VALARM s triggerem -P2D).
+        $this->assertStringContainsString('BEGIN:VALARM', $body);
+        $this->assertStringContainsString('TRIGGER:-P2D', $body);
         // CRLF řádkování dle RFC 5545.
         $this->assertStringContainsString("\r\n", $body);
     }
