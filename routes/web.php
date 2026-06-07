@@ -46,6 +46,8 @@ Route::post('/hlaseni', [HlaseniController::class, 'store'])->middleware('thrott
 
 // --- Veřejné ---
 Route::get('/kola', [KolaController::class, 'index'])->name('kola.index');
+// iCalendar feed termínů kol (.ics) pro přidání do kalendáře.
+Route::get('/kola/kalendar.ics', [KolaController::class, 'ical'])->name('kola.ical');
 
 Route::get('/vysledky', [VysledkyController::class, 'listina'])->name('vysledkova_listina');
 Route::get('/vysledky/pribezne', [VysledkyController::class, 'pribezne'])->name('pribezne_vysledky');

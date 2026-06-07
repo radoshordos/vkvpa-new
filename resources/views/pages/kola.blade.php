@@ -9,11 +9,12 @@
 
 @php $isAdmin = $isAdmin ?? (bool) (auth()->user()?->is_admin); @endphp
 
-@if ($isAdmin)
-  <div class="mb-4">
+<div class="mb-4 flex flex-wrap gap-2">
+  @if ($isAdmin)
     <a href="{{ route('kola.admin.create') }}" class="btn btn-primary btn-sm">{{ __('pages.kola.btn_create') }}</a>
-  </div>
-@endif
+  @endif
+  <a href="{{ route('kola.ical') }}" class="btn btn-ghost btn-sm">{{ __('pages.kola.btn_ical') }}</a>
+</div>
 
 <div class="table-wrap">
   <table class="data-table">
