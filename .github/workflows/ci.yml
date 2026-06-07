@@ -21,7 +21,7 @@ jobs:
         with:
           php-version: '8.4'
           extensions: gd, intl, mbstring, pdo, pdo_sqlite, sqlite3, zip
-          coverage: none
+          coverage: pcov
 
       - name: Prepare Laravel environment
         run: |
@@ -38,8 +38,10 @@ jobs:
       - name: Install PHP dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
 
-      - name: Run tests
-        run: composer test
+      - name: Run tests with coverage
+        run: |
+          php artisan config:clear --ansi
+          php artisan test --coverage
 
   analyse:
     name: Static Analysis
@@ -76,6 +78,23 @@ jobs:
 
       - name: Check PHP style
         run: composer lint
+
+  audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+
+      - name: Audit Composer dependencies
+        run: composer audit --locked --no-interaction --abandoned=report
 
   build:
     name: Frontend Build

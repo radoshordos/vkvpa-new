@@ -57,6 +57,7 @@ return [
         'title' => 'Log import – VKV PA',
         'heading_edi' => 'Import EDI file',
         'error_line' => 'Invalid line',
+        'import_warnings' => 'The log was imported, but please note:',
         'btn_upload' => 'upload',
         'edi_info' => "You can use any logging software that can export EDI, and it doesn't matter whether the log itself can count points for OK Activity or not. You can use the standard VHF/UHF contest configuration (one point per kilometer) — the robot calculates the points according to the OK Activity rules and looks up the multipliers in the log.",
         'no_edi_link' => 'No EDI file (fill in the form manually)',

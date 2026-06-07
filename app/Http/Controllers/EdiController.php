@@ -12,6 +12,7 @@ use App\Exceptions\UnknownBandException;
 use App\Models\Edihead;
 use App\Services\Edi\EdiParser;
 use App\Services\Edi\EdiReducer;
+use App\Services\Edi\EdiValidator;
 use App\Support\VkvpaSettings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -29,6 +30,7 @@ class EdiController extends Controller
         private readonly EdiParser $parser,
         private readonly ImportEdiAction $action,
         private readonly EdiReducer $reducer,
+        private readonly EdiValidator $validator,
     ) {}
 
     public function create(): View
@@ -61,7 +63,12 @@ class EdiController extends Controller
         // ID vlastněného řádku v session – povolí jeho editaci i nepřihlášenému.
         $request->session()->put('owned_data_id', $row->id);
 
-        return redirect()->route('hlaseni.index', ['import' => 'success']);
+        // Nefatální kontrola kvality deníku – upozornění se ukáže na hlášení.
+        $warnings = $this->validator->validate($log)->messages();
+
+        return redirect()
+            ->route('hlaseni.index', ['import' => 'success'])
+            ->with('importWarnings', $warnings);
     }
 
     /**

@@ -183,4 +183,28 @@ class EdiPipelineIntegrationTest extends TestCase
         $this->assertTrue((bool) $row->schvaleno, 'Po odeslání formuláře musí být schvaleno=true');
         $this->assertSame(1, VkvpaData::count(), 'Nesmí vzniknout duplicitní záznam');
     }
+
+    public function test_upload_flashes_quality_warnings_for_duplicate_qso(): void
+    {
+        $this->koloProBrezen2026();
+
+        // Deník s duplicitním spojením (OK2IMH 2×) a QSO mimo okno (12:30).
+        $edi = "[REG1TEST;1]\nTName=Provozni aktiv\nTDate=20260315;20260315\n"
+            ."PCall=OK2KJT\nPWWLo=JN99AJ\nPSect=MULTI\nPBand=144 MHz\n"
+            ."RHBBS=ok2ulq@seznam.cz\nSPowe=800W\n[QSORecords;3]\n"
+            ."260315;0800;OK2IMH;1;59;001;59;001;;JN99BP;2;;;;\n"
+            ."260315;0805;OK2IMH;1;59;002;59;002;;JN99BP;2;;;;\n"
+            ."260315;1230;OK1XYZ;1;59;003;59;003;;JN79VS;3;;;;\n[END;]\n";
+
+        $file = UploadedFile::fake()->createWithContent('dup.edi', $edi);
+
+        $response = $this->post('/edi', ['upload' => $file]);
+        $response->assertRedirect(route('hlaseni.index', ['import' => 'success']));
+
+        $warnings = session('importWarnings');
+        $this->assertIsArray($warnings);
+        $joined = implode(' ', array_map(static fn (mixed $w): string => is_string($w) ? $w : '', $warnings));
+        $this->assertStringContainsString('OK2IMH (2×)', $joined);
+        $this->assertStringContainsString('mimo závodní okno', $joined);
+    }
 }

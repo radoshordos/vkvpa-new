@@ -17,9 +17,30 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="OK Activity contest">
-    <meta name="keywords" content="HAMradio, OK, Activity contest">
+    <meta name="description" content="Elektronické hlášení výsledků závodů VKV PA – nahrávání EDI deníků, bodování a výsledkové listiny.">
+    <meta name="keywords" content="HAMradio, OK, Activity contest, VKV, EDI, závod">
+    <meta name="theme-color" content="#4338ca">
     <title>@yield('title', 'VKV PA - provozní aktiv')</title>
+
+    {{-- Ikony + PWA manifest --}}
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/svg+xml" href="/icon.svg">
+    <link rel="apple-touch-icon" href="/icon.svg">
+    <link rel="manifest" href="/site.webmanifest">
+
+    {{-- Open Graph / Twitter – náhled při sdílení --}}
+    @php $ogImage = asset('screenshots/vysledky.png'); @endphp
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="VKV provozní aktiv">
+    <meta property="og:title" content="@yield('title', 'VKV provozní aktiv')">
+    <meta property="og:description" content="Elektronické hlášení výsledků závodů VKV PA – nahrávání EDI deníků, bodování a výsledkové listiny.">
+    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:image" content="{{ $ogImage }}">
+    <meta property="og:locale" content="{{ $locale === 'en' ? 'en_US' : 'cs_CZ' }}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="@yield('title', 'VKV provozní aktiv')">
+    <meta name="twitter:description" content="Elektronické hlášení výsledků závodů VKV PA.">
+    <meta name="twitter:image" content="{{ $ogImage }}">
 
     {{-- Tmavý režim bez probliknutí: nastav třídu .dark dřív, než se vykreslí tělo. --}}
     <script>
@@ -121,5 +142,16 @@
     </aside>
 
     @stack('scripts')
+
+    {{-- Registrace service workeru (PWA / offline). V lokálním vývoji vynecháno. --}}
+    <script>
+      if ('serviceWorker' in navigator
+          && location.hostname !== 'localhost'
+          && location.hostname !== '127.0.0.1') {
+        window.addEventListener('load', function () {
+          navigator.serviceWorker.register('/sw.js').catch(function () {});
+        });
+      }
+    </script>
   </body>
 </html>
