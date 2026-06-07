@@ -53,7 +53,7 @@ class SendEdiMailsListenerTest extends TestCase
             'schvaleno' => false,
         ]);
 
-        $this->listener = new SendEdiMailsListener();
+        $this->listener = new SendEdiMailsListener;
 
         Config::set('vkvpa.contact_mail', '');
     }

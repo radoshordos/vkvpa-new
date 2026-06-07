@@ -2,10 +2,9 @@
 
 declare(strict_types=1);
 
-use App\Services\Scoring\ScoringService;
+use App\Console\Commands\DeactivateExpiredRoundsCommand;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schedule;
 
 Artisan::command('inspire', function (): void {
@@ -13,14 +12,8 @@ Artisan::command('inspire', function (): void {
 })->purpose('Display an inspiring quote');
 
 // Po uplynutí uzávěrky kolo automaticky deaktivovat (přestane přijímat hlášení).
-// Spouští se každou hodinu; ručně lze přes `php artisan schedule:run`.
-Schedule::call(function (ScoringService $scoring): void {
-    $pocet = $scoring->deactivateExpiredRounds();
-    if ($pocet > 0) {
-        Log::info('schedule.kola.deactivate_expired', ['pocet' => $pocet]);
-    }
-})
+// Spouští se každou hodinu; ručně lze přes `php artisan kola:deactivate-expired`.
+Schedule::command(DeactivateExpiredRoundsCommand::class)
     ->hourly()
-    ->name('kola:deactivate-expired')
     ->withoutOverlapping()
     ->skip(fn (): bool => app()->runningUnitTests());

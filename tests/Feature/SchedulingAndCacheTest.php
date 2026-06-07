@@ -51,7 +51,9 @@ class SchedulingAndCacheTest extends TestCase
         $events = Collection::make(app(Schedule::class)->events());
 
         $this->assertTrue(
-            $events->contains(fn ($event): bool => $event->description === 'kola:deactivate-expired'),
+            $events->contains(
+                fn ($event): bool => str_contains((string) ($event->command ?? ''), 'kola:deactivate-expired'),
+            ),
             'Naplánovaná úloha kola:deactivate-expired není registrovaná.',
         );
     }
