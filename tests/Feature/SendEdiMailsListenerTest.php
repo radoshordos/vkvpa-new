@@ -112,7 +112,7 @@ class SendEdiMailsListenerTest extends TestCase
 
         Mail::assertQueued(
             HlaseniPrijato::class,
-            fn (HlaseniPrijato $m) => str_contains($m->envelope()->subject, 'Testovací kolo'),
+            fn (HlaseniPrijato $m) => str_contains((string) $m->envelope()->subject, 'Testovací kolo'),
         );
     }
 
@@ -164,7 +164,7 @@ class SendEdiMailsListenerTest extends TestCase
         Mail::assertQueued(HlaseniProVyhodnocovatele::class, function (HlaseniProVyhodnocovatele $m) {
             $subject = $m->envelope()->subject;
 
-            return str_contains($subject, 'OK2KJT') && str_contains($subject, 'Testovací kolo');
+            return str_contains((string) $subject, 'OK2KJT') && str_contains((string) $subject, 'Testovací kolo');
         });
     }
 
