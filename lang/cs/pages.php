@@ -34,6 +34,17 @@ return [
         'ql_results_desc' => 'Uzavřená kola',
         'ql_yearly' => 'Roční výsledky',
         'ql_yearly_desc' => 'Přehled za rok',
+
+        // Upload window info strip
+        'upload_window_label' => 'Upload okno',
+        'upload_window_upcoming' => '3. neděle :date 08:00 UTC – pátek :deadline 23:59 UTC',
+        'upload_window_open' => 'Otevřeno do :deadline 23:59 UTC — EDI/EDIR omezeny (anti-opisování)',
+        'upload_window_closed_auth' => 'Uzavřeno — EDI dostupné po přihlášení',
+        'upload_window_evaluated' => 'Vyhodnoceno — EDI dostupné po přihlášení',
+
+        // Upcoming rounds mini-calendar
+        'upcoming_heading' => 'Plánovaná kola',
+        'upcoming_ical' => 'Přihlásit do kalendáře (.ics)',
     ],
 
     'kola' => [

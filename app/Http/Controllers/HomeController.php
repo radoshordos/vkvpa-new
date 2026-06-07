@@ -30,7 +30,19 @@ class HomeController extends Controller
             ? VkvpaData::prubezne($kolo->id)->get()
             : collect();
 
-        return view('pages.home', compact('kolo', 'state', 'countdownTarget', 'liveMode', 'vysledky', 'kategorie'));
+        // Next upcoming rounds (for mini-calendar), excluding the round already shown.
+        $excludeId = $kolo?->id;
+        $upcomingRounds = VkvpaKola::query()
+            ->where('datum_konani', '>', $now->toDateString())
+            ->when($excludeId !== null, fn ($q) => $q->where('id', '!=', $excludeId))
+            ->orderBy('datum_konani')
+            ->limit(3)
+            ->get();
+
+        return view('pages.home', compact(
+            'kolo', 'state', 'countdownTarget', 'liveMode',
+            'vysledky', 'kategorie', 'upcomingRounds',
+        ));
     }
 
     private function resolveState(VkvpaKola $kolo, Carbon $now): string

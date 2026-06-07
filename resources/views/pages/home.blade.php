@@ -63,6 +63,28 @@
         @endif
     </div>
 
+    {{-- Upload window info strip --}}
+    @php
+        $uploadDate = $kolo->datum_konani->isoFormat('D. M.');
+        $uploadDeadline = $kolo->datum_uzaverky?->isoFormat('D. M. YYYY') ?? '?';
+    @endphp
+    <div class="mt-4 flex items-start gap-2 rounded-lg border border-line bg-surface-2 px-3 py-2 text-xs text-muted">
+        <span class="shrink-0 font-semibold text-heading">{{ __('pages.home.upload_window_label') }}:</span>
+        <span>
+            @if ($state === 'upcoming')
+                {{ __('pages.home.upload_window_upcoming', ['date' => $uploadDate, 'deadline' => $uploadDeadline]) }}
+            @elseif (in_array($state, ['active', 'deadline']))
+                <span class="font-medium text-green-600 dark:text-green-400">
+                    {{ __('pages.home.upload_window_open', ['deadline' => $uploadDeadline]) }}
+                </span>
+            @elseif ($state === 'evaluating')
+                {{ __('pages.home.upload_window_closed_auth') }}
+            @else
+                {{ __('pages.home.upload_window_evaluated') }}
+            @endif
+        </span>
+    </div>
+
     {{-- CTA tlačítka --}}
     <div class="mt-4 flex flex-wrap gap-3">
         @if (in_array($state, ['active', 'deadline']))
@@ -163,6 +185,47 @@
         <div class="text-xs text-muted mt-0.5">{{ __('pages.home.ql_yearly_desc') }}</div>
     </a>
 </div>
+
+{{-- ── Nadcházející kola ───────────────────────────────────────────── --}}
+@if ($upcomingRounds->isNotEmpty())
+<div class="mt-8">
+    <div class="section-head flex items-center justify-between">
+        <span>{{ __('pages.home.upcoming_heading') }}</span>
+        <a href="{{ route('kola.ical') }}" class="text-xs font-normal text-brand hover:underline">
+            📅 {{ __('pages.home.upcoming_ical') }}
+        </a>
+    </div>
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>{{ __('pages.kola.col_name') }}</th>
+                    <th>{{ __('pages.kola.col_date') }}</th>
+                    <th>{{ __('pages.kola.col_deadline') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach ($upcomingRounds as $r)
+                <tr>
+                    <td class="font-medium">{{ $r->nazev }}</td>
+                    <td class="whitespace-nowrap">{{ $r->datum_konani->isoFormat('dddd D. MMMM YYYY') }}</td>
+                    <td class="whitespace-nowrap text-muted">
+                        {{ $r->datum_uzaverky?->isoFormat('D. MMMM YYYY') ?? '—' }}
+                    </td>
+                </tr>
+            @endforeach
+            </tbody>
+        </table>
+    </div>
+</div>
+@else
+{{-- iCal odkaz i bez nadcházejících kol --}}
+<div class="mt-6 text-sm text-muted">
+    <a href="{{ route('kola.ical') }}" class="text-brand hover:underline">
+        📅 {{ __('pages.home.upcoming_ical') }}
+    </a>
+</div>
+@endif
 
 @push('scripts')
 <script>

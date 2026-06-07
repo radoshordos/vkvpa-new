@@ -34,6 +34,17 @@ return [
         'ql_results_desc' => 'Closed contest rounds',
         'ql_yearly' => 'Yearly results',
         'ql_yearly_desc' => 'Annual overview',
+
+        // Upload window info strip
+        'upload_window_label' => 'Upload window',
+        'upload_window_upcoming' => '3rd Sunday :date 08:00 UTC – Friday :deadline 23:59 UTC',
+        'upload_window_open' => 'Open until :deadline 23:59 UTC — EDI/EDIR restricted (anti-copying)',
+        'upload_window_closed_auth' => 'Closed — EDI available after login',
+        'upload_window_evaluated' => 'Evaluated — EDI available after login',
+
+        // Upcoming rounds mini-calendar
+        'upcoming_heading' => 'Upcoming rounds',
+        'upcoming_ical' => 'Subscribe to calendar (.ics)',
     ],
 
     'kola' => [
