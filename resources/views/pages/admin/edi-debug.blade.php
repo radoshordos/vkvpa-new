@@ -83,6 +83,7 @@
                     <a href="{{ route('edi.mapa.jezek', $edihead) }}" target="_blank" class="action-link">M</a>
                     <a href="{{ route('edi.mapa.spendliky', $edihead) }}" target="_blank" class="action-link">N</a>
                     <a href="{{ route('edi.mapa.lokatory', $edihead) }}" target="_blank" class="action-link">S</a>
+                    <a href="{{ route('edi.mapa.crk', $edihead) }}" target="_blank" class="action-link">C</a>
                 </div>
             </div>
         @endif

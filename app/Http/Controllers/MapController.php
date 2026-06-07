@@ -18,8 +18,9 @@ use Illuminate\View\View;
  *   M – {@see jezek()}     „ježek": ze stanoviště vedou čáry do protistanic
  *   N – {@see spendliky()} špendlíky protistanic; popup = značka, vzdálenost, azimut
  *   S – {@see lokatory()}  velké čtverce (lokátory) s počtem protistanic v každém
+ *   C – {@see crk()}       kombinovaná mapa ve stylu vkvzavody.crk.cz
  *
- * Všechny tři kreslí jen QSO uvnitř závodního okna 08:00–11:00 UTC. Geometrii
+ * Všechny kreslí jen QSO uvnitř závodního okna 08:00–11:00 UTC. Geometrii
  * (souřadnice, vzdálenost, azimut, čtverce) počítá sdílená {@see QsoGeometry}.
  *
  * @api  Endpointy budou popsány v OpenAPI/Swagger – komentáře drží strukturu.
@@ -64,6 +65,20 @@ class MapController extends Controller
     }
 
     /**
+     * Mapa „C" – kombinovaná mapa ve stylu vkvzavody.crk.cz.
+     *
+     * Endpoint: GET /edi/{head}/mapa/crk  (name: edi.mapa.crk)
+     * Výstup:   paprsky z QTH do protistanic, špendlíky s ikonami podle druhu
+     *           provozu (CW/SSB) a popupem (značka/lokátor/km/azimut),
+     *           přepínatelné vrstvy: kružnice vzdáleností po 200 km, mřížka
+     *           lokátorů a všechny stanice z kola (≥ 5 QSO).
+     */
+    public function crk(Edihead $head): View
+    {
+        return $this->mapView($head, MapMode::Crk);
+    }
+
+    /**
      * Společná logika pro sestavení dat mapového pohledu.
      */
     private function mapView(Edihead $head, MapMode $mode): View
@@ -79,6 +94,7 @@ class MapController extends Controller
             'home' => $home,
             'points' => $withPoints ? $this->points($head, $home) : collect(),
             'squares' => $withPoints ? collect() : $this->geometry->bigSquares($head),
+            'roundStations' => $mode === MapMode::Crk ? $this->geometry->roundStations($head) : collect(),
         ]);
     }
 
@@ -86,7 +102,7 @@ class MapController extends Controller
      * Protistanice v závodním okně se souřadnicemi, vzdáleností a azimutem.
      *
      * @param  array{lat: float, lon: float}|null  $home
-     * @return Collection<int, array{lat: float, lon: float, call: string, wwl: string, points: int, dist: int|null, azimut: int|null}>
+     * @return Collection<int, array{lat: float, lon: float, call: string, wwl: string, points: int, dist: int|null, azimut: int|null, mode: int}>
      */
     private function points(Edihead $head, ?array $home): Collection
     {
@@ -99,6 +115,7 @@ class MapController extends Controller
                 'points' => $q->points,
                 'dist' => $q->dist,
                 'azimut' => $q->azimut,
+                'mode' => $q->mode->value,
             ]);
     }
 }

@@ -60,4 +60,17 @@ class MapTest extends TestCase
             ->assertSee('JN99')
             ->assertSee('JN89');
     }
+
+    public function test_crk_map_renders_with_combined_data(): void
+    {
+        $head = $this->importSample();
+
+        $this->get(route('edi.mapa.crk', $head->ID))
+            ->assertOk()
+            ->assertSee('kombinovaná mapa')
+            ->assertSeeHtml('OK2KJT')
+            ->assertSeeHtml('OK2IMH')
+            ->assertSeeHtml('roundStations')
+            ->assertSeeHtml('window.__mapConfig');
+    }
 }
