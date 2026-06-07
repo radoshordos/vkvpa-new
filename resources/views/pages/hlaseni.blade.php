@@ -1,5 +1,5 @@
 {{--
-    Hlášení. Nahoře EDI upload box; ruční formulář se zobrazí jen když $showManual.
+    Hlášení. Nahoře tab navigace; EDI panel nebo ruční formulář dle aktivní záložky.
     Pod tím průběžné výsledky vybraného kola.
 --}}
 @extends('layouts.app')
@@ -28,10 +28,27 @@
 @endif
 
 @if ($maAktivniKolo)
-{{-- ===== EDI upload box ===== --}}
-<div class="card mb-6 p-5">
-    <h1 class="!mb-3">{{ __('pages.hlaseni.heading_edi') }}</h1>
 
+{{-- ===== Tab navigace ===== --}}
+<div class="tab-nav">
+    <a href="{{ route('hlaseni.index') }}" class="tab-btn {{ !$showManual ? 'active' : '' }}">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <path d="M9 2H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V6L9 2Z"/>
+            <path d="M9 2v4h4M8 9.5v3M6.5 11l1.5-1.5 1.5 1.5"/>
+        </svg>
+        {{ __('pages.hlaseni.tab_edi') }}
+    </a>
+    <a href="{{ route('hlaseni.index', ['showfrm' => 1]) }}" class="tab-btn {{ $showManual ? 'active' : '' }}">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <path d="M11.5 2.5a1.5 1.5 0 0 1 2 2L5 13l-3 1 1-3 8.5-8.5Z"/>
+        </svg>
+        {{ __('pages.hlaseni.tab_manual') }}
+    </a>
+</div>
+
+{{-- ===== EDI upload panel ===== --}}
+@if (!$showManual)
+<div class="card mb-6 p-5">
     @if ($errors->has('upload'))
         <div class="alert alert-error">
             {{ $errors->first('upload') }}
@@ -52,9 +69,15 @@
     </p>
 
     <div class="mt-3 border-t border-line pt-3">
-        <a href="{{ route('hlaseni.index', ['showfrm' => 1]) }}" class="font-semibold">{{ __('pages.hlaseni.no_edi_link') }}</a>
+        <a href="{{ route('hlaseni.index', ['showfrm' => 1]) }}" class="link-arrow">
+            {{ __('pages.hlaseni.no_edi_link') }}
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                <path d="M3 8h10M9 4l4 4-4 4"/>
+            </svg>
+        </a>
     </div>
 </div>
+@endif
 
 {{-- ===== Ruční formulář – jen když je potřeba ===== --}}
 @if ($showManual)
@@ -68,7 +91,7 @@
     </div>
 @endif
 
-<form action="{{ route('hlaseni.store') }}" method="post" class="card p-5">
+<form action="{{ route('hlaseni.store') }}" method="post" class="card p-5 mb-6">
     @csrf
     <input type="hidden" name="id_zaznamu" value="{{ (int) ($e->id ?? 0) }}">
     <input type="hidden" name="EDIID" value="{{ (int) $val('EDIID', $e->EDI_ID ?? 0, 0) }}">
