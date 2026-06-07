@@ -16,23 +16,19 @@ use App\Support\VkvpaSettings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Concurrency;
 use Illuminate\View\View;
 use ZipArchive;
 
 /**
  * Administrace – Hromadný import EDI deníků ze ZIP archivu.
  *
- * Sdílí jádro příjmu deníku s jednotlivým nahráním ({@see ImportEdiAction});
- * navíc jen rozbaluje ZIP, mapuje výsledek na řádek souhrnu a (na rozdíl od
- * jednotlivého nahrání) nerozesílá potvrzovací e-maily.
+ * Fáze čtení ze ZIP je sekvenční (ZipArchive není process-safe); zpracování
+ * (parsing + DB insert) probíhá souběžně přes Concurrency::run() – každý soubor
+ * v samostatném procesu (process driver) nebo kooperativně (sync/fiber v testech).
  */
 class ImportController extends Controller
 {
-    public function __construct(
-        private readonly EdiParser $parser,
-        private readonly ImportEdiAction $action,
-    ) {}
-
     public function index(): View
     {
         return view('pages.admin.importy', [
@@ -55,10 +51,14 @@ class ImportController extends Controller
             return back()->withErrors(['zip' => 'Nepodařilo se otevřít ZIP archiv.']);
         }
 
-        $items = [];
         $limit = VkvpaSettings::importMaxFiles();
+        /** @var list<\Closure(): array<string, mixed>> $tasks */
+        $tasks = [];
+        /** @var list<array<string, mixed>> $earlyErrors */
+        $earlyErrors = [];
 
-        for ($i = 0; $i < $zip->count() && count($items) < $limit; $i++) {
+        // Fáze 1: sekvenční čtení obsahu ze ZIP.
+        for ($i = 0; $i < $zip->count() && (count($tasks) + count($earlyErrors)) < $limit; $i++) {
             $stat = $zip->statIndex($i);
             if ($stat === false) {
                 continue;
@@ -69,25 +69,61 @@ class ImportController extends Controller
                 continue;
             }
 
-            // Guard against zip entries with inflated size far exceeding EDI limits.
+            $name = basename($stat['name']);
             $maxBytes = VkvpaSettings::ediMaxSizeKb() * 1024;
+
             if ($stat['size'] > $maxBytes) {
-                $items[] = ['file' => basename($stat['name']), 'status' => 'error', 'reason' => 'Soubor přesahuje povolenou velikost.'];
+                $earlyErrors[] = ['file' => $name, 'status' => 'error', 'reason' => 'Soubor přesahuje povolenou velikost.'];
 
                 continue;
             }
 
             $content = $zip->getFromIndex($i);
             if ($content === false || trim($content) === '') {
-                $items[] = ['file' => basename($stat['name']), 'status' => 'error', 'reason' => 'Prázdný nebo nečitelný soubor.'];
+                $earlyErrors[] = ['file' => $name, 'status' => 'error', 'reason' => 'Prázdný nebo nečitelný soubor.'];
 
                 continue;
             }
 
-            $items[] = $this->importFile(basename($stat['name']), $content);
-        }
+            // Closure zachytává jen primitivní řetězce → serializovatelné pro process driver.
+            $tasks[] = static function () use ($name, $content): array {
+                try {
+                    $log = app(EdiParser::class)->parse($content);
+                } catch (EdiParseException $e) {
+                    return ['file' => $name, 'status' => 'error', 'reason' => $e->getMessage()];
+                }
 
+                $pcall = $log->header->pCall();
+
+                try {
+                    $data = app(ImportEdiAction::class)->execute($log, notify: false);
+                } catch (DuplicateEdiException) {
+                    return ['file' => $name, 'status' => 'skip', 'znacka' => $pcall, 'reason' => 'Deník pro toto kolo již existuje.'];
+                } catch (TDateMismatchException $e) {
+                    return ['file' => $name, 'status' => 'error', 'reason' => $e->getMessage()];
+                } catch (UnknownBandException) {
+                    return ['file' => $name, 'status' => 'error', 'reason' => "Nerozpoznané pásmo ({$log->header->pBand()})."];
+                } catch (\Throwable $e) {
+                    return ['file' => $name, 'status' => 'error', 'reason' => 'Chyba při importu: '.$e->getMessage()];
+                }
+
+                $kolo = VkvpaKola::query()->find($data->id_kola);
+
+                return [
+                    'file' => $name,
+                    'status' => 'ok',
+                    'znacka' => $pcall,
+                    'kolo' => $kolo instanceof VkvpaKola ? $kolo->nazev : '—',
+                    'body' => $data->body,
+                ];
+            };
+        }
         $zip->close();
+
+        // Fáze 2: souběžné zpracování (parse + DB insert) pro všechny soubory.
+        /** @var list<array<string, mixed>> $processed */
+        $processed = Concurrency::run($tasks);
+        $items = [...$earlyErrors, ...$processed];
 
         return redirect()
             ->route('importy.index')
@@ -98,44 +134,5 @@ class ImportController extends Controller
                 'errors' => count(array_filter($items, static fn (array $r): bool => $r['status'] === 'error')),
                 'items' => $items,
             ]);
-    }
-
-    /**
-     * Naparsuje a importuje jeden deník přes sdílenou {@see ImportEdiAction}
-     * a přeloží výsledek (nebo výjimku) na řádek souhrnu importu.
-     *
-     * @return array{file: string, status: string, znacka?: string, kolo?: string, body?: int, reason?: string}
-     */
-    private function importFile(string $filename, string $content): array
-    {
-        try {
-            $log = $this->parser->parse($content);
-        } catch (EdiParseException $e) {
-            return ['file' => $filename, 'status' => 'error', 'reason' => $e->getMessage()];
-        }
-
-        $pcall = $log->header->pCall();
-
-        try {
-            $data = $this->action->execute($log, notify: false);
-        } catch (DuplicateEdiException) {
-            return ['file' => $filename, 'status' => 'skip', 'znacka' => $pcall, 'reason' => 'Deník pro toto kolo již existuje.'];
-        } catch (TDateMismatchException $e) {
-            return ['file' => $filename, 'status' => 'error', 'reason' => $e->getMessage()];
-        } catch (UnknownBandException) {
-            return ['file' => $filename, 'status' => 'error', 'reason' => "Nerozpoznané pásmo ({$log->header->pBand()})."];
-        } catch (\Throwable $e) {
-            return ['file' => $filename, 'status' => 'error', 'reason' => 'Chyba při importu: '.$e->getMessage()];
-        }
-
-        $kolo = VkvpaKola::query()->find($data->id_kola);
-
-        return [
-            'file' => $filename,
-            'status' => 'ok',
-            'znacka' => $pcall,
-            'kolo' => $kolo instanceof VkvpaKola ? $kolo->nazev : '—',
-            'body' => $data->body,
-        ];
     }
 }

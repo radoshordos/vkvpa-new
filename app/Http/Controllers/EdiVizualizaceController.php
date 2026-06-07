@@ -143,7 +143,7 @@ class EdiVizualizaceController extends Controller
             }
         }
 
-        $maxDist = array_reduce($dists, fn (int $carry, int $d): int => max($carry, $d), 0);
+        $maxDist = $dists !== [] ? max($dists) : 0;
         $avgDist = count($dists) > 0 ? (int) round(array_sum($dists) / count($dists)) : 0;
 
         $uniqueSq = $lines

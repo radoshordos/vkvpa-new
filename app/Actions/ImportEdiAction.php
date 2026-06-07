@@ -15,7 +15,6 @@ use App\Services\Edi\EdiLog;
 use App\Services\Edi\EdiQso;
 use App\Services\Scoring\ScoringService;
 use Illuminate\Support\Facades\Context;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Orchestruje celý tok importu EDI deníku: validace business pravidel,
@@ -85,7 +84,9 @@ final readonly class ImportEdiAction
         ]);
 
         if ($notify) {
-            DB::afterCommit(fn () => EdiImported::dispatch($data));
+            // defer() odešle event až po odeslání HTTP odpovědi – queue dispatch
+            // nebrzdí redirect k uživateli. Transakce jsou v tomto bodě vždy uzavřeny.
+            defer(static fn () => EdiImported::dispatch($data));
         }
 
         return $data;

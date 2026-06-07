@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 use Override;
 
 /**
@@ -15,7 +16,7 @@ use Override;
  *
  * @property int $id
  * @property string $kod
- * @property \Illuminate\Support\Carbon $time
+ * @property Carbon $time
  */
 #[Fillable(['time', 'kod'])]
 #[Table(name: 'vkvpa_prihlaseni', key: 'id')]
