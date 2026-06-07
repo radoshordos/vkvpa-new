@@ -66,6 +66,8 @@ return [
 
     'hlaseni' => [
         'title' => 'Hlášení – VKV PA',
+        'tab_edi' => 'Import EDI',
+        'tab_manual' => 'Ruční vložení',
         'heading_edi' => 'Načíst EDI soubor',
         'error_line' => 'Chybný řádek',
         'import_warnings' => 'Deník byl načten, ale upozorňujeme na:',

@@ -421,6 +421,71 @@
         color: #fff;
     }
 
+    /* ── Záložky (segmented control) ─────────────────────────────── */
+    .tab-nav {
+        display: flex;
+        gap: 0.3rem;
+        padding: 0.3rem;
+        background-color: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 0.85rem;
+        margin-bottom: 1.25rem;
+    }
+    .tab-btn {
+        flex: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.45rem;
+        padding: 0.55rem 1rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--muted);
+        text-decoration: none;
+        border-radius: 0.6rem;
+        transition: color 0.15s, background-color 0.15s, box-shadow 0.15s;
+        white-space: nowrap;
+    }
+    .tab-btn:hover:not(.active) {
+        color: var(--ink);
+        background-color: var(--surface-2);
+    }
+    .tab-btn.active {
+        color: var(--brand-fg);
+        background-color: var(--brand);
+        box-shadow: 0 1px 3px rgb(0 0 0 / 0.15);
+    }
+    .tab-btn svg {
+        width: 1rem;
+        height: 1rem;
+        flex-shrink: 0;
+    }
+
+    /* Odkaz s animovanou šipkou → */
+    .link-arrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--link);
+        text-decoration: none;
+        transition: gap 0.15s, color 0.15s;
+    }
+    .link-arrow:hover {
+        color: var(--brand);
+        gap: 0.5rem;
+    }
+    .link-arrow svg {
+        width: 1rem;
+        height: 1rem;
+        flex-shrink: 0;
+        transition: transform 0.15s;
+    }
+    .link-arrow:hover svg {
+        transform: translateX(0.2rem);
+    }
+
     /* Odkazy EDI / mapy (EDI / EDIR / M / N / S). */
     .action-link {
         display: inline-block;
