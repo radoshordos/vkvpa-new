@@ -48,9 +48,10 @@ class DiskuseController extends Controller
     {
         $foto = null;
         if ($request->hasFile('foto') && $request->file('foto')?->isValid()) {
-            $file = $request->file('foto');
-            $nazev = time().'_'.$request->string('znacka')->value().'.'.$file->getClientOriginalExtension();
-            $foto = $file->storeAs('diskuse/'.$kolo->id, $nazev, 'public');
+            // Náhodný server-side název; přípona se odvodí z detekovaného obsahu,
+            // nikoli z klientem zaslaného jména souboru. Tím odpadá riziko vložení
+            // útočníkem zvolené přípony i lomítka ze značky do cesty.
+            $foto = $request->file('foto')->store('diskuse/'.$kolo->id, 'public');
         }
 
         Prispevek::create([

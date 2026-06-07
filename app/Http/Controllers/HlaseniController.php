@@ -72,7 +72,10 @@ class HlaseniController extends Controller
             'soapbox' => $v['soapbox'] ?? '',
             'poznamka' => $v['poznamka'] ?? '',
             'EDI_ID' => $this->intFrom($v['EDIID'] ?? 0),
-            'schvaleno' => true,
+            // Jen administrátor smí záznam rovnou „převzít". Hlášení od veřejnosti
+            // zůstává ve stavu „Čeká" (schvaleno=false), dokud ho vyhodnocovatel
+            // nepřevezme – brání to podvržení veřejně zobrazených výsledků.
+            'schvaleno' => (bool) ($request->user()?->is_admin),
         ];
 
         if ($idZaznamu > 0) {

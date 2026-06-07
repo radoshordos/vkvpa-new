@@ -16,9 +16,10 @@ use Override;
  *
  * @property int $id
  * @property string $kod
+ * @property int|null $user_id
  * @property Carbon $time
  */
-#[Fillable(['time', 'kod'])]
+#[Fillable(['time', 'kod', 'user_id'])]
 #[Table(name: 'vkvpa_prihlaseni', key: 'id')]
 #[WithoutTimestamps]
 class VkvpaPrihlaseni extends Model
@@ -28,6 +29,7 @@ class VkvpaPrihlaseni extends Model
     {
         return [
             'time' => 'datetime',
+            'user_id' => 'integer',
         ];
     }
 }

@@ -18,6 +18,9 @@ class MailImageController extends Controller
         $text = base64_decode((string) $request->query('text'), true) ?: '';
         // Jen tisknutelné ASCII, ať nelze podstrčit nic divného.
         $text = preg_replace('/[^\x20-\x7E]/', '', $text) ?? '';
+        // Strop délky: šířka obrázku se odvozuje od délky textu, příliš dlouhý
+        // vstup by jinak alokoval nepřiměřeně velký obrázek (DoS přes paměť/CPU).
+        $text = substr($text, 0, 100);
 
         $width = max(1, strlen($text) * 12);
         $im = imagecreate($width, 16);

@@ -66,23 +66,31 @@ class AuthController extends Controller
             ->delete();
 
         // lockForUpdate + delete v transakci: paralelní požadavky (prefetch prohlížeče,
-        // dvojité kliknutí) nemohou použít stejný token dvakrát.
-        $used = DB::transaction(function () use ($kod): bool {
+        // dvojité kliknutí) nemohou použít stejný token dvakrát. Vrací ['user_id' => …]
+        // při úspěchu (i null pro starší token bez vazby), nebo false když token chybí.
+        $consumed = DB::transaction(function () use ($kod): array|false {
             $token = VkvpaPrihlaseni::query()->where('kod', hash('sha256', $kod))->lockForUpdate()->first();
             if ($token === null) {
                 return false;
             }
+            $userId = $token->user_id;
             $token->delete();
 
-            return true;
+            return ['user_id' => $userId];
         });
 
-        if (! $used) {
+        if ($consumed === false) {
             return redirect()->route('login')
                 ->withErrors(['username' => 'Přihlašovací kód je neplatný nebo vypršel.']);
         }
 
-        $admin = User::query()->where('is_admin', true)->first();
+        // Přihlásíme uživatele svázaného s tokenem; pro starší tokeny bez vazby
+        // (user_id = null) padáme zpět na prvního administrátora. V obou případech
+        // ověříme, že cílový účet stále má administrátorská práva.
+        $admin = $consumed['user_id'] !== null
+            ? User::query()->whereKey($consumed['user_id'])->where('is_admin', true)->first()
+            : null;
+        $admin ??= User::query()->where('is_admin', true)->first();
 
         if ($admin === null) {
             return redirect()->route('login')
