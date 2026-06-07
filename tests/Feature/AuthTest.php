@@ -27,11 +27,12 @@ class AuthTest extends TestCase
     }
 
     /** Uloží token jako SHA-256 hash (stejně jako SendEdiMailsListener). */
-    private function createToken(string $plaintext, mixed $time = null): void
+    private function createToken(string $plaintext, mixed $time = null, ?int $userId = null): void
     {
         VkvpaPrihlaseni::create([
             'time' => $time ?? now(),
             'kod' => hash('sha256', $plaintext),
+            'user_id' => $userId,
         ]);
     }
 
@@ -85,7 +86,7 @@ class AuthTest extends TestCase
     public function test_valid_token_logs_in_admin(): void
     {
         $admin = $this->admin();
-        $this->createToken('abc123');
+        $this->createToken('abc123', userId: $admin->id);
 
         $this->get(route('login.token', ['kod' => 'abc123']))
             ->assertRedirect('/');
@@ -93,6 +94,18 @@ class AuthTest extends TestCase
         $this->assertAuthenticatedAs($admin);
         $this->assertSame($admin->name, session('prihlasen'));
         $this->assertSame(0, VkvpaPrihlaseni::count()); // token smazán po použití
+    }
+
+    public function test_token_without_user_id_is_rejected(): void
+    {
+        $this->admin();
+        $this->createToken('nulltoken', userId: null);
+
+        $this->get(route('login.token', ['kod' => 'nulltoken']))
+            ->assertRedirect(route('login'))
+            ->assertSessionHasErrors('username');
+
+        $this->assertGuest();
     }
 
     public function test_invalid_token_redirects_with_error(): void
@@ -122,7 +135,7 @@ class AuthTest extends TestCase
     public function test_token_with_confirm_redirects_to_record(): void
     {
         $admin = $this->admin();
-        $this->createToken('xyz789');
+        $this->createToken('xyz789', userId: $admin->id);
 
         $this->get(route('login.token', ['kod' => 'xyz789', 'confirm' => 42]))
             ->assertRedirect(route('hlaseni.index', ['id' => 42]));

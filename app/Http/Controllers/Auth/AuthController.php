@@ -84,13 +84,13 @@ class AuthController extends Controller
                 ->withErrors(['username' => 'Přihlašovací kód je neplatný nebo vypršel.']);
         }
 
-        // Přihlásíme uživatele svázaného s tokenem; pro starší tokeny bez vazby
-        // (user_id = null) padáme zpět na prvního administrátora. V obou případech
-        // ověříme, že cílový účet stále má administrátorská práva.
-        $admin = $consumed['user_id'] !== null
-            ? User::query()->whereKey($consumed['user_id'])->where('is_admin', true)->first()
-            : null;
-        $admin ??= User::query()->where('is_admin', true)->first();
+        // Token musí být svázán s konkrétním uživatelem; tokeny bez user_id jsou odmítnuty.
+        if ($consumed['user_id'] === null) {
+            return redirect()->route('login')
+                ->withErrors(['username' => 'Přihlašovací kód je neplatný nebo vypršel.']);
+        }
+
+        $admin = User::query()->whereKey($consumed['user_id'])->where('is_admin', true)->first();
 
         if ($admin === null) {
             return redirect()->route('login')

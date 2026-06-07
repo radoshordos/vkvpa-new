@@ -41,7 +41,7 @@ class EdiDebugController extends Controller
     public function analyze(Request $request): View|RedirectResponse
     {
         $request->validate([
-            'upload' => ['required', 'file', 'max:500'],
+            'upload' => ['required', 'file', 'max:500', 'extensions:edi,txt'],
         ]);
 
         $content = (string) file_get_contents($request->file('upload')->getRealPath());
