@@ -6,6 +6,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\VkvpaKola;
+use App\Support\ContestCalendar;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -22,7 +24,51 @@ class KolaAdminController extends Controller
         return view('pages.admin.kolo-form', [
             'active' => 'kola.index',
             'kolo' => null,
+            'suggested' => $this->nextSuggestedRound(),
         ]);
+    }
+
+    /**
+     * Vrátí předvyplněné hodnoty pro nejbližší měsíc, pro který ještě kolo neexistuje.
+     *
+     * @return array{nazev: string, datum_konani: string, datum_uzaverky: string}
+     */
+    private function nextSuggestedRound(): array
+    {
+        $now = CarbonImmutable::now('UTC');
+
+        for ($i = 0; $i < 24; $i++) {
+            $target = $now->addMonths($i);
+            $year = (int) $target->format('Y');
+            $month = (int) $target->format('n');
+
+            $exists = VkvpaKola::query()
+                ->whereYear('datum_konani', $year)
+                ->whereMonth('datum_konani', $month)
+                ->exists();
+
+            if (! $exists) {
+                $start = ContestCalendar::roundStart($year, $month);
+
+                return [
+                    'nazev' => ContestCalendar::roundName($year, $month),
+                    'datum_konani' => $start->toDateString(),
+                    'datum_uzaverky' => ContestCalendar::uploadDeadline($start)->format('Y-m-d\TH:i'),
+                ];
+            }
+        }
+
+        // Záložní hodnota: příští měsíc.
+        $next = $now->addMonth();
+        $year = (int) $next->format('Y');
+        $month = (int) $next->format('n');
+        $start = ContestCalendar::roundStart($year, $month);
+
+        return [
+            'nazev' => ContestCalendar::roundName($year, $month),
+            'datum_konani' => $start->toDateString(),
+            'datum_uzaverky' => ContestCalendar::uploadDeadline($start)->format('Y-m-d\TH:i'),
+        ];
     }
 
     public function store(Request $request): RedirectResponse
@@ -47,6 +93,7 @@ class KolaAdminController extends Controller
         return view('pages.admin.kolo-form', [
             'active' => 'kola.index',
             'kolo' => $kolo,
+            'suggested' => [],
         ]);
     }
 

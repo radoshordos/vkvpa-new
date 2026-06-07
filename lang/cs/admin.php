@@ -32,6 +32,8 @@ return [
     'kolo_field_deadline' => 'Uzávěrka (datum a čas)',
     'kolo_field_note' => 'Poznámka',
     'kolo_field_active' => 'Aktivní (příjem hlášení je otevřen)',
+    'kolo_hint_date' => 'Změnou data se automaticky přepočítá uzávěrka a název.',
+    'kolo_hint_deadline' => 'Standardně pátek po závodu 23:59 UTC.',
     'kolo_btn_create' => 'Vytvořit kolo',
     'kolo_btn_save' => 'Uložit změny',
 

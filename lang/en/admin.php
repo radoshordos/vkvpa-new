@@ -32,6 +32,8 @@ return [
     'kolo_field_deadline' => 'Deadline (date and time)',
     'kolo_field_note' => 'Note',
     'kolo_field_active' => 'Active (log submissions are open)',
+    'kolo_hint_date' => 'Changing the date will auto-update the deadline and round name.',
+    'kolo_hint_deadline' => 'Normally the Friday after the contest at 23:59 UTC.',
     'kolo_btn_create' => 'Create round',
     'kolo_btn_save' => 'Save changes',
 
