@@ -373,21 +373,20 @@
         margin: 1.25rem 0 0.6rem;
     }
 
-    /* ── Písmenková tlačítka akcí (P / U / X) – zachovaný systém ──── */
+    /* ── SVG tlačítka akcí (approve / edit / delete) ──────────────── */
     .icon-btn {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 1.3rem;
-        height: 1.3rem;
-        font-size: 0.72rem;
-        font-weight: 700;
+        width: 1.5rem;
+        height: 1.5rem;
         color: #fff;
         border: none;
         border-radius: 0.3rem;
         cursor: pointer;
         text-decoration: none;
-        padding: 0;
+        padding: 0.2rem;
+        flex-shrink: 0;
     }
     .icon-btn-p {
         background-color: var(--ok);

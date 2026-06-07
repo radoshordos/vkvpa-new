@@ -29,7 +29,9 @@
                     <td class="text-sm text-muted">{{ $k->popis ?: '—' }}</td>
                     <td class="num">{{ $k->dxid }}</td>
                     <td>
-                        <a href="{{ route('kategorie.edit', $k->id) }}" class="icon-btn icon-btn-u" title="{{ __('admin.kategorie_btn_edit') }}">U</a>
+                        <a href="{{ route('kategorie.edit', $k->id) }}" class="icon-btn icon-btn-u" title="{{ __('admin.kategorie_btn_edit') }}">
+                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.5 2.5a1.5 1.5 0 0 1 2 2L5 13l-3 1 1-3 8.5-8.5z"/></svg>
+                        </a>
                     </td>
                 </tr>
             @empty

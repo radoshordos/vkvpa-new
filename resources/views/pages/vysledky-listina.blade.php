@@ -86,14 +86,20 @@
                                         @csrf
                                         @method('PATCH')
                                         <button type="submit" class="icon-btn icon-btn-p"
-                                                title="{{ $r->schvaleno ? 'Záznam je převzat' : 'Převzít záznam (vyhodnocovatel viděl)' }}">P</button>
+                                                title="{{ $r->schvaleno ? 'Záznam je převzat' : 'Převzít záznam (vyhodnocovatel viděl)' }}">
+                                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="2 8.5 6 12.5 14 3.5"/></svg>
+                                        </button>
                                     </form>
-                                    <a href="{{ route('hlaseni.index', ['id' => $r->id]) }}" class="icon-btn icon-btn-u" title="Upravit záznam">U</a>
+                                    <a href="{{ route('hlaseni.index', ['id' => $r->id]) }}" class="icon-btn icon-btn-u" title="Upravit záznam">
+                                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.5 2.5a1.5 1.5 0 0 1 2 2L5 13l-3 1 1-3 8.5-8.5z"/></svg>
+                                    </a>
                                     <form method="post" action="{{ route('zaznam.destroy', ['zaznam' => $r->id]) }}">
                                         @csrf
                                         @method('DELETE')
                                         <button type="button" class="icon-btn icon-btn-x" title="Smazat záznam"
-                                                onclick="openDelModal(this, @js($r->znacka))">X</button>
+                                                onclick="openDelModal(this, @js($r->znacka))">
+                                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="2" y1="4" x2="14" y2="4"/><path d="M5 4V2.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 .5.5V4M13 4v9a1.5 1.5 0 0 1-1.5 1.5h-5A1.5 1.5 0 0 1 3 13V4"/></svg>
+                                        </button>
                                     </form>
                                 </div>
                                 @if ($r->EDI && $r->EDI_ID)
