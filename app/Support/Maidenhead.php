@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace App\Support;
 
+use Location\Bearing\BearingSpherical;
+use Location\Coordinate;
+use Location\Distance\Vincenty;
+use Location\Exception\NotConvergingException;
+
 /**
  * Převod Maidenhead QTH lokátoru (např. „JN99AJ") na zeměpisné souřadnice
  * (střed čtverce).
@@ -114,17 +119,25 @@ final class Maidenhead
     }
 
     /**
-     * Vzdálenost mezi dvěma body v kilometrech (haversine, poloměr Země 6371 km).
+     * Vzdálenost mezi dvěma body v kilometrech (Vincenty, WGS-84).
      * Pro popup mapy „N" (vzdálenost spojení).
      */
     public static function distanceKm(float $lat1, float $lon1, float $lat2, float $lon2): float
     {
-        $dLat = deg2rad($lat2 - $lat1);
-        $dLon = deg2rad($lon2 - $lon1);
-        $a = sin($dLat / 2) ** 2
-            + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($dLon / 2) ** 2;
+        try {
+            return (new Vincenty)->getDistance(
+                new Coordinate($lat1, $lon1),
+                new Coordinate($lat2, $lon2),
+            ) / 1000.0;
+        } catch (NotConvergingException) {
+            // Antipodální body – záložní haversine.
+            $dLat = deg2rad($lat2 - $lat1);
+            $dLon = deg2rad($lon2 - $lon1);
+            $a = sin($dLat / 2) ** 2
+                + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($dLon / 2) ** 2;
 
-        return 6371.0 * 2 * atan2(sqrt($a), sqrt(1 - $a));
+            return 6371.0 * 2 * atan2(sqrt($a), sqrt(1 - $a));
+        }
     }
 
     /**
@@ -133,11 +146,9 @@ final class Maidenhead
      */
     public static function bearingDeg(float $lat1, float $lon1, float $lat2, float $lon2): float
     {
-        $dLon = deg2rad($lon2 - $lon1);
-        $y = sin($dLon) * cos(deg2rad($lat2));
-        $x = cos(deg2rad($lat1)) * sin(deg2rad($lat2))
-            - sin(deg2rad($lat1)) * cos(deg2rad($lat2)) * cos($dLon);
-
-        return fmod(rad2deg(atan2($y, $x)) + 360.0, 360.0);
+        return (new BearingSpherical)->calculateBearing(
+            new Coordinate($lat1, $lon1),
+            new Coordinate($lat2, $lon2),
+        );
     }
 }
