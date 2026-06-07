@@ -116,21 +116,25 @@
         padding-bottom: 0.35rem;
         margin-bottom: 0.9rem;
         border-bottom: 2px solid var(--line);
+        text-wrap: balance;
     }
     .content h2 {
         font-size: 1.1rem;
         font-weight: 600;
         color: var(--heading);
         margin: 1.25rem 0 0.6rem;
+        text-wrap: balance;
     }
     .content h3 {
         font-size: 0.98rem;
         font-weight: 600;
         color: var(--ink);
         margin: 1rem 0 0.4rem;
+        text-wrap: balance;
     }
     .content p {
         margin-bottom: 0.6rem;
+        text-wrap: pretty;
     }
     .content a:not(.btn):not(.icon-btn):not(.nav-link):not(.action-link) {
         color: var(--link);
@@ -148,7 +152,7 @@
         background-color: var(--surface);
         border: 1px solid var(--line);
         border-radius: 0.75rem;
-        box-shadow: 0 1px 2px rgb(20 22 40 / 0.04);
+        box-shadow: 0 1px 2px rgb(20 22 40 / 0.04), inset 0 1px 0 rgb(255 255 255 / 0.07);
     }
 
     /* ── Tlačítka ────────────────────────────────────────────────── */
@@ -226,8 +230,9 @@
         transition: border-color 0.15s, box-shadow 0.15s;
     }
     .textarea {
-        resize: vertical;
+        field-sizing: content;
         min-height: 3rem;
+        max-height: 18rem;
     }
     .input:focus,
     .select:focus,
@@ -253,6 +258,12 @@
         font-size: 0.85rem;
         margin-bottom: 1rem;
         border: 1px solid transparent;
+        transition: opacity 0.3s ease, transform 0.3s ease;
+
+        @starting-style {
+            opacity: 0;
+            transform: translateY(-0.4rem);
+        }
     }
     .alert-error {
         background-color: var(--danger-soft);
@@ -273,6 +284,12 @@
         background-color: var(--warn-soft);
         border-color: color-mix(in oklab, var(--warn) 45%, transparent);
         color: var(--warn);
+    }
+
+    /* has-[:focus] – rozsvítí label při fokusu inputu/selectu/textarey. */
+    .field:has(:focus) .label {
+        color: var(--brand);
+        transition: color 0.15s;
     }
 
     /* ── Odznaky ─────────────────────────────────────────────────── */
@@ -313,6 +330,7 @@
         overflow-x: auto;
         border: 1px solid var(--line);
         border-radius: 0.6rem;
+        container-type: inline-size;
     }
     table.data-table {
         width: 100%;
@@ -371,6 +389,7 @@
         padding: 0.45rem 0.85rem;
         border-radius: 0.5rem;
         margin: 1.25rem 0 0.6rem;
+        text-wrap: balance;
     }
 
     /* ── SVG tlačítka akcí (approve / edit / delete) ──────────────── */

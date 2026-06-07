@@ -63,7 +63,7 @@
                             ? $r->body / ($r->nasobice * $r->pocet)
                             : 0.0;
                     @endphp
-                    <tr @class(['row-pending' => ! $r->schvaleno])>
+                    <tr @class(['row-pending' => ! $r->schvaleno, 'group'])>
                         <td class="num font-bold">{{ $poradi }}.</td>
                         <td>
                             <span class="mono font-bold">{{ $r->znacka }}</span>@if ($r->qrp)<span class="badge badge-qrp ml-1">QRP</span>@endif
@@ -104,12 +104,12 @@
                                 </div>
                                 @if ($r->EDI && $r->EDI_ID)
                                     {{-- 2. řádek: EDI · EDIR --}}
-                                    <div class="whitespace-nowrap">
+                                    <div class="whitespace-nowrap opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100">
                                         <a href="{{ route('edi.soubor', ['head' => $r->EDI_ID]) }}" class="action-link" title="Zobrazit původní EDI soubor">EDI</a>
                                         <a href="{{ route('edi.soubor.redukovany', ['head' => $r->EDI_ID]) }}" class="action-link" title="Zobrazit redukovaný EDI (08–11 UTC)">EDIR</a>
                                     </div>
                                     {{-- 3. řádek: mapy M · N · S · V --}}
-                                    <div class="whitespace-nowrap">
+                                    <div class="whitespace-nowrap opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100">
                                         <a href="{{ route('edi.mapa.jezek', ['head' => $r->EDI_ID]) }}" class="action-link" title="Mapa – ježek (čáry do protistanic)">M</a>
                                         <a href="{{ route('edi.mapa.spendliky', ['head' => $r->EDI_ID]) }}" class="action-link" title="Mapa – špendlíky (značka, km, azimut)">N</a>
                                         <a href="{{ route('edi.mapa.lokatory', ['head' => $r->EDI_ID]) }}" class="action-link" title="Mapa – velké čtverce s počty protistanic">S</a>

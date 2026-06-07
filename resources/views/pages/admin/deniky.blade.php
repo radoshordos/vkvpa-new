@@ -21,7 +21,7 @@
                     <th>{{ __('admin.deniky_col_band') }}</th>
                     <th>{{ __('admin.deniky_col_round') }}</th>
                     <th class="num">{{ __('admin.deniky_col_qso') }}</th>
-                    <th>{{ __('admin.deniky_col_upload') }}</th>
+                    <th class="hidden @[520px]:table-cell">{{ __('admin.deniky_col_upload') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -39,7 +39,7 @@
                         <td class="mono text-sm">{{ $d->PBand ?: '—' }}</td>
                         <td class="text-sm">{{ $kola->get($d->id_kola, '—') }}</td>
                         <td class="num">{{ $d->lines_count }}</td>
-                        <td class="whitespace-nowrap text-sm text-muted">{{ $d->stamp?->format('j. n. Y H:i') ?? '—' }}</td>
+                        <td class="hidden whitespace-nowrap text-sm text-muted @[520px]:table-cell">{{ $d->stamp?->format('j. n. Y H:i') ?? '—' }}</td>
                     </tr>
                 @endforeach
             </tbody>
