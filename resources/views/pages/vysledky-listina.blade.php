@@ -5,7 +5,11 @@
 @section('title', __('pages.vysledky.title'))
 
 @section('content')
-@php $isAdmin = (bool) (auth()->user()?->is_admin); @endphp
+@php
+    $isAdmin = (bool) (auth()->user()?->is_admin);
+    $isAuth  = auth()->check();
+    $uploadWindowOpen = $uploadWindowOpen ?? false;
+@endphp
 
 <h1>{{ __('pages.vysledky.heading') }}</h1>
 
@@ -52,7 +56,7 @@
                         <th class="num">{{ __('pages.vysledky.col_mult') }}</th>
                         <th class="num">{{ __('pages.vysledky.col_total') }}</th>
                         <th>{{ __('pages.vysledky.col_soapbox') }}</th>
-                        @if ($isAdmin)<th>{{ __('pages.vysledky.col_actions') }}</th>@endif
+                        @if ($isAdmin || $isAuth)<th>{{ __('pages.vysledky.col_actions') }}</th>@endif
                     </tr>
                 </thead>
                 <tbody>
@@ -78,44 +82,52 @@
                             <span class="text-xs text-muted">{{ number_format($bq, 1, ',', '') }} b/QSO</span>
                         </td>
                         <td class="text-danger">{{ $r->soapbox }}@if ($r->poznamka)<br><i class="text-muted">{{ $r->poznamka }}</i>@endif</td>
-                        @if ($isAdmin)
+                        @if ($isAdmin || $isAuth)
                             <td>
-                                {{-- 1. řádek: P převzít · U upravit · X smazat --}}
-                                <div class="mb-1 flex items-center gap-1">
-                                    <form method="post" action="{{ route('zaznam.update', ['zaznam' => $r->id]) }}">
-                                        @csrf
-                                        @method('PATCH')
-                                        <button type="submit" class="icon-btn icon-btn-p"
-                                                title="{{ $r->schvaleno ? 'Záznam je převzat' : 'Převzít záznam (vyhodnocovatel viděl)' }}">
-                                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="2 8.5 6 12.5 14 3.5"/></svg>
-                                        </button>
-                                    </form>
-                                    <a href="{{ route('hlaseni.index', ['id' => $r->id]) }}" class="icon-btn icon-btn-u" title="Upravit záznam">
-                                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.5 2.5a1.5 1.5 0 0 1 2 2L5 13l-3 1 1-3 8.5-8.5z"/></svg>
-                                    </a>
-                                    <form method="post" action="{{ route('zaznam.destroy', ['zaznam' => $r->id]) }}">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="button" class="icon-btn icon-btn-x" title="Smazat záznam"
-                                                onclick="openDelModal(this, @js($r->znacka))">
-                                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="2" y1="4" x2="14" y2="4"/><path d="M5 4V2.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 .5.5V4M13 4v9a1.5 1.5 0 0 1-1.5 1.5h-5A1.5 1.5 0 0 1 3 13V4"/></svg>
-                                        </button>
-                                    </form>
-                                </div>
+                                @if ($isAdmin)
+                                    {{-- 1. řádek: P převzít · U upravit · X smazat --}}
+                                    <div class="mb-1 flex items-center gap-1">
+                                        <form method="post" action="{{ route('zaznam.update', ['zaznam' => $r->id]) }}">
+                                            @csrf
+                                            @method('PATCH')
+                                            <button type="submit" class="icon-btn icon-btn-p"
+                                                    title="{{ $r->schvaleno ? 'Záznam je převzat' : 'Převzít záznam (vyhodnocovatel viděl)' }}">
+                                                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="2 8.5 6 12.5 14 3.5"/></svg>
+                                            </button>
+                                        </form>
+                                        <a href="{{ route('hlaseni.index', ['id' => $r->id]) }}" class="icon-btn icon-btn-u" title="Upravit záznam">
+                                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.5 2.5a1.5 1.5 0 0 1 2 2L5 13l-3 1 1-3 8.5-8.5z"/></svg>
+                                        </a>
+                                        <form method="post" action="{{ route('zaznam.destroy', ['zaznam' => $r->id]) }}">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="button" class="icon-btn icon-btn-x" title="Smazat záznam"
+                                                    onclick="openDelModal(this, @js($r->znacka))">
+                                                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="2" y1="4" x2="14" y2="4"/><path d="M5 4V2.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 .5.5V4M13 4v9a1.5 1.5 0 0 1-1.5 1.5h-5A1.5 1.5 0 0 1 3 13V4"/></svg>
+                                            </button>
+                                        </form>
+                                    </div>
+                                @endif
                                 @if ($r->EDI && $r->EDI_ID)
-                                    {{-- 2. řádek: EDI · EDIR --}}
+                                    {{-- EDI · EDIR: admin vždy, ostatní přihlášení jen mimo upload window --}}
                                     <div class="whitespace-nowrap opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100">
-                                        <a href="{{ route('edi.soubor', ['head' => $r->EDI_ID]) }}" class="action-link" title="Zobrazit původní EDI soubor">EDI</a>
-                                        <a href="{{ route('edi.soubor.redukovany', ['head' => $r->EDI_ID]) }}" class="action-link" title="Zobrazit redukovaný EDI (08–11 UTC)">EDIR</a>
+                                        @if ($isAdmin || ! $uploadWindowOpen)
+                                            <a href="{{ route('edi.soubor', ['head' => $r->EDI_ID]) }}" class="action-link" title="Zobrazit původní EDI soubor">EDI</a>
+                                            <a href="{{ route('edi.soubor.redukovany', ['head' => $r->EDI_ID]) }}" class="action-link" title="Zobrazit redukovaný EDI (08–11 UTC)">EDIR</a>
+                                        @else
+                                            <span class="action-link cursor-not-allowed opacity-50" title="{{ __('app.edi_restricted_body') }}">{{ __('app.edi_restricted_label') }}</span>
+                                        @endif
                                     </div>
-                                    {{-- 3. řádek: mapy M · N · S · C · V --}}
-                                    <div class="whitespace-nowrap opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100">
-                                        <a href="{{ route('edi.mapa.jezek', ['head' => $r->EDI_ID]) }}" class="action-link" title="Mapa – ježek (čáry do protistanic)">M</a>
-                                        <a href="{{ route('edi.mapa.spendliky', ['head' => $r->EDI_ID]) }}" class="action-link" title="Mapa – špendlíky (značka, km, azimut)">N</a>
-                                        <a href="{{ route('edi.mapa.lokatory', ['head' => $r->EDI_ID]) }}" class="action-link" title="Mapa – velké čtverce s počty protistanic">S</a>
-                                        <a href="{{ route('edi.mapa.crk', ['head' => $r->EDI_ID]) }}" class="action-link" title="Mapa – kombinovaná (paprsky, provoz, kružnice, mřížka, stanice z kola)">C</a>
-                                        <a href="{{ route('edi.vizualizace', ['head' => $r->EDI_ID]) }}" class="action-link" title="Vizualizace deníku (mapa + grafy)">V</a>
-                                    </div>
+                                    @if ($isAdmin)
+                                        {{-- Mapy M · N · S · C · V – jen admin --}}
+                                        <div class="whitespace-nowrap opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100">
+                                            <a href="{{ route('edi.mapa.jezek', ['head' => $r->EDI_ID]) }}" class="action-link" title="Mapa – ježek (čáry do protistanic)">M</a>
+                                            <a href="{{ route('edi.mapa.spendliky', ['head' => $r->EDI_ID]) }}" class="action-link" title="Mapa – špendlíky (značka, km, azimut)">N</a>
+                                            <a href="{{ route('edi.mapa.lokatory', ['head' => $r->EDI_ID]) }}" class="action-link" title="Mapa – velké čtverce s počty protistanic">S</a>
+                                            <a href="{{ route('edi.mapa.crk', ['head' => $r->EDI_ID]) }}" class="action-link" title="Mapa – kombinovaná (paprsky, provoz, kružnice, mřížka, stanice z kola)">C</a>
+                                            <a href="{{ route('edi.vizualizace', ['head' => $r->EDI_ID]) }}" class="action-link" title="Vizualizace deníku (mapa + grafy)">V</a>
+                                        </div>
+                                    @endif
                                 @endif
                             </td>
                         @endif

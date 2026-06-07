@@ -6,11 +6,15 @@ namespace Tests\Feature;
 
 use App\Http\Controllers\EdiController;
 use App\Models\Edihead;
+use App\Models\User;
+use App\Models\VkvpaKola;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 /**
  * Zobrazení EDI deníku: akce EDI (původní) a EDIR (redukovaný na 08–11 UTC).
+ * Přístupová pravidla: admin vždy, přihlášený mimo window, v době window 403.
  *
  * @see EdiController
  */
@@ -36,14 +40,38 @@ class EdiZobrazeniTest extends TestCase
         ]);
     }
 
+    private function admin(): User
+    {
+        return User::create(['name' => 'admin', 'password' => Hash::make('x'), 'is_admin' => true]);
+    }
+
+    private function regularUser(): User
+    {
+        return User::create(['name' => 'user', 'password' => Hash::make('x'), 'is_admin' => false]);
+    }
+
+    private function activeRound(): VkvpaKola
+    {
+        return VkvpaKola::create([
+            'nazev' => 'Test kolo',
+            'datum_konani' => now()->subDay(),
+            'datum_uzaverky' => now()->addDay(),
+            'aktivni' => true,
+            'poznamka' => '',
+        ]);
+    }
+
+    // ─── Obsah EDI (admin má vždy přístup) ────────────────────────────────────
+
     public function test_shows_original_edi(): void
     {
         $head = $this->denik();
 
-        $this->get(route('edi.soubor', ['head' => $head->ID]))
+        $this->actingAs($this->admin())
+            ->get(route('edi.soubor', ['head' => $head->ID]))
             ->assertOk()
             ->assertSee('OK1A')
-            ->assertSee('OK1Z')            // původní obsahuje i QSO mimo okno
+            ->assertSee('OK1Z')
             ->assertSee('[QSORecords;2]');
     }
 
@@ -51,11 +79,12 @@ class EdiZobrazeniTest extends TestCase
     {
         $head = $this->denik();
 
-        $this->get(route('edi.soubor.redukovany', ['head' => $head->ID]))
+        $this->actingAs($this->admin())
+            ->get(route('edi.soubor.redukovany', ['head' => $head->ID]))
             ->assertOk()
-            ->assertSee('OK1A')             // v okně → zůstává
-            ->assertDontSee('OK1Z')         // 12:00 → oříznuto
-            ->assertSee('[QSORecords;1]');  // přepočítaný počet
+            ->assertSee('OK1A')
+            ->assertDontSee('OK1Z')
+            ->assertSee('[QSORecords;1]');
     }
 
     public function test_missing_src_returns_404(): void
@@ -63,6 +92,87 @@ class EdiZobrazeniTest extends TestCase
         $head = $this->denik();
         $head->update(['src' => null]);
 
-        $this->get(route('edi.soubor', ['head' => $head->ID]))->assertNotFound();
+        $this->actingAs($this->admin())
+            ->get(route('edi.soubor', ['head' => $head->ID]))
+            ->assertNotFound();
+    }
+
+    // ─── Přístupová pravidla ───────────────────────────────────────────────────
+
+    public function test_guest_redirected_to_login_when_no_active_round(): void
+    {
+        $head = $this->denik();
+
+        $this->get(route('edi.soubor', ['head' => $head->ID]))
+            ->assertRedirect(route('login'));
+    }
+
+    public function test_guest_redirected_to_login_for_edir_when_no_active_round(): void
+    {
+        $head = $this->denik();
+
+        $this->get(route('edi.soubor.redukovany', ['head' => $head->ID]))
+            ->assertRedirect(route('login'));
+    }
+
+    public function test_authenticated_user_can_view_edi_when_no_active_round(): void
+    {
+        $head = $this->denik();
+
+        $this->actingAs($this->regularUser())
+            ->get(route('edi.soubor', ['head' => $head->ID]))
+            ->assertOk()
+            ->assertSee('OK1A');
+    }
+
+    public function test_edi_blocked_during_upload_window_for_guest(): void
+    {
+        $this->activeRound();
+        $head = $this->denik();
+
+        $this->get(route('edi.soubor', ['head' => $head->ID]))
+            ->assertForbidden();
+    }
+
+    public function test_edi_blocked_during_upload_window_for_regular_user(): void
+    {
+        $this->activeRound();
+        $head = $this->denik();
+
+        $this->actingAs($this->regularUser())
+            ->get(route('edi.soubor', ['head' => $head->ID]))
+            ->assertForbidden();
+    }
+
+    public function test_edir_blocked_during_upload_window_for_regular_user(): void
+    {
+        $this->activeRound();
+        $head = $this->denik();
+
+        $this->actingAs($this->regularUser())
+            ->get(route('edi.soubor.redukovany', ['head' => $head->ID]))
+            ->assertForbidden();
+    }
+
+    public function test_admin_can_view_edi_during_upload_window(): void
+    {
+        $this->activeRound();
+        $head = $this->denik();
+
+        $this->actingAs($this->admin())
+            ->get(route('edi.soubor', ['head' => $head->ID]))
+            ->assertOk()
+            ->assertSee('OK1A');
+    }
+
+    public function test_admin_can_view_edir_during_upload_window(): void
+    {
+        $this->activeRound();
+        $head = $this->denik();
+
+        $this->actingAs($this->admin())
+            ->get(route('edi.soubor.redukovany', ['head' => $head->ID]))
+            ->assertOk()
+            ->assertSee('OK1A');
     }
 }

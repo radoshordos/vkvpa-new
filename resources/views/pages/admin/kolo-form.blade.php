@@ -2,6 +2,16 @@
 @section('title', $kolo ? __('admin.kolo_edit_title') : __('admin.kolo_create_title'))
 @section('content')
 
+@php
+    $sug = $suggested ?? [];
+    // Předvyplnění: při vytváření z ContestCalendar, při editaci z modelu.
+    $defNazev      = old('nazev',          $kolo?->nazev          ?? ($sug['nazev'] ?? ''));
+    $defKonani     = old('datum_konani',   $kolo?->datum_konani?->format('Y-m-d') ?? ($sug['datum_konani'] ?? ''));
+    $defUzaverky   = old('datum_uzaverky', $kolo?->datum_uzaverky?->format('Y-m-d\TH:i') ?? ($sug['datum_uzaverky'] ?? ''));
+    $defPoznamka   = old('poznamka',       $kolo?->poznamka       ?? '');
+    $defAktivni    = old('aktivni',        $kolo?->aktivni        ?? false);
+@endphp
+
 <h1>{{ $kolo ? __('admin.kolo_edit_heading') : __('admin.kolo_create_heading') }}</h1>
 
 @if ($errors->any())
@@ -27,7 +37,7 @@
             <label class="label" for="nazev">{{ __('admin.kolo_field_name') }} *</label>
             <input id="nazev" name="nazev" type="text"
                    class="input @error('nazev') input-err @enderror"
-                   value="{{ old('nazev', $kolo?->nazev) }}"
+                   value="{{ $defNazev }}"
                    maxlength="250" required>
             @error('nazev')
                 <span class="field-error">{{ $message }}</span>
@@ -39,8 +49,9 @@
                 <label class="label" for="datum_konani">{{ __('admin.kolo_field_date') }} *</label>
                 <input id="datum_konani" name="datum_konani" type="date"
                        class="input @error('datum_konani') input-err @enderror"
-                       value="{{ old('datum_konani', $kolo?->datum_konani?->format('Y-m-d')) }}"
+                       value="{{ $defKonani }}"
                        required>
+                <span class="mt-1 block text-xs text-muted">{{ __('admin.kolo_hint_date') }}</span>
                 @error('datum_konani')
                     <span class="field-error">{{ $message }}</span>
                 @enderror
@@ -50,8 +61,9 @@
                 <label class="label" for="datum_uzaverky">{{ __('admin.kolo_field_deadline') }} *</label>
                 <input id="datum_uzaverky" name="datum_uzaverky" type="datetime-local"
                        class="input @error('datum_uzaverky') input-err @enderror"
-                       value="{{ old('datum_uzaverky', $kolo?->datum_uzaverky?->format('Y-m-d\TH:i')) }}"
+                       value="{{ $defUzaverky }}"
                        required>
+                <span class="mt-1 block text-xs text-muted">{{ __('admin.kolo_hint_deadline') }}</span>
                 @error('datum_uzaverky')
                     <span class="field-error">{{ $message }}</span>
                 @enderror
@@ -62,7 +74,7 @@
             <label class="label" for="poznamka">{{ __('admin.kolo_field_note') }}</label>
             <input id="poznamka" name="poznamka" type="text"
                    class="input @error('poznamka') input-err @enderror"
-                   value="{{ old('poznamka', $kolo?->poznamka) }}"
+                   value="{{ $defPoznamka }}"
                    maxlength="250">
             @error('poznamka')
                 <span class="field-error">{{ $message }}</span>
@@ -72,7 +84,7 @@
         <label class="flex items-center gap-2 text-sm">
             <input type="hidden" name="aktivni" value="0">
             <input id="aktivni" name="aktivni" type="checkbox" value="1"
-                   @checked(old('aktivni', $kolo?->aktivni ?? false))>
+                   @checked($defAktivni)>
             {{ __('admin.kolo_field_active') }}
         </label>
 
@@ -84,5 +96,49 @@
         </div>
     </form>
 </div>
+
+@push('scripts')
+<script>
+(function () {
+    var datumKonani   = document.getElementById('datum_konani');
+    var datumUzaverky = document.getElementById('datum_uzaverky');
+    var nazev         = document.getElementById('nazev');
+
+    if (! datumKonani) { return; }
+
+    datumKonani.addEventListener('change', function () {
+        var val = this.value; // YYYY-MM-DD
+        if (! val) { return; }
+
+        var parts = val.split('-');
+        if (parts.length !== 3) { return; }
+
+        // Datum závodu jako UTC půlnoc
+        var d = new Date(Date.UTC(
+            parseInt(parts[0], 10),
+            parseInt(parts[1], 10) - 1,
+            parseInt(parts[2], 10)
+        ));
+        if (isNaN(d.getTime())) { return; }
+
+        // Uzávěrka = nejbližší následující pátek (dayOfWeek 5) 23:59
+        var dayOfWeek = d.getUTCDay(); // 0 = Sun … 6 = Sat
+        var daysUntilFriday = (5 - dayOfWeek + 7) % 7 || 7;
+        var deadline = new Date(d);
+        deadline.setUTCDate(deadline.getUTCDate() + daysUntilFriday);
+
+        var yyyy = deadline.getUTCFullYear();
+        var mm   = String(deadline.getUTCMonth() + 1).padStart(2, '0');
+        var dd   = String(deadline.getUTCDate()).padStart(2, '0');
+        datumUzaverky.value = yyyy + '-' + mm + '-' + dd + 'T23:59';
+
+        // Název kola dle měsíce/roku data závodu
+        var ym = String(d.getUTCMonth() + 1).padStart(2, '0');
+        var yy = d.getUTCFullYear();
+        nazev.value = 'VKV PA ' + ym + '/' + yy;
+    });
+}());
+</script>
+@endpush
 
 @endsection

@@ -58,6 +58,7 @@ class VysledkyController extends Controller
             'radky' => $radky,
             'hledat' => $hledat,
             'limitReached' => $radky->count() >= $maxRows,
+            'uploadWindowOpen' => VkvpaKola::existujeAktivni(),
         ]);
     }
 

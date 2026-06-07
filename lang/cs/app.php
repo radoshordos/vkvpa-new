@@ -17,4 +17,8 @@ return [
     'useful_links' => 'Užitečné odkazy',
     'no_active_title' => 'Nyní není aktivní žádné kolo.',
     'no_active_body' => 'EDI je možné odeslat pouze do aktivních kol.',
+    'edi_restricted_title' => 'Omezeno / Restricted',
+    'edi_restricted_body' => 'Přístup k deníkům je omezen po dobu otevřeného příjmu hlášení, aby nebylo možné opisovat z cizích deníků. EDI soubory budou dostupné po uzavření kola.',
+    'edi_restricted_label' => 'Omezeno',
+    'back_home' => 'Zpět na úvod',
 ];
