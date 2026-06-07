@@ -180,7 +180,8 @@ class EdiPipelineIntegrationTest extends TestCase
 
         $row->refresh();
         $this->assertSame('OK2KJT', $row->znacka);
-        $this->assertTrue((bool) $row->schvaleno, 'Po odeslání formuláře musí být schvaleno=true');
+        // Hlášení od veřejnosti zůstává „Čeká" – převezme ho až vyhodnocovatel.
+        $this->assertFalse((bool) $row->schvaleno, 'Po odeslání formuláře veřejností musí zůstat schvaleno=false');
         $this->assertSame(1, VkvpaData::count(), 'Nesmí vzniknout duplicitní záznam');
     }
 

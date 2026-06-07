@@ -18,12 +18,30 @@ Nebyla nalezena žádná kritická zranitelnost (RCE, SQLi, auth bypass).
 Identifikovány byly **3 nálezy** (2× střední, 1× nízká) a několik
 informativních poznámek. Detaily níže.
 
-| # | Závažnost | Oblast | Soubor |
-|---|-----------|--------|--------|
-| 1 | Střední | Upload souboru – název/přípona + možné SVG/polyglot (stored XSS) | `DiskuseController`, `StorePrispevekRequest` |
-| 2 | Střední / Nízká | Neověřené vytvoření „schváleného" výsledkového řádku | `HlaseniController::store` |
-| 3 | Nízká / Info | Magic-link token přihlašuje jako „první admin" | `AuthController::loginViaToken` |
-| 4 | Nízká | Možný DoS přes velikost generovaného PNG | `MailImageController` |
+| # | Závažnost | Oblast | Soubor | Stav |
+|---|-----------|--------|--------|------|
+| 1 | Střední | Upload souboru – název/přípona + možné SVG/polyglot (stored XSS) | `DiskuseController`, `StorePrispevekRequest` | ✅ Opraveno |
+| 2 | Střední / Nízká | Veřejné hlášení se ukládalo rovnou jako „schválené" | `HlaseniController::store` | ✅ Opraveno |
+| 3 | Nízká / Info | Magic-link token přihlašoval „prvního admina" + ořez `kod` na 32 znaků | `AuthController`, migrace | ✅ Opraveno |
+| 4 | Nízká | Možný DoS přes velikost generovaného PNG | `MailImageController` | ✅ Opraveno |
+
+## Stav nápravy (2026-06-07)
+
+Všechny čtyři nálezy byly opraveny ve stejné větvi. Ověřeno: `composer test`
+(236 testů zelených), PHPStan level 10 bez chyb, Pint bez výtek.
+
+- **#1** – fotky v diskusi se ukládají pod náhodným server-side názvem
+  (`->store()`), přípona se odvozuje z obsahu, nikoli z klienta; pravidlo
+  `image` nahrazeno `mimes:jpeg,png,gif,webp` (SVG vyloučeno).
+- **#2** – veřejné (neEDI i EDI) hlášení se ukládá jako `schvaleno=false`
+  („Čeká") a zobrazí se až po převzetí vyhodnocovatelem; jen administrátor
+  zakládá rovnou převzatý záznam.
+- **#3** – přidán sloupec `vkvpa_prihlaseni.user_id`; token se váže na
+  konkrétního administrátora a přihlásí právě jeho (s ověřením práv a
+  zpětnou kompatibilitou pro starší tokeny). Při té příležitosti opraven
+  i latentní defekt: sloupec `kod` byl `varchar(32)`, ač ukládáme SHA-256
+  (64 znaků) → v MySQL by se hash ořezával; rozšířeno na `varchar(64)`.
+- **#4** – délka textu pro generovaný PNG omezena na 100 znaků.
 
 ---
 

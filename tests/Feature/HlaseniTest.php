@@ -48,7 +48,7 @@ class HlaseniTest extends TestCase
         ];
     }
 
-    public function test_valid_report_is_stored_and_approved(): void
+    public function test_valid_report_is_stored_and_pending(): void
     {
         [$kolo, $kat] = $this->prepare();
 
@@ -61,7 +61,21 @@ class HlaseniTest extends TestCase
         $this->assertSame('OK2KJT', $row->znacka);   // uppercased
         $this->assertSame('JN99AJ', $row->locator);
         $this->assertSame('test@example.com', $row->mail);
-        $this->assertTrue((bool) $row->schvaleno);   // auto-approve
+        // Hlášení od veřejnosti čeká na převzetí vyhodnocovatelem (není auto-approve).
+        $this->assertFalse((bool) $row->schvaleno);
+    }
+
+    public function test_admin_report_is_stored_and_approved(): void
+    {
+        [$kolo, $kat] = $this->prepare();
+        $admin = User::create(['name' => 'Admin', 'password' => Hash::make('x'), 'is_admin' => true]);
+
+        $this->actingAs($admin)
+            ->post('/hlaseni', $this->payload($kolo->id, $kat->id))
+            ->assertRedirect(route('vysledkova_listina', ['kolo' => $kolo->id]));
+
+        // Administrátor smí záznam rovnou převzít (schvaleno=true).
+        $this->assertTrue((bool) VkvpaData::firstOrFail()->schvaleno);
     }
 
     public function test_missing_required_fields_rejected(): void
