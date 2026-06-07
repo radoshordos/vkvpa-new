@@ -118,4 +118,80 @@ final class QsoGeometry
 
         return collect($out);
     }
+
+    /**
+     * Stanice z celého kola s alespoň $minQso spojeními – vrstva „všechny
+     * stanice z kola" kombinované mapy (obdoba „show all logged calls" na
+     * vkvzavody.crk.cz).
+     *
+     * Agreguje protistanice napříč všemi deníky téhož kola (`id_kola`); když
+     * deník kolo nemá (null), počítá jen z něj. Každá značka je zastoupena
+     * jednou, se souřadnicemi a lokátorem prvního platného výskytu a s počtem
+     * spojení napříč všemi deníky kola. Jen QSO uvnitř závodního okna.
+     *
+     * @return Collection<int, array{lat: float, lon: float, call: string, wwl: string, count: int}>
+     */
+    public function roundStations(Edihead $head, int $minQso = 5): Collection
+    {
+        $headIds = $head->id_kola === null
+            ? [$head->ID]
+            : Edihead::query()->where('id_kola', $head->id_kola)->pluck('ID')->all();
+
+        /** @var array<string, array{count: int, lat: float|null, lon: float|null, wwl: string}> $stations */
+        $stations = [];
+
+        foreach (
+            Ediline::query()
+                ->whereIn('IDS', $headIds)
+                ->whereBetween('Time', [ContestWindow::from(), ContestWindow::to()])
+                ->orderBy('Time')
+                ->get(['CallSign', 'Received-WWL', 'lon', 'lat']) as $l
+        ) {
+            $call = strtoupper(trim((string) $l->CallSign));
+            if ($call === '') {
+                continue;
+            }
+
+            $wwl = $l->receivedWwl();
+            $lat = $l->lat;
+            $lon = $l->lon;
+
+            if (($lat === null || $lon === null) && $wwl !== '') {
+                $c = Maidenhead::toLatLon($wwl);
+                $lat = $c['lat'] ?? null;
+                $lon = $c['lon'] ?? null;
+            }
+
+            if (! isset($stations[$call])) {
+                $stations[$call] = ['count' => 0, 'lat' => null, 'lon' => null, 'wwl' => ''];
+            }
+
+            $stations[$call]['count']++;
+
+            // Souřadnice a lokátor z prvního platného výskytu.
+            if (($stations[$call]['lat'] === null || $stations[$call]['lon'] === null) && $lat !== null && $lon !== null) {
+                $stations[$call]['lat'] = (float) $lat;
+                $stations[$call]['lon'] = (float) $lon;
+                $stations[$call]['wwl'] = $wwl;
+            }
+        }
+
+        $out = [];
+
+        foreach ($stations as $call => $s) {
+            if ($s['count'] < $minQso || $s['lat'] === null || $s['lon'] === null) {
+                continue;
+            }
+
+            $out[] = [
+                'lat' => $s['lat'],
+                'lon' => $s['lon'],
+                'call' => $call,
+                'wwl' => $s['wwl'],
+                'count' => $s['count'],
+            ];
+        }
+
+        return collect($out);
+    }
 }

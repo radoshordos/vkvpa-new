@@ -5,6 +5,8 @@
       jezek     (M) – QTH uprostřed, čáry (paprsky) do protistanic
       spendliky (N) – špendlíky protistanic; popup = značka, lokátor, km, azimut
       lokatory  (S) – velké čtverce s počtem protistanic (popisek = počet)
+      crk       (C) – kombinovaná mapa: paprsky + ikony provozu + přepínatelné
+                      vrstvy (kružnice po 200 km, mřížka lokátorů, stanice z kola)
 --}}
 @extends('layouts.app')
 
@@ -17,6 +19,9 @@
     #mapa { height: 70vh; width: 100%; border-radius: 0.6rem; isolation: isolate; }
     /* Popisek s počtem protistanic ve velkém čtverci (režim „lokatory"). */
     .sq-label { background: transparent; border: none; box-shadow: none; color: #fff; font-weight: bold; font-size: 12px; }
+    /* Popisky kružnic vzdáleností a mřížky lokátorů (režim „crk"). */
+    .km-label { background: transparent; border: none; box-shadow: none; color: #c00; font-weight: bold; font-size: 11px; white-space: nowrap; text-shadow: 0 0 2px #fff, 0 0 2px #fff; }
+    .loc-label { background: transparent; border: none; box-shadow: none; color: #333; font-weight: bold; font-size: 11px; white-space: nowrap; text-shadow: 0 0 2px #fff, 0 0 2px #fff; }
   </style>
 @endpush
 
@@ -27,6 +32,7 @@
     home: @json($home),
     points: @json($points),
     squares: @json($squares),
+    roundStations: @json($roundStations),
     pcall: @json($pcall),
     homeLoc: @json($homeLoc),
   };

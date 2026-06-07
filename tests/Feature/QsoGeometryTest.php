@@ -6,6 +6,7 @@ namespace Tests\Feature;
 
 use App\Enums\QsoMode;
 use App\Models\Edihead;
+use App\Models\Ediline;
 use App\Services\Edi\BigSquareCount;
 use App\Services\Edi\EdiImportService;
 use App\Services\Edi\EdiParser;
@@ -84,5 +85,33 @@ class QsoGeometryTest extends TestCase
         $this->assertInstanceOf(BigSquareCount::class, $jn89);
         $this->assertSame(1, $jn99->count);
         $this->assertSame(1, $jn89->count);
+    }
+
+    public function test_round_stations_aggregate_across_logs_and_filter_by_min_qso(): void
+    {
+        $headA = Edihead::create(['id_kola' => 7, 'TDate' => '20260315', 'PCall' => 'OK1AAA', 'PWWLo' => 'JN79', 'PBand' => '144 MHz', 'RName' => 'A', 'RHBBS' => 'a@a.cz', 'SPowe' => 100]);
+        $headB = Edihead::create(['id_kola' => 7, 'TDate' => '20260315', 'PCall' => 'OK1BBB', 'PWWLo' => 'JN89', 'PBand' => '144 MHz', 'RName' => 'B', 'RHBBS' => 'b@b.cz', 'SPowe' => 100]);
+
+        // OK5BIG: 3 QSO v deníku A + 2 v deníku B = 5 napříč kolem → projde (min 5).
+        foreach (['0810', '0811', '0812'] as $t) {
+            Ediline::create(['IDS' => $headA->ID, 'Date' => '260315', 'Time' => $t, 'CallSign' => 'OK5BIG', 'Received-WWL' => 'JN99AA']);
+        }
+        foreach (['0820', '0821'] as $t) {
+            Ediline::create(['IDS' => $headB->ID, 'Date' => '260315', 'Time' => $t, 'CallSign' => 'OK5BIG', 'Received-WWL' => 'JN99AA']);
+        }
+        // OK9SML: jen 1 QSO → neprojde.
+        Ediline::create(['IDS' => $headA->ID, 'Date' => '260315', 'Time' => '0815', 'CallSign' => 'OK9SML', 'Received-WWL' => 'JO60AA']);
+        // Mimo závodní okno → nezapočítá se (OK5BIG by jinak měl 6).
+        Ediline::create(['IDS' => $headA->ID, 'Date' => '260315', 'Time' => '1200', 'CallSign' => 'OK5BIG', 'Received-WWL' => 'JN99AA']);
+
+        $stations = new QsoGeometry()->roundStations($headA);
+
+        // Jen OK5BIG (≥ 5 QSO); OK9SML vypadl pod prahem.
+        $this->assertCount(1, $stations);
+
+        $big = $stations->firstWhere('call', 'OK5BIG');
+        $this->assertNotNull($big);
+        $this->assertSame(5, $big['count']);
+        $this->assertSame('JN99AA', $big['wwl']);
     }
 }
