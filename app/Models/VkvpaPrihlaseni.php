@@ -12,6 +12,10 @@ use Override;
 
 /**
  * Dočasné přihlašovací kódy pro přihlášení přes ?kod=.
+ *
+ * @property int $id
+ * @property string $kod
+ * @property \Illuminate\Support\Carbon $time
  */
 #[Fillable(['time', 'kod'])]
 #[Table(name: 'vkvpa_prihlaseni', key: 'id')]
