@@ -10,6 +10,7 @@ use App\Exceptions\EdiParseException;
 use App\Exceptions\TDateMismatchException;
 use App\Exceptions\UnknownBandException;
 use App\Models\Edihead;
+use App\Models\VkvpaKola;
 use App\Services\Edi\EdiParser;
 use App\Services\Edi\EdiReducer;
 use App\Services\Edi\EdiValidator;
@@ -74,32 +75,59 @@ class EdiController extends Controller
     /**
      * Zobrazí původní EDI soubor deníku – akce „EDI" ve výsledkové listině.
      *
-     * Endpoint: GET /edi/{head}/soubor  (name: edi.soubor)
-     * Vstup:    {head} = ID deníku v `edihead` (route-model-binding)
-     * Efekt:    žádný (jen čtení uloženého `edihead.src`)
-     * Návrat:   text/plain s původním obsahem EDI; 404 pokud zdroj chybí.
+     * Přístup:
+     *   – admin: vždy povolen,
+     *   – otevřené upload window (aktivní kolo): 403 Omezeno,
+     *   – nepřihlášený, žádné aktivní kolo: přesměrování na přihlášení,
+     *   – přihlášený, žádné aktivní kolo: povolen.
      */
-    public function zobrazit(Edihead $head): Response
+    public function zobrazit(Edihead $head): Response|RedirectResponse
     {
+        if ($redirect = $this->checkEdiAccess()) {
+            return $redirect;
+        }
+
         return $this->ediResponse($head, (string) $head->src, $head->PCall, 'edi');
     }
 
     /**
-     * Zobrazí REDUKOVANÝ EDI soubor – akce „EDIR" ve výsledkové listině.
-     *
-     * Endpoint: GET /edi/{head}/soubor-redukovany  (name: edi.soubor.redukovany)
-     * Vstup:    {head} = ID deníku v `edihead` (route-model-binding)
-     * Efekt:    žádný; z `edihead.src` se za běhu ořežou QSO mimo závodní okno
-     *           08:00–11:00 UTC ({@see EdiReducer}). Tato oříznutá podoba je
-     *           zároveň ta, podle které se deník vyhodnocuje.
-     * Návrat:   text/plain s oříznutým EDI; 404 pokud zdroj chybí.
+     * Zobrazí REDUKOVANÝ EDI soubor (oříznutý na závodní okno 08:00–11:00 UTC).
+     * Stejná přístupová pravidla jako {@see zobrazit()}.
      */
-    public function zobrazitRedukovany(Edihead $head): Response
+    public function zobrazitRedukovany(Edihead $head): Response|RedirectResponse
     {
+        if ($redirect = $this->checkEdiAccess()) {
+            return $redirect;
+        }
+
         $src = (string) $head->src;
         $reduced = $src === '' ? '' : $this->reducer->reduce($src);
 
         return $this->ediResponse($head, $reduced, $head->PCall, 'edir');
+    }
+
+    /**
+     * Vrátí redirect (pokud je přístup odepřen) nebo null (přístup povolen).
+     * Admin má vždy přístup. Ostatní uživatelé jsou blokováni v době
+     * otevřeného upload window; mimo window se vyžaduje přihlášení.
+     *
+     * @return RedirectResponse|null null = přístup povolen
+     */
+    private function checkEdiAccess(): ?RedirectResponse
+    {
+        if (auth()->user()?->is_admin) {
+            return null;
+        }
+
+        if (VkvpaKola::existujeAktivni()) {
+            abort(403);
+        }
+
+        if (! auth()->check()) {
+            return redirect()->route('login');
+        }
+
+        return null;
     }
 
     private function ediResponse(Edihead $head, string $content, string $pcall, string $variant): Response
