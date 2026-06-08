@@ -88,6 +88,9 @@ Route::middleware('admin')->group(function (): void {
     Route::get('/admin/dashboard', [DashboardController::class, 'index'])
         ->name('admin.dashboard');
 
+    // Přehled a správa kol (admin index).
+    Route::get('/admin/kola', [KolaAdminController::class, 'index'])->name('kola.admin.index');
+
     // CRUD kol – vytvoření, editace (název, data, aktivní příznak).
     Route::get('/admin/kola/create', [KolaAdminController::class, 'create'])->name('kola.admin.create');
     Route::post('/admin/kola', [KolaAdminController::class, 'store'])->name('kola.admin.store');

@@ -19,10 +19,19 @@ use Illuminate\View\View;
  */
 class KolaAdminController extends Controller
 {
+    public function index(): View
+    {
+        return view('pages.kola', [
+            'active'   => 'kola.admin.index',
+            'isAdmin'  => true,
+            'kola'     => VkvpaKola::query()->withCount('hlaseni')->orderByDesc('datum_konani')->get(),
+        ]);
+    }
+
     public function create(): View
     {
         return view('pages.admin.kolo-form', [
-            'active' => 'kola.index',
+            'active' => 'kola.admin.index',
             'kolo' => null,
             'suggested' => $this->nextSuggestedRound(),
         ]);
@@ -82,14 +91,14 @@ class KolaAdminController extends Controller
         ]);
 
         return redirect()
-            ->route('kola.index')
+            ->route('kola.admin.index')
             ->with('announcement', 'Kolo „'.$kolo->nazev.'" bylo vytvořeno.');
     }
 
     public function edit(VkvpaKola $kolo): View
     {
         return view('pages.admin.kolo-form', [
-            'active' => 'kola.index',
+            'active' => 'kola.admin.index',
             'kolo' => $kolo,
             'suggested' => [],
         ]);
@@ -106,7 +115,7 @@ class KolaAdminController extends Controller
         ]);
 
         return redirect()
-            ->route('kola.index')
+            ->route('kola.admin.index')
             ->with('announcement', 'Kolo „'.$kolo->nazev.'" bylo aktualizováno.');
     }
 }

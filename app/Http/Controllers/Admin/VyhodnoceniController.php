@@ -30,7 +30,7 @@ class VyhodnoceniController extends Controller
             'admin' => Auth::user()?->name,
         ]);
 
-        return redirect()->route('kola.index')
+        return redirect()->route('kola.admin.index')
             ->with('announcement', 'Kolo „'.$kolo->nazev.'" vyhodnoceno.');
     }
 
@@ -46,7 +46,7 @@ class VyhodnoceniController extends Controller
             'admin' => Auth::user()?->name,
         ]);
 
-        return redirect()->route('kola.index')
+        return redirect()->route('kola.admin.index')
             ->with('announcement', 'Kolo „'.$kolo->nazev.'" uzavřeno.');
     }
 }
