@@ -23,23 +23,20 @@
         <th>{{ __('pages.kola.col_date') }}</th>
         <th>{{ __('pages.kola.col_deadline') }}</th>
         <th>{{ __('pages.kola.col_name') }}</th>
-        <th class="num">{{ __('pages.kola.col_active') }}</th>
+        <th>{{ __('pages.kola.col_state') }}</th>
         <th>{{ __('pages.kola.col_evaluated') }}</th>
         @if ($isAdmin)<th>{{ __('pages.kola.col_actions') }}</th>@endif
       </tr>
     </thead>
     <tbody>
       @foreach ($kola as $k)
+        @php $stav = $k->stav(); @endphp
         <tr>
           <td class="whitespace-nowrap">{{ $k->datum_konani?->format('j. n. Y') }}</td>
           <td class="whitespace-nowrap">{{ $k->datum_uzaverky?->format('j. n. Y H:i') }}</td>
           <td>{{ $k->nazev }}</td>
-          <td class="num">
-            @if ($k->aktivni)
-              <span class="badge badge-ok">{{ __('pages.kola.active_yes') }}</span>
-            @else
-              <span class="text-muted">—</span>
-            @endif
+          <td>
+            <span class="badge {{ $stav->badgeClass() }}">{{ $stav->label() }}</span>
           </td>
           <td class="whitespace-nowrap">{{ $k->vyhodnoceno?->format('j. n. Y H:i') ?? '—' }}</td>
           @if ($isAdmin)

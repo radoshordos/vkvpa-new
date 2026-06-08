@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Enums\KoloStav;
 use App\Models\VkvpaData;
 use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
@@ -21,7 +22,7 @@ class HomeController extends Controller
             ?? VkvpaKola::query()->where('datum_konani', '>', $now->toDateString())->orderBy('datum_konani')->first()
             ?? VkvpaKola::query()->orderByDesc('datum_konani')->first();
 
-        $state = $kolo ? $this->resolveState($kolo, $now) : null;
+        $state = $kolo ? $this->stateKey($kolo->stav()) : null;
         $countdownTarget = ($kolo && $state) ? $this->resolveCountdownTarget($kolo, $state) : null;
         $liveMode = in_array($state, ['active', 'deadline', 'evaluating'], true);
 
@@ -45,25 +46,20 @@ class HomeController extends Controller
         ));
     }
 
-    private function resolveState(VkvpaKola $kolo, Carbon $now): string
+    /**
+     * Přemapuje stav kola na klíč používaný šablonou úvodky a odpočtem.
+     * Stav je jediný zdroj pravdy ({@see VkvpaKola::stav()}), úvodka si jen
+     * drží vlastní bohatší popisky a logiku odpočtu navázané na tyto klíče.
+     */
+    private function stateKey(KoloStav $stav): string
     {
-        if ($kolo->aktivni) {
-            return 'active';
-        }
-
-        if ($kolo->datum_konani->isAfter($now->copy()->endOfDay())) {
-            return 'upcoming';
-        }
-
-        if ($kolo->datum_uzaverky !== null && $kolo->datum_uzaverky->isAfter($now)) {
-            return 'deadline';
-        }
-
-        if ($kolo->vyhodnoceno === null) {
-            return 'evaluating';
-        }
-
-        return 'evaluated';
+        return match ($stav) {
+            KoloStav::Nadchazejici => 'upcoming',
+            KoloStav::Aktivni => 'active',
+            KoloStav::Prijem => 'deadline',
+            KoloStav::Uzavrene => 'evaluating',
+            KoloStav::Vyhodnocene => 'evaluated',
+        };
     }
 
     /**

@@ -323,6 +323,10 @@
         background-color: var(--brand-soft);
         color: var(--brand);
     }
+    .badge-muted {
+        background-color: var(--surface-2);
+        color: var(--muted);
+    }
 
     /* ── Tabulky ─────────────────────────────────────────────────── */
     .table-wrap {

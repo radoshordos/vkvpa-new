@@ -49,8 +49,12 @@ class VkvpaKola extends Model
     /**
      * Fáze životního cyklu kola odvozená ze sloupců.
      *
-     * Pořadí podmínek je dané prioritou: vyhodnocené kolo je terminální stav,
-     * jinak rozhoduje příznak `aktivni`, a teprve pak uplynulá uzávěrka.
+     * Pořadí podmínek je dané prioritou:
+     *  1) vyhodnocené kolo je terminální stav (`vyhodnoceno`),
+     *  2) jinak rozhoduje příznak `aktivni` (probíhá příjem),
+     *  3) den závodu ještě nenastal → nadcházející,
+     *  4) den závodu proběhl, ale uzávěrka ne → stále se přijímají hlášení,
+     *  5) uzávěrka uplynula a kolo není vyhodnocené → zpracování výsledků.
      */
     public function stav(): KoloStav
     {
@@ -62,11 +66,15 @@ class VkvpaKola extends Model
             return KoloStav::Aktivni;
         }
 
-        if ($this->datum_uzaverky !== null && $this->datum_uzaverky->isPast()) {
-            return KoloStav::Uzavrene;
+        if ($this->datum_konani->isAfter(Carbon::now()->endOfDay())) {
+            return KoloStav::Nadchazejici;
         }
 
-        return KoloStav::Nadchazejici;
+        if ($this->datum_uzaverky !== null && $this->datum_uzaverky->isFuture()) {
+            return KoloStav::Prijem;
+        }
+
+        return KoloStav::Uzavrene;
     }
 
     /**
