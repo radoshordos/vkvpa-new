@@ -14,15 +14,7 @@
 
 <h1>{{ $kolo ? __('admin.kolo_edit_heading') : __('admin.kolo_create_heading') }}</h1>
 
-@if ($errors->any())
-    <div class="alert alert-error mb-4">
-        <ul class="list-disc pl-5">
-            @foreach ($errors->all() as $err)
-                <li>{{ $err }}</li>
-            @endforeach
-        </ul>
-    </div>
-@endif
+<x-form-errors />
 
 <div class="card max-w-2xl p-5">
     <form method="post"
@@ -33,53 +25,19 @@
             @method('PATCH')
         @endif
 
-        <div class="field">
-            <label class="label" for="nazev">{{ __('admin.kolo_field_name') }} *</label>
-            <input id="nazev" name="nazev" type="text"
-                   class="input @error('nazev') input-err @enderror"
-                   value="{{ $defNazev }}"
-                   maxlength="250" required>
-            @error('nazev')
-                <span class="field-error">{{ $message }}</span>
-            @enderror
-        </div>
+        <x-field name="nazev" id="nazev" :label="__('admin.kolo_field_name')" required
+                 :value="$defNazev" maxlength="250" />
 
         <div class="grid gap-x-5 sm:grid-cols-2">
-            <div class="field">
-                <label class="label" for="datum_konani">{{ __('admin.kolo_field_date') }} *</label>
-                <input id="datum_konani" name="datum_konani" type="date"
-                       class="input @error('datum_konani') input-err @enderror"
-                       value="{{ $defKonani }}"
-                       required>
-                <span class="mt-1 block text-xs text-muted">{{ __('admin.kolo_hint_date') }}</span>
-                @error('datum_konani')
-                    <span class="field-error">{{ $message }}</span>
-                @enderror
-            </div>
+            <x-field name="datum_konani" id="datum_konani" type="date" required
+                     :label="__('admin.kolo_field_date')" :value="$defKonani" :hint="__('admin.kolo_hint_date')" />
 
-            <div class="field">
-                <label class="label" for="datum_uzaverky">{{ __('admin.kolo_field_deadline') }} *</label>
-                <input id="datum_uzaverky" name="datum_uzaverky" type="datetime-local"
-                       class="input @error('datum_uzaverky') input-err @enderror"
-                       value="{{ $defUzaverky }}"
-                       required>
-                <span class="mt-1 block text-xs text-muted">{{ __('admin.kolo_hint_deadline') }}</span>
-                @error('datum_uzaverky')
-                    <span class="field-error">{{ $message }}</span>
-                @enderror
-            </div>
+            <x-field name="datum_uzaverky" id="datum_uzaverky" type="datetime-local" required
+                     :label="__('admin.kolo_field_deadline')" :value="$defUzaverky" :hint="__('admin.kolo_hint_deadline')" />
         </div>
 
-        <div class="field">
-            <label class="label" for="poznamka">{{ __('admin.kolo_field_note') }}</label>
-            <input id="poznamka" name="poznamka" type="text"
-                   class="input @error('poznamka') input-err @enderror"
-                   value="{{ $defPoznamka }}"
-                   maxlength="250">
-            @error('poznamka')
-                <span class="field-error">{{ $message }}</span>
-            @enderror
-        </div>
+        <x-field name="poznamka" id="poznamka" :label="__('admin.kolo_field_note')"
+                 :value="$defPoznamka" maxlength="250" />
 
         <label class="flex items-center gap-2 text-sm">
             <input type="hidden" name="aktivni" value="0">

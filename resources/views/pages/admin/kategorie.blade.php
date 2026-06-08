@@ -28,7 +28,7 @@
                     <td class="num">{{ $k->dxid }}</td>
                     <td>
                         <a href="{{ route('kategorie.edit', $k->id) }}" class="icon-btn icon-btn-u" title="{{ __('admin.kategorie_btn_edit') }}">
-                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.5 2.5a1.5 1.5 0 0 1 2 2L5 13l-3 1 1-3 8.5-8.5z"/></svg>
+                            <x-icon name="pencil" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
                         </a>
                     </td>
                 </tr>
@@ -46,60 +46,24 @@
 <div class="card max-w-2xl p-5 mb-8 border-l-4 border-brand">
     <h2>{{ __('admin.kategorie_edit') }}: <span class="mono">{{ $editKategorie->nazev }}</span></h2>
 
-    @if ($errors->any())
-        <div class="alert alert-error mb-4 mt-3">
-            <ul class="list-disc pl-5">
-                @foreach ($errors->all() as $err)
-                    <li>{{ $err }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
+    <x-form-errors class="mt-3" />
 
     <form method="post" action="{{ route('kategorie.update', $editKategorie->id) }}" class="mt-3 space-y-3">
         @csrf
         @method('PATCH')
 
         <div class="flex flex-wrap gap-3">
-            <div class="field mb-0 min-w-48 flex-1">
-                <label class="label" for="edit-nazev">{{ __('admin.field_name') }} *</label>
-                <input id="edit-nazev" name="nazev" type="text"
-                       class="input @error('nazev') input-err @enderror"
-                       value="{{ old('nazev', $editKategorie->nazev) }}" maxlength="50" required>
-                @error('nazev')
-                    <span class="field-error">{{ $message }}</span>
-                @enderror
-            </div>
-            <div class="field mb-0 w-32">
-                <label class="label" for="edit-zkratka">{{ __('admin.field_abbr') }} *</label>
-                <input id="edit-zkratka" name="zkratka" type="text"
-                       class="input mono @error('zkratka') input-err @enderror"
-                       value="{{ old('zkratka', $editKategorie->zkratka) }}" maxlength="20" required>
-                @error('zkratka')
-                    <span class="field-error">{{ $message }}</span>
-                @enderror
-            </div>
-            <div class="field mb-0 w-24">
-                {{-- dxid: 0 = tato kategorie je tuzemská; jinak ID odpovídající tuzemské kategorie --}}
-                <label class="label" for="edit-dxid">dxid *</label>
-                <input id="edit-dxid" name="dxid" type="number"
-                       class="input @error('dxid') input-err @enderror"
-                       value="{{ old('dxid', $editKategorie->dxid) }}" min="0" required>
-                @error('dxid')
-                    <span class="field-error">{{ $message }}</span>
-                @enderror
-            </div>
+            <x-field name="nazev" id="edit-nazev" :label="__('admin.field_name')" required
+                     wrapper="mb-0 min-w-48 flex-1" :value="old('nazev', $editKategorie->nazev)" maxlength="50" />
+            <x-field name="zkratka" id="edit-zkratka" :label="__('admin.field_abbr')" required class="mono"
+                     wrapper="mb-0 w-32" :value="old('zkratka', $editKategorie->zkratka)" maxlength="20" />
+            {{-- dxid: 0 = tato kategorie je tuzemská; jinak ID odpovídající tuzemské kategorie --}}
+            <x-field name="dxid" id="edit-dxid" label="dxid" type="number" required
+                     wrapper="mb-0 w-24" :value="old('dxid', $editKategorie->dxid)" min="0" />
         </div>
 
-        <div class="field mb-0">
-            <label class="label" for="edit-popis">{{ __('admin.field_desc') }}</label>
-            <input id="edit-popis" name="popis" type="text"
-                   class="input @error('popis') input-err @enderror"
-                   value="{{ old('popis', $editKategorie->popis) }}" maxlength="250">
-            @error('popis')
-                <span class="field-error">{{ $message }}</span>
-            @enderror
-        </div>
+        <x-field name="popis" id="edit-popis" :label="__('admin.field_desc')"
+                 wrapper="mb-0" :value="old('popis', $editKategorie->popis)" maxlength="250" />
 
         <div class="flex justify-end gap-3">
             <a href="{{ route('kategorie.index') }}" class="btn btn-ghost">{{ __('admin.btn_cancel') }}</a>
@@ -113,58 +77,24 @@
 <div class="card max-w-2xl p-5">
     <h2>{{ __('admin.kategorie_add') }}</h2>
 
-    @if ($errors->any() && ! isset($editKategorie))
-        <div class="alert alert-error mb-4 mt-3">
-            <ul class="list-disc pl-5">
-                @foreach ($errors->all() as $err)
-                    <li>{{ $err }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
+    @unless (isset($editKategorie))
+        <x-form-errors class="mt-3" />
+    @endunless
 
     <form method="post" action="{{ route('kategorie.store') }}" class="mt-3 space-y-3">
         @csrf
 
         <div class="flex flex-wrap gap-3">
-            <div class="field mb-0 min-w-48 flex-1">
-                <label class="label" for="nazev">{{ __('admin.field_name') }} *</label>
-                <input id="nazev" name="nazev" type="text"
-                       class="input @error('nazev') input-err @enderror"
-                       value="{{ old('nazev') }}" maxlength="50" required>
-                @error('nazev')
-                    <span class="field-error">{{ $message }}</span>
-                @enderror
-            </div>
-            <div class="field mb-0 w-32">
-                <label class="label" for="zkratka">{{ __('admin.field_abbr') }} *</label>
-                <input id="zkratka" name="zkratka" type="text"
-                       class="input mono @error('zkratka') input-err @enderror"
-                       value="{{ old('zkratka') }}" maxlength="20" required>
-                @error('zkratka')
-                    <span class="field-error">{{ $message }}</span>
-                @enderror
-            </div>
-            <div class="field mb-0 w-24">
-                <label class="label" for="dxid">dxid *</label>
-                <input id="dxid" name="dxid" type="number"
-                       class="input @error('dxid') input-err @enderror"
-                       value="{{ old('dxid', '0') }}" min="0" required>
-                @error('dxid')
-                    <span class="field-error">{{ $message }}</span>
-                @enderror
-            </div>
+            <x-field name="nazev" :label="__('admin.field_name')" required
+                     wrapper="mb-0 min-w-48 flex-1" :value="old('nazev')" maxlength="50" />
+            <x-field name="zkratka" :label="__('admin.field_abbr')" required class="mono"
+                     wrapper="mb-0 w-32" :value="old('zkratka')" maxlength="20" />
+            <x-field name="dxid" label="dxid" type="number" required
+                     wrapper="mb-0 w-24" :value="old('dxid', '0')" min="0" />
         </div>
 
-        <div class="field mb-0">
-            <label class="label" for="popis">{{ __('admin.field_desc') }}</label>
-            <input id="popis" name="popis" type="text"
-                   class="input @error('popis') input-err @enderror"
-                   value="{{ old('popis') }}" maxlength="250">
-            @error('popis')
-                <span class="field-error">{{ $message }}</span>
-            @enderror
-        </div>
+        <x-field name="popis" :label="__('admin.field_desc')"
+                 wrapper="mb-0" :value="old('popis')" maxlength="250" />
 
         <div class="flex justify-end">
             <button type="submit" class="btn btn-primary">{{ __('admin.kategorie_add') }}</button>

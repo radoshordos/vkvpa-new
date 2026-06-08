@@ -38,7 +38,7 @@
 @if (! $kolo)
     <p class="text-muted">{{ __('pages.vysledky.no_closed_round') }}</p>
 @elseif ($limitReached ?? false)
-    <div class="alert alert-error">{{ __('pages.vysledky.too_many', ['count' => $radky->count()]) }}</div>
+    <x-alert type="error" :message="__('pages.vysledky.too_many', ['count' => $radky->count()])" />
 @elseif ($radky->isEmpty())
     @if ($hledat !== '')
         <p class="text-muted">{{ __('pages.vysledky.no_search', ['query' => $hledat]) }}</p>
@@ -74,7 +74,7 @@
                     <tr @class(['row-pending' => ! $r->schvaleno, 'group'])>
                         <td class="num font-bold">{{ $poradi }}.</td>
                         <td>
-                            <span class="mono font-bold">{{ $r->znacka }}</span>@if ($r->qrp)<span class="badge badge-qrp ml-1">QRP</span>@elseif ($r->lp)<span class="badge ml-1">LP</span>@endif @if ($sk['top'])<span class="badge badge-skokan ml-1" title="Největší skokan v kategorii (oproti poslednímu startu)">SKOKAN</span>@endif
+                            <span class="mono font-bold">{{ $r->znacka }}</span>@if ($r->qrp)<x-badge variant="qrp" class="ml-1">QRP</x-badge>@elseif ($r->lp)<x-badge class="ml-1">LP</x-badge>@endif @if ($sk['top'])<x-badge variant="skokan" class="ml-1" title="Největší skokan v kategorii (oproti poslednímu startu)">SKOKAN</x-badge>@endif
                             @if ($r->jmeno)<br><span class="text-muted">{{ $r->jmeno }}</span>@endif
                             @if ($r->timestamp)<br><span class="text-xs text-muted">{{ $r->timestamp->format('j. n. H:i') }}</span>@endif
                         </td>

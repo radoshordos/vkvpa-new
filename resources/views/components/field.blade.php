@@ -17,8 +17,10 @@
       label    – popisek; když není zadán, label se nevykreslí
       value    – hodnota textového inputu
       type     – typ textového inputu (výchozí: text)
-      required – přidá hvězdičku k popisku
+      required – přidá hvězdičku k popisku a atribut „required“ k inputu
       id       – id prvku (výchozí: „f-{name}“)
+      wrapper  – doplňkové třídy obalového <div class="field …">
+      hint     – nápověda pod prvkem (drobný text)
 --}}
 @props([
     'name',
@@ -27,9 +29,11 @@
     'type' => 'text',
     'required' => false,
     'id' => null,
+    'wrapper' => null,
+    'hint' => null,
 ])
 @php $id = $id ?? 'f-' . $name; @endphp
-<div class="field">
+<div @class(['field', $wrapper => $wrapper])>
     @if ($label)
         <label class="label" for="{{ $id }}">{{ $label }}@if ($required) *@endif</label>
     @endif
@@ -37,9 +41,10 @@
     @isset($control)
         {{ $control }}
     @else
-        <input id="{{ $id }}" name="{{ $name }}" type="{{ $type }}" value="{{ $value }}"
+        <input id="{{ $id }}" name="{{ $name }}" type="{{ $type }}" value="{{ $value }}" @required($required)
                {{ $attributes->class(['input', 'input-err' => $errors->has($name)]) }}>
     @endisset
 
+    @if ($hint)<span class="mt-1 block text-xs text-muted">{{ $hint }}</span>@endif
     @error($name)<span class="field-error">{{ $message }}</span>@enderror
 </div>

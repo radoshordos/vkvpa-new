@@ -8,27 +8,13 @@
     {!! __('admin.importy_desc') !!}
 </p>
 
-@if ($errors->any())
-    <div class="alert alert-error mb-4">
-        <ul class="list-disc pl-5">
-            @foreach ($errors->all() as $err)
-                <li>{{ $err }}</li>
-            @endforeach
-        </ul>
-    </div>
-@endif
+<x-form-errors />
 
 <div class="card mb-8 max-w-xl p-5">
     <form method="post" action="{{ route('importy.store') }}" enctype="multipart/form-data" class="flex flex-wrap items-end gap-4">
         @csrf
-        <div class="field mb-0 min-w-48 flex-1">
-            <label class="label" for="zip">{{ __('admin.importy_zip_label') }}</label>
-            <input id="zip" name="zip" type="file" accept=".zip,application/zip"
-                   class="input @error('zip') input-err @enderror" required>
-            @error('zip')
-                <span class="field-error">{{ $message }}</span>
-            @enderror
-        </div>
+        <x-field name="zip" id="zip" type="file" :label="__('admin.importy_zip_label')"
+                 wrapper="mb-0 min-w-48 flex-1" accept=".zip,application/zip" required />
         <button type="submit" class="btn btn-primary">{{ __('admin.importy_btn') }}</button>
     </form>
 </div>
@@ -69,13 +55,13 @@
                             <td>
                                 @switch($item['status'])
                                     @case('ok')
-                                        <span class="badge badge-ok">{{ __('admin.importy_status_ok') }}</span>
+                                        <x-badge variant="ok">{{ __('admin.importy_status_ok') }}</x-badge>
                                         @break
                                     @case('skip')
-                                        <span class="badge badge-brand">{{ __('admin.importy_status_skip') }}</span>
+                                        <x-badge variant="brand">{{ __('admin.importy_status_skip') }}</x-badge>
                                         @break
                                     @default
-                                        <span class="badge badge-danger">{{ __('admin.importy_status_err') }}</span>
+                                        <x-badge variant="danger">{{ __('admin.importy_status_err') }}</x-badge>
                                 @endswitch
                             </td>
                             <td class="mono font-bold">{{ $item['znacka'] ?? '—' }}</td>

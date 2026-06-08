@@ -13,19 +13,14 @@
 
     <div class="px-5 py-4">
         @if ($errors->any())
-            <div class="alert alert-error">{{ $errors->first() }}</div>
+            <x-alert type="error" :message="$errors->first()" />
         @endif
 
-        <div class="field">
-            <label class="label" for="lgn-username">{{ __('admin.login_username') }}</label>
-            <input class="input" type="text" id="lgn-username" name="username"
-                   value="{{ old('username') }}" autocomplete="username" autofocus>
-        </div>
+        <x-field name="username" id="lgn-username" :label="__('admin.login_username')"
+                 :value="old('username')" autocomplete="username" autofocus />
 
-        <div class="field">
-            <label class="label" for="lgn-heslo">{{ __('admin.login_password') }}</label>
-            <input class="input" type="password" id="lgn-heslo" name="heslo" autocomplete="current-password">
-        </div>
+        <x-field name="heslo" id="lgn-heslo" type="password" :label="__('admin.login_password')"
+                 autocomplete="current-password" />
 
         <button type="submit" class="btn btn-primary w-full" name="poslane_heslo" value="šup tam">{{ __('admin.login_btn') }}</button>
     </div>

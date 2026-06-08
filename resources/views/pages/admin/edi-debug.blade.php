@@ -28,7 +28,7 @@
 </p>
 
 @if ($errors->any())
-    <div class="alert alert-error mt-3">
+    <x-alert type="error" class="mt-3">
         <strong>{{ __('admin.debug_err_title') }}</strong>
         <p class="mt-1">{{ $errors->first('upload') }}</p>
         @if (session('lineErrors'))
@@ -38,7 +38,7 @@
                 @endforeach
             </ul>
         @endif
-    </div>
+    </x-alert>
 @endif
 
 <form class="card mb-5 mt-4 flex flex-wrap items-end gap-4 p-4" action="{{ route('edi.debug.store') }}" method="post" enctype="multipart/form-data">
@@ -114,15 +114,15 @@
 
     {{-- Souhrn parsování a vyloučení --}}
     <section class="mb-5 flex flex-wrap gap-2">
-        <span class="badge badge-brand">{{ __('admin.debug_badge_decl') }} <b>{{ $report->declaredTotal }}</b></span>
-        <span class="badge badge-brand">{{ __('admin.debug_badge_parsed') }} <b>{{ $report->parsedCount }}</b></span>
-        <span class="badge badge-ok">{{ __('admin.debug_badge_counted') }} <b>{{ $report->pocet }}</b></span>
-        @if ($report->excludedOutOfWindow)<span class="badge badge-warn">{{ __('admin.debug_badge_window') }} <b>{{ $report->excludedOutOfWindow }}</b></span>@endif
-        @if ($report->excludedWrongDate)<span class="badge badge-warn">{{ __('admin.debug_badge_date') }} <b>{{ $report->excludedWrongDate }}</b></span>@endif
-        @if ($report->ownSquareCount)<span class="badge badge-ok">{{ __('admin.debug_badge_own') }} <b>{{ $report->ownSquareCount }}</b></span>@endif
-        @if ($report->excludedEmpty)<span class="badge badge-brand">{{ __('admin.debug_badge_empty') }} <b>{{ $report->excludedEmpty }}</b></span>@endif
-        @if (count($report->ignoredLines))<span class="badge badge-danger">{{ __('admin.debug_badge_ignored') }} <b>{{ count($report->ignoredLines) }}</b></span>@endif
-        @if ($report->duplicateCount)<span class="badge badge-danger">{{ __('admin.debug_badge_dup') }} <b>{{ $report->duplicateCount }}</b></span>@endif
+        <x-badge variant="brand">{{ __('admin.debug_badge_decl') }} <b>{{ $report->declaredTotal }}</b></x-badge>
+        <x-badge variant="brand">{{ __('admin.debug_badge_parsed') }} <b>{{ $report->parsedCount }}</b></x-badge>
+        <x-badge variant="ok">{{ __('admin.debug_badge_counted') }} <b>{{ $report->pocet }}</b></x-badge>
+        @if ($report->excludedOutOfWindow)<x-badge variant="warn">{{ __('admin.debug_badge_window') }} <b>{{ $report->excludedOutOfWindow }}</b></x-badge>@endif
+        @if ($report->excludedWrongDate)<x-badge variant="warn">{{ __('admin.debug_badge_date') }} <b>{{ $report->excludedWrongDate }}</b></x-badge>@endif
+        @if ($report->ownSquareCount)<x-badge variant="ok">{{ __('admin.debug_badge_own') }} <b>{{ $report->ownSquareCount }}</b></x-badge>@endif
+        @if ($report->excludedEmpty)<x-badge variant="brand">{{ __('admin.debug_badge_empty') }} <b>{{ $report->excludedEmpty }}</b></x-badge>@endif
+        @if (count($report->ignoredLines))<x-badge variant="danger">{{ __('admin.debug_badge_ignored') }} <b>{{ count($report->ignoredLines) }}</b></x-badge>@endif
+        @if ($report->duplicateCount)<x-badge variant="danger">{{ __('admin.debug_badge_dup') }} <b>{{ $report->duplicateCount }}</b></x-badge>@endif
     </section>
 
     {{-- Ignorované řádky (neprošly parserem) --}}
@@ -142,9 +142,9 @@
         <span class="inline-flex items-center gap-1"><i class="inline-block h-3 w-3 rounded-sm" style="background:var(--ok)"></i> {{ __('admin.debug_legend_ok') }}</span>
         <span class="inline-flex items-center gap-1"><i class="inline-block h-3 w-3 rounded-sm" style="background:var(--warn)"></i> {{ __('admin.debug_legend_warn') }}</span>
         <span class="inline-flex items-center gap-1"><i class="inline-block h-3 w-3 rounded-sm" style="background:var(--muted)"></i> {{ __('admin.debug_legend_skip') }}</span>
-        <span class="badge badge-brand">{{ __('admin.debug_legend_own') }}</span>
-        <span class="badge badge-brand">{{ __('admin.debug_legend_new') }}</span>
-        <span class="badge badge-danger">{{ __('admin.debug_legend_dup') }}</span>
+        <x-badge variant="brand">{{ __('admin.debug_legend_own') }}</x-badge>
+        <x-badge variant="brand">{{ __('admin.debug_legend_new') }}</x-badge>
+        <x-badge variant="danger">{{ __('admin.debug_legend_dup') }}</x-badge>
     </div>
 
     {{-- Rozpad QSO --}}
@@ -179,14 +179,14 @@
                         <td class="num">{{ $row->counted ? $row->points : '—' }}</td>
                         <td class="whitespace-nowrap">
                             @switch($row->reason)
-                                @case('counted')<span class="badge badge-ok">{{ __('admin.debug_status_ok') }}</span>@break
-                                @case('out_of_window')<span class="badge badge-warn">{{ __('admin.debug_status_window') }}</span>@break
-                                @case('wrong_date')<span class="badge badge-warn">{{ __('admin.debug_status_date') }}</span>@break
-                                @default<span class="badge badge-brand">{{ __('admin.debug_status_empty') }}</span>
+                                @case('counted')<x-badge variant="ok">{{ __('admin.debug_status_ok') }}</x-badge>@break
+                                @case('out_of_window')<x-badge variant="warn">{{ __('admin.debug_status_window') }}</x-badge>@break
+                                @case('wrong_date')<x-badge variant="warn">{{ __('admin.debug_status_date') }}</x-badge>@break
+                                @default<x-badge variant="brand">{{ __('admin.debug_status_empty') }}</x-badge>
                             @endswitch
-                            @if ($row->isOwnSquare && $row->counted)<span class="badge badge-brand ml-1">{{ __('admin.debug_tag_own') }}</span>@endif
-                            @if ($row->newMultiplier)<span class="badge badge-brand ml-1">{{ __('admin.debug_tag_new_mult') }}</span>@endif
-                            @if ($row->duplicate)<span class="badge badge-danger ml-1">{{ __('admin.debug_tag_dup') }}</span>@endif
+                            @if ($row->isOwnSquare && $row->counted)<x-badge variant="brand" class="ml-1">{{ __('admin.debug_tag_own') }}</x-badge>@endif
+                            @if ($row->newMultiplier)<x-badge variant="brand" class="ml-1">{{ __('admin.debug_tag_new_mult') }}</x-badge>@endif
+                            @if ($row->duplicate)<x-badge variant="danger" class="ml-1">{{ __('admin.debug_tag_dup') }}</x-badge>@endif
                         </td>
                     </tr>
                 @empty

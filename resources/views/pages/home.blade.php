@@ -105,7 +105,7 @@
 <div class="mb-6" id="live-results-section">
     <div class="section-head flex items-center justify-between">
         <span>
-            <span class="badge badge-warn mr-2">LIVE</span>
+            <x-badge variant="warn" class="mr-2">LIVE</x-badge>
             {{ __('pages.home.live_heading') }}
         </span>
         <span class="text-xs font-normal text-muted">
@@ -143,9 +143,9 @@
                     <td class="text-muted text-sm">{{ $r->jmeno }}@if ($r->poznamka) <i>({{ $r->poznamka }})</i>@endif</td>
                     <td>
                         @if ($r->schvaleno)
-                            <span class="badge badge-ok">{{ __('pages.hlaseni.status_ok') }}</span>
+                            <x-badge variant="ok">{{ __('pages.hlaseni.status_ok') }}</x-badge>
                         @else
-                            <span class="badge badge-warn">{{ __('pages.hlaseni.status_pending') }}</span>
+                            <x-badge variant="warn">{{ __('pages.hlaseni.status_pending') }}</x-badge>
                         @endif
                     </td>
                 </tr>

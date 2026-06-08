@@ -4,14 +4,14 @@
 <h1>Načíst EDI soubor / Import EDI file</h1>
 
 @if ($errors->any())
-  <div class="alert alert-error">
+  <x-alert type="error">
     {{ $errors->first('upload') }}
     @if (session('lineErrors'))
       @foreach (session('lineErrors') as $le)
         <br><span class="font-normal">Chybný řádek: {{ $le }}</span>
       @endforeach
     @endif
-  </div>
+  </x-alert>
 @endif
 
 <form action="{{ route('edi.store') }}" method="post" enctype="multipart/form-data" class="card flex flex-wrap items-end gap-3 p-4">

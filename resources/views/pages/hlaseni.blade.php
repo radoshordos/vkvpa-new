@@ -193,9 +193,9 @@
                     <td class="text-muted">{{ $r->jmeno }} @if ($r->poznamka)<i>({{ $r->poznamka }})</i>@endif</td>
                     <td>
                         @if ($r->schvaleno)
-                            <span class="badge badge-ok">{{ __('pages.hlaseni.status_ok') }}</span>
+                            <x-badge variant="ok">{{ __('pages.hlaseni.status_ok') }}</x-badge>
                         @else
-                            <span class="badge badge-warn">{{ __('pages.hlaseni.status_pending') }}</span>
+                            <x-badge variant="warn">{{ __('pages.hlaseni.status_pending') }}</x-badge>
                         @endif
                     </td>
                 </tr>
