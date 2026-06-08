@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\KoloStav;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Attributes\Table;
@@ -46,13 +47,38 @@ class VkvpaKola extends Model
     }
 
     /**
+     * Fáze životního cyklu kola odvozená ze sloupců.
+     *
+     * Pořadí podmínek je dané prioritou: vyhodnocené kolo je terminální stav,
+     * jinak rozhoduje příznak `aktivni`, a teprve pak uplynulá uzávěrka.
+     */
+    public function stav(): KoloStav
+    {
+        if ($this->vyhodnoceno !== null) {
+            return KoloStav::Vyhodnocene;
+        }
+
+        if ($this->aktivni) {
+            return KoloStav::Aktivni;
+        }
+
+        if ($this->datum_uzaverky !== null && $this->datum_uzaverky->isPast()) {
+            return KoloStav::Uzavrene;
+        }
+
+        return KoloStav::Nadchazejici;
+    }
+
+    /**
      * Je kolo v aktivní fázi pro příjem hlášení?
-     *  1) sloupec aktivni = 1, nebo
-     *  2) záložní pojistka – v kole jsou čerstvá neschválená data.
+     *  1) stav kola je {@see KoloStav::Aktivni}, nebo
+     *  2) záložní pojistka – v kole jsou čerstvá neschválená data
+     *     (účastník právě odeslal hlášení a kolo se mezitím automaticky
+     *     deaktivovalo; ať pořád vidí a může upravit svůj rozpracovaný záznam).
      */
     public function isActive(): bool
     {
-        if ($this->aktivni) {
+        if ($this->stav() === KoloStav::Aktivni) {
             return true;
         }
 
