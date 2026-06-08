@@ -53,6 +53,7 @@ return [
         'col_date' => 'Contest date',
         'col_deadline' => 'Deadline',
         'col_name' => 'Name',
+        'col_count' => 'Records',
         'col_state' => 'Status',
         'col_evaluated' => 'Evaluated',
         'col_actions' => 'Actions',

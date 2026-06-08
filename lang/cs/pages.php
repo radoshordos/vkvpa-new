@@ -53,6 +53,7 @@ return [
         'col_date' => 'Datum konání',
         'col_deadline' => 'Uzávěrka',
         'col_name' => 'Název',
+        'col_count' => 'Záznamů',
         'col_state' => 'Stav',
         'col_evaluated' => 'Vyhodnoceno',
         'col_actions' => 'Akce',

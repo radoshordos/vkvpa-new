@@ -21,6 +21,7 @@
         <th>{{ __('pages.kola.col_date') }}</th>
         <th>{{ __('pages.kola.col_deadline') }}</th>
         <th>{{ __('pages.kola.col_name') }}</th>
+        <th>{{ __('pages.kola.col_count') }}</th>
         <th>{{ __('pages.kola.col_state') }}</th>
         <th>{{ __('pages.kola.col_evaluated') }}</th>
         @if ($isAdmin)<th>{{ __('pages.kola.col_actions') }}</th>@endif
@@ -33,6 +34,7 @@
           <td class="whitespace-nowrap">{{ $k->datum_konani?->format('j. n. Y') }}</td>
           <td class="whitespace-nowrap">{{ $k->datum_uzaverky?->format('j. n. Y H:i') }}</td>
           <td>{{ $k->nazev }}</td>
+          <td class="text-right">{{ $k->hlaseni_count }}</td>
           <td>
             <span class="badge {{ $stav->badgeClass() }}">{{ $stav->label() }}</span>
           </td>

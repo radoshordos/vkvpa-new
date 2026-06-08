@@ -16,7 +16,7 @@ class KolaController extends Controller
     {
         return view('pages.kola', [
             'active' => 'edit_kola',
-            'kola' => VkvpaKola::query()->orderByDesc('datum_konani')->get(),
+            'kola' => VkvpaKola::query()->withCount('hlaseni')->orderByDesc('datum_konani')->get(),
         ]);
     }
 
