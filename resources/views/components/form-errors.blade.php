@@ -4,7 +4,7 @@
 
     Použití:
       <x-form-errors />
-      <x-form-errors class="mt-3" />   {{-- doplňkové třídy na obal --}}
+      <x-form-errors class="mt-3" />   (doplňkové třídy na obal)
 
     Nevykreslí nic, pokud nejsou žádné chyby.
 --}}
