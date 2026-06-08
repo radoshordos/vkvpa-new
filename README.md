@@ -146,7 +146,7 @@ SendEdiMailsListener (queue) ──► HlaseniPrijato + HlaseniProVyhodnocovatel
 
 **Legacy schéma** (`edihead`, `edilines`): zachováno z původního systému. Sloupce mají nestandardní PHP identifikátory (`Mode-code`, `Received-WWL`, `Sent QSO number` apod.). Přistupujte k nim přes `$line->{'Received-WWL'}`. PHPStan má `property.notFound` potlačeno pro soubory, které tyto sloupce používají. Oba modely mají `#[WithoutTimestamps]` (vlastní časové sloupce `stamp`, `d_cas`).
 
-**Aplikační schéma** (`vkvpa_*`): `VkvpaData` (závodní záznamy/výsledky), `VkvpaKola` (kola závodu), `VkvpaKategorie` (kategorie), `VkvpaPrihlaseni` (přihlašovací tokeny), `VkvpaDiskuse`/`Prispevek` (diskuze ke kolům), `VkvpaConfig` (konfigurace key-value).
+**Aplikační schéma** (`vkvpa_*`): `VkvpaData` (závodní záznamy/výsledky), `VkvpaKola` (kola závodu), `VkvpaKategorie` (kategorie), `VkvpaPrihlaseni` (přihlašovací tokeny), `Prispevek` (diskuze ke kolům).
 
 ### Adresářová struktura
 
@@ -410,7 +410,6 @@ VkvpaKola ──► Prispevek[]
 | `Ediline` | `belongsTo(Edihead)`, nestandardní názvy sloupců, `#[WithoutTimestamps]` |
 | `VkvpaKola` | `hasMany(VkvpaData, Prispevek)`, `isActive()`, scope `active()` |
 | `VkvpaKategorie` | `hasMany(VkvpaData)` |
-| `VkvpaConfig` | statické `get(key, default)` a `put(key, value)` |
 | `VkvpaPrihlaseni` | tokeny s TTL = `vkvpa.token_ttl_days` (výchozí: 5 dní) |
 | `Prispevek` | `belongsTo(VkvpaKola)` – diskuzní příspěvky |
 | `User` | přihlašování přes `name` (ne email), `is_admin` boolean |

@@ -42,7 +42,7 @@ EDI files may arrive as Windows-1250; `EdiParser` converts via `iconv` before pr
 
 **Legacy schema** (`edihead`, `edilines`): preserved verbatim from the original system. Columns use non-standard PHP identifiers (`Mode-code`, `Received-WWL`, `Sent QSO number`, etc.). Access these via `$line->{'Received-WWL'}` syntax. PHPStan's `property.notFound` is suppressed for files that use these columns (`ScoringService`, `MapController`). Both models carry `#[WithoutTimestamps]` since they have custom time columns (`stamp`, `d_cas`).
 
-**Application schema** (`vkvpa_*` tables): `VkvpaData` (contest entry/result row), `VkvpaKola` (contest round), `VkvpaKategorie` (category), `VkvpaPrihlaseni`, `VkvpaDiskuse`, `VkvpaConfig`.
+**Application schema** (`vkvpa_*` tables): `VkvpaData` (contest entry/result row), `VkvpaKola` (contest round), `VkvpaKategorie` (category), `VkvpaPrihlaseni`, `Prispevek` (discussion).
 
 ### Scoring Formula
 
