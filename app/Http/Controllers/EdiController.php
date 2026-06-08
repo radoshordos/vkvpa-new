@@ -11,14 +11,13 @@ use App\Exceptions\RoundNotFoundException;
 use App\Exceptions\TDateMismatchException;
 use App\Exceptions\TDateNotContestDayException;
 use App\Exceptions\UnknownBandException;
+use App\Http\Requests\StoreEdiRequest;
 use App\Models\Edihead;
 use App\Models\VkvpaKola;
 use App\Services\Edi\EdiParser;
 use App\Services\Edi\EdiReducer;
 use App\Services\Edi\EdiValidator;
-use App\Support\VkvpaSettings;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\View\View;
 
@@ -41,12 +40,8 @@ class EdiController extends Controller
         return view('pages.edi-upload', ['active' => 'edit_hlaseni']);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(StoreEdiRequest $request): RedirectResponse
     {
-        $request->validate([
-            'upload' => ['required', 'file', 'max:'.VkvpaSettings::ediMaxSizeKb(), 'extensions:edi,txt'],
-        ]);
-
         $content = (string) file_get_contents($request->file('upload')->getRealPath());
 
         try {

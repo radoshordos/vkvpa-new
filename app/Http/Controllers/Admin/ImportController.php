@@ -12,11 +12,11 @@ use App\Exceptions\TDateMismatchException;
 use App\Exceptions\TDateNotContestDayException;
 use App\Exceptions\UnknownBandException;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\ImportZipRequest;
 use App\Models\VkvpaKola;
 use App\Services\Edi\EdiParser;
 use App\Support\VkvpaSettings;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Concurrency;
 use Illuminate\View\View;
@@ -39,12 +39,8 @@ class ImportController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(ImportZipRequest $request): RedirectResponse
     {
-        $request->validate([
-            'zip' => ['required', 'file', 'max:'.VkvpaSettings::importMaxSizeKb(), 'mimes:zip'],
-        ]);
-
         /** @var UploadedFile $file */
         $file = $request->file('zip');
 

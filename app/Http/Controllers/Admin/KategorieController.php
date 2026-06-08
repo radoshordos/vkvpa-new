@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\KategorieRequest;
 use App\Models\VkvpaKategorie;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
@@ -25,21 +25,9 @@ class KategorieController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(KategorieRequest $request): RedirectResponse
     {
-        $request->validate([
-            'nazev' => ['required', 'string', 'max:50'],
-            'popis' => ['nullable', 'string', 'max:250'],
-            'zkratka' => ['required', 'string', 'max:20'],
-            'dxid' => ['required', 'integer', 'min:0'], // 0 = tuzemská; nenulové = id odpovídající tuzemské kategorie
-        ]);
-
-        VkvpaKategorie::create([
-            'nazev' => $request->string('nazev')->value(),
-            'popis' => $request->string('popis')->value(),
-            'zkratka' => $request->string('zkratka')->value(),
-            'dxid' => $request->integer('dxid'),
-        ]);
+        VkvpaKategorie::create($request->toModel());
 
         return redirect()
             ->route('kategorie.index')
@@ -55,21 +43,9 @@ class KategorieController extends Controller
         ]);
     }
 
-    public function update(Request $request, VkvpaKategorie $kategorie): RedirectResponse
+    public function update(KategorieRequest $request, VkvpaKategorie $kategorie): RedirectResponse
     {
-        $request->validate([
-            'nazev' => ['required', 'string', 'max:50'],
-            'popis' => ['nullable', 'string', 'max:250'],
-            'zkratka' => ['required', 'string', 'max:20'],
-            'dxid' => ['required', 'integer', 'min:0'],
-        ]);
-
-        $kategorie->update([
-            'nazev' => $request->string('nazev')->value(),
-            'popis' => $request->string('popis')->value(),
-            'zkratka' => $request->string('zkratka')->value(),
-            'dxid' => $request->integer('dxid'),
-        ]);
+        $kategorie->update($request->toModel());
 
         Log::info('admin.kategorie.update', [
             'kategorie_id' => $kategorie->id,

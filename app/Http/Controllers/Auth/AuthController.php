@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\LoginRequest;
 use App\Models\User;
 use App\Models\VkvpaPrihlaseni;
 use App\Support\VkvpaSettings;
@@ -29,13 +30,8 @@ class AuthController extends Controller
         return view('auth.login');
     }
 
-    public function login(Request $request): RedirectResponse
+    public function login(LoginRequest $request): RedirectResponse
     {
-        $request->validate([
-            'username' => ['required', 'string', 'max:255'],
-            'heslo' => ['required', 'string'],
-        ]);
-
         $username = $request->string('username')->value();
         $heslo = $request->string('heslo')->value();
 

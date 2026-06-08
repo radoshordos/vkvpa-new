@@ -7,11 +7,11 @@ namespace App\Http\Controllers\Admin;
 use App\Exceptions\EdiParseException;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\EdiController;
+use App\Http\Requests\Admin\EdiDebugUploadRequest;
 use App\Models\Edihead;
 use App\Services\Edi\EdiParser;
 use App\Services\Scoring\EdiScoreDebugger;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 /**
@@ -38,12 +38,8 @@ class EdiDebugController extends Controller
     }
 
     /** Naparsuje nahraný EDI deník a vykreslí debug rozpad bodování. */
-    public function analyze(Request $request): View|RedirectResponse
+    public function analyze(EdiDebugUploadRequest $request): View|RedirectResponse
     {
-        $request->validate([
-            'upload' => ['required', 'file', 'max:500', 'extensions:edi,txt'],
-        ]);
-
         $content = (string) file_get_contents($request->file('upload')->getRealPath());
 
         try {
