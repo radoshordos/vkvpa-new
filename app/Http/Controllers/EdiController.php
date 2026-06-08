@@ -11,6 +11,7 @@ use App\Exceptions\RoundNotFoundException;
 use App\Exceptions\TDateMismatchException;
 use App\Exceptions\TDateNotContestDayException;
 use App\Exceptions\UnknownBandException;
+use App\Exceptions\UnknownSectionException;
 use App\Http\Requests\StoreEdiRequest;
 use App\Models\Edihead;
 use App\Models\VkvpaKola;
@@ -54,7 +55,7 @@ class EdiController extends Controller
 
         try {
             $row = $this->action->execute($log);
-        } catch (TDateNotContestDayException|RoundNotFoundException|TDateMismatchException|DuplicateEdiException|UnknownBandException $e) {
+        } catch (TDateNotContestDayException|RoundNotFoundException|TDateMismatchException|DuplicateEdiException|UnknownBandException|UnknownSectionException $e) {
             return back()->withErrors(['upload' => $e->getMessage()]);
         }
 
