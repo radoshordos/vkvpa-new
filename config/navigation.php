@@ -31,7 +31,6 @@ return [
     'admin' => [
         ['key' => 'admin.dashboard',  'trans' => 'admin.nav_dashboard'],
         ['key' => 'kola.admin.index',  'trans' => 'admin.nav_rounds'],
-        ['key' => 'hlaseni.index',    'trans' => 'admin.nav_reports'],
         ['key' => 'deniky.index',     'trans' => 'admin.nav_logs'],
         ['key' => 'edi.debug.create', 'trans' => 'admin.nav_edi_debug'],
         ['key' => 'kategorie.index',  'trans' => 'admin.nav_categories'],
