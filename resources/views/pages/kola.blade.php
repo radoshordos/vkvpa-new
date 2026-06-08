@@ -21,7 +21,7 @@
         <th>{{ __('pages.kola.col_date') }}</th>
         <th>{{ __('pages.kola.col_deadline') }}</th>
         <th>{{ __('pages.kola.col_name') }}</th>
-        <th>{{ __('pages.kola.col_count') }}</th>
+        <th class="text-right"><abbr title="{{ __('pages.kola.col_count') }}">Σ</abbr></th>
         <th>{{ __('pages.kola.col_state') }}</th>
         <th>{{ __('pages.kola.col_evaluated') }}</th>
         @if ($isAdmin)<th>{{ __('pages.kola.col_actions') }}</th>@endif
