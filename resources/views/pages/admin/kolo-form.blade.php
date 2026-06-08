@@ -93,7 +93,7 @@
         // Název kola dle měsíce/roku data závodu
         var ym = String(d.getUTCMonth() + 1).padStart(2, '0');
         var yy = d.getUTCFullYear();
-        nazev.value = 'VKV PA ' + ym + '/' + yy;
+        nazev.value = ym + '/' + yy;
     });
 }());
 </script>

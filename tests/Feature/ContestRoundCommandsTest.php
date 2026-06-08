@@ -54,7 +54,7 @@ class ContestRoundCommandsTest extends TestCase
 
         $kolo = VkvpaKola::first();
         $this->assertNotNull($kolo);
-        $this->assertMatchesRegularExpression('/^VKV PA \d{2}\/\d{4}$/', $kolo->nazev);
+        $this->assertMatchesRegularExpression('/^\d{2}\/\d{4}$/', $kolo->nazev);
     }
 
     public function test_ensure_upcoming_sets_deadline_to_friday(): void

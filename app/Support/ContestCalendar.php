@@ -48,10 +48,10 @@ final class ContestCalendar
     }
 
     /**
-     * Standardní název kola, např. "VKV PA 06/2026".
+     * Standardní název kola, např. "06/2026".
      */
     public static function roundName(int $year, int $month): string
     {
-        return sprintf('VKV PA %02d/%d', $month, $year);
+        return sprintf('%02d/%d', $month, $year);
     }
 }

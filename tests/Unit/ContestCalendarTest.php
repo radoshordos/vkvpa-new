@@ -63,8 +63,8 @@ class ContestCalendarTest extends TestCase
 
     public function test_round_name_format(): void
     {
-        $this->assertSame('VKV PA 06/2026', ContestCalendar::roundName(2026, 6));
-        $this->assertSame('VKV PA 01/2026', ContestCalendar::roundName(2026, 1));
-        $this->assertSame('VKV PA 12/2025', ContestCalendar::roundName(2025, 12));
+        $this->assertSame('06/2026', ContestCalendar::roundName(2026, 6));
+        $this->assertSame('01/2026', ContestCalendar::roundName(2026, 1));
+        $this->assertSame('12/2025', ContestCalendar::roundName(2025, 12));
     }
 }
