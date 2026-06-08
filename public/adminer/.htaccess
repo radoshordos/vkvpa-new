@@ -1,14 +1,22 @@
+# Přístup k databázovému nástroji Adminer je chráněn HTTP Basic autentizací
+# (mod_authz_user, syntaxe Apache 2.4). Soubor .htpasswd vytváří vstupní skript
+# kontejneru (docker/entrypoint.sh) z proměnných ADMINER_AUTH_USER /
+# ADMINER_AUTH_PASSWORD a ukládá ho MIMO webroot (/etc/apache2/adminer.htpasswd),
+# takže ho nelze stáhnout přes HTTP. Bez těchto proměnných .htpasswd neexistuje
+# a Basic auth selže (fail-closed = přístup odepřen).
+#
+# POZN.: účinné jen na Apache s `AllowOverride All` (viz docker/vhost.conf,
+# docker/apache/000-default.conf). Pod nginx nebo `php artisan serve` se
+# .htaccess ignoruje – tam Adminer nenasazuj / neprovozuj na nedůvěryhodné síti.
 AuthType Basic
 AuthName "Database Admin"
-AuthUserFile /var/www/html/.htpasswd
+AuthUserFile /etc/apache2/adminer.htpasswd
+
 Require valid-user
 
-# Belt-and-suspenders: also deny from all non-localhost addresses.
-# To allow access from a specific IP, add: Allow from YOUR.IP.HERE
-<IfModule mod_authz_host.c>
-    Order Deny,Allow
-    Deny from all
-    Allow from 127.0.0.1
-    Allow from ::1
-    Satisfy All
-</IfModule>
+# Volitelné zpřísnění – vyžadovat heslo A SOUČASNĚ konkrétní zdrojovou IP/síť.
+# Odkomentuj a uprav (pozor: za reverzní proxy/Dockerem je zdrojová IP IP proxy):
+# <RequireAll>
+#     Require valid-user
+#     Require ip 192.168.1.0/24
+# </RequireAll>

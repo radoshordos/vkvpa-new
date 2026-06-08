@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y \
         unzip \
         git \
         zip \
+        apache2-utils \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) gd pdo_mysql pdo_sqlite zip intl \
     && rm -rf /var/lib/apt/lists/*
@@ -22,4 +23,11 @@ COPY docker/php/uploads.ini /usr/local/etc/php/conf.d/uploads.ini
 
 RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
+# Vstupní skript generuje .htpasswd pro Adminer z env proměnných při startu.
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
 WORKDIR /var/www/html
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["apache2-foreground"]

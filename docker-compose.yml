@@ -12,6 +12,10 @@ services:
             DB_DATABASE: ${DB_DATABASE:-digipa}
             DB_USERNAME: ${DB_USERNAME:-vkvpa}
             DB_PASSWORD: ${DB_PASSWORD:-secret}
+            # Basic auth pro Adminer (public/adminer/). Bez vyplnění obou
+            # proměnných je přístup k Adminer odepřen (fail-closed).
+            ADMINER_AUTH_USER: ${ADMINER_AUTH_USER:-}
+            ADMINER_AUTH_PASSWORD: ${ADMINER_AUTH_PASSWORD:-}
         depends_on:
             db:
                 condition: service_healthy
