@@ -23,7 +23,7 @@ ochranou. Ostatní zjištění jsou informativní.
 
 | # | Závažnost | Oblast | Soubor | Stav |
 |---|-----------|--------|--------|------|
-| 5 | Střední | Adminer ve veřejném webrootu; ochrana závislá na Apache 2.2 syntaxi a chybějícím `.htpasswd` | `public/adminer/*`, `public/adminer/.htaccess` | ⚠️ Částečně zmírněno (viz níže) + doporučení |
+| 5 | Střední | Adminer ve veřejném webrootu; ochrana závislá na Apache 2.2 syntaxi a chybějícím `.htpasswd` | `public/adminer/*`, `public/adminer/.htaccess` | ✅ Opraveno (Basic auth + provisioning `.htpasswd`) |
 
 ---
 
@@ -68,21 +68,29 @@ Pozitivní okolnost: v cílovém Docker/Apache nasazení je `AllowOverride All`
 zapnuto (`docker/vhost.conf`, `docker/apache/000-default.conf`), takže
 `.htaccess` se uplatní.
 
-**Provedené zmírnění (tento commit):** `.htaccess` přepsán do robustní syntaxe
-Apache 2.4 s `RequireAll` (současně `Require valid-user` **a** `Require local`),
-takže host-omezení na localhost už nezávisí na `mod_access_compat`.
+**Provedené řešení (rozhodnutí provozovatele: ponechat Adminer + provisioning):**
 
-**Zbývající doporučení (vyžaduje rozhodnutí provozovatele):**
+1. `.htaccess` přepsán do syntaxe Apache 2.4 (`mod_authz_user`), bránou je
+   **HTTP Basic auth** (`Require valid-user`). Volitelné zpřísnění na konkrétní
+   IP je připraveno jako zakomentovaný `RequireAll` blok. (Tvrdé `Require local`
+   se nepoužilo záměrně – za Dockerem s mapováním portů vidí Apache IP bridge,
+   ne `127.0.0.1`, což by legitimní přístup zablokovalo.)
+2. **Provisioning `.htpasswd` za běhu:** `docker/entrypoint.sh` vygeneruje
+   `/etc/apache2/adminer.htpasswd` (bcrypt) z `ADMINER_AUTH_USER` /
+   `ADMINER_AUTH_PASSWORD`. Heslo se neukládá do image ani repozitáře; soubor
+   leží **mimo webroot i bind-mount**, takže ho nelze stáhnout přes HTTP. Bez
+   nastavených proměnných `.htpasswd` nevznikne a Basic auth selže
+   (fail-closed). Proměnné jsou zavedené v `docker-compose.yml` a `.env.example`.
+3. Ověřeno, že nasazení běží na Apache s `AllowOverride All`
+   (`docker/vhost.conf`, `docker/apache/000-default.conf`), takže `.htaccess`
+   se uplatní.
 
-1. **Preferováno – nedeployovat Adminer z aplikačního repozitáře.** Odstranit
-   `public/adminer/` z verzovaného webrootu; pro správu DB použít lokální
-   tunel (`ssh -L`) k samostatné instanci, nebo nástroj mimo webroot.
-2. Pokud má Adminer zůstat: provisioning `.htpasswd` v `Dockerfile`/deploy
-   skriptu (jinak Basic auth selže) a ověřit, že produkce běží na Apache
-   s `AllowOverride All` (ne nginx).
-3. Nikdy nespoléhat na `.htaccess` ve vývoji přes `php artisan serve` – tam je
-   Adminer bez ochrany; nespouštět `artisan serve` na nedůvěryhodné síti, pokud
-   `public/adminer/` existuje.
+**Zbytkové riziko / poznámky:**
+
+- `.htaccess` je ignorován pod **nginx** a vývojovým **`php artisan serve`** –
+  tam Adminer nenasazuj ani neprovozuj na nedůvěryhodné síti.
+- Silnější alternativou (neaplikováno na přání provozovatele) by bylo Adminer
+  z aplikačního repozitáře úplně vyřadit a DB spravovat přes `ssh -L` tunel.
 
 ---
 

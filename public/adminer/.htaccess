@@ -1,17 +1,22 @@
-# Přístup k databázovému nástroji Adminer je chráněn dvěma SOUČASNĚ platnými
-# podmínkami (RequireAll): platné HTTP Basic přihlášení A spojení z localhostu.
-# Použita syntaxe Apache 2.4 (mod_authz_core/mod_authz_host) – nahrazuje
-# zastaralé Order/Deny/Allow + Satisfy z Apache 2.2, které na běžícím serveru
-# (php:8.x-apache = Apache 2.4) nemusí být bez mod_access_compat k dispozici.
+# Přístup k databázovému nástroji Adminer je chráněn HTTP Basic autentizací
+# (mod_authz_user, syntaxe Apache 2.4). Soubor .htpasswd vytváří vstupní skript
+# kontejneru (docker/entrypoint.sh) z proměnných ADMINER_AUTH_USER /
+# ADMINER_AUTH_PASSWORD a ukládá ho MIMO webroot (/etc/apache2/adminer.htpasswd),
+# takže ho nelze stáhnout přes HTTP. Bez těchto proměnných .htpasswd neexistuje
+# a Basic auth selže (fail-closed = přístup odepřen).
 #
-# POZN.: AuthUserFile (.htpasswd) musí být na serveru vytvořen, jinak Basic
-# auth selže (fail-closed). Pro vzdálený přístup z konkrétní IP nahraď
-# „Require local" za „Require ip YOUR.IP.HERE".
+# POZN.: účinné jen na Apache s `AllowOverride All` (viz docker/vhost.conf,
+# docker/apache/000-default.conf). Pod nginx nebo `php artisan serve` se
+# .htaccess ignoruje – tam Adminer nenasazuj / neprovozuj na nedůvěryhodné síti.
 AuthType Basic
 AuthName "Database Admin"
-AuthUserFile /var/www/html/.htpasswd
+AuthUserFile /etc/apache2/adminer.htpasswd
 
-<RequireAll>
-    Require valid-user
-    Require local
-</RequireAll>
+Require valid-user
+
+# Volitelné zpřísnění – vyžadovat heslo A SOUČASNĚ konkrétní zdrojovou IP/síť.
+# Odkomentuj a uprav (pozor: za reverzní proxy/Dockerem je zdrojová IP IP proxy):
+# <RequireAll>
+#     Require valid-user
+#     Require ip 192.168.1.0/24
+# </RequireAll>
