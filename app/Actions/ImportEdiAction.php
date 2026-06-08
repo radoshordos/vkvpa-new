@@ -6,6 +6,7 @@ namespace App\Actions;
 
 use App\Events\EdiImported;
 use App\Exceptions\DuplicateEdiException;
+use App\Exceptions\RoundNotFoundException;
 use App\Exceptions\TDateMismatchException;
 use App\Exceptions\TDateNotContestDayException;
 use App\Exceptions\UnknownBandException;
@@ -27,6 +28,7 @@ use Throwable;
  * Vyhodí výjimku při jakémkoli selhání; úspěch vrací nový VkvpaData řádek.
  *
  * @throws TDateNotContestDayException TDate neodpovídá termínu kola (3. neděle v měsíci)
+ * @throws RoundNotFoundException Pro datum z TDate neexistuje žádné kolo
  * @throws TDateMismatchException TDate v hlavičce neodpovídá datům QSO
  * @throws DuplicateEdiException Deník pro tuto stanici a kolo již existuje
  * @throws UnknownBandException Pásmo z hlavičky EDI nelze přiřadit kategorii
@@ -54,6 +56,10 @@ final readonly class ImportEdiAction
 
         Context::add('znacka', $pcall);
         Context::add('id_kola', $idKola);
+
+        if ($idKola === 0) {
+            throw new RoundNotFoundException($h->tDate());
+        }
 
         $this->assertTDateMatchesQsos($h->tDate(), $log->qsos);
 
@@ -163,10 +169,18 @@ final readonly class ImportEdiAction
      */
     private function assertTDateMatchesQsos(string $tdate, array $qsos): void
     {
-        $tdateDay = substr(trim($tdate), 2, 6);
+        // TDate může být i rozsah (start;end) – QSO musí sednout s kterýmkoli z jeho dnů.
+        $tdateDays = array_map(
+            static fn (CarbonImmutable $d): string => $d->format('ymd'),
+            $this->parseTDateDates($tdate),
+        );
         $qsoDays = array_values(array_unique(array_map(static fn (EdiQso $q): string => $q->date, $qsos)));
 
-        if ($tdateDay !== '' && $qsoDays !== [] && ! in_array($tdateDay, $qsoDays, true)) {
+        if ($tdateDays === [] || $qsoDays === []) {
+            return;
+        }
+
+        if (array_intersect($tdateDays, $qsoDays) === []) {
             $preview = implode(', ', array_map($this->formatEdiDate(...), array_slice($qsoDays, 0, 3)));
             throw new TDateMismatchException($tdate, $preview);
         }

@@ -61,6 +61,7 @@ class EdiPipelineIntegrationTest extends TestCase
 
     public function test_upload_creates_edihead_edilines_and_vkvpa_data_rows(): void
     {
+        $this->koloProBrezen2026();
         $this->upload();
 
         $this->assertSame(1, Edihead::count(), 'Musí vzniknout 1 edihead');
@@ -70,6 +71,7 @@ class EdiPipelineIntegrationTest extends TestCase
 
     public function test_upload_sets_correct_scoring_values_in_vkvpa_data(): void
     {
+        $this->koloProBrezen2026();
         $this->upload();
 
         $row = VkvpaData::firstOrFail();
@@ -84,6 +86,7 @@ class EdiPipelineIntegrationTest extends TestCase
 
     public function test_upload_scoring_matches_direct_service_calculation(): void
     {
+        $this->koloProBrezen2026();
         $this->upload();
 
         $row = VkvpaData::firstOrFail();
@@ -99,6 +102,7 @@ class EdiPipelineIntegrationTest extends TestCase
 
     public function test_upload_stores_edi_flag_and_edi_id(): void
     {
+        $this->koloProBrezen2026();
         $this->upload();
 
         $row = VkvpaData::firstOrFail();
@@ -109,6 +113,7 @@ class EdiPipelineIntegrationTest extends TestCase
 
     public function test_upload_creates_reserved_row_with_schvaleno_false(): void
     {
+        $this->koloProBrezen2026();
         $this->upload();
 
         $row = VkvpaData::firstOrFail();

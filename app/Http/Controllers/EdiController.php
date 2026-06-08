@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Actions\ImportEdiAction;
 use App\Exceptions\DuplicateEdiException;
 use App\Exceptions\EdiParseException;
+use App\Exceptions\RoundNotFoundException;
 use App\Exceptions\TDateMismatchException;
 use App\Exceptions\TDateNotContestDayException;
 use App\Exceptions\UnknownBandException;
@@ -58,7 +59,7 @@ class EdiController extends Controller
 
         try {
             $row = $this->action->execute($log);
-        } catch (TDateNotContestDayException|TDateMismatchException|DuplicateEdiException|UnknownBandException $e) {
+        } catch (TDateNotContestDayException|RoundNotFoundException|TDateMismatchException|DuplicateEdiException|UnknownBandException $e) {
             return back()->withErrors(['upload' => $e->getMessage()]);
         }
 

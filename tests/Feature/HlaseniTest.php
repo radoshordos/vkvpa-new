@@ -33,6 +33,18 @@ class HlaseniTest extends TestCase
         return [$kolo, $kat];
     }
 
+    /** Založí kolo s daným dnem konání, aby ho import podle TDate dohledal. */
+    private function koloProDatum(string $datum): void
+    {
+        VkvpaKola::create([
+            'datum_konani' => $datum,
+            'datum_uzaverky' => $datum.' 23:59:59',
+            'nazev' => 'Kolo '.$datum,
+            'aktivni' => true,
+            'poznamka' => '',
+        ]);
+    }
+
     /** @return array<string, mixed> */
     private function payload(int $kolo, int $kat): array
     {
@@ -106,6 +118,7 @@ class HlaseniTest extends TestCase
 
     public function test_edi_upload_creates_reserved_row_and_session(): void
     {
+        $this->koloProDatum('2026-03-15'); // sample.edi se koná 15. 3. 2026
         $edi = (string) file_get_contents(__DIR__.'/../fixtures/sample.edi');
         $file = UploadedFile::fake()->createWithContent('02OK2KJT.edi', $edi);
 
@@ -180,6 +193,7 @@ class HlaseniTest extends TestCase
     {
         // Šablona 24h závodu vyplní TDate jako rozsah sobota;neděle. Třetí neděle ledna
         // 2026 je 18. 1. – stačí, že ji rozsah obsahuje, deník proto musí projít.
+        $this->koloProDatum('2026-01-18');
         $edi = implode("\n", [
             '[REG1TEST;1]',
             'TName=VKV PA 2026/01',
@@ -203,8 +217,20 @@ class HlaseniTest extends TestCase
         $this->assertSame(1, Edihead::count());
     }
 
+    public function test_edi_upload_rejected_when_no_round_exists(): void
+    {
+        // Žádné kolo pro březen 2026 není založeno → deník se musí odmítnout.
+        $edi = (string) file_get_contents(__DIR__.'/../fixtures/sample.edi');
+
+        $this->post('/edi', ['upload' => UploadedFile::fake()->createWithContent('x.edi', $edi)])
+            ->assertSessionHasErrors('upload');
+
+        $this->assertSame(0, Edihead::count());
+    }
+
     public function test_duplicate_edi_upload_is_rejected(): void
     {
+        $this->koloProDatum('2026-03-15'); // sample.edi se koná 15. 3. 2026
         $edi = (string) file_get_contents(__DIR__.'/../fixtures/sample.edi');
 
         // První nahrání projde.
