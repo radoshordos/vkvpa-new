@@ -10,6 +10,7 @@ use App\Exceptions\RoundNotFoundException;
 use App\Exceptions\TDateMismatchException;
 use App\Exceptions\TDateNotContestDayException;
 use App\Exceptions\UnknownBandException;
+use App\Exceptions\UnknownSectionException;
 use App\Models\VkvpaData;
 use App\Services\Edi\CategoryResolver;
 use App\Services\Edi\EdiImportService;
@@ -73,6 +74,10 @@ final readonly class ImportEdiAction
             throw new UnknownBandException(
                 'Nerozpoznané pásmo v deníku ('.$h->pBand().') – nelze určit kategorii. Oprav PBand a nahraj znovu.',
             );
+        }
+
+        if ($idKategorie === null) {
+            throw new UnknownSectionException($h->pSect());
         }
 
         $head = $this->importer->import($log);
