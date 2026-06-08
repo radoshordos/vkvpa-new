@@ -68,7 +68,7 @@ final readonly class ImportEdiAction
         }
 
         try {
-            $idKategorie = $this->categories->resolve($pcall, $h->pBand(), $h->pSect()) ?? 0;
+            $idKategorie = $this->categories->resolve($pcall, $h->pBand(), $h->pSect());
         } catch (UnknownBandException) {
             throw new UnknownBandException(
                 'Nerozpoznané pásmo v deníku ('.$h->pBand().') – nelze určit kategorii. Oprav PBand a nahraj znovu.',
