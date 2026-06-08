@@ -4,7 +4,7 @@
     Použití:
       <x-badge variant="ok">{{ __('…') }}</x-badge>
       <x-badge variant="brand" class="ml-1">{{ __('…') }} <b>{{ $n }}</b></x-badge>
-      <x-badge>LP</x-badge>   {{-- bez varianty = neutrální --}}
+      <x-badge>LP</x-badge>   (bez varianty = neutrální)
 
     Parametry:
       variant – ok | warn | danger | brand | qrp | muted | skokan (volitelné)
