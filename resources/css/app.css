@@ -410,6 +410,10 @@
     .icon-btn-p {
         background-color: var(--ok);
     }
+    /* Nepřevzatý záznam: tlačítko „P" tlumené – klik teprve převezme. */
+    .icon-btn-p-off {
+        background-color: var(--muted);
+    }
     .icon-btn-u {
         background-color: var(--brand);
     }

@@ -15,8 +15,8 @@ use Illuminate\Support\Facades\Log;
  * Admin akce nad jedním záznamem výsledkové listiny (řádkem hlášení `vkvpa_data`).
  *
  * Pokrývá tlačítka ze sloupce „Akce / EDI":
- *   P – PŘEVZÍT záznam (vyhodnocovatel ho viděl)  → {@see prevzit()}
- *   X – smazat záznam                             → {@see smazat()}
+ *   P – PŘEVZÍT / vrátit záznam (toggle převzetí)  → {@see update()}
+ *   X – smazat záznam                             → {@see destroy()}
  * (U = úprava je řešena přes HlaseniController::index s ?id a HlaseniController::store.)
  *
  * „Převzetí" = vyhodnocovatel záznam zkontroloval; v DB je to `schvaleno = true`.
@@ -31,13 +31,14 @@ use Illuminate\Support\Facades\Log;
 class ZaznamController extends Controller
 {
     /**
-     * Převezme záznam – tlačítko „P" ve výsledkové listině.
+     * Přepne převzetí záznamu – tlačítko „P" ve výsledkové listině (toggle).
      *
      * Endpoint: PATCH /admin/zaznamy/{zaznam}  (name: zaznam.update)
      * Vstup:    {zaznam} = id řádku vkvpa_data (route-model-binding)
      * Oprávnění: jen administrátor (middleware `admin`)
-     * Efekt:    nastaví `schvaleno = true` (záznam přestane být meruňkový)
-     *           a přepočítá pořadí v kole, aby se promítl do žebříčku.
+     * Efekt:    překlopí `schvaleno` (nepřevzatý ↔ převzatý) a přepočítá pořadí
+     *           v kole, aby se změna promítla do žebříčku (do pořadí se počítají
+     *           jen převzaté záznamy).
      * Návrat:   redirect zpět na výsledkovou listinu kola záznamu + hláška.
      */
     public function update(VkvpaData $zaznam): RedirectResponse
@@ -45,10 +46,11 @@ class ZaznamController extends Controller
         $idKola = $zaznam->id_kola;
         $znacka = $zaznam->znacka;
 
-        $zaznam->update(['schvaleno' => true]);
+        $prevzato = ! $zaznam->schvaleno;
+        $zaznam->update(['schvaleno' => $prevzato]);
         RankRoundJob::dispatch($idKola);
 
-        Log::info('admin.zaznam.prevzit', [
+        Log::info($prevzato ? 'admin.zaznam.prevzit' : 'admin.zaznam.odebrat-prevzeti', [
             'zaznam_id' => $zaznam->id,
             'znacka' => $znacka,
             'kolo_id' => $idKola,
@@ -57,7 +59,9 @@ class ZaznamController extends Controller
 
         return redirect()
             ->route('vysledkova_listina', ['kolo' => $idKola])
-            ->with('announcement', 'Záznam „'.$znacka.'" byl převzat.');
+            ->with('announcement', $prevzato
+                ? 'Záznam „'.$znacka.'" byl převzat.'
+                : 'Záznam „'.$znacka.'" byl vrácen mezi nepřevzaté.');
     }
 
     /**

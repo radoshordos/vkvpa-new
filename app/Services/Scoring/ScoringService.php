@@ -28,6 +28,14 @@ final class ScoringService
     public function rankRound(int $koloId): void
     {
         DB::transaction(function () use ($koloId): void {
+            // Nepřevzaté (schvaleno=false) do žebříčku nepatří – vynulovat jim staré
+            // pořadí, aby po odebrání převzetí nezůstalo viset zastaralé `poradi`.
+            VkvpaData::query()
+                ->where('id_kola', $koloId)
+                ->where('schvaleno', false)
+                ->where('poradi', '<>', 0)
+                ->update(['poradi' => 0]);
+
             foreach (VkvpaKategorie::query()->pluck('id') as $kategorieId) {
                 $entries = VkvpaData::query()
                     ->where('id_kola', $koloId)
