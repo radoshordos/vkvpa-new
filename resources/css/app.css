@@ -327,6 +327,10 @@
         background-color: var(--surface-2);
         color: var(--muted);
     }
+    .badge-skokan {
+        background-color: var(--warn);
+        color: #fff;
+    }
 
     /* ── Tabulky ─────────────────────────────────────────────────── */
     .table-wrap {

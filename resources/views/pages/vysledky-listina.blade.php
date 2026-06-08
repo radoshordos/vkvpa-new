@@ -69,11 +69,12 @@
                         $bq = ($r->nasobice > 0 && $r->pocet > 0)
                             ? $r->body / ($r->nasobice * $r->pocet)
                             : 0.0;
+                        $sk = $skokani[$r->id] ?? ['delta' => null, 'top' => false];
                     @endphp
                     <tr @class(['row-pending' => ! $r->schvaleno, 'group'])>
                         <td class="num font-bold">{{ $poradi }}.</td>
                         <td>
-                            <span class="mono font-bold">{{ $r->znacka }}</span>@if ($r->qrp)<span class="badge badge-qrp ml-1">QRP</span>@elseif ($r->lp)<span class="badge ml-1">LP</span>@endif
+                            <span class="mono font-bold">{{ $r->znacka }}</span>@if ($r->qrp)<span class="badge badge-qrp ml-1">QRP</span>@elseif ($r->lp)<span class="badge ml-1">LP</span>@endif @if ($sk['top'])<span class="badge badge-skokan ml-1" title="Největší skokan v kategorii (oproti poslednímu startu)">SKOKAN</span>@endif
                             @if ($r->jmeno)<br><span class="text-muted">{{ $r->jmeno }}</span>@endif
                             @if ($r->timestamp)<br><span class="text-xs text-muted">{{ $r->timestamp->format('j. n. H:i') }}</span>@endif
                         </td>
@@ -83,6 +84,16 @@
                         <td class="num">
                             <span class="font-bold text-warn">{{ $r->body }}</span><br>
                             <span class="text-xs text-muted">{{ number_format($bq, 1, ',', '') }} b/QSO</span>
+                            @if ($sk['delta'] !== null)
+                                <br>
+                                @if ($sk['delta'] > 0)
+                                    <span class="text-xs font-bold text-ok" title="oproti poslednímu startu">▲ +{{ $sk['delta'] }}</span>
+                                @elseif ($sk['delta'] < 0)
+                                    <span class="text-xs font-bold text-danger" title="oproti poslednímu startu">▼ {{ $sk['delta'] }}</span>
+                                @else
+                                    <span class="text-xs text-muted" title="stejně jako posledně">→ 0</span>
+                                @endif
+                            @endif
                         </td>
                         <td class="text-danger">{{ $r->soapbox }}@if ($r->poznamka)<br><i class="text-muted">{{ $r->poznamka }}</i>@endif</td>
                         @if ($isAdmin || $isAuth)

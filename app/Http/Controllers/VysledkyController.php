@@ -8,6 +8,7 @@ use App\Models\VkvpaData;
 use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
 use App\Services\Scoring\ScoringService;
+use App\Services\Scoring\SkokanService;
 use App\Support\VkvpaSettings;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -17,7 +18,10 @@ use Illuminate\View\View;
  */
 class VysledkyController extends Controller
 {
-    public function __construct(private readonly ScoringService $scoring) {}
+    public function __construct(
+        private readonly ScoringService $scoring,
+        private readonly SkokanService $skokan,
+    ) {}
 
     public function listina(Request $request): View
     {
@@ -35,8 +39,10 @@ class VysledkyController extends Controller
 
         $maxRows = VkvpaSettings::listaMaxRows();
 
-        $radky = $kolo
-            ? VkvpaData::query()
+        $radky = collect();
+        $skokani = [];
+        if ($kolo) {
+            $radky = VkvpaData::query()
                 ->where('id_kola', $kolo->id)
                 ->when($jenPrevzate, fn ($q) => $q->where('schvaleno', true))
                 ->when($request->boolean('qrp'), fn ($q) => $q->where('qrp', true))
@@ -51,8 +57,10 @@ class VysledkyController extends Controller
                 ->with('kategorie')
                 ->orderBy('id_kategorie')->orderBy('poradi')->orderByDesc('body')
                 ->limit($maxRows)
-                ->get()
-            : collect();
+                ->get();
+
+            $skokani = $this->skokan->bodyDeltas($kolo, $radky);
+        }
 
         return view('pages.vysledky-listina', [
             'active' => 'vysledkova_listina',
@@ -60,6 +68,7 @@ class VysledkyController extends Controller
             'kolo' => $kolo,
             'kategorie' => VkvpaKategorie::query()->orderBy('id')->get()->keyBy('id'),
             'radky' => $radky,
+            'skokani' => $skokani,
             'hledat' => $hledat,
             'limitReached' => $radky->count() >= $maxRows,
             'uploadWindowOpen' => VkvpaKola::existujeAktivni(),

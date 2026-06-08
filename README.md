@@ -517,6 +517,7 @@ Vzorové EDI soubory jsou v `resources/edi/` a slouží jako fixture pro unit te
 | `QsoGeometry` | `app/Services/Edi/QsoGeometry.php` | Výpočty souřadnic, vzdáleností a azimutů (sdíleno mapami i vizualizací) |
 | `BigSquareCount` | `app/Services/Edi/BigSquareCount.php` | Agregace QSO do 4-znakových Maidenhead čtverců |
 | `ImportEdiAction` | `app/Actions/ImportEdiAction.php` | Orchestrace celého importu: validace → uložení → scoring → event |
+| `SkokanService` | `app/Services/Scoring/SkokanService.php` | „Skokan" – body-delta závodníka oproti poslednímu startu ve stejné kategorii + největší skokan kola (zobrazeno ve výsledkové listině) |
 
 ### Value objekty
 
