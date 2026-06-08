@@ -528,11 +528,13 @@ Vzorové EDI soubory jsou v `resources/edi/` a slouží jako fixture pro unit te
 
 ### Enums
 
-| Enum | Hodnoty | Použití |
-|------|---------|---------|
-| `QsoMode` | `Ssb(1)`, `Cw(2)`, `Other(0)` | Druh provozu z EDI `Mode-code`; řídí barvy v mapách a vizualizaci |
-| `MapMode` | `Jezek`, `Spendliky`, `Lokatory`, `Crk` | Typ mapového pohledu; hodnota (`value`) je segment URL |
-| `KoloStav` | `Nadchazejici`, `Aktivni`, `Uzavrene`, `Vyhodnocene` | Fáze životního cyklu kola; odvozená z `aktivni`, `vyhodnoceno` a `datum_uzaverky` (viz `VkvpaKola::stav()`) |
+Všechny enumy jsou v `app/Enums/`. Backed enumy nesou hodnotu (`value`), která se používá buď v datech (EDI `Mode-code`), nebo v URL.
+
+| Enum | Typ | Hodnoty | Použití |
+|------|-----|---------|---------|
+| `QsoMode` | `int` | `Ssb(1)`, `Cw(2)`, `Other(0)` | Druh provozu z EDI `Mode-code`; řídí barvy v mapách a vizualizaci. `fromCode()` mapuje neznámý kód na `Other`, `label()` vrací `SSB`/`CW`/`?` |
+| `MapMode` | `string` | `Jezek`, `Spendliky`, `Lokatory`, `Crk` | Typ mapového pohledu; hodnota (`value`) je segment URL i klíč pro JS. `label()` vrací český popisek pod nadpisem mapy |
+| `KoloStav` | `string` | `Nadchazejici`, `Aktivni`, `Uzavrene`, `Vyhodnocene` | Fáze životního cyklu kola, odvozená z `aktivni`, `vyhodnoceno` a `datum_uzaverky` (viz `VkvpaKola::stav()`). `label()` vrací popisek `Nadcházející`/`Probíhá`/`Uzavřené`/`Vyhodnocené` |
 
 ### Rozlišení kategorií
 
