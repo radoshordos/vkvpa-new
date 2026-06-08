@@ -66,9 +66,7 @@
         <button type="button" data-drawer-open
                 class="-ml-1 inline-flex h-9 w-9 items-center justify-center rounded-lg text-ink hover:bg-surface-2 lg:hidden"
                 aria-label="{{ __('app.open_menu') }}">
-          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
-          </svg>
+          <x-icon name="menu" class="h-5 w-5" />
         </button>
 
         <a href="{{ url('/') }}" class="flex items-center gap-2 font-semibold tracking-tight text-heading">
@@ -100,12 +98,8 @@
           <button type="button" data-theme-toggle
                   class="inline-flex h-9 w-9 items-center justify-center rounded-lg text-ink hover:bg-surface-2"
                   aria-label="{{ __('app.toggle_theme') }}">
-            <svg class="h-5 w-5 dark:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
-            </svg>
-            <svg class="hidden h-5 w-5 dark:block" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2m0 14v2m9-9h-2M5 12H3m15.36 6.36l-1.42-1.42M7.05 7.05L5.64 5.64m12.72 0l-1.42 1.42M7.05 16.95l-1.41 1.41M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
-            </svg>
+            <x-icon name="moon" class="h-5 w-5 dark:hidden" />
+            <x-icon name="sun" class="hidden h-5 w-5 dark:block" />
           </button>
         </div>
       </div>
@@ -119,6 +113,7 @@
 
       {{-- ── Obsah ─────────────────────────────────────────────────── --}}
       <main class="content min-w-0 flex-1">
+        <x-flash />
         @yield('content')
       </main>
     </div>
@@ -133,9 +128,7 @@
         <span class="font-semibold text-heading">Menu</span>
         <button type="button" data-drawer-close
                 class="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-surface-2" aria-label="{{ __('app.close_menu') }}">
-          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-          </svg>
+          <x-icon name="close" class="h-5 w-5" />
         </button>
       </div>
       @include('partials.menu')

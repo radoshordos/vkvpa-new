@@ -12,19 +12,17 @@
     $val = fn (string $name, $editVal = null, $def = '') => old($name, $editVal ?? $def);
 @endphp
 
-@if (session('announcement'))
-    <div class="alert alert-success">{{ session('announcement') }}</div>
-@endif
+{{-- announcement řeší centrální <x-flash /> v layoutu --}}
 
 @if (!empty(session('importWarnings')))
-    <div class="alert alert-warning">
+    <x-alert type="warning">
         <strong>{{ __('pages.hlaseni.import_warnings') }}</strong>
         <ul class="mt-1 list-disc pl-5">
             @foreach (session('importWarnings') as $w)
                 <li class="font-normal">{{ $w }}</li>
             @endforeach
         </ul>
-    </div>
+    </x-alert>
 @endif
 
 @if ($maAktivniKolo)
@@ -32,16 +30,11 @@
 {{-- ===== Tab navigace ===== --}}
 <div class="tab-nav">
     <a href="{{ route('hlaseni.index') }}" class="tab-btn {{ !$showManual ? 'active' : '' }}">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-            <path d="M9 2H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V6L9 2Z"/>
-            <path d="M9 2v4h4M8 9.5v3M6.5 11l1.5-1.5 1.5 1.5"/>
-        </svg>
+        <x-icon name="file" />
         {{ __('pages.hlaseni.tab_edi') }}
     </a>
     <a href="{{ route('hlaseni.index', ['showfrm' => 1]) }}" class="tab-btn {{ $showManual ? 'active' : '' }}">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-            <path d="M11.5 2.5a1.5 1.5 0 0 1 2 2L5 13l-3 1 1-3 8.5-8.5Z"/>
-        </svg>
+        <x-icon name="pencil" />
         {{ __('pages.hlaseni.tab_manual') }}
     </a>
 </div>
@@ -50,12 +43,12 @@
 @if (!$showManual)
 <div class="card mb-6 p-5">
     @if ($errors->has('upload'))
-        <div class="alert alert-error">
+        <x-alert type="error">
             {{ $errors->first('upload') }}
             @foreach (session('lineErrors', []) as $le)
                 <br><span class="font-normal">{{ __('pages.hlaseni.error_line') }}: {{ $le }}</span>
             @endforeach
-        </div>
+        </x-alert>
     @endif
 
     <form action="{{ route('edi.store') }}" method="post" enctype="multipart/form-data" class="flex flex-wrap items-center gap-3">
@@ -71,9 +64,7 @@
     <div class="mt-3 border-t border-line pt-3">
         <a href="{{ route('hlaseni.index', ['showfrm' => 1]) }}" class="link-arrow">
             {{ __('pages.hlaseni.no_edi_link') }}
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
-                <path d="M3 8h10M9 4l4 4-4 4"/>
-            </svg>
+            <x-icon name="arrow-right" />
         </a>
     </div>
 </div>
@@ -82,13 +73,13 @@
 {{-- ===== Ruční formulář – jen když je potřeba ===== --}}
 @if ($showManual)
 @if ($errors->any() && ! ($errors->count() === 1 && $errors->has('upload')))
-    <div class="alert alert-error">
+    <x-alert type="error">
         @foreach ($errors->all() as $err)
             @if ($err !== $errors->first('upload'))
                 {{ $err }}<br>
             @endif
         @endforeach
-    </div>
+    </x-alert>
 @endif
 
 <form action="{{ route('hlaseni.store') }}" method="post" class="card p-5 mb-6">
@@ -97,39 +88,31 @@
     <input type="hidden" name="EDIID" value="{{ (int) $val('EDIID', $e->EDI_ID ?? 0, 0) }}">
 
     <div class="grid gap-x-5 sm:grid-cols-2">
-        <div class="field">
-            <label class="label" for="f-kolo">{{ __('pages.hlaseni.field_period') }} *</label>
-            <select id="f-kolo" name="kolo" class="select @error('kolo') input-err @enderror">
-                <option value="">{{ __('pages.hlaseni.select_period') }}</option>
-                @foreach ($kola as $k)
-                    <option value="{{ $k->id }}" @selected((int) $val('kolo', $e->id_kola ?? 0) === $k->id)>{{ $k->nazev }}</option>
-                @endforeach
-            </select>
-            @error('kolo')<span class="field-error">{{ $message }}</span>@enderror
-        </div>
+        <x-field name="kolo" :label="__('pages.hlaseni.field_period')" required>
+            <x-slot:control>
+                <select id="f-kolo" name="kolo" @class(['select', 'input-err' => $errors->has('kolo')])>
+                    <option value="">{{ __('pages.hlaseni.select_period') }}</option>
+                    @foreach ($kola as $k)
+                        <option value="{{ $k->id }}" @selected((int) $val('kolo', $e->id_kola ?? 0) === $k->id)>{{ $k->nazev }}</option>
+                    @endforeach
+                </select>
+            </x-slot:control>
+        </x-field>
 
-        <div class="field">
-            <label class="label" for="f-kat">{{ __('pages.hlaseni.field_category') }} *</label>
-            <select id="f-kat" name="kategorie" class="select @error('kategorie') input-err @enderror">
-                <option value="">{{ __('pages.hlaseni.select_category') }}</option>
-                @foreach ($kategorie as $cat)
-                    <option value="{{ $cat->id }}" @selected((int) $val('kategorie', $e->id_kategorie ?? 0) === $cat->id)>{{ $cat->nazev }}</option>
-                @endforeach
-            </select>
-            @error('kategorie')<span class="field-error">{{ $message }}</span>@enderror
-        </div>
+        <x-field name="kategorie" :label="__('pages.hlaseni.field_category')" required>
+            <x-slot:control>
+                <select id="f-kategorie" name="kategorie" @class(['select', 'input-err' => $errors->has('kategorie')])>
+                    <option value="">{{ __('pages.hlaseni.select_category') }}</option>
+                    @foreach ($kategorie as $cat)
+                        <option value="{{ $cat->id }}" @selected((int) $val('kategorie', $e->id_kategorie ?? 0) === $cat->id)>{{ $cat->nazev }}</option>
+                    @endforeach
+                </select>
+            </x-slot:control>
+        </x-field>
 
-        <div class="field">
-            <label class="label" for="f-znacka">{{ __('pages.hlaseni.field_callsign') }} *</label>
-            <input id="f-znacka" name="znacka" type="text" class="input mono font-bold @error('znacka') input-err @enderror" value="{{ $val('znacka', $e->znacka ?? '') }}">
-            @error('znacka')<span class="field-error">{{ $message }}</span>@enderror
-        </div>
+        <x-field name="znacka" :label="__('pages.hlaseni.field_callsign')" :value="$val('znacka', $e->znacka ?? '')" required class="mono font-bold" />
 
-        <div class="field">
-            <label class="label" for="f-loc">{{ __('pages.hlaseni.field_locator') }} *</label>
-            <input id="f-loc" name="locator" type="text" class="input mono @error('locator') input-err @enderror" value="{{ $val('locator', $e->locator ?? '') }}">
-            @error('locator')<span class="field-error">{{ $message }}</span>@enderror
-        </div>
+        <x-field name="locator" :label="__('pages.hlaseni.field_locator')" :value="$val('locator', $e->locator ?? '')" required class="mono" />
     </div>
 
     <label class="mb-2 flex items-center gap-2 text-sm">
@@ -144,54 +127,29 @@
 
     {{-- Body / počty --}}
     <div class="grid grid-cols-2 gap-x-5 sm:grid-cols-4">
-        <div class="field">
-            <label class="label" for="f-pocet">{{ __('pages.hlaseni.field_qso') }} *</label>
-            <input id="f-pocet" name="pocet" type="text" class="input num @error('pocet') input-err @enderror" value="{{ (int) $val('pocet', $e->pocet ?? 0, 0) }}">
-            @error('pocet')<span class="field-error">{{ $message }}</span>@enderror
-        </div>
-        <div class="field">
-            <label class="label" for="f-bzq">{{ __('pages.hlaseni.field_qso_pts') }}</label>
-            <input id="f-bzq" name="bodu_za_qso" type="text" class="input num @error('bodu_za_qso') input-err @enderror" value="{{ (int) $val('bodu_za_qso', $e->bodu_za_qso ?? 0, 0) }}">
-            @error('bodu_za_qso')<span class="field-error">{{ $message }}</span>@enderror
-        </div>
-        <div class="field">
-            <label class="label" for="f-nas">{{ __('pages.hlaseni.field_mult') }} *</label>
-            <input id="f-nas" name="nasobice" type="text" class="input num @error('nasobice') input-err @enderror" value="{{ (int) $val('nasobice', $e->nasobice ?? 0, 0) }}">
-            @error('nasobice')<span class="field-error">{{ $message }}</span>@enderror
-        </div>
-        <div class="field">
-            <label class="label" for="f-body">{{ __('pages.hlaseni.field_total') }} *</label>
-            <input id="f-body" name="body" type="text" class="input num font-bold @error('body') input-err @enderror" value="{{ (int) $val('body', $e->body ?? 0, 0) }}">
-            @error('body')<span class="field-error">{{ $message }}</span>@enderror
-        </div>
+        <x-field name="pocet" :label="__('pages.hlaseni.field_qso')" :value="(int) $val('pocet', $e->pocet ?? 0, 0)" required class="num" />
+        <x-field name="bodu_za_qso" :label="__('pages.hlaseni.field_qso_pts')" :value="(int) $val('bodu_za_qso', $e->bodu_za_qso ?? 0, 0)" class="num" />
+        <x-field name="nasobice" :label="__('pages.hlaseni.field_mult')" :value="(int) $val('nasobice', $e->nasobice ?? 0, 0)" required class="num" />
+        <x-field name="body" :label="__('pages.hlaseni.field_total')" :value="(int) $val('body', $e->body ?? 0, 0)" required class="num font-bold" />
     </div>
 
     <div class="grid gap-x-5 sm:grid-cols-2">
-        <div class="field">
-            <label class="label" for="f-jmeno">{{ __('pages.hlaseni.field_name') }}</label>
-            <input id="f-jmeno" name="jmeno" type="text" class="input" value="{{ $val('jmeno', $e->jmeno ?? '') }}">
-        </div>
-        <div class="field">
-            <label class="label" for="f-email">{{ __('pages.hlaseni.field_contact') }} *</label>
-            <input id="f-email" name="email" type="text" class="input @error('email') input-err @enderror" value="{{ $val('email', $e->mail ?? '') }}">
-            @error('email')<span class="field-error">{{ $message }}</span>@enderror
-        </div>
-        <div class="field">
-            <label class="label" for="f-tel">{{ __('pages.hlaseni.field_phone') }}</label>
-            <input id="f-tel" name="telefon" type="text" class="input @error('telefon') input-err @enderror" value="{{ $val('telefon', $e->telefon ?? '') }}">
-            @error('telefon')<span class="field-error">{{ $message }}</span>@enderror
-        </div>
+        <x-field name="jmeno" :label="__('pages.hlaseni.field_name')" :value="$val('jmeno', $e->jmeno ?? '')" />
+        <x-field name="email" :label="__('pages.hlaseni.field_contact')" :value="$val('email', $e->mail ?? '')" required />
+        <x-field name="telefon" :label="__('pages.hlaseni.field_phone')" :value="$val('telefon', $e->telefon ?? '')" />
     </div>
 
-    <div class="field">
-        <label class="label" for="f-pozn">{{ __('pages.hlaseni.field_note') }}</label>
-        <textarea id="f-pozn" name="poznamka" class="textarea" rows="2">{{ $val('poznamka', $e->poznamka ?? '') }}</textarea>
-    </div>
+    <x-field name="poznamka" :label="__('pages.hlaseni.field_note')">
+        <x-slot:control>
+            <textarea id="f-poznamka" name="poznamka" class="textarea" rows="2">{{ $val('poznamka', $e->poznamka ?? '') }}</textarea>
+        </x-slot:control>
+    </x-field>
 
-    <div class="field">
-        <label class="label" for="f-soap">{{ __('pages.hlaseni.field_soapbox') }}</label>
-        <textarea id="f-soap" name="soapbox" class="textarea" rows="4">{{ $val('soapbox', $e->soapbox ?? '') }}</textarea>
-    </div>
+    <x-field name="soapbox" :label="__('pages.hlaseni.field_soapbox')">
+        <x-slot:control>
+            <textarea id="f-soapbox" name="soapbox" class="textarea" rows="4">{{ $val('soapbox', $e->soapbox ?? '') }}</textarea>
+        </x-slot:control>
+    </x-field>
 
     <div class="mt-2 flex items-center justify-between">
         <a href="{{ route('hlaseni.index') }}" class="text-sm">{{ __('pages.hlaseni.btn_clear') }}</a>

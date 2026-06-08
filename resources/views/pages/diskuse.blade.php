@@ -32,9 +32,7 @@
     <span class="pb-1 text-sm text-muted">{{ $cnt }} {{ $postWord }}</span>
 </div>
 
-@if (session('success'))
-    <div class="alert alert-success">{{ session('success') }}</div>
-@endif
+{{-- success řeší centrální <x-flash /> v layoutu --}}
 
 {{-- Příspěvky --}}
 @if ($prispevky->isEmpty())

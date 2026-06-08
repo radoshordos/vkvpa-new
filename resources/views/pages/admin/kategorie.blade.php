@@ -4,9 +4,7 @@
 
 <h1>{{ __('admin.kategorie_heading') }}</h1>
 
-@if (session('announcement'))
-    <div class="alert alert-success">{{ session('announcement') }}</div>
-@endif
+{{-- announcement řeší centrální <x-flash /> v layoutu --}}
 
 <div class="table-wrap mb-8">
     <table class="data-table">

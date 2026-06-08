@@ -3,9 +3,7 @@
 @section('content')
 <h1>{{ __('pages.kola.heading') }}</h1>
 
-@if (session('announcement'))
-  <div class="alert alert-success">{{ session('announcement') }}</div>
-@endif
+{{-- announcement řeší centrální <x-flash /> v layoutu --}}
 
 @php $isAdmin = $isAdmin ?? (bool) (auth()->user()?->is_admin); @endphp
 
