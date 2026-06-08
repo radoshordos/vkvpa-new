@@ -78,6 +78,7 @@ final readonly class ImportEdiAction
             'bodu_za_qso' => $score->boduZaQso,
             'body' => $score->body,
             'qrp' => $h->isQrp(),
+            'lp' => $h->isLp(),
             'EDI' => true,
             'EDI_ID' => $head->ID,
             'schvaleno' => false,

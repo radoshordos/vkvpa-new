@@ -92,4 +92,12 @@ final readonly class EdiHeader
 
         return $p > 0 && $p <= 5;
     }
+
+    /** LP (low power) = výkon 1–99 W (< 100 W). QRP je podmnožina LP. */
+    public function isLp(): bool
+    {
+        $p = $this->sPowe();
+
+        return $p > 0 && $p < 100;
+    }
 }

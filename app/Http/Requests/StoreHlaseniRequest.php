@@ -74,6 +74,7 @@ class StoreHlaseniRequest extends FormRequest
             'poznamka' => ['nullable', 'string'],
             'soapbox' => ['nullable', 'string'],
             'qrp' => ['nullable', 'boolean'],
+            'lp' => ['nullable', 'boolean'],
         ];
     }
 

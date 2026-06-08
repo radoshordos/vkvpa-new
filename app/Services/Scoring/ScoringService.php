@@ -150,23 +150,23 @@ final class ScoringService
      *
      * @return \Illuminate\Database\Eloquent\Collection<int, VkvpaData>
      */
-    public function yearlyResults(int $year, bool $qrpOnly = false): Collection
+    public function yearlyResults(int $year, bool $qrpOnly = false, bool $lpOnly = false): Collection
     {
         // Roční výsledky jsou drahá agregace, která se mezi vyhodnoceními kol nemění.
         // Cache::flexible (stale-while-revalidate): do `fresh` s vrací z cache, do
         // `stale` s vrací starou hodnotu a obnoví ji na pozadí. Invaliduje se cíleně
         // v {@see self::rankRound()} přes forgetYearlyCache().
         return Cache::flexible(
-            $this->yearlyCacheKey($year, $qrpOnly),
+            $this->yearlyCacheKey($year, $qrpOnly, $lpOnly),
             [VkvpaSettings::yearlyCacheFresh(), VkvpaSettings::yearlyCacheStale()],
-            fn (): Collection => $this->computeYearlyResults($year, $qrpOnly),
+            fn (): Collection => $this->computeYearlyResults($year, $qrpOnly, $lpOnly),
         );
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Collection<int, VkvpaData>
      */
-    private function computeYearlyResults(int $year, bool $qrpOnly): Collection
+    private function computeYearlyResults(int $year, bool $qrpOnly, bool $lpOnly): Collection
     {
         $query = VkvpaData::query()
             ->join('vkvpa_kola', 'vkvpa_data.id_kola', '=', 'vkvpa_kola.id')
@@ -185,24 +185,34 @@ final class ScoringService
             $query->where('vkvpa_data.qrp', true);
         }
 
+        // QRP (≤5 W) je podmnožinou LP (<100 W), proto „jen LP" zahrnuje i QRP stanice.
+        if ($lpOnly) {
+            $query->where(
+                fn ($w) => $w->where('vkvpa_data.lp', true)->orWhere('vkvpa_data.qrp', true),
+            );
+        }
+
         return $query->get();
     }
 
-    /** Klíč cache ročních výsledků pro daný rok a QRP filtr. */
-    private function yearlyCacheKey(int $year, bool $qrpOnly): string
+    /** Klíč cache ročních výsledků pro daný rok a kombinaci výkonových filtrů. */
+    private function yearlyCacheKey(int $year, bool $qrpOnly, bool $lpOnly): string
     {
-        return sprintf('vkvpa:yearly:%d:%d', $year, $qrpOnly ? 1 : 0);
+        return sprintf('vkvpa:yearly:%d:%d:%d', $year, $qrpOnly ? 1 : 0, $lpOnly ? 1 : 0);
     }
 
-    /** Zahodí cache ročních výsledků daného roku (obě varianty QRP). */
+    /** Zahodí cache ročních výsledků daného roku (všechny kombinace výkonových filtrů). */
     private function forgetYearlyCache(?int $year): void
     {
         if ($year === null) {
             return;
         }
 
-        Cache::forget($this->yearlyCacheKey($year, false));
-        Cache::forget($this->yearlyCacheKey($year, true));
+        foreach ([false, true] as $qrp) {
+            foreach ([false, true] as $lp) {
+                Cache::forget($this->yearlyCacheKey($year, $qrp, $lp));
+            }
+        }
     }
 
     /**

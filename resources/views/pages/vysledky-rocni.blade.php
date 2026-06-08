@@ -15,6 +15,9 @@
   <label class="flex items-center gap-2 pb-1 text-sm">
     <input id="qrp-rocni" type="checkbox" name="qrp" value="1" @checked(request()->boolean('qrp'))> {{ __('pages.rocni.filter_qrp') }}
   </label>
+  <label class="flex items-center gap-2 pb-1 text-sm">
+    <input id="lp-rocni" type="checkbox" name="lp" value="1" @checked(request()->boolean('lp'))> {{ __('pages.rocni.filter_lp') }}
+  </label>
   <button type="submit" class="btn btn-primary">{{ __('pages.rocni.btn_show') }}</button>
 </form>
 
@@ -27,6 +30,7 @@
     if (form) {
         document.getElementById('rok').addEventListener('change', function () { form.submit(); });
         document.getElementById('qrp-rocni').addEventListener('change', function () { form.submit(); });
+        document.getElementById('lp-rocni').addEventListener('change', function () { form.submit(); });
     }
 }());
 </script>

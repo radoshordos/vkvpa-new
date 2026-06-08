@@ -132,9 +132,14 @@
         </div>
     </div>
 
-    <label class="mb-4 flex items-center gap-2 text-sm">
+    <label class="mb-2 flex items-center gap-2 text-sm">
         <input type="checkbox" name="qrp" value="1" @checked($val('qrp', $e->qrp ?? false))>
         {{ __('pages.hlaseni.field_qrp') }}
+    </label>
+
+    <label class="mb-4 flex items-center gap-2 text-sm">
+        <input type="checkbox" name="lp" value="1" @checked($val('lp', $e->lp ?? false))>
+        {{ __('pages.hlaseni.field_lp') }}
     </label>
 
     {{-- Body / počty --}}

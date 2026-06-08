@@ -23,7 +23,7 @@ use Override;
  * @property int $id_kola
  * @property int $id_kategorie
  * @property bool $qrp
- * @property int $lp
+ * @property bool $lp
  * @property string $znacka
  * @property string $locator
  * @property int $pocet

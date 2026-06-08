@@ -29,6 +29,9 @@
     <label class="flex items-center gap-2 pb-2 text-sm">
         <input id="qrp" type="checkbox" name="qrp" value="1" @checked(request()->boolean('qrp'))> {{ __('pages.vysledky.filter_qrp') }}
     </label>
+    <label class="flex items-center gap-2 pb-2 text-sm">
+        <input id="lp" type="checkbox" name="lp" value="1" @checked(request()->boolean('lp'))> {{ __('pages.vysledky.filter_lp') }}
+    </label>
     <button type="submit" class="btn btn-primary">{{ __('pages.vysledky.btn_show') }}</button>
 </form>
 
@@ -70,7 +73,7 @@
                     <tr @class(['row-pending' => ! $r->schvaleno, 'group'])>
                         <td class="num font-bold">{{ $poradi }}.</td>
                         <td>
-                            <span class="mono font-bold">{{ $r->znacka }}</span>@if ($r->qrp)<span class="badge badge-qrp ml-1">QRP</span>@endif
+                            <span class="mono font-bold">{{ $r->znacka }}</span>@if ($r->qrp)<span class="badge badge-qrp ml-1">QRP</span>@elseif ($r->lp)<span class="badge ml-1">LP</span>@endif
                             @if ($r->jmeno)<br><span class="text-muted">{{ $r->jmeno }}</span>@endif
                             @if ($r->timestamp)<br><span class="text-xs text-muted">{{ $r->timestamp->format('j. n. H:i') }}</span>@endif
                         </td>
@@ -159,6 +162,7 @@
     if (filterForm) {
         document.getElementById('kolo').addEventListener('change', function () { filterForm.submit(); });
         document.getElementById('qrp').addEventListener('change', function () { filterForm.submit(); });
+        document.getElementById('lp').addEventListener('change', function () { filterForm.submit(); });
     }
 }());
 </script>

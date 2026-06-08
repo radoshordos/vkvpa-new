@@ -86,6 +86,23 @@ class VysledkyListinaTest extends TestCase
             ->assertDontSee('OK1DOL');
     }
 
+    public function test_lp_filter_includes_lp_and_qrp_stations(): void
+    {
+        $kolo = $this->kolo();
+        $kat = $this->kat('144 MHz single op');
+
+        // QRP (≤5 W) je podmnožinou LP (<100 W), proto „jen LP" zahrnuje obě.
+        $this->entry($kolo->id, $kat->id, 'OK1LP', 10, 5, 300, 1)->update(['lp' => true]);
+        $this->entry($kolo->id, $kat->id, 'OK1QRP', 10, 5, 200, 2)->update(['qrp' => true]);
+        $this->entry($kolo->id, $kat->id, 'OK1FULL', 10, 5, 500, 3);
+
+        $this->get(route('vysledkova_listina', ['kolo' => $kolo->id, 'lp' => 1]))
+            ->assertOk()
+            ->assertSee('OK1LP')
+            ->assertSee('OK1QRP')
+            ->assertDontSee('OK1FULL');
+    }
+
     public function test_admin_sees_unapproved_rows(): void
     {
         $kolo = $this->kolo();

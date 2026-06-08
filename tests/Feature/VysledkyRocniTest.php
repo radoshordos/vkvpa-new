@@ -35,7 +35,7 @@ class VysledkyRocniTest extends TestCase
         ]);
     }
 
-    private function entry(VkvpaKola $kolo, VkvpaKategorie $kat, string $znacka, int $body, bool $qrp = false, bool $edi = true): VkvpaData
+    private function entry(VkvpaKola $kolo, VkvpaKategorie $kat, string $znacka, int $body, bool $qrp = false, bool $edi = true, bool $lp = false): VkvpaData
     {
         return VkvpaData::create([
             'id_kola' => $kolo->id,
@@ -50,6 +50,7 @@ class VysledkyRocniTest extends TestCase
             'schvaleno' => true,
             'odeslano' => false,
             'qrp' => $qrp,
+            'lp' => $lp,
             'EDI' => $edi,
             'EDI_ID' => $edi ? 1 : 0,
         ]);
@@ -112,6 +113,23 @@ class VysledkyRocniTest extends TestCase
 
         $this->get(route('rocni_vysledky', ['rok' => 2026, 'qrp' => 1]))
             ->assertOk()
+            ->assertSee('OK1QRP')
+            ->assertDontSee('OK1FULL');
+    }
+
+    public function test_rocni_lp_filter_includes_lp_and_qrp_stations(): void
+    {
+        $kat = $this->kat('144 MHz single op');
+        $kolo = $this->kolo('2026');
+
+        // QRP (≤5 W) je podmnožinou LP (<100 W) – filtr „jen LP" musí zahrnout obě.
+        $this->entry($kolo, $kat, 'OK1LP', 300, lp: true);
+        $this->entry($kolo, $kat, 'OK1QRP', 200, qrp: true);
+        $this->entry($kolo, $kat, 'OK1FULL', 500, qrp: false, lp: false);
+
+        $this->get(route('rocni_vysledky', ['rok' => 2026, 'lp' => 1]))
+            ->assertOk()
+            ->assertSee('OK1LP')
             ->assertSee('OK1QRP')
             ->assertDontSee('OK1FULL');
     }
