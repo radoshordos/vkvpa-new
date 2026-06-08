@@ -7,6 +7,7 @@ namespace App\Actions;
 use App\Events\EdiImported;
 use App\Exceptions\DuplicateEdiException;
 use App\Exceptions\TDateMismatchException;
+use App\Exceptions\TDateNotContestDayException;
 use App\Exceptions\UnknownBandException;
 use App\Models\VkvpaData;
 use App\Services\Edi\CategoryResolver;
@@ -14,7 +15,10 @@ use App\Services\Edi\EdiImportService;
 use App\Services\Edi\EdiLog;
 use App\Services\Edi\EdiQso;
 use App\Services\Scoring\ScoringService;
+use App\Support\ContestCalendar;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Context;
+use Throwable;
 
 /**
  * Orchestruje celý tok importu EDI deníku: validace business pravidel,
@@ -22,6 +26,7 @@ use Illuminate\Support\Facades\Context;
  *
  * Vyhodí výjimku při jakémkoli selhání; úspěch vrací nový VkvpaData řádek.
  *
+ * @throws TDateNotContestDayException TDate neodpovídá termínu kola (3. neděle v měsíci)
  * @throws TDateMismatchException TDate v hlavičce neodpovídá datům QSO
  * @throws DuplicateEdiException Deník pro tuto stanici a kolo již existuje
  * @throws UnknownBandException Pásmo z hlavičky EDI nelze přiřadit kategorii
@@ -42,6 +47,9 @@ final readonly class ImportEdiAction
     {
         $h = $log->header;
         $pcall = $h->pCall();
+
+        $this->assertTDateIsContestDay($h->tDate());
+
         $idKola = $this->scoring->koloForTDate($h->tDate()) ?? 0;
 
         Context::add('znacka', $pcall);
@@ -91,6 +99,61 @@ final readonly class ImportEdiAction
         }
 
         return $data;
+    }
+
+    /**
+     * Ověří, že TDate odpovídá termínu závodu. Kolo VKV PA se koná vždy třetí
+     * neděli v měsíci; TDate ale může být i dvoudenní rozsah (start;end), když
+     * účastník použil šablonu 24h závodu. Stačí proto, aby třetí neděli
+     * odpovídalo alespoň jedno z dat uvedených v TDate.
+     *
+     * @throws TDateNotContestDayException
+     */
+    private function assertTDateIsContestDay(string $tdate): void
+    {
+        $dates = $this->parseTDateDates($tdate);
+        if ($dates === []) {
+            // Nečitelné TDate řeší jiná validace (TDateMismatchException / EdiValidator).
+            return;
+        }
+
+        foreach ($dates as $date) {
+            $thirdSunday = ContestCalendar::thirdSundayOf((int) $date->year, (int) $date->month);
+            if ($date->isSameDay($thirdSunday)) {
+                return;
+            }
+        }
+
+        throw new TDateNotContestDayException($tdate);
+    }
+
+    /**
+     * Vytáhne z TDate všechna validní data ve formátu YYYYMMDD (jedno i rozsah).
+     *
+     * @return CarbonImmutable[]
+     */
+    private function parseTDateDates(string $tdate): array
+    {
+        $dates = [];
+
+        foreach (preg_split('/[^0-9]+/', trim($tdate)) ?: [] as $token) {
+            if (strlen($token) !== 8) {
+                continue;
+            }
+
+            try {
+                $date = CarbonImmutable::createFromFormat('!Ymd', $token, 'UTC');
+            } catch (Throwable) {
+                continue;
+            }
+
+            // createFromFormat tichý overflow (např. měsíc 13) přeskočíme.
+            if ($date instanceof CarbonImmutable && $date->format('Ymd') === $token) {
+                $dates[] = $date;
+            }
+        }
+
+        return $dates;
     }
 
     /**

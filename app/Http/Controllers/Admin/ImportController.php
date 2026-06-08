@@ -8,6 +8,7 @@ use App\Actions\ImportEdiAction;
 use App\Exceptions\DuplicateEdiException;
 use App\Exceptions\EdiParseException;
 use App\Exceptions\TDateMismatchException;
+use App\Exceptions\TDateNotContestDayException;
 use App\Exceptions\UnknownBandException;
 use App\Http\Controllers\Controller;
 use App\Models\VkvpaKola;
@@ -99,7 +100,7 @@ class ImportController extends Controller
                     $data = app(ImportEdiAction::class)->execute($log, notify: false);
                 } catch (DuplicateEdiException) {
                     return ['file' => $name, 'status' => 'skip', 'znacka' => $pcall, 'reason' => 'Deník pro toto kolo již existuje.'];
-                } catch (TDateMismatchException $e) {
+                } catch (TDateNotContestDayException|TDateMismatchException $e) {
                     return ['file' => $name, 'status' => 'error', 'reason' => $e->getMessage()];
                 } catch (UnknownBandException) {
                     return ['file' => $name, 'status' => 'error', 'reason' => "Nerozpoznané pásmo ({$log->header->pBand()})."];
