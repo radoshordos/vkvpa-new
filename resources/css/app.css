@@ -455,7 +455,8 @@
         transition: border-color 0.15s, background-color 0.15s, box-shadow 0.15s;
         user-select: none;
     }
-    .upload-zone:hover {
+    .upload-zone:hover,
+    .upload-zone.dragover {
         border-color: var(--brand);
         background-color: var(--brand-softer);
     }

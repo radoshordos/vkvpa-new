@@ -210,4 +210,37 @@
     </div>
 @endforeach
 @endif
+
+@push('scripts')
+<script>
+(function () {
+    var zone  = document.getElementById('edi-zone');
+    var input = document.getElementById('edi-file');
+    if (! zone || ! input) return;
+
+    zone.addEventListener('dragover', function (e) {
+        e.preventDefault();
+        zone.classList.add('dragover');
+    });
+
+    zone.addEventListener('dragleave', function (e) {
+        if (! zone.contains(e.relatedTarget)) zone.classList.remove('dragover');
+    });
+
+    zone.addEventListener('drop', function (e) {
+        e.preventDefault();
+        zone.classList.remove('dragover');
+        if (e.dataTransfer && e.dataTransfer.files.length) {
+            input.files = e.dataTransfer.files;
+            // change spustí stejnou obsluhu jako ruční výběr (zobrazení názvu)
+            input.dispatchEvent(new Event('change'));
+        }
+    });
+
+    // Drop mimo zónu nesmí otevřít soubor místo stránky
+    document.addEventListener('dragover', function (e) { e.preventDefault(); });
+    document.addEventListener('drop', function (e) { e.preventDefault(); });
+}());
+</script>
+@endpush
 @endsection
