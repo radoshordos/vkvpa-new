@@ -57,6 +57,18 @@ class HlaseniController extends Controller
         $idZaznamu = $this->intFrom($v['id_zaznamu'] ?? 0);
         $znacka = is_string($v['znacka'] ?? null) ? $v['znacka'] : '';
 
+        // Hlášení (i manuální) lze odeslat jen v otevřeném upload okně kola.
+        // Admin smí ukládat kdykoliv (opravy a doplňování starých kol).
+        if (! (bool) ($request->user()?->is_admin)) {
+            $kolo = VkvpaKola::find($this->intFrom($v['kolo']));
+
+            if ($kolo === null || ! $kolo->prijimaHlaseni()) {
+                return back()
+                    ->withErrors(['kolo' => 'Kolo právě nepřijímá hlášení – odeslat je lze jen v otevřeném upload okně (od dne závodu 08:00 UTC do uzávěrky).'])
+                    ->withInput();
+            }
+        }
+
         $payload = [
             'id_kola' => $this->intFrom($v['kolo']),
             'id_kategorie' => isset($v['kategorie']) && is_numeric($v['kategorie']) ? (int) $v['kategorie'] : null,

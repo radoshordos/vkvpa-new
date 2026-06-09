@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Actions;
 
-use App\Enums\KoloStav;
 use App\Events\EdiImported;
 use App\Exceptions\DuplicateEdiException;
 use App\Exceptions\RoundNotFoundException;
@@ -145,7 +144,7 @@ final readonly class ImportEdiAction
             return; // neexistenci kola hlásí RoundNotFoundException dříve
         }
 
-        if (! in_array($kolo->stav(), [KoloStav::Aktivni, KoloStav::Prijem], true)) {
+        if (! $kolo->prijimaHlaseni()) {
             throw new UploadWindowClosedException($kolo->nazev);
         }
     }

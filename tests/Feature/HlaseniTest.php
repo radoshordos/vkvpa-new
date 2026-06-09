@@ -90,6 +90,30 @@ class HlaseniTest extends TestCase
         $this->assertTrue((bool) VkvpaData::firstOrFail()->schvaleno);
     }
 
+    public function test_manual_report_rejected_outside_upload_window(): void
+    {
+        [$kolo, $kat] = $this->prepare();
+        // Uzávěrka uplynula, kolo neaktivní → stav Uzavřené, okno zavřené.
+        $kolo->update(['aktivni' => false, 'datum_uzaverky' => now()->subDay()]);
+
+        $this->post('/hlaseni', $this->payload($kolo->id, $kat->id))
+            ->assertSessionHasErrors('kolo');
+        $this->assertSame(0, VkvpaData::count());
+    }
+
+    public function test_admin_can_store_report_outside_upload_window(): void
+    {
+        [$kolo, $kat] = $this->prepare();
+        $kolo->update(['aktivni' => false, 'datum_uzaverky' => now()->subDay()]);
+        $admin = User::create(['name' => 'Admin', 'password' => Hash::make('x'), 'is_admin' => true]);
+
+        $this->actingAs($admin)
+            ->post('/hlaseni', $this->payload($kolo->id, $kat->id))
+            ->assertRedirect(route('vysledkova_listina', ['kolo' => $kolo->id]));
+
+        $this->assertSame(1, VkvpaData::count());
+    }
+
     public function test_missing_required_fields_rejected(): void
     {
         [$kolo, $kat] = $this->prepare();

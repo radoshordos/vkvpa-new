@@ -109,6 +109,16 @@ class VkvpaKola extends Model
     }
 
     /**
+     * Je otevřené upload okno kola? Hlášení (EDI i manuální) se přijímají
+     * jen ve stavech Aktivní a Příjem hlášení – od dne závodu 08:00 UTC
+     * do uzávěrky.
+     */
+    public function prijimaHlaseni(): bool
+    {
+        return in_array($this->stav(), [KoloStav::Aktivni, KoloStav::Prijem], true);
+    }
+
+    /**
      * Kolo, pro které se zobrazují průběžné výsledky: nejstarší aktivní,
      * které ještě nebylo vyhodnocené. Když žádné není, průběžné výsledky
      * se neukazují (stránka hlásí „vyhodnocování neprobíhá", položka menu
