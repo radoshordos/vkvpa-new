@@ -42,9 +42,7 @@ return [
         'upload_window_closed_auth' => 'Uzavřeno — EDI dostupné po přihlášení',
         'upload_window_evaluated' => 'Vyhodnoceno — EDI dostupné po přihlášení',
 
-        // Upcoming rounds mini-calendar
         'upcoming_heading' => 'Plánovaná kola',
-        'upcoming_ical' => 'Přihlásit do kalendáře (.ics)',
     ],
 
     'kola' => [
@@ -58,7 +56,6 @@ return [
         'col_evaluated' => 'Vyhodnoceno',
         'col_actions' => 'Akce',
         'btn_create' => '+ Přidat kolo',
-        'btn_ical' => '📅 Kalendář (.ics)',
         'btn_edit' => 'upravit',
         'btn_evaluate' => 'vyhodnotit',
         'btn_close' => 'uzavřít',

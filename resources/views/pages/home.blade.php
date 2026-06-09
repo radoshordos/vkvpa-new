@@ -189,12 +189,7 @@
 {{-- ── Nadcházející kola ───────────────────────────────────────────── --}}
 @if ($upcomingRounds->isNotEmpty())
 <div class="mt-8">
-    <div class="section-head flex items-center justify-between">
-        <span>{{ __('pages.home.upcoming_heading') }}</span>
-        <a href="{{ route('kola.ical') }}" class="text-xs font-normal text-brand hover:underline">
-            📅 {{ __('pages.home.upcoming_ical') }}
-        </a>
-    </div>
+    <div class="section-head">{{ __('pages.home.upcoming_heading') }}</div>
     <div class="table-wrap">
         <table class="data-table">
             <thead>
@@ -217,13 +212,6 @@
             </tbody>
         </table>
     </div>
-</div>
-@else
-{{-- iCal odkaz i bez nadcházejících kol --}}
-<div class="mt-6 text-sm text-muted">
-    <a href="{{ route('kola.ical') }}" class="text-brand hover:underline">
-        📅 {{ __('pages.home.upcoming_ical') }}
-    </a>
 </div>
 @endif
 

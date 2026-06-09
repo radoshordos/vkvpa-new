@@ -11,7 +11,6 @@
   @if ($isAdmin)
     <a href="{{ route('kola.admin.create') }}" class="btn btn-primary btn-sm">{{ __('pages.kola.btn_create') }}</a>
   @endif
-  <a href="{{ route('kola.ical') }}" class="btn btn-ghost btn-sm">{{ __('pages.kola.btn_ical') }}</a>
 </div>
 
 <div class="table-wrap">

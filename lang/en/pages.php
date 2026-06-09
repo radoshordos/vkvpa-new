@@ -42,9 +42,7 @@ return [
         'upload_window_closed_auth' => 'Closed — EDI available after login',
         'upload_window_evaluated' => 'Evaluated — EDI available after login',
 
-        // Upcoming rounds mini-calendar
         'upcoming_heading' => 'Upcoming rounds',
-        'upcoming_ical' => 'Subscribe to calendar (.ics)',
     ],
 
     'kola' => [
@@ -58,7 +56,6 @@ return [
         'col_evaluated' => 'Evaluated',
         'col_actions' => 'Actions',
         'btn_create' => '+ Add round',
-        'btn_ical' => '📅 Calendar (.ics)',
         'btn_edit' => 'edit',
         'btn_evaluate' => 'evaluate',
         'btn_close' => 'close',
