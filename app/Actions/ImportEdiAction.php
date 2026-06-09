@@ -128,11 +128,11 @@ final readonly class ImportEdiAction
             return;
         }
 
-        foreach ($dates as $date) {
-            $thirdSunday = ContestCalendar::thirdSundayOf((int) $date->year, (int) $date->month);
-            if ($date->isSameDay($thirdSunday)) {
-                return;
-            }
+        if (array_any(
+            $dates,
+            fn (CarbonImmutable $d): bool => $d->isSameDay(ContestCalendar::thirdSundayOf((int) $d->year, (int) $d->month)),
+        )) {
+            return;
         }
 
         throw new TDateNotContestDayException($tdate);

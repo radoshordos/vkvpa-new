@@ -138,12 +138,9 @@ final class CategoryResolver
     {
         $p = strtoupper(trim($pcall));
 
-        foreach (VkvpaSettings::domesticPrefixes() as $prefix) {
-            if (str_starts_with($p, strtoupper($prefix))) {
-                return false;
-            }
-        }
-
-        return true;
+        return ! array_any(
+            VkvpaSettings::domesticPrefixes(),
+            static fn (string $prefix): bool => str_starts_with($p, strtoupper($prefix)),
+        );
     }
 }
