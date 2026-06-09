@@ -11,7 +11,7 @@ return [
     'nav_logs' => 'Logs – upload',
     'nav_edi_debug' => 'EDI score check',
     'nav_categories' => 'Category management',
-    'nav_imports' => 'Imports',
+    'nav_imports' => 'EDI bulk import',
     'nav_api_docs' => 'API documentation',
     'nav_pulse' => 'Pulse monitoring',
 

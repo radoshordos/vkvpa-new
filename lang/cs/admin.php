@@ -11,7 +11,7 @@ return [
     'nav_logs' => 'Deníky – upload',
     'nav_edi_debug' => 'EDI kontrola bodů',
     'nav_categories' => 'Správa kategorií',
-    'nav_imports' => 'Importy',
+    'nav_imports' => 'EDI hromadný import',
     'nav_api_docs' => 'API dokumentace',
     'nav_pulse' => 'Pulse monitoring',
 
