@@ -101,13 +101,9 @@
                                     <a href="{{ route('edi.soubor', ['head' => $r->EDI_ID]) }}" class="action-link" title="Zobrazit původní EDI soubor">EDI</a>
                                     <a href="{{ route('edi.soubor.redukovany', ['head' => $r->EDI_ID]) }}" class="action-link" title="Zobrazit redukovaný EDI (08–11 UTC)">EDIR</a>
                                 </div>
-                                {{-- Mapy M · N · S · C · V – jen admin --}}
+                                {{-- Vizualizace deníku (mapy + grafy) – jen admin --}}
                                 <div class="whitespace-nowrap opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100">
-                                    <a href="{{ route('edi.mapa.jezek', ['head' => $r->EDI_ID]) }}" class="action-link" title="Mapa – ježek (čáry do protistanic)">M</a>
-                                    <a href="{{ route('edi.mapa.spendliky', ['head' => $r->EDI_ID]) }}" class="action-link" title="Mapa – špendlíky (značka, km, azimut)">N</a>
-                                    <a href="{{ route('edi.mapa.lokatory', ['head' => $r->EDI_ID]) }}" class="action-link" title="Mapa – velké čtverce s počty protistanic">S</a>
-                                    <a href="{{ route('edi.mapa.crk', ['head' => $r->EDI_ID]) }}" class="action-link" title="Mapa – kombinovaná (paprsky, provoz, kružnice, mřížka, stanice z kola)">C</a>
-                                    <a href="{{ route('edi.vizualizace', ['head' => $r->EDI_ID]) }}" class="action-link" title="Vizualizace deníku (mapa + grafy)">V</a>
+                                    <x-vizualizace-odkaz :head="$r->EDI_ID" />
                                 </div>
                             @endif
                         </td>

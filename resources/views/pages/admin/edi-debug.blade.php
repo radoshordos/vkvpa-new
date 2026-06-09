@@ -80,10 +80,7 @@
             <div class="card p-3">
                 <span class="block text-xs uppercase tracking-wide text-muted">{{ __('admin.debug_card_maps') }}</span>
                 <div class="mt-1 flex flex-wrap gap-1">
-                    <a href="{{ route('edi.mapa.jezek', $edihead) }}" target="_blank" class="action-link">M</a>
-                    <a href="{{ route('edi.mapa.spendliky', $edihead) }}" target="_blank" class="action-link">N</a>
-                    <a href="{{ route('edi.mapa.lokatory', $edihead) }}" target="_blank" class="action-link">S</a>
-                    <a href="{{ route('edi.mapa.crk', $edihead) }}" target="_blank" class="action-link">C</a>
+                    <x-vizualizace-odkaz :head="$edihead" target="_blank" />
                 </div>
             </div>
         @endif

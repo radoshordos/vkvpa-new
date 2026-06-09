@@ -40,7 +40,7 @@ EDI files may arrive as Windows-1250; `EdiParser` converts via `iconv` before pr
 
 ### Database: Two Schemas
 
-**Legacy schema** (`edihead`, `edilines`): preserved verbatim from the original system. Columns use non-standard PHP identifiers (`Mode-code`, `Received-WWL`, `Sent QSO number`, etc.). Access these via `$line->{'Received-WWL'}` syntax. PHPStan's `property.notFound` is suppressed for files that use these columns (`ScoringService`, `MapController`). Both models carry `#[WithoutTimestamps]` since they have custom time columns (`stamp`, `d_cas`).
+**Legacy schema** (`edihead`, `edilines`): preserved verbatim from the original system. Columns use non-standard PHP identifiers (`Mode-code`, `Received-WWL`, `Sent QSO number`, etc.). Access these via `$line->{'Received-WWL'}` syntax. PHPStan's `property.notFound` is suppressed for files that use these columns (`ScoringService`, `QsoGeometry`). Both models carry `#[WithoutTimestamps]` since they have custom time columns (`stamp`, `d_cas`).
 
 **Application schema** (`vkvpa_*` tables): `VkvpaData` (contest entry/result row), `VkvpaKola` (contest round), `VkvpaKategorie` (category), `VkvpaPrihlaseni`, `Prispevek` (discussion).
 
@@ -59,10 +59,13 @@ EDI files may arrive as Windows-1250; `EdiParser` converts via `iconv` before pr
 
 ### Map Views
 
-Three Leaflet-based map views per Edihead (routes `/edi/{head}/mapa/*`):
+The map lives on the visualization page (`/edi/{head}/vizualizace`, `EdiVizualizaceController`) as four switchable Leaflet layers (no separate map routes — they were removed for UX simplicity):
+- `crk` (default) – combined view (rays + mode pins + distance circles + locator grid + all round stations)
 - `jezek` – lines from home station to all worked stations
 - `spendliky` – pins per QSO with distance/bearing popup
 - `lokatory` – big squares (4-char Maidenhead) with QSO counts
+
+The `crk` "all round stations" layer (`QsoGeometry::roundStations()`) is withheld until the round is closed/evaluated (`KoloStav`) to avoid leaking competitors' logs during reception. Each Leaflet map also has a fullscreen toggle (`resources/js/leaflet-fullscreen.js`).
 
 `Maidenhead` support class handles locator→lat/lon conversion, distance (haversine), and bearing.
 
