@@ -64,7 +64,7 @@ final readonly class ImportEdiAction
 
         $this->assertTDateMatchesQsos($h->tDate(), $log->qsos);
 
-        if (VkvpaData::query()->hasEdi()->where('znacka', $pcall)->where('id_kola', $idKola)->exists()) {
+        if (VkvpaData::query()->where('znacka', $pcall)->where('id_kola', $idKola)->exists()) {
             throw new DuplicateEdiException($pcall);
         }
 
@@ -80,7 +80,7 @@ final readonly class ImportEdiAction
             throw new UnknownSectionException($h->pSect());
         }
 
-        $head = $this->importer->import($log);
+        $head = $this->importer->import($log, $idKola);
         $score = $this->scoring->scoreEdi($head);
 
         $data = VkvpaData::create([

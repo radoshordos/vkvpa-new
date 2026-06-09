@@ -244,6 +244,21 @@ class HlaseniTest extends TestCase
         $this->assertSame(1, Edihead::count()); // druhý import se neuložil
     }
 
+    public function test_duplicate_manual_submission_is_rejected(): void
+    {
+        [$kolo, $kat] = $this->prepare();
+
+        $this->post('/hlaseni', $this->payload($kolo->id, $kat->id))
+            ->assertRedirect();
+
+        $this->assertSame(1, VkvpaData::count());
+
+        $this->post('/hlaseni', $this->payload($kolo->id, $kat->id))
+            ->assertSessionHasErrors('znacka');
+
+        $this->assertSame(1, VkvpaData::count());
+    }
+
     public function test_submission_to_inactive_round_is_blocked(): void
     {
         $kolo = VkvpaKola::create([

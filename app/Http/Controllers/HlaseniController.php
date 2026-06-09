@@ -58,7 +58,7 @@ class HlaseniController extends Controller
 
         $payload = [
             'id_kola' => $this->intFrom($v['kolo']),
-            'id_kategorie' => $this->intFrom($v['kategorie'] ?? 0),
+            'id_kategorie' => isset($v['kategorie']) ? (int) $v['kategorie'] : null,
             'znacka' => $v['znacka'],
             'locator' => $v['locator'],
             'pocet' => $this->intFrom($v['pocet'] ?? 0),
@@ -82,6 +82,12 @@ class HlaseniController extends Controller
         if ($idZaznamu > 0) {
             VkvpaData::findOrFail($idZaznamu)->update($payload);
         } else {
+            if (VkvpaData::query()->where('id_kola', $payload['id_kola'])->where('znacka', $payload['znacka'])->exists()) {
+                return back()
+                    ->withErrors(['znacka' => 'Pro toto kolo již existuje hlášení pro značku '.$payload['znacka'].'.'])
+                    ->withInput();
+            }
+
             VkvpaData::create($payload);
         }
 
