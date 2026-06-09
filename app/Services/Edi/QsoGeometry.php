@@ -29,7 +29,7 @@ final class QsoGeometry
      * Obohacená QSO v závodním okně (s platnými souřadnicemi).
      *
      * @param  array{lat: float, lon: float}|null  $home  souřadnice domácího QTH
-     * @param  string  $orderColumn  sloupec řazení (např. 'Time' nebo 'Received-WWL')
+     * @param  string  $orderColumn  sloupec řazení (např. 'Time' nebo 'received_wwl')
      * @return Collection<int, EnrichedQso>
      */
     public function enrichedQsos(Edihead $head, ?array $home, string $orderColumn = 'Time'): Collection
@@ -39,7 +39,7 @@ final class QsoGeometry
         return $head->lines()
             ->whereBetween('Time', [ContestWindow::from(), ContestWindow::to()])
             ->orderBy($orderColumn)
-            ->get(['lon', 'lat', 'CallSign', 'Received-WWL', 'Time', 'Mode-code'])
+            ->get(['lon', 'lat', 'CallSign', 'received_wwl', 'Time', 'mode_code'])
             ->map(function (Ediline $l) use ($home, $head, $homeSq): ?EnrichedQso {
                 $lat = $l->lat;
                 $lon = $l->lon;
@@ -99,7 +99,7 @@ final class QsoGeometry
     {
         $counts = [];
 
-        foreach ($head->lines()->whereBetween('Time', [ContestWindow::from(), ContestWindow::to()])->get(['Received-WWL']) as $l) {
+        foreach ($head->lines()->whereBetween('Time', [ContestWindow::from(), ContestWindow::to()])->get(['received_wwl']) as $l) {
             $sq = strtoupper(substr(trim($l->receivedWwl), 0, 4));
             if (preg_match('/^[A-R]{2}\d{2}$/', $sq) === 1) {
                 $counts[$sq] = ($counts[$sq] ?? 0) + 1;
@@ -162,7 +162,7 @@ final class QsoGeometry
                 ->whereIn('IDS', $headIds)
                 ->whereBetween('Time', [ContestWindow::from(), ContestWindow::to()])
                 ->orderBy('Time')
-                ->get(['CallSign', 'Received-WWL', 'lon', 'lat']) as $l
+                ->get(['CallSign', 'received_wwl', 'lon', 'lat']) as $l
         ) {
             $call = strtoupper(trim((string) $l->CallSign));
             if ($call === '') {

@@ -133,15 +133,15 @@ class QsoGeometryTest extends TestCase
 
         // OK5BIG: 3 QSO v deníku A + 2 v deníku B = 5 napříč kolem → projde (min 5).
         foreach (['0810', '0811', '0812'] as $t) {
-            Ediline::create(['IDS' => $headA->ID, 'Date' => '260315', 'Time' => $t, 'CallSign' => 'OK5BIG', 'Received-WWL' => 'JN99AA']);
+            Ediline::create(['IDS' => $headA->ID, 'Date' => '260315', 'Time' => $t, 'CallSign' => 'OK5BIG', 'received_wwl' => 'JN99AA']);
         }
         foreach (['0820', '0821'] as $t) {
-            Ediline::create(['IDS' => $headB->ID, 'Date' => '260315', 'Time' => $t, 'CallSign' => 'OK5BIG', 'Received-WWL' => 'JN99AA']);
+            Ediline::create(['IDS' => $headB->ID, 'Date' => '260315', 'Time' => $t, 'CallSign' => 'OK5BIG', 'received_wwl' => 'JN99AA']);
         }
         // OK9SML: jen 1 QSO → neprojde.
-        Ediline::create(['IDS' => $headA->ID, 'Date' => '260315', 'Time' => '0815', 'CallSign' => 'OK9SML', 'Received-WWL' => 'JO60AA']);
+        Ediline::create(['IDS' => $headA->ID, 'Date' => '260315', 'Time' => '0815', 'CallSign' => 'OK9SML', 'received_wwl' => 'JO60AA']);
         // Mimo závodní okno → nezapočítá se (OK5BIG by jinak měl 6).
-        Ediline::create(['IDS' => $headA->ID, 'Date' => '260315', 'Time' => '1200', 'CallSign' => 'OK5BIG', 'Received-WWL' => 'JN99AA']);
+        Ediline::create(['IDS' => $headA->ID, 'Date' => '260315', 'Time' => '1200', 'CallSign' => 'OK5BIG', 'received_wwl' => 'JN99AA']);
 
         return $headA;
     }

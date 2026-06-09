@@ -15,36 +15,39 @@ use Override;
 /**
  * Jednotlivé spojení (QSO) v deníku EDI.
  *
- * Pozn.: řada sloupců má v původní DB nestandardní názvy (mezery, pomlčky,
- * závorky – např. `Mode-code`, `Sent QSO number`, `New-WWL-(N)`). Ponechány
- * kvůli kompatibilitě; přistupuje se k nim přes typované accessor metody.
- *
  * @property int $ID
  * @property int $IDS
  * @property string $Date
  * @property string $Time
  * @property string $CallSign
- * @property string $sqr
+ * @property int|null $mode_code
+ * @property string|null $sent_rst
+ * @property int|null $sent_qso_number
+ * @property string|null $received_rst
+ * @property int|null $received_qso_number
+ * @property string|null $received_exchange
+ * @property string|null $received_wwl
+ * @property int|null $qso_points
+ * @property string|null $new_exchange_n
+ * @property string|null $new_wwl_n
+ * @property string|null $new_dxcc_n
+ * @property string|null $duplicate_qso_d
+ * @property int $sqr
  * @property float|null $lon
  * @property float|null $lat
  * @property-read Edihead|null $head
  */
 #[Fillable([
-    'IDS', 'Date', 'Time', 'CallSign', 'Mode-code', 'Sent-RST',
-    'Sent QSO number', 'Received-RST', 'Received QSO number',
-    'Received exchange', 'Received-WWL', 'QSO-Points',
-    'New-Exchange-(N)', 'New-WWL-(N)', 'New-DXCC-(N)',
-    'Duplicate-QSO-(D)', 'sqr', 'lon', 'lat',
+    'IDS', 'Date', 'Time', 'CallSign', 'mode_code', 'sent_rst',
+    'sent_qso_number', 'received_rst', 'received_qso_number',
+    'received_exchange', 'received_wwl', 'qso_points',
+    'new_exchange_n', 'new_wwl_n', 'new_dxcc_n',
+    'duplicate_qso_d', 'sqr', 'lon', 'lat',
 ])]
 #[Table(name: 'edilines', key: 'ID')]
 #[WithoutTimestamps]
 class Ediline extends Model
 {
-    // Legacy tabulka – property hooks přistupují přímo k $this->attributes['Column-name'],
-    // ale ostatní kód přistupuje k reálným sloupcům přes __get; opt-out zachovává
-    // kompatibilitu se starším přístupovým vzorem a tests s partial select.
-    protected static $modelsShouldPreventAccessingMissingAttributes = false;
-
     /**
      * Hlavička deníku, ke kterému spojení patří.
      *
@@ -57,17 +60,17 @@ class Ediline extends Model
 
     /** Přijatý lokátor protistanice (prázdný string pokud chybí). */
     public string $receivedWwl {
-        get => trim((string) ($this->{'Received-WWL'} ?? ''));
+        get => trim((string) ($this->{'received_wwl'} ?? ''));
     }
 
-    /** Body za spojení z deníku (EDI QSO-Points; ve skóre se ignoruje). */
+    /** Body za spojení z deníku (EDI qso_points; ve skóre se ignoruje). */
     public int $qsoPoints {
-        get => (int) ($this->{'QSO-Points'} ?? 0);
+        get => (int) ($this->{'qso_points'} ?? 0);
     }
 
     /** Kód druhu provozu z deníku: 1 = SSB, 2 = CW, 0/jiné = neznámý. */
     public int $modeCode {
-        get => (int) ($this->{'Mode-code'} ?? 0);
+        get => (int) ($this->{'mode_code'} ?? 0);
     }
 
     /** Druh provozu jako enum (neznámý/chybějící kód → QsoMode::Other). */
@@ -75,9 +78,9 @@ class Ediline extends Model
         get => QsoMode::fromCode($this->modeCode);
     }
 
-    /** Opravený lokátor (New-WWL-(N), prázdný string pokud chybí). */
+    /** Opravený lokátor (new_wwl_n, prázdný string pokud chybí). */
     public string $newWwl {
-        get => trim((string) ($this->{'New-WWL-(N)'} ?? ''));
+        get => trim((string) ($this->{'new_wwl_n'} ?? ''));
     }
 
     #[Override]
@@ -85,10 +88,10 @@ class Ediline extends Model
     {
         return [
             'IDS' => 'integer',
-            'Mode-code' => 'integer',
-            'Sent QSO number' => 'integer',
-            'Received QSO number' => 'integer',
-            'QSO-Points' => 'integer',
+            'mode_code' => 'integer',
+            'sent_qso_number' => 'integer',
+            'received_qso_number' => 'integer',
+            'qso_points' => 'integer',
             'sqr' => 'integer',
             'lon' => 'float',
             'lat' => 'float',

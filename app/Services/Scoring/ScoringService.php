@@ -113,7 +113,7 @@ final class ScoringService
         $squares = $head->lines()
             ->whereBetween('Time', [ContestWindow::from(), ContestWindow::to()])
             ->when($den !== '', fn ($q) => $q->where('Date', $den))
-            ->get(['Received-WWL'])
+            ->get(['received_wwl'])
             ->map(static fn ($l): string => strtoupper(substr(trim($l->receivedWwl), 0, 4)))
             ->filter(static fn (string $sq): bool => $sq !== '')
             ->values();
