@@ -136,12 +136,12 @@
         margin-bottom: 0.6rem;
         text-wrap: pretty;
     }
-    .content a:not(.btn):not(.icon-btn):not(.nav-link):not(.action-link) {
+    .content a:not(.btn):not(.icon-btn):not(.nav-link):not(.action-link):not(.card) {
         color: var(--link);
         text-decoration: underline;
         text-underline-offset: 2px;
     }
-    .content a:not(.btn):not(.icon-btn):not(.nav-link):not(.action-link):hover {
+    .content a:not(.btn):not(.icon-btn):not(.nav-link):not(.action-link):not(.card):hover {
         color: var(--brand);
     }
 }
