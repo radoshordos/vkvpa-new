@@ -123,21 +123,19 @@
                                     </div>
                                 @endif
                                 @if ($r->EDI && $r->EDI_ID)
-                                    {{-- EDI · EDIR: admin vždy, ostatní přihlášení jen mimo upload window --}}
-                                    <div class="mb-1 flex items-center gap-1 opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100">
+                                    {{-- EDI · EDIR · vizualizace: admin vždy, ostatní přihlášení jen mimo upload window --}}
+                                    <div class="flex items-center gap-1">
                                         @if ($isAdmin || ! $uploadWindowOpen)
                                             <x-edi-odkaz :head="$r->EDI_ID" />
                                             <x-edi-odkaz :head="$r->EDI_ID" reduced />
                                         @else
                                             <span class="action-link cursor-not-allowed opacity-50" title="{{ __('app.edi_restricted_body') }}">{{ __('app.edi_restricted_label') }}</span>
                                         @endif
-                                    </div>
-                                    @if ($isAdmin)
-                                        {{-- Vizualizace deníku (mapy + grafy) – jen admin --}}
-                                        <div class="flex items-center gap-1 opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100">
+                                        @if ($isAdmin)
+                                            {{-- Vizualizace deníku (mapy + grafy) – jen admin --}}
                                             <x-vizualizace-odkaz :head="$r->EDI_ID" />
-                                        </div>
-                                    @endif
+                                        @endif
+                                    </div>
                                 @endif
                             </td>
                         @endif

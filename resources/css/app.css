@@ -445,13 +445,13 @@
     /* Obrysová varianta pro ikonové odkazy (EDI / EDIR / vizualizace) –
        stejná velikost a tvar jako barevná tlačítka P/U/X. */
     .icon-btn-ghost {
-        background-color: var(--surface);
+        background-color: var(--brand-soft);
         border: 1px solid var(--line);
         color: var(--brand);
     }
     .icon-btn-ghost:hover {
-        background-color: var(--brand-soft);
-        color: var(--brand);
+        background-color: var(--brand);
+        color: var(--brand-fg);
         filter: none;
     }
 
