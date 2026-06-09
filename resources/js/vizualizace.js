@@ -175,9 +175,7 @@ function redrawCrkGrid() {
     }
 }
 
-// Výchozí vrstva: ježek
-jezekLayer.addTo(map);
-
+// Výřez nastavíme dřív, než zapneme vrstvu – mřížka CRK čte map.getBounds().
 if (bounds.length > 0) {
     map.fitBounds(bounds, { padding: [24, 24] });
 } else {
@@ -186,19 +184,23 @@ if (bounds.length > 0) {
 
 // Přepínání vrstev přes tlačítka
 const layers = { jezek: jezekLayer, spendliky: spendlikyLayer, lokatory: lokatoryLayer, crk: crkLayer };
+
+function showLayer(key) {
+    Object.values(layers).forEach((l) => map.removeLayer(l));
+    if (homeMarker) map.removeLayer(homeMarker);
+    map.off('moveend', redrawCrkGrid);
+    layers[key].addTo(map);
+    if (key === 'crk') { redrawCrkGrid(); map.on('moveend', redrawCrkGrid); }
+    if (homeMarker) homeMarker.addTo(map);
+    document.querySelectorAll('[data-map-layer]').forEach((b) => b.classList.toggle('active', b.dataset.mapLayer === key));
+}
+
 document.querySelectorAll('[data-map-layer]').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-        const key = btn.dataset.mapLayer;
-        Object.values(layers).forEach((l) => map.removeLayer(l));
-        if (homeMarker) map.removeLayer(homeMarker);
-        map.off('moveend', redrawCrkGrid);
-        layers[key].addTo(map);
-        if (key === 'crk') { redrawCrkGrid(); map.on('moveend', redrawCrkGrid); }
-        if (homeMarker) homeMarker.addTo(map);
-        document.querySelectorAll('[data-map-layer]').forEach((b) => b.classList.remove('active'));
-        btn.classList.add('active');
-    });
+    btn.addEventListener('click', () => showLayer(btn.dataset.mapLayer));
 });
+
+// Výchozí vrstva: CRK (kombinovaná mapa).
+showLayer('crk');
 
 // ── Chart.js: Časová osa QSO (bar) ────────────────────────────────────────
 
