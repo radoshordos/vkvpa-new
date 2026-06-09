@@ -62,12 +62,14 @@
     {{-- ── Horní lišta ──────────────────────────────────────────────── --}}
     <header class="sticky top-0 z-30 border-b border-line bg-surface/95 backdrop-blur">
       <div class="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4">
-        {{-- Hamburger (mobil) --}}
-        <button type="button" data-drawer-open
-                class="-ml-1 inline-flex h-9 w-9 items-center justify-center rounded-lg text-ink hover:bg-surface-2 lg:hidden"
-                aria-label="{{ __('app.open_menu') }}">
-          <x-icon name="menu" class="h-5 w-5" />
-        </button>
+        {{-- Hamburger (mobil) – jen pro přihlášené, nepřihlášení menu nemají --}}
+        @auth
+          <button type="button" data-drawer-open
+                  class="-ml-1 inline-flex h-9 w-9 items-center justify-center rounded-lg text-ink hover:bg-surface-2 lg:hidden"
+                  aria-label="{{ __('app.open_menu') }}">
+            <x-icon name="menu" class="h-5 w-5" />
+          </button>
+        @endauth
 
         <a href="{{ url('/') }}" class="flex items-center gap-2 font-semibold tracking-tight text-heading">
           <span class="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-brand text-xs font-bold text-brand-fg">PA</span>
@@ -106,10 +108,12 @@
     </header>
 
     <div class="mx-auto flex max-w-6xl gap-6 px-4 py-6">
-      {{-- ── Postranní navigace (desktop) ──────────────────────────── --}}
-      <aside class="hidden w-52 shrink-0 lg:block">
-        @include('partials.menu')
-      </aside>
+      {{-- ── Postranní navigace (desktop) – jen pro přihlášené ─────── --}}
+      @auth
+        <aside class="hidden w-52 shrink-0 lg:block">
+          @include('partials.menu')
+        </aside>
+      @endauth
 
       {{-- ── Obsah ─────────────────────────────────────────────────── --}}
       <main class="content min-w-0 flex-1">
@@ -120,19 +124,21 @@
 
     @include('partials.footer')
 
-    {{-- ── Mobilní off-canvas menu ───────────────────────────────────── --}}
-    <div data-drawer-backdrop class="fixed inset-0 z-40 hidden bg-black/40 lg:hidden" data-drawer-close></div>
-    <aside data-drawer
-           class="fixed inset-y-0 left-0 z-50 w-64 -translate-x-full overflow-y-auto border-r border-line bg-surface p-4 transition-transform duration-200 lg:hidden">
-      <div class="mb-3 flex items-center justify-between">
-        <span class="font-semibold text-heading">Menu</span>
-        <button type="button" data-drawer-close
-                class="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-surface-2" aria-label="{{ __('app.close_menu') }}">
-          <x-icon name="close" class="h-5 w-5" />
-        </button>
-      </div>
-      @include('partials.menu')
-    </aside>
+    {{-- ── Mobilní off-canvas menu – jen pro přihlášené ──────────────── --}}
+    @auth
+      <div data-drawer-backdrop class="fixed inset-0 z-40 hidden bg-black/40 lg:hidden" data-drawer-close></div>
+      <aside data-drawer
+             class="fixed inset-y-0 left-0 z-50 w-64 -translate-x-full overflow-y-auto border-r border-line bg-surface p-4 transition-transform duration-200 lg:hidden">
+        <div class="mb-3 flex items-center justify-between">
+          <span class="font-semibold text-heading">Menu</span>
+          <button type="button" data-drawer-close
+                  class="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-surface-2" aria-label="{{ __('app.close_menu') }}">
+            <x-icon name="close" class="h-5 w-5" />
+          </button>
+        </div>
+        @include('partials.menu')
+      </aside>
+    @endauth
 
     @stack('scripts')
 
