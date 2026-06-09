@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Edihead;
+use App\Models\VkvpaKola;
 use App\Services\Edi\EnrichedQso;
 use App\Services\Edi\QsoGeometry;
 use App\Support\Maidenhead;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
@@ -20,8 +22,17 @@ class EdiVizualizaceController extends Controller
 {
     public function __construct(private readonly QsoGeometry $geometry) {}
 
-    public function show(Edihead $head): View
+    public function show(Edihead $head): View|RedirectResponse
     {
+        if (! auth()->user()?->is_admin) {
+            if (VkvpaKola::existujeAktivni()) {
+                abort(403);
+            }
+            if (! auth()->check()) {
+                return redirect()->route('login');
+            }
+        }
+
         $home = Maidenhead::toLatLon((string) $head->p_wwlo);
 
         $enriched = $this->geometry->enrichedQsos($head, $home, 'time');

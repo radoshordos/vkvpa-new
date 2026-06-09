@@ -13,7 +13,7 @@ return new class extends Migration
             $table->collation = 'utf8mb4_unicode_ci';
 
             $table->integer('id', true);
-            $table->integer('id_kola')->nullable()->default(0);
+            $table->integer('id_kola')->nullable();
             $table->string('t_date', 17);
             $table->string('p_call', 30);
             $table->string('p_wwlo', 6);

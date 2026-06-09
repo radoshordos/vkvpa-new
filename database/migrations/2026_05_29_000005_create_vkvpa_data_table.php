@@ -16,7 +16,7 @@ return new class extends Migration
             // NULL nikdy neukládá, prázdný řetězec/0/false vyjadřuje „nevyplněno".
             $table->integer('id', true);
             $table->integer('id_kola');
-            $table->integer('id_kategorie');
+            $table->integer('id_kategorie')->nullable();
             $table->boolean('qrp')->default(false);
             $table->boolean('lp')->default(false);
             $table->string('znacka', 10);
@@ -39,10 +39,10 @@ return new class extends Migration
             $table->string('session_id', 255)->default('');
             $table->timestamp('timestamp')->nullable()->useCurrent();
 
+            $table->unique(['id_kola', 'znacka'], 'vkvpa_data_kola_znacka_unique');
             $table->index(['id_kola', 'znacka', 'schvaleno'], 'data1');
             $table->index('id_kategorie', 'vkvpa_data_id_kategorie_idx');
             $table->index(['id_kola', 'schvaleno'], 'vkvpa_data_kola_schvaleno_idx');
-            $table->index(['znacka', 'id_kola'], 'vkvpa_data_znacka_kola_idx');
         });
     }
 

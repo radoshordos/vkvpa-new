@@ -71,8 +71,8 @@ class StoreHlaseniRequest extends FormRequest
             'body' => ['nullable', 'integer', 'min:0'],
             'jmeno' => ['nullable', 'string', 'max:60'],
             'telefon' => ['nullable', 'string', 'max:20'],
-            'poznamka' => ['nullable', 'string'],
-            'soapbox' => ['nullable', 'string'],
+            'poznamka' => ['nullable', 'string', 'max:250'],
+            'soapbox' => ['nullable', 'string', 'max:250'],
             'qrp' => ['nullable', 'boolean'],
             'lp' => ['nullable', 'boolean'],
         ];

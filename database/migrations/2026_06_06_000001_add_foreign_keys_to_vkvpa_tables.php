@@ -38,6 +38,18 @@ return new class extends Migration
                 ->references('id')->on('vkvpa_kola')
                 ->cascadeOnDelete();
         });
+
+        Schema::table('edihead', function (Blueprint $table): void {
+            $table->foreign('id_kola', 'edihead_id_kola_fk')
+                ->references('id')->on('vkvpa_kola')
+                ->cascadeOnDelete();
+        });
+
+        Schema::table('vkvpa_prihlaseni', function (Blueprint $table): void {
+            $table->foreign('user_id', 'vkvpa_prihlaseni_user_id_fk')
+                ->references('id')->on('users')
+                ->cascadeOnDelete();
+        });
     }
 
     public function down(): void
@@ -54,6 +66,14 @@ return new class extends Migration
         Schema::table('diskuse', function (Blueprint $table): void {
             $table->dropForeign('diskuse_kolo_id_fk');
             $table->unsignedInteger('kolo_id')->change();
+        });
+
+        Schema::table('edihead', function (Blueprint $table): void {
+            $table->dropForeign('edihead_id_kola_fk');
+        });
+
+        Schema::table('vkvpa_prihlaseni', function (Blueprint $table): void {
+            $table->dropForeign('vkvpa_prihlaseni_user_id_fk');
         });
     }
 };

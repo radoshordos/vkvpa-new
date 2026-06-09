@@ -18,7 +18,7 @@ class DenikyController extends Controller
             ->orderByDesc('stamp')
             ->paginate(50);
 
-        $kola = VkvpaKola::query()->pluck('nazev', 'id');
+        $kola = VkvpaKola::query()->orderByDesc('datum_konani')->limit(200)->pluck('nazev', 'id');
 
         return view('pages.admin.deniky', [
             'active' => 'deniky.index',

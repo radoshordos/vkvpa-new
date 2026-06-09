@@ -108,7 +108,8 @@ class VysledkyController extends Controller
 
     public function rocni(Request $request): View
     {
-        $rok = $request->integer('rok', (int) date('Y'));
+        $currentYear = (int) date('Y');
+        $rok = max(2000, min($currentYear, $request->integer('rok', $currentYear)));
         $qrp = $request->boolean('qrp');
         $lp = $request->boolean('lp');
 

@@ -13,12 +13,13 @@ use Illuminate\Support\Facades\DB;
  */
 final class EdiImportService
 {
-    public function import(EdiLog $log): Edihead
+    public function import(EdiLog $log, ?int $idKola = null): Edihead
     {
-        return DB::transaction(function () use ($log): Edihead {
+        return DB::transaction(function () use ($log, $idKola): Edihead {
             $h = $log->header;
 
             $head = Edihead::create([
+                'id_kola' => $idKola,
                 't_date' => $h->tDate(),
                 'p_call' => $h->pCall(),
                 'p_wwlo' => $h->pWWLo(),

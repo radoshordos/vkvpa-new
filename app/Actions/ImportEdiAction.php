@@ -19,7 +19,9 @@ use App\Services\Edi\EdiQso;
 use App\Services\Scoring\ScoringService;
 use App\Support\ContestCalendar;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\Context;
+use Illuminate\Support\Facades\DB;
 use Throwable;
 
 /**
@@ -64,7 +66,7 @@ final readonly class ImportEdiAction
 
         $this->assertTDateMatchesQsos($h->tDate(), $log->qsos);
 
-        if (VkvpaData::query()->hasEdi()->where('znacka', $pcall)->where('id_kola', $idKola)->exists()) {
+        if (VkvpaData::query()->where('znacka', $pcall)->where('id_kola', $idKola)->exists()) {
             throw new DuplicateEdiException($pcall);
         }
 
@@ -80,28 +82,34 @@ final readonly class ImportEdiAction
             throw new UnknownSectionException($h->pSect());
         }
 
-        $head = $this->importer->import($log);
-        $score = $this->scoring->scoreEdi($head);
+        try {
+            $data = DB::transaction(function () use ($log, $h, $pcall, $idKola, $idKategorie): VkvpaData {
+                $head = $this->importer->import($log, $idKola);
+                $score = $this->scoring->scoreEdi($head);
 
-        $data = VkvpaData::create([
-            'id_kola' => $idKola,
-            'id_kategorie' => $idKategorie,
-            'znacka' => $pcall,
-            'locator' => $h->pWWLo(),
-            'jmeno' => $h->rName(),
-            'mail' => $h->rEmail(),
-            'telefon' => $h->rPhon(),
-            'soapbox' => $h->get('RSoap'),
-            'pocet' => $score->pocet,
-            'nasobice' => $score->nasobice,
-            'bodu_za_qso' => $score->boduZaQso,
-            'body' => $score->body,
-            'qrp' => $h->isQrp(),
-            'lp' => $h->isLp(),
-            'EDI' => true,
-            'EDI_ID' => $head->id,
-            'schvaleno' => false,
-        ]);
+                return VkvpaData::create([
+                    'id_kola' => $idKola,
+                    'id_kategorie' => $idKategorie,
+                    'znacka' => $pcall,
+                    'locator' => $h->pWWLo(),
+                    'jmeno' => $h->rName(),
+                    'mail' => $h->rEmail(),
+                    'telefon' => $h->rPhon(),
+                    'soapbox' => $h->get('RSoap'),
+                    'pocet' => $score->pocet,
+                    'nasobice' => $score->nasobice,
+                    'bodu_za_qso' => $score->boduZaQso,
+                    'body' => $score->body,
+                    'qrp' => $h->isQrp(),
+                    'lp' => $h->isLp(),
+                    'EDI' => true,
+                    'EDI_ID' => $head->id,
+                    'schvaleno' => false,
+                ]);
+            });
+        } catch (UniqueConstraintViolationException) {
+            throw new DuplicateEdiException($pcall);
+        }
 
         if ($notify) {
             // defer() odešle event až po odeslání HTTP odpovědi – queue dispatch
