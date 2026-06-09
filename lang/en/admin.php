@@ -9,7 +9,7 @@ return [
     'nav_rounds' => 'Contest rounds',
     'nav_reports' => 'Reports',
     'nav_logs' => 'Logs – upload',
-    'nav_edi_debug' => 'EDI debug / score check',
+    'nav_edi_debug' => 'EDI score check',
     'nav_categories' => 'Category management',
     'nav_imports' => 'Imports',
     'nav_api_docs' => 'API documentation',
