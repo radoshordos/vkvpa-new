@@ -69,12 +69,14 @@ return [
     'deniky_col_round' => 'Kolo',
     'deniky_col_qso' => 'QSO',
     'deniky_col_upload' => 'Nahráno',
+    'deniky_link_debug' => 'Kontrola bodů',
 
     // EDI debug
     'debug_title' => 'EDI debug – VKV PA',
     'debug_heading' => 'EDI debug – kontrola bodování',
     'debug_desc' => 'Nahraj EDI deník a zkontroluj řádek po řádku, jak vzniká skóre – které QSO se započítává, které spadá mimo závodní okno či den a které přináší nový násobič. Slouží jen pro náhled, do databáze se nic neukládá.',
     'debug_err_title' => 'Soubor se nepodařilo zpracovat.',
+    'debug_no_src' => 'Deník #:id nemá v databázi uložený zdrojový EDI soubor.',
     'debug_file_label' => 'EDI soubor',
     'debug_file_hint' => 'Max 500 kB. Analyzuje se lokálně, nic se neukládá.',
     'debug_btn' => 'Analyzovat deník',

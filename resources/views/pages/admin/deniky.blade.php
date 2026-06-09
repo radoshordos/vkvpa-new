@@ -22,6 +22,7 @@
                     <th>{{ __('admin.deniky_col_round') }}</th>
                     <th class="num">{{ __('admin.deniky_col_qso') }}</th>
                     <th class="hidden @[520px]:table-cell">{{ __('admin.deniky_col_upload') }}</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
@@ -40,6 +41,9 @@
                         <td class="text-sm">{{ $kola->get($d->id_kola, '—') }}</td>
                         <td class="num">{{ $d->lines_count }}</td>
                         <td class="hidden whitespace-nowrap text-sm text-muted @[520px]:table-cell">{{ $d->stamp?->format('j. n. Y H:i') ?? '—' }}</td>
+                        <td class="whitespace-nowrap text-sm">
+                            <a href="{{ route('edi.debug.show', $d) }}" class="link">{{ __('admin.deniky_link_debug') }}</a>
+                        </td>
                     </tr>
                 @endforeach
             </tbody>

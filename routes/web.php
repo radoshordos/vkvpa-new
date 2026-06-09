@@ -100,6 +100,7 @@ Route::middleware('admin')->group(function (): void {
     // EDI debug – nahrání deníku a rozpad bodování řádek po řádku (jen náhled).
     Route::get('/admin/edi-debug', [EdiDebugController::class, 'create'])->name('edi.debug.create');
     Route::post('/admin/edi-debug', [EdiDebugController::class, 'analyze'])->name('edi.debug.store');
+    Route::get('/admin/edi-debug/{head}', [EdiDebugController::class, 'show'])->name('edi.debug.show')->whereNumber('head');
 
     Route::get('/admin/deniky', [DenikyController::class, 'index'])->name('deniky.index');
     Route::get('/admin/kategorie', [KategorieController::class, 'index'])->name('kategorie.index');

@@ -69,12 +69,14 @@ return [
     'deniky_col_round' => 'Round',
     'deniky_col_qso' => 'QSO',
     'deniky_col_upload' => 'Uploaded',
+    'deniky_link_debug' => 'Score check',
 
     // EDI debug
     'debug_title' => 'EDI debug – VKV PA',
     'debug_heading' => 'EDI debug – score breakdown',
     'debug_desc' => 'Upload an EDI log and check line by line how the score is built — which QSO is counted, which falls outside the contest window or day, and which brings a new multiplier. Preview only — nothing is saved to the database.',
     'debug_err_title' => 'The file could not be processed.',
+    'debug_no_src' => 'Log #:id has no source EDI file stored in the database.',
     'debug_file_label' => 'EDI file',
     'debug_file_hint' => 'Max 500 kB. Analysed locally, nothing is saved.',
     'debug_btn' => 'Analyse log',

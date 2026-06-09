@@ -37,6 +37,34 @@ class EdiDebugController extends Controller
         ]);
     }
 
+    /** Rozpad bodování deníku uloženého v databázi (sloupec `src`). */
+    public function show(Edihead $head): View|RedirectResponse
+    {
+        $src = (string) $head->src;
+
+        if ($src === '') {
+            return redirect()
+                ->route('edi.debug.create')
+                ->withErrors(['upload' => __('admin.debug_no_src', ['id' => $head->id])]);
+        }
+
+        try {
+            $log = $this->parser->parse($src);
+        } catch (EdiParseException $ediParseException) {
+            return redirect()
+                ->route('edi.debug.create')
+                ->withErrors(['upload' => $ediParseException->getMessage()])
+                ->with('lineErrors', $ediParseException->lineErrors);
+        }
+
+        return view('pages.admin.edi-debug', [
+            'active' => 'edit_edi_debug',
+            'report' => $this->debugger->analyze($log),
+            'filename' => $head->p_call,
+            'edihead' => $head,
+        ]);
+    }
+
     /** Naparsuje nahraný EDI deník a vykreslí debug rozpad bodování. */
     public function analyze(EdiDebugUploadRequest $request): View|RedirectResponse
     {
