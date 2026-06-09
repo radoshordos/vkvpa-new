@@ -90,7 +90,8 @@ class ImportController extends Controller
             $pcall = $log->header->pCall();
 
             try {
-                $data = app(ImportEdiAction::class)->execute($log, notify: false);
+                // Admin backfill smí importovat i mimo upload okno (stará kola).
+                $data = app(ImportEdiAction::class)->execute($log, notify: false, enforceUploadWindow: false);
             } catch (DuplicateEdiException) {
                 $items[] = ['file' => $name, 'status' => 'skip', 'znacka' => $pcall, 'reason' => 'Deník pro toto kolo již existuje.'];
 

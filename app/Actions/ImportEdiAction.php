@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions;
 
+use App\Enums\KoloStav;
 use App\Events\EdiImported;
 use App\Exceptions\DuplicateEdiException;
 use App\Exceptions\RoundNotFoundException;
@@ -11,7 +12,9 @@ use App\Exceptions\TDateMismatchException;
 use App\Exceptions\TDateNotContestDayException;
 use App\Exceptions\UnknownBandException;
 use App\Exceptions\UnknownSectionException;
+use App\Exceptions\UploadWindowClosedException;
 use App\Models\VkvpaData;
+use App\Models\VkvpaKola;
 use App\Services\Edi\CategoryResolver;
 use App\Services\Edi\EdiImportService;
 use App\Services\Edi\EdiLog;
@@ -47,8 +50,11 @@ final readonly class ImportEdiAction
     /**
      * @param  bool  $notify  rozeslat potvrzovací e-maily (jednotlivé nahrání ano,
      *                        hromadný admin import ne)
+     * @param  bool  $enforceUploadWindow  vyžadovat otevřené upload okno kola
+     *                                     (veřejné nahrání ano, hromadný admin
+     *                                     backfill starých kol ne)
      */
-    public function execute(EdiLog $log, bool $notify = true): VkvpaData
+    public function execute(EdiLog $log, bool $notify = true, bool $enforceUploadWindow = true): VkvpaData
     {
         $h = $log->header;
         $pcall = $h->pCall();
@@ -62,6 +68,10 @@ final readonly class ImportEdiAction
 
         if ($idKola === 0) {
             throw new RoundNotFoundException($h->tDate());
+        }
+
+        if ($enforceUploadWindow) {
+            $this->assertUploadWindowOpen($idKola);
         }
 
         $this->assertTDateMatchesQsos($h->tDate(), $log->qsos);
@@ -118,6 +128,26 @@ final readonly class ImportEdiAction
         }
 
         return $data;
+    }
+
+    /**
+     * Ověří, že kolo právě přijímá hlášení – „upload okno" trvá od dne závodu
+     * (stav Aktivní) do uzávěrky (stav Příjem hlášení). Mimo okno (nadcházející,
+     * uzavřené či vyhodnocené kolo) se deník odmítne.
+     *
+     * @throws UploadWindowClosedException
+     */
+    private function assertUploadWindowOpen(int $idKola): void
+    {
+        $kolo = VkvpaKola::query()->find($idKola);
+
+        if ($kolo === null) {
+            return; // neexistenci kola hlásí RoundNotFoundException dříve
+        }
+
+        if (! in_array($kolo->stav(), [KoloStav::Aktivni, KoloStav::Prijem], true)) {
+            throw new UploadWindowClosedException($kolo->nazev);
+        }
     }
 
     /**

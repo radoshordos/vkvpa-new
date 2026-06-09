@@ -69,6 +69,35 @@ class EdiPipelineIntegrationTest extends TestCase
         $this->assertSame(1, VkvpaData::count(), 'Musí vzniknout 1 rezervovaný řádek');
     }
 
+    // ------------------------------------------------------------------
+    // Upload okno – deník lze odeslat jen u kola ve stavu Aktivní/Příjem
+
+    public function test_upload_rejected_when_round_is_closed(): void
+    {
+        // Uzávěrka v minulosti, kolo neaktivní → stav Uzavřené, okno zavřené.
+        $this->koloProBrezen2026()->update(['aktivni' => false]);
+
+        $this->upload()->assertSessionHasErrors('upload');
+        $this->assertSame(0, VkvpaData::count(), 'Mimo upload okno nesmí vzniknout záznam');
+    }
+
+    public function test_upload_rejected_when_round_is_evaluated(): void
+    {
+        $this->koloProBrezen2026()->update(['aktivni' => false, 'vyhodnoceno' => now()]);
+
+        $this->upload()->assertSessionHasErrors('upload');
+        $this->assertSame(0, VkvpaData::count(), 'Do vyhodnoceného kola nesmí vzniknout záznam');
+    }
+
+    public function test_upload_allowed_when_round_in_prijem_state(): void
+    {
+        // Den závodu proběhl, kolo neaktivní, uzávěrka v budoucnu → stav Příjem.
+        $this->koloProBrezen2026()->update(['aktivni' => false, 'datum_uzaverky' => now()->addDay()]);
+
+        $this->upload()->assertSessionDoesntHaveErrors('upload');
+        $this->assertSame(1, VkvpaData::count(), 'Ve stavu Příjem se deník přijme');
+    }
+
     public function test_upload_sets_correct_scoring_values_in_vkvpa_data(): void
     {
         $this->koloProBrezen2026();
