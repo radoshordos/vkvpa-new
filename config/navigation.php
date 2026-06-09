@@ -28,13 +28,14 @@ return [
     ],
 
     'admin' => [
-        ['key' => 'admin.dashboard',  'trans' => 'admin.nav_dashboard'],
-        ['key' => 'kola.admin.index',  'trans' => 'admin.nav_rounds'],
+        // Abecedně podle českých názvů
         ['key' => 'deniky.index',     'trans' => 'admin.nav_logs'],
-        ['key' => 'edi.debug.create', 'trans' => 'admin.nav_edi_debug'],
-        ['key' => 'kategorie.index',  'trans' => 'admin.nav_categories'],
         ['key' => 'importy.index',    'trans' => 'admin.nav_imports'],
+        ['key' => 'edi.debug.create', 'trans' => 'admin.nav_edi_debug'],
+        ['key' => 'kola.admin.index', 'trans' => 'admin.nav_rounds'],
         ['url' => '/pulse',           'trans' => 'admin.nav_pulse', 'target' => '_blank'],
+        ['key' => 'kategorie.index',  'trans' => 'admin.nav_categories'],
+        ['key' => 'admin.dashboard',  'trans' => 'admin.nav_dashboard'],
     ],
 
 ];
