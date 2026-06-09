@@ -439,44 +439,65 @@
         color: #fff;
     }
 
-    /* ── Záložky (segmented control) ─────────────────────────────── */
-    .tab-nav {
+    /* ── Upload zóna (EDI import) ────────────────────────────────── */
+    .upload-zone {
         display: flex;
-        gap: 0.3rem;
-        padding: 0.3rem;
-        background-color: var(--surface);
-        border: 1px solid var(--line);
-        border-radius: 0.85rem;
-        margin-bottom: 1.25rem;
-    }
-    .tab-btn {
-        flex: 1;
-        display: inline-flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 0.45rem;
-        padding: 0.55rem 1rem;
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: var(--muted);
-        text-decoration: none;
-        border-radius: 0.6rem;
-        transition: color 0.15s, background-color 0.15s, box-shadow 0.15s;
-        white-space: nowrap;
-    }
-    .tab-btn:hover:not(.active) {
-        color: var(--ink);
+        gap: 0.35rem;
+        padding: 1.75rem 1.25rem;
+        border: 1.5px dashed var(--line);
+        border-radius: 0.65rem;
         background-color: var(--surface-2);
+        cursor: pointer;
+        text-align: center;
+        transition: border-color 0.15s, background-color 0.15s, box-shadow 0.15s;
+        user-select: none;
     }
-    .tab-btn.active {
-        color: var(--brand-fg);
-        background-color: var(--brand);
-        box-shadow: 0 1px 3px rgb(0 0 0 / 0.15);
+    .upload-zone:hover {
+        border-color: var(--brand);
+        background-color: var(--brand-softer);
     }
-    .tab-btn svg {
-        width: 1rem;
-        height: 1rem;
+    .upload-zone:has(input:focus-visible) {
+        border-color: var(--brand);
+        box-shadow: 0 0 0 3px color-mix(in oklab, var(--brand) 22%, transparent);
+        outline: none;
+    }
+    .upload-zone.has-file {
+        border-color: var(--brand);
+        background-color: var(--brand-softer);
+        border-style: solid;
+    }
+    .upload-zone-icon {
+        width: 2rem;
+        height: 2rem;
+        color: var(--muted);
+        transition: color 0.15s;
         flex-shrink: 0;
+    }
+    .upload-zone:hover .upload-zone-icon,
+    .upload-zone.has-file .upload-zone-icon {
+        color: var(--brand);
+    }
+    .upload-zone-name {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--muted);
+        transition: color 0.15s;
+        word-break: break-all;
+    }
+    .upload-zone.has-file .upload-zone-name {
+        color: var(--ink);
+        font-weight: 600;
+    }
+    .upload-zone-hint {
+        font-size: 0.72rem;
+        color: var(--muted);
+        line-height: 1.4;
+    }
+    .upload-zone.has-file .upload-zone-hint {
+        display: none;
     }
 
     /* Odkaz s animovanou šipkou → */
