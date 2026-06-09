@@ -98,8 +98,8 @@
                             @if ($r->EDI && $r->EDI_ID)
                                 {{-- EDI · EDIR – admin má vždy přístup --}}
                                 <div class="whitespace-nowrap opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100">
-                                    <a href="{{ route('edi.soubor', ['head' => $r->EDI_ID]) }}" class="action-link" title="Zobrazit původní EDI soubor">EDI</a>
-                                    <a href="{{ route('edi.soubor.redukovany', ['head' => $r->EDI_ID]) }}" class="action-link" title="Zobrazit redukovaný EDI (08–11 UTC)">EDIR</a>
+                                    <x-edi-odkaz :head="$r->EDI_ID" />
+                                    <x-edi-odkaz :head="$r->EDI_ID" reduced />
                                 </div>
                                 {{-- Vizualizace deníku (mapy + grafy) – jen admin --}}
                                 <div class="whitespace-nowrap opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100">
