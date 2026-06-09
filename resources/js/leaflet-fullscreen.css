@@ -1,5 +1,7 @@
 /* Tlačítko přepnutí na celou obrazovku (sdílené mapou i vizualizací). */
-.leaflet-control-fullscreen-btn {
+/* `.leaflet-bar a` z Leafletu má vyšší specificitu a display: block –
+   selektor musí být silnější, jinak se ikonka nevycentruje. */
+.leaflet-bar a.leaflet-control-fullscreen-btn {
     display: flex;
     align-items: center;
     justify-content: center;
