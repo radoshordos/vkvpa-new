@@ -29,6 +29,10 @@ class User extends Authenticatable
 {
     use Notifiable;
 
+    // Authenticatable trait accesses remember_token via __get; opt-out prevents
+    // MissingAttributeException during logout when the column isn't selected.
+    protected static $modelsShouldPreventAccessingMissingAttributes = false;
+
     #[Override]
     protected function casts(): array
     {

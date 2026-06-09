@@ -114,7 +114,7 @@ final class ScoringService
             ->whereBetween('Time', [ContestWindow::from(), ContestWindow::to()])
             ->when($den !== '', fn ($q) => $q->where('Date', $den))
             ->get(['Received-WWL'])
-            ->map(static fn ($l): string => strtoupper(substr(trim($l->receivedWwl()), 0, 4)))
+            ->map(static fn ($l): string => strtoupper(substr(trim($l->receivedWwl), 0, 4)))
             ->filter(static fn (string $sq): bool => $sq !== '')
             ->values();
 

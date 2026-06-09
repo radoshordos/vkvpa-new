@@ -41,6 +41,10 @@ use Override;
 #[WithoutTimestamps]
 class Edihead extends Model
 {
+    // Legacy tabulka s nestandardními názvy sloupců – preventAccessingMissingAttributes
+    // by přístupy jako $head->{'PCall'} i reálné sloupce vyhodila v testech/dev.
+    protected static $modelsShouldPreventAccessingMissingAttributes = false;
+
     /**
      * Jednotlivá spojení (QSO) tohoto deníku.
      *
