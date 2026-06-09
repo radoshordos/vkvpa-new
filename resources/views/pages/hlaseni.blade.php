@@ -190,7 +190,13 @@
             @foreach ($radky as $i => $r)
                 <tr @class(['row-pending' => ! $r->schvaleno])>
                     <td class="num font-bold">{{ $i + 1 }}.</td>
-                    <td class="mono font-bold">{{ $r->znacka }}{{ $r->qrp ? ' /QRP' : '' }}</td>
+                    <td class="mono font-bold">
+                        {{ $r->znacka }}{{ $r->qrp ? ' /QRP' : '' }}
+                        {{-- Vizualizace vlastního deníku – jen pro řádek aktuálního závodníka s nahraným EDI --}}
+                        @if ($e && $r->id === $e->id && (int) $r->EDI_ID > 0)
+                            <x-vizualizace-odkaz :head="(int) $r->EDI_ID" target="_blank" class="ml-1" />
+                        @endif
+                    </td>
                     <td class="mono whitespace-nowrap">{{ $r->locator }}</td>
                     <td class="num">{{ (int) $r->pocet }}</td>
                     <td class="num">{{ (int) $r->nasobice }}</td>
