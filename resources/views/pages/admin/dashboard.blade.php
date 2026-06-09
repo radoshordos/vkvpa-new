@@ -17,8 +17,8 @@
     </div>
 </div>
 
-{{-- ── Stat karty ──────────────────────────────────────────────────────── --}}
-<div class="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
+{{-- ── Stat karty – řádek 1 ─────────────────────────────────────────────── --}}
+<div class="mb-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
     @foreach ([
         ['label' => 'Kol celkem',       'value' => $celkemKol],
         ['label' => "Kol {$rok}",       'value' => $kolaTento],
@@ -32,8 +32,30 @@
     @endforeach
 </div>
 
-{{-- ── Grafy ───────────────────────────────────────────────────────────── --}}
-<div class="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
+{{-- ── Stat karty – řádek 2 ─────────────────────────────────────────────── --}}
+<div class="mb-8 grid grid-cols-1 gap-3 sm:grid-cols-3">
+
+    {{-- Čekající na schválení --}}
+    <a href="{{ route('deniky.index') }}"
+       class="rounded-xl border bg-surface p-4 transition hover:border-brand {{ $cekajici > 0 ? 'border-amber-400 dark:border-amber-500' : 'border-line' }}">
+        <div class="text-3xl font-bold {{ $cekajici > 0 ? 'text-amber-500' : 'text-heading' }}">{{ $cekajici }}</div>
+        <div class="mt-1 text-xs text-muted">Čeká na schválení {{ $rok }}</div>
+    </a>
+
+    <div class="rounded-xl border border-line bg-surface p-4">
+        <div class="text-3xl font-bold text-heading">{{ $avgBody > 0 ? number_format($avgBody, 0, ',', "\u{00a0}") : '—' }}</div>
+        <div class="mt-1 text-xs text-muted">Průměrné body {{ $rok }}</div>
+    </div>
+
+    <div class="rounded-xl border border-line bg-surface p-4">
+        <div class="text-3xl font-bold text-heading">{{ $avgQso > 0 ? $avgQso : '—' }}</div>
+        <div class="mt-1 text-xs text-muted">Průměrný počet QSO {{ $rok }}</div>
+    </div>
+
+</div>
+
+{{-- ── Grafy – řádek 1 ──────────────────────────────────────────────────── --}}
+<div class="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
 
     {{-- Graf: účastníci per kolo --}}
     <div class="rounded-xl border border-line bg-surface p-4">
@@ -48,6 +70,55 @@
     </div>
 
 </div>
+
+{{-- ── Graf: rok vs. rok ────────────────────────────────────────────────── --}}
+<div class="mb-8 rounded-xl border border-line bg-surface p-4">
+    <h2 class="mb-3 text-sm font-semibold text-heading">Rok vs. rok – {{ $rok - 1 }} / {{ $rok }}</h2>
+    <canvas id="chartRokVsRok" height="100"></canvas>
+</div>
+
+{{-- ── Přehled kol roku ─────────────────────────────────────────────────── --}}
+<h2 class="mb-3 text-sm font-semibold text-heading">Přehled kol {{ $rok }}</h2>
+
+@if ($kolaRoku->isEmpty())
+    <p class="mb-8 text-sm text-muted">Žádná kola pro rok {{ $rok }}.</p>
+@else
+    <div class="table-wrap mb-8">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Kolo</th>
+                    <th class="num">Datum</th>
+                    <th class="num">Přihlášeno</th>
+                    <th class="num">Schváleno</th>
+                    <th class="num">Čeká</th>
+                    <th>Stav</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach ($kolaRoku as $kolo)
+                    @php $ceka = $kolo->pocet_celkem - $kolo->pocet_schvalenych; @endphp
+                    <tr>
+                        <td>
+                            <a href="{{ route('kola.admin.edit', $kolo) }}" class="font-medium hover:underline">
+                                {{ $kolo->nazev }}
+                            </a>
+                        </td>
+                        <td class="num text-muted text-sm">{{ $kolo->datum_konani->format('d.\u{00a0}m.\u{00a0}Y') }}</td>
+                        <td class="num">{{ $kolo->pocet_celkem }}</td>
+                        <td class="num font-semibold">{{ $kolo->pocet_schvalenych }}</td>
+                        <td class="num {{ $ceka > 0 ? 'text-amber-500 font-semibold' : 'text-muted' }}">
+                            {{ $ceka > 0 ? $ceka : '—' }}
+                        </td>
+                        <td>
+                            <span class="badge {{ $kolo->stav()->badgeClass() }}">{{ $kolo->stav()->label() }}</span>
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+@endif
 
 {{-- ── Top 10 stanic ───────────────────────────────────────────────────── --}}
 <h2 class="mb-3 text-sm font-semibold text-heading">Top 10 stanic {{ $rok }}</h2>
@@ -73,7 +144,7 @@
                         <td class="mono font-bold">{{ $r->znacka }}</td>
                         <td>{{ $r->jmeno }}</td>
                         <td class="text-sm text-muted">{{ $kategorie->get($r->kategorie_id)?->nazev ?? '—' }}</td>
-                        <td class="num font-semibold">{{ number_format((int) $r->celkem, 0, ',', '\u{00a0}') }}</td>
+                        <td class="num font-semibold">{{ number_format((int) $r->celkem, 0, ',', "\u{00a0}") }}</td>
                     </tr>
                 @endforeach
             </tbody>
@@ -85,9 +156,10 @@
 <script>
 (function () {
     const isDark = document.documentElement.classList.contains('dark');
-    const gridColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
-    const textColor = isDark ? '#a1a1aa' : '#71717a';
+    const gridColor  = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
+    const textColor  = isDark ? '#a1a1aa' : '#71717a';
     const brandColor = '#6366f1';
+    const prevColor  = '#a78bfa';
 
     Chart.defaults.color = textColor;
     Chart.defaults.borderColor = gridColor;
@@ -132,6 +204,41 @@
         options: {
             plugins: { legend: { position: 'right' } },
             cutout: '65%',
+        },
+    });
+
+    // Graf: rok vs. rok
+    // Zarovnání po pořadí kola v roce (1. kolo, 2. kolo, …)
+    const aktData  = @json($trendAktualniRok->pluck('pocet')->values());
+    const prevData = @json($trendPredchoziRok->pluck('pocet')->values());
+    const maxLen   = Math.max(aktData.length, prevData.length);
+    const koloLabels = Array.from({ length: maxLen }, (_, i) => `${i + 1}. kolo`);
+
+    new Chart(document.getElementById('chartRokVsRok'), {
+        type: 'bar',
+        data: {
+            labels: koloLabels,
+            datasets: [
+                {
+                    label: '{{ $rok - 1 }}',
+                    data: prevData,
+                    backgroundColor: prevColor + 'aa',
+                    borderRadius: 3,
+                },
+                {
+                    label: '{{ $rok }}',
+                    data: aktData,
+                    backgroundColor: brandColor + 'cc',
+                    borderRadius: 3,
+                },
+            ],
+        },
+        options: {
+            plugins: { legend: { position: 'top' } },
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1 } },
+                x: { ticks: { maxRotation: 0 } },
+            },
         },
     });
 })();
