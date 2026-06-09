@@ -67,13 +67,13 @@
                         <th>{{ __('admin.importy_col_call') }}</th>
                         <th>{{ __('admin.importy_col_round') }}</th>
                         <th class="num">{{ __('admin.importy_col_pts') }}</th>
-                        <th>{{ __('admin.importy_col_note') }}</th>
+                        <th class="min-w-[16rem]">{{ __('admin.importy_col_note') }}</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach ($results['items'] as $item)
                         <tr>
-                            <td class="mono text-sm">{{ $item['file'] }}</td>
+                            <td class="mono wrap-anywhere text-sm">{{ $item['file'] }}</td>
                             <td>
                                 @switch($item['status'])
                                     @case('ok')
