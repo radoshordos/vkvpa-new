@@ -4,7 +4,6 @@
     @foreach(config('navigation.public') as $item)
         @include('partials.menu-item', $item)
     @endforeach
-    <a href="{{ route('login') }}" class="nav-link mt-3">{{ __('app.admin_login') }}</a>
 @else
     <p class="nav-heading">{{ __('app.public_section') }}</p>
     @foreach(config('navigation.public') as $item)

@@ -5,11 +5,11 @@ declare(strict_types=1);
 return [
 
     // Navigace
-    'nav_dashboard' => 'Dashboard / statistiky',
+    'nav_dashboard' => 'Statistiky',
     'nav_rounds' => 'Kola závodu',
     'nav_reports' => 'Hlášení',
     'nav_logs' => 'Deníky – upload',
-    'nav_edi_debug' => 'EDI debug / kontrola bodů',
+    'nav_edi_debug' => 'EDI kontrola bodů',
     'nav_categories' => 'Správa kategorií',
     'nav_imports' => 'Importy',
     'nav_api_docs' => 'API dokumentace',
