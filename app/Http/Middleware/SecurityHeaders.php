@@ -25,9 +25,20 @@ class SecurityHeaders
         // jsdelivr.net: chart.js (admin dashboard) + swagger-ui (api-docs).
         // tile.openstreetmap.org: Leaflet map tiles (img-src + connect-src).
         // 'unsafe-inline' for style-src: required by Leaflet and inline style attributes.
+        //
+        // Laravel Pulse bundluje Alpine.js, který vyhodnocuje x-data výrazy přes new Function()
+        // – to vyžaduje 'unsafe-eval'. Přidáváme ho cíleně jen pro /pulse/* cestu,
+        // aby hlavní aplikace zůstala s přísnějším pravidlem.
+        $pulsePathRaw = config('pulse.path', 'pulse');
+        $pulsePath = is_string($pulsePathRaw) ? $pulsePathRaw : 'pulse';
+        $isPulse = str_starts_with($request->path(), $pulsePath);
+        $scriptSrc = $isPulse
+            ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' cdn.jsdelivr.net"
+            : "script-src 'self' 'unsafe-inline' cdn.jsdelivr.net";
+
         $response->headers->set('Content-Security-Policy', implode('; ', [
             "default-src 'self'",
-            "script-src 'self' 'unsafe-inline' cdn.jsdelivr.net",
+            $scriptSrc,
             "style-src 'self' 'unsafe-inline' cdn.jsdelivr.net",
             "img-src 'self' data: https://tile.openstreetmap.org",
             "font-src 'self' data:",
