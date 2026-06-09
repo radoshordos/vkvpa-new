@@ -12,10 +12,20 @@ AuthType Basic
 AuthName "Database Admin"
 AuthUserFile /etc/apache2/adminer.htpasswd
 
-Require valid-user
+# Lokální vývoj (Docker na localhost) projde bez hesla – uvnitř kontejneru
+# přicházejí požadavky z hosta přes docker bridge (172.16.0.0/12). Odjinud
+# se vyžaduje heslo z .htpasswd.
+#
+# POZOR pro produkci: pokud by před Apache stála reverzní proxy s privátní
+# IP z rozsahu 172.16.0.0/12, tato výjimka by autentizaci obešla – v takovém
+# nasazení blok <RequireAny> nahraď prostým `Require valid-user`.
+<RequireAny>
+    Require ip 127.0.0.1 ::1 172.16.0.0/12
+    Require valid-user
+</RequireAny>
 
 # Volitelné zpřísnění – vyžadovat heslo A SOUČASNĚ konkrétní zdrojovou IP/síť.
-# Odkomentuj a uprav (pozor: za reverzní proxy/Dockerem je zdrojová IP IP proxy):
+# (pozor: za reverzní proxy/Dockerem je zdrojová IP IP proxy):
 # <RequireAll>
 #     Require valid-user
 #     Require ip 192.168.1.0/24
