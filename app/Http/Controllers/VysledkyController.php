@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Enums\KoloStav;
 use App\Models\VkvpaData;
 use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
@@ -64,7 +65,10 @@ class VysledkyController extends Controller
 
         return view('pages.vysledky-listina', [
             'active' => 'vysledkova_listina',
-            'kola' => VkvpaKola::query()->orderByDesc('datum_konani')->get(),
+            // Nadcházející kola nemají co zobrazit – ve výběru se nenabízejí.
+            'kola' => VkvpaKola::query()->orderByDesc('datum_konani')->get()
+                ->reject(fn (VkvpaKola $k): bool => $k->stav() === KoloStav::Nadchazejici)
+                ->values(),
             'kolo' => $kolo,
             'kategorie' => VkvpaKategorie::query()->orderBy('id')->get()->keyBy('id'),
             'radky' => $radky,
