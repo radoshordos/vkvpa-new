@@ -13,7 +13,6 @@ declare(strict_types=1);
 return [
 
     'public' => [
-        ['key' => 'kola.index',         'trans' => 'nav.contest_periods'],
         ['key' => 'hlaseni.index',      'trans' => 'nav.log_import'],
         ['key' => 'pribezne_vysledky',  'trans' => 'nav.interim_results'],
         ['key' => 'vysledkova_listina', 'trans' => 'nav.results'],

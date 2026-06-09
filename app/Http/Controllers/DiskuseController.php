@@ -22,7 +22,7 @@ class DiskuseController extends Controller
             ?? VkvpaKola::query()->orderByDesc('datum_konani')->first();
 
         if (! $kolo) {
-            return redirect()->route('kola.index');
+            return redirect()->route('home');
         }
 
         return redirect()->route('diskuse.show', $kolo->id);

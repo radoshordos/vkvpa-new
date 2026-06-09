@@ -48,7 +48,7 @@
         </label>
 
         <div class="flex justify-end gap-3 pt-2">
-            <a href="{{ route('kola.index') }}" class="btn btn-ghost">{{ __('admin.btn_cancel') }}</a>
+            <a href="{{ route('kola.admin.index') }}" class="btn btn-ghost">{{ __('admin.btn_cancel') }}</a>
             <button type="submit" class="btn btn-primary">
                 {{ $kolo ? __('admin.kolo_btn_save') : __('admin.kolo_btn_create') }}
             </button>

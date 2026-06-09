@@ -43,10 +43,10 @@ class DiskuseTest extends TestCase
             ->assertRedirect(route('diskuse.show', $kolo->id));
     }
 
-    public function test_index_redirects_to_kola_index_when_no_kola_exist(): void
+    public function test_index_redirects_home_when_no_kola_exist(): void
     {
         $this->get(route('diskuse.index'))
-            ->assertRedirect(route('kola.index'));
+            ->assertRedirect(route('home'));
     }
 
     // ------------------------------------------------------------------

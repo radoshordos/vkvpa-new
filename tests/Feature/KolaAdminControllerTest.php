@@ -179,7 +179,7 @@ class KolaAdminControllerTest extends TestCase
     }
 
     // ------------------------------------------------------------------
-    // kola.index – admin vidí tlačítka
+    // kola.admin.index – admin vidí tlačítka
 
     public function test_admin_sees_create_button_and_edit_links_on_kola_page(): void
     {
@@ -192,12 +192,12 @@ class KolaAdminControllerTest extends TestCase
             ->assertSee(route('kola.admin.edit', $kolo->id));
     }
 
-    public function test_guest_does_not_see_admin_buttons_on_kola_page(): void
+    public function test_guest_cannot_access_kola_page(): void
     {
         $this->makeKolo();
 
-        $this->get(route('kola.index'))
-            ->assertOk()
-            ->assertDontSee(route('kola.admin.create'));
+        // Výpis kol je nově jen pro admina; staré /kola přesměruje na admin verzi.
+        $this->get('/kola')->assertRedirect('/admin/kola');
+        $this->get(route('kola.admin.index'))->assertRedirect(route('login'));
     }
 }

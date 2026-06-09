@@ -15,7 +15,6 @@ use App\Http\Controllers\EdiController;
 use App\Http\Controllers\EdiVizualizaceController;
 use App\Http\Controllers\HlaseniController;
 use App\Http\Controllers\HomeController;
-use App\Http\Controllers\KolaController;
 use App\Http\Controllers\MailImageController;
 use App\Http\Controllers\VysledkyController;
 use Illuminate\Support\Facades\Route;
@@ -43,7 +42,8 @@ Route::get('/hlaseni', [HlaseniController::class, 'index'])->name('hlaseni.index
 Route::post('/hlaseni', [HlaseniController::class, 'store'])->middleware('throttle:hlaseni')->name('hlaseni.store');
 
 // --- Veřejné ---
-Route::get('/kola', [KolaController::class, 'index'])->name('kola.index');
+// Výpis kol je jen pro admina (route kola.admin.index); staré /kola přesměrujeme.
+Route::redirect('/kola', '/admin/kola');
 
 Route::get('/vysledky', [VysledkyController::class, 'listina'])->name('vysledkova_listina');
 Route::get('/vysledky/pribezne', [VysledkyController::class, 'pribezne'])->name('pribezne_vysledky');
