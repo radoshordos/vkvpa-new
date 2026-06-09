@@ -21,23 +21,25 @@ final class DashboardController extends Controller
 
     public function index(Request $request): View
     {
-        $rok = min((int) $request->query('rok', now()->year), now()->year);
+        $rok = max(2000, min((int) $request->query('rok', now()->year), now()->year));
 
         $kolaIds = VkvpaKola::whereYear('datum_konani', $rok)->pluck('id');
 
-        $celkemKol    = VkvpaKola::count();
-        $kolaTento    = VkvpaKola::whereYear('datum_konani', $rok)->count();
+        $celkemKol = VkvpaKola::count();
+        $kolaTento = $kolaIds->count();
         $celkemZnacek = VkvpaData::approved()->distinct()->count('znacka');
-        $znackyTento  = VkvpaData::approved()->whereIn('id_kola', $kolaIds)->distinct()->count('znacka');
+        $znackyTento = VkvpaData::approved()->whereIn('id_kola', $kolaIds)->distinct()->count('znacka');
 
         // 1. Záznamy čekající na schválení
         $cekajici = VkvpaData::whereIn('id_kola', $kolaIds)->where('schvaleno', false)->count();
 
-        // 3. Průměrné body a QSO pro rok
-        $avgBodyRaw = VkvpaData::approved()->whereIn('id_kola', $kolaIds)->avg('body');
-        $avgQsoRaw  = VkvpaData::approved()->whereIn('id_kola', $kolaIds)->avg('pocet');
-        $avgBody = (int) round(is_numeric($avgBodyRaw) ? (float) $avgBodyRaw : 0);
-        $avgQso  = (int) round(is_numeric($avgQsoRaw) ? (float) $avgQsoRaw : 0);
+        // 3. Průměrné body a QSO pro rok – jeden SELECT místo dvou
+        $avgRow = VkvpaData::approved()->whereIn('id_kola', $kolaIds)
+            ->toBase()
+            ->selectRaw('AVG(body) as avg_body, AVG(pocet) as avg_pocet')
+            ->first();
+        $avgBody = (int) round(is_numeric($avgRow?->avg_body) ? (float) $avgRow->avg_body : 0);
+        $avgQso = (int) round(is_numeric($avgRow?->avg_pocet) ? (float) $avgRow->avg_pocet : 0);
 
         // Trend – posledních 12 kol s počtem schválených účastníků
         $trendKola = VkvpaKola::query()
@@ -48,12 +50,8 @@ final class DashboardController extends Controller
             ->reverse()
             ->values();
 
-        // 4. Graf rok vs. rok – schválení účastníci per kolo pro oba roky
-        $trendAktualniRok = VkvpaKola::whereYear('datum_konani', $rok)
-            ->withCount(['hlaseni as pocet' => fn (Builder $q) => $q->where('schvaleno', true)])
-            ->orderBy('datum_konani')
-            ->get(['id', 'nazev', 'datum_konani']);
-
+        // 4. Graf rok vs. rok – schválení účastníci per kolo pro předchozí rok
+        //    (aktuální rok se čte z $kolaRoku, viz níže – sdílíme jeden dotaz)
         $trendPredchoziRok = VkvpaKola::whereYear('datum_konani', $rok - 1)
             ->withCount(['hlaseni as pocet' => fn (Builder $q) => $q->where('schvaleno', true)])
             ->orderBy('datum_konani')
@@ -82,22 +80,21 @@ final class DashboardController extends Controller
         $top10 = $this->scoring->yearlyResults($rok)->take(10);
 
         return view('pages.admin.dashboard', [
-            'active'            => 'admin.dashboard',
-            'rok'               => $rok,
-            'celkemKol'         => $celkemKol,
-            'kolaTento'         => $kolaTento,
-            'celkemZnacek'      => $celkemZnacek,
-            'znackyTento'       => $znackyTento,
-            'cekajici'          => $cekajici,
-            'avgBody'           => $avgBody,
-            'avgQso'            => $avgQso,
-            'trendKola'         => $trendKola,
-            'trendAktualniRok'  => $trendAktualniRok,
+            'active' => 'admin.dashboard',
+            'rok' => $rok,
+            'celkemKol' => $celkemKol,
+            'kolaTento' => $kolaTento,
+            'celkemZnacek' => $celkemZnacek,
+            'znackyTento' => $znackyTento,
+            'cekajici' => $cekajici,
+            'avgBody' => $avgBody,
+            'avgQso' => $avgQso,
+            'trendKola' => $trendKola,
             'trendPredchoziRok' => $trendPredchoziRok,
-            'kategorieData'     => $kategorieData,
-            'kategorie'         => $kategorie,
-            'kolaRoku'          => $kolaRoku,
-            'top10'             => $top10,
+            'kategorieData' => $kategorieData,
+            'kategorie' => $kategorie,
+            'kolaRoku' => $kolaRoku,
+            'top10' => $top10,
         ]);
     }
 }

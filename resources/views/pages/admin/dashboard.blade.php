@@ -242,7 +242,7 @@
     });
 
     // Graf: rok vs. rok
-    const aktData  = @json($trendAktualniRok->pluck('pocet')->values());
+    const aktData  = @json($kolaRoku->pluck('pocet_schvalenych')->values());
     const prevData = @json($trendPredchoziRok->pluck('pocet')->values());
     const maxLen   = Math.max(aktData.length, prevData.length);
     const koloLabels = Array.from({ length: maxLen }, (_, i) => `${i + 1}. kolo`);

@@ -44,7 +44,7 @@ class EdiVizualizaceController extends Controller
             ]),
             'squares' => $this->geometry->bigSquares($head),
             'roundStations' => $this->geometry->roundStations($head),
-            'roundDataPending' => $this->geometry->roundDataPending($head),
+            'roundDataPending' => ! $this->geometry->roundResultsDisclosable($head),
             'timeline' => $this->timeline($enriched),
             'azimuth' => $this->azimuthRose($enriched),
             'distHistogram' => $this->distHistogram($enriched),
