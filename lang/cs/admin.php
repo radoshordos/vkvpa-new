@@ -13,6 +13,7 @@ return [
     'nav_categories' => 'Správa kategorií',
     'nav_imports' => 'Importy',
     'nav_api_docs' => 'API dokumentace',
+    'nav_pulse' => 'Pulse monitoring',
 
     // Login
     'login_title' => 'Přihlášení – VKV PA',

@@ -6,11 +6,13 @@ namespace App\Providers;
 
 use App\Events\EdiImported;
 use App\Listeners\SendEdiMailsListener;
+use App\Models\User;
 use App\Support\VkvpaSettings;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Override;
@@ -33,12 +35,15 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // Mimo produkci běží Eloquent ve striktním režimu: lazy loading vztahů
-        // (zdroj N+1) a tiché zahazování nevyplnitelných atributů vyhodí výjimku,
-        // takže se chyby odhalí už ve vývoji/testech, ne až podle výkonu v provozu.
-        // preventAccessingMissingAttributes ZÁMĚRNĚ nezapínáme – legacy modely
-        // (Edihead/Ediline) pracují s dynamickými sloupci typu `Received-WWL`.
+        // (zdroj N+1), tiché zahazování nevyplnitelných atributů a přístup
+        // k neexistujícím atributům vyhodí výjimku – chyby se odhalí ve vývoji.
+        // Edihead/Ediline mají per-model opt-out (legacy sloupce s pomlčkami).
         Model::preventLazyLoading(! $this->app->isProduction());
         Model::preventSilentlyDiscardingAttributes(! $this->app->isProduction());
+        Model::preventAccessingMissingAttributes(! $this->app->isProduction());
+
+        // Pulse dashboard – přístup jen pro adminů.
+        Gate::define('viewPulse', fn (User $user) => (bool) $user->is_admin);
 
         Event::listen(EdiImported::class, SendEdiMailsListener::class);
 

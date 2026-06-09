@@ -40,6 +40,11 @@ use Override;
 #[WithoutTimestamps]
 class Ediline extends Model
 {
+    // Legacy tabulka – property hooks přistupují přímo k $this->attributes['Column-name'],
+    // ale ostatní kód přistupuje k reálným sloupcům přes __get; opt-out zachovává
+    // kompatibilitu se starším přístupovým vzorem a tests s partial select.
+    protected static $modelsShouldPreventAccessingMissingAttributes = false;
+
     /**
      * Hlavička deníku, ke kterému spojení patří.
      *
@@ -50,31 +55,29 @@ class Ediline extends Model
         return $this->belongsTo(Edihead::class, 'IDS', 'ID');
     }
 
-    public function receivedWwl(): string
-    {
-        return (string) $this->{'Received-WWL'};
+    /** Přijatý lokátor protistanice (prázdný string pokud chybí). */
+    public string $receivedWwl {
+        get => trim((string) ($this->{'Received-WWL'} ?? ''));
     }
 
-    public function qsoPoints(): int
-    {
-        return (int) $this->{'QSO-Points'};
+    /** Body za spojení z deníku (EDI QSO-Points; ve skóre se ignoruje). */
+    public int $qsoPoints {
+        get => (int) ($this->{'QSO-Points'} ?? 0);
     }
 
-    /** Druh provozu jako kód z deníku: 1 = SSB, 2 = CW, jiné/0 = neznámý. */
-    public function modeCode(): int
-    {
-        return (int) $this->{'Mode-code'};
+    /** Kód druhu provozu z deníku: 1 = SSB, 2 = CW, 0/jiné = neznámý. */
+    public int $modeCode {
+        get => (int) ($this->{'Mode-code'} ?? 0);
     }
 
     /** Druh provozu jako enum (neznámý/chybějící kód → QsoMode::Other). */
-    public function mode(): QsoMode
-    {
-        return QsoMode::fromCode($this->modeCode());
+    public QsoMode $mode {
+        get => QsoMode::fromCode($this->modeCode);
     }
 
-    public function newWwl(): string
-    {
-        return (string) $this->{'New-WWL-(N)'};
+    /** Opravený lokátor (New-WWL-(N), prázdný string pokud chybí). */
+    public string $newWwl {
+        get => trim((string) ($this->{'New-WWL-(N)'} ?? ''));
     }
 
     #[Override]

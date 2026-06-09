@@ -43,7 +43,7 @@ final class QsoGeometry
             ->map(function (Ediline $l) use ($home, $head, $homeSq): ?EnrichedQso {
                 $lat = $l->lat;
                 $lon = $l->lon;
-                $wwl = $l->receivedWwl();
+                $wwl = $l->receivedWwl;
 
                 // Když chybí lon/lat, dopočítej ze středu lokátoru.
                 if (($lat === null || $lon === null) && $wwl !== '') {
@@ -83,7 +83,7 @@ final class QsoGeometry
                     dist: $dist,
                     azimut: $azimut,
                     timeMinutes: $timeMinutes,
-                    mode: $l->mode(),
+                    mode: $l->mode,
                 );
             })
             ->filter()
@@ -100,7 +100,7 @@ final class QsoGeometry
         $counts = [];
 
         foreach ($head->lines()->whereBetween('Time', [ContestWindow::from(), ContestWindow::to()])->get(['Received-WWL']) as $l) {
-            $sq = strtoupper(substr(trim($l->receivedWwl()), 0, 4));
+            $sq = strtoupper(substr(trim($l->receivedWwl), 0, 4));
             if (preg_match('/^[A-R]{2}\d{2}$/', $sq) === 1) {
                 $counts[$sq] = ($counts[$sq] ?? 0) + 1;
             }
@@ -169,7 +169,7 @@ final class QsoGeometry
                 continue;
             }
 
-            $wwl = $l->receivedWwl();
+            $wwl = $l->receivedWwl;
             $lat = $l->lat;
             $lon = $l->lon;
 
