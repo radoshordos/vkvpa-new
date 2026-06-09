@@ -5,7 +5,11 @@
 
 {{-- announcement řeší centrální <x-flash /> v layoutu --}}
 
-@php $isAdmin = $isAdmin ?? (bool) (auth()->user()?->is_admin); @endphp
+@php
+    $isAdmin = $isAdmin ?? (bool) (auth()->user()?->is_admin);
+    // Start závodu z konfigurace závodního okna ('0800' → '08:00')
+    $startZavodu = preg_replace('/^(\d{2})(\d{2})$/', '$1:$2', \App\Support\ContestWindow::from());
+@endphp
 
 <div class="mb-4 flex flex-wrap gap-2">
   @if ($isAdmin)
@@ -30,7 +34,7 @@
       @foreach ($kola as $k)
         @php $stav = $k->stav(); @endphp
         <tr>
-          <td class="whitespace-nowrap">{{ $k->datum_konani?->locale(app()->getLocale())->isoFormat('dddd D. M. YYYY') }}</td>
+          <td class="whitespace-nowrap">{{ $k->datum_konani ? $k->datum_konani->locale(app()->getLocale())->isoFormat('dddd D. M. YYYY').' '.$startZavodu.' UTC' : '' }}</td>
           {{-- isoFormat dddd = název dne v aktuálním jazyce (pátek / Friday) --}}
           <td class="whitespace-nowrap">{{ $k->datum_uzaverky ? $k->datum_uzaverky->locale(app()->getLocale())->isoFormat('dddd D. M. YYYY HH:mm').' UTC' : '' }}</td>
           <td>{{ $k->nazev }}</td>
