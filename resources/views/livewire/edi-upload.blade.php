@@ -6,13 +6,19 @@
       <label class="label block mb-2" for="edi-file">EDI soubor / EDI file</label>
 
       <div wire:loading.remove wire:target="upload">
-        <input
-          id="edi-file"
-          type="file"
-          accept=".edi,.txt"
-          wire:model="upload"
-          class="text-sm"
-        >
+        {{-- Drop zóna: soubor lze přetáhnout myší, kliknutí otevře klasický výběr.
+             Obsluhu má delegovaný skript níže (přežije Livewire re-render). --}}
+        <div data-edi-dropzone
+             class="rounded-lg border-2 border-dashed border-line p-4 text-center transition-colors">
+          <input
+            id="edi-file"
+            type="file"
+            accept=".edi,.txt"
+            wire:model="upload"
+            class="text-sm"
+          >
+          <p class="text-xs text-muted mt-2">…nebo sem soubor přetáhněte myší / or drag &amp; drop the file here</p>
+        </div>
         <p class="text-xs text-muted mt-1">Formát EDI (REG1TEST), max 10 MB.</p>
       </div>
 
@@ -71,4 +77,51 @@
       </div>
     </div>
   @endif
+
+  {{-- Delegovaná obsluha drag & drop – listenery visí na dokumentu, takže
+       fungují i po Livewire re-renderu; guard brání dvojí registraci. --}}
+  <script>
+    if (! window.__ediDropzoneInit) {
+      window.__ediDropzoneInit = true;
+
+      var activeClasses = ['border-brand', 'bg-brand/5'];
+
+      function zoneOf(e) {
+        return e.target instanceof Element ? e.target.closest('[data-edi-dropzone]') : null;
+      }
+
+      document.addEventListener('dragover', function (e) {
+        var zone = zoneOf(e);
+        if (zone) {
+          e.preventDefault();
+          zone.classList.add.apply(zone.classList, activeClasses);
+        }
+      });
+
+      document.addEventListener('dragleave', function (e) {
+        var zone = zoneOf(e);
+        if (zone && ! zone.contains(e.relatedTarget)) {
+          zone.classList.remove.apply(zone.classList, activeClasses);
+        }
+      });
+
+      document.addEventListener('drop', function (e) {
+        var zone = zoneOf(e);
+        if (! zone) return;
+        e.preventDefault();
+        zone.classList.remove.apply(zone.classList, activeClasses);
+
+        var input = zone.querySelector('input[type="file"]');
+        if (input && e.dataTransfer && e.dataTransfer.files.length) {
+          input.files = e.dataTransfer.files;
+          // change event spustí wire:model upload stejně jako ruční výběr
+          input.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      });
+
+      // Mimo drop zónu prohlížeč soubor neotvírá (navigace pryč ze stránky)
+      document.addEventListener('dragover', function (e) { e.preventDefault(); });
+      document.addEventListener('drop', function (e) { e.preventDefault(); });
+    }
+  </script>
 </div>
