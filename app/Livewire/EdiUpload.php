@@ -14,6 +14,7 @@ use App\Exceptions\UnknownBandException;
 use App\Exceptions\UnknownSectionException;
 use App\Services\Edi\EdiParser;
 use App\Services\Edi\EdiValidator;
+use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Rule;
 use Livewire\Component;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
@@ -109,8 +110,9 @@ class EdiUpload extends Component
             $this->state = 'success';
 
         } catch (Throwable $e) {
+            Log::error('edi_upload.unexpected', ['exception' => $e]);
             $this->state = 'error';
-            $this->errorMessage = $e->getMessage();
+            $this->errorMessage = 'Neočekávaná chyba při zpracování deníku. Zkuste znovu nebo kontaktujte správce.';
         }
     }
 

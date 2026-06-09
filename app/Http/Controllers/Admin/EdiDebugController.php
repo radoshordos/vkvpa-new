@@ -58,7 +58,7 @@ class EdiDebugController extends Controller
         return view('pages.admin.edi-debug', [
             'active' => 'edit_edi_debug',
             'report' => $this->debugger->analyze($log),
-            'filename' => $request->file('upload')->getClientOriginalName(),
+            'filename' => preg_replace('/[^A-Za-z0-9._\-]/', '_', basename((string) $request->file('upload')->getClientOriginalName())),
             'edihead' => $edihead,
         ]);
     }
