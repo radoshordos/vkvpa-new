@@ -34,7 +34,6 @@ return [
         ['key' => 'edi.debug.create', 'trans' => 'admin.nav_edi_debug'],
         ['key' => 'kategorie.index',  'trans' => 'admin.nav_categories'],
         ['key' => 'importy.index',    'trans' => 'admin.nav_imports'],
-        ['key' => 'api.docs',         'trans' => 'admin.nav_api_docs'],
         ['url' => '/pulse',           'trans' => 'admin.nav_pulse', 'target' => '_blank'],
     ],
 
