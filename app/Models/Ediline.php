@@ -15,11 +15,11 @@ use Override;
 /**
  * Jednotlivé spojení (QSO) v deníku EDI.
  *
- * @property int $ID
- * @property int $IDS
- * @property string $Date
- * @property string $Time
- * @property string $CallSign
+ * @property int $id
+ * @property int $edihead_id
+ * @property string $date
+ * @property string $time
+ * @property string $call_sign
  * @property int|null $mode_code
  * @property string|null $sent_rst
  * @property int|null $sent_qso_number
@@ -38,13 +38,13 @@ use Override;
  * @property-read Edihead|null $head
  */
 #[Fillable([
-    'IDS', 'Date', 'Time', 'CallSign', 'mode_code', 'sent_rst',
+    'edihead_id', 'date', 'time', 'call_sign', 'mode_code', 'sent_rst',
     'sent_qso_number', 'received_rst', 'received_qso_number',
     'received_exchange', 'received_wwl', 'qso_points',
     'new_exchange_n', 'new_wwl_n', 'new_dxcc_n',
     'duplicate_qso_d', 'sqr', 'lon', 'lat',
 ])]
-#[Table(name: 'edilines', key: 'ID')]
+#[Table(name: 'edilines')]
 #[WithoutTimestamps]
 class Ediline extends Model
 {
@@ -55,7 +55,7 @@ class Ediline extends Model
      */
     public function head(): BelongsTo
     {
-        return $this->belongsTo(Edihead::class, 'IDS', 'ID');
+        return $this->belongsTo(Edihead::class, 'edihead_id');
     }
 
     /** Přijatý lokátor protistanice (prázdný string pokud chybí). */
@@ -87,7 +87,7 @@ class Ediline extends Model
     protected function casts(): array
     {
         return [
-            'IDS' => 'integer',
+            'edihead_id' => 'integer',
             'mode_code' => 'integer',
             'sent_qso_number' => 'integer',
             'received_qso_number' => 'integer',

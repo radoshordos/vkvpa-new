@@ -27,16 +27,16 @@
             <tbody>
                 @foreach ($deniky as $d)
                     @php
-                        $tdate = $d->TDate ?? '';
+                        $tdate = $d->t_date ?? '';
                         $datum = strlen($tdate) >= 8
                             ? \Illuminate\Support\Carbon::createFromFormat('Ymd', substr($tdate, 0, 8))?->format('j. n. Y') ?? $tdate
                             : ($tdate ?: '—');
                     @endphp
                     <tr>
-                        <td class="num text-muted">{{ $d->ID }}</td>
-                        <td class="mono font-bold">{{ $d->PCall ?: '—' }}</td>
+                        <td class="num text-muted">{{ $d->id }}</td>
+                        <td class="mono font-bold">{{ $d->p_call ?: '—' }}</td>
                         <td class="whitespace-nowrap">{{ $datum }}</td>
-                        <td class="mono text-sm">{{ $d->PBand ?: '—' }}</td>
+                        <td class="mono text-sm">{{ $d->p_band ?: '—' }}</td>
                         <td class="text-sm">{{ $kola->get($d->id_kola, '—') }}</td>
                         <td class="num">{{ $d->lines_count }}</td>
                         <td class="hidden whitespace-nowrap text-sm text-muted @[520px]:table-cell">{{ $d->stamp?->format('j. n. Y H:i') ?? '—' }}</td>

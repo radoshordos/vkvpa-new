@@ -19,25 +19,25 @@ final class EdiImportService
             $h = $log->header;
 
             $head = Edihead::create([
-                'TDate' => $h->tDate(),
-                'PCall' => $h->pCall(),
-                'PWWLo' => $h->pWWLo(),
-                'PSect' => $h->pSect(),
-                'PBand' => $h->pBand(),
-                'RName' => $h->rName(),
-                'RPhon' => $h->rPhon(),
-                'RHBBS' => $h->rHBBS(),
-                'SPowe' => $h->sPowe(),
+                't_date' => $h->tDate(),
+                'p_call' => $h->pCall(),
+                'p_wwlo' => $h->pWWLo(),
+                'p_sect' => $h->pSect(),
+                'p_band' => $h->pBand(),
+                'r_name' => $h->rName(),
+                'r_phon' => $h->rPhon(),
+                'r_hbbs' => $h->rHBBS(),
+                's_powe' => $h->sPowe(),
                 'src' => $log->rawSource,
             ]);
 
             $rows = [];
             foreach ($log->qsos as $q) {
                 $rows[] = [
-                    'IDS' => $head->ID,
-                    'Date' => $q->date,
-                    'Time' => $q->time,
-                    'CallSign' => $q->callSign,
+                    'edihead_id' => $head->id,
+                    'date' => $q->date,
+                    'time' => $q->time,
+                    'call_sign' => $q->callSign,
                     'mode_code' => $this->intOrNull($q->modeCode),
                     'sent_rst' => $q->sentRst,
                     'sent_qso_number' => $this->intOrNull($q->sentQsoNumber),

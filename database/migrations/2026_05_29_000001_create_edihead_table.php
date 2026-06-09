@@ -12,28 +12,28 @@ return new class extends Migration
             $table->charset = 'utf8mb4';
             $table->collation = 'utf8mb4_unicode_ci';
 
-            $table->integer('ID', true);
+            $table->integer('id', true);
             $table->integer('id_kola')->nullable()->default(0);
-            $table->string('TDate', 17);
-            $table->string('PCall', 30);
-            $table->string('PWWLo', 6);
-            $table->string('PSect', 20)->default('');
-            $table->string('PBand', 20)->default('');
-            $table->string('RName', 50);
-            $table->string('REmai', 100)->nullable();
-            $table->string('RPhon', 50)->default('');
-            $table->string('RHBBS', 50);
-            $table->unsignedSmallInteger('SPowe');
-            $table->string('STXEq', 100)->nullable();
-            $table->string('SAnte', 100)->nullable();
+            $table->string('t_date', 17);
+            $table->string('p_call', 30);
+            $table->string('p_wwlo', 6);
+            $table->string('p_sect', 20)->default('');
+            $table->string('p_band', 20)->default('');
+            $table->string('r_name', 50);
+            $table->string('r_emai', 100)->nullable();
+            $table->string('r_phon', 50)->default('');
+            $table->string('r_hbbs', 50);
+            $table->unsignedSmallInteger('s_powe');
+            $table->string('s_tx_eq', 100)->nullable();
+            $table->string('s_ante', 100)->nullable();
             $table->mediumText('src')->nullable();
-            $table->text('Remarks')->nullable();
+            $table->text('remarks')->nullable();
             $table->timestamp('stamp')->useCurrent();
             $table->timestamp('d_cas')->nullable()->useCurrent();
-            $table->longText('SRCR')->nullable();
+            $table->longText('s_rcr')->nullable();
 
             $table->index('id_kola', 'edihead_id_kola_idx');
-            $table->index('PCall', 'edihead_pcall_idx');
+            $table->index('p_call', 'edihead_pcall_idx');
         });
     }
 

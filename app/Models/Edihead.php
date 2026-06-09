@@ -16,35 +16,39 @@ use Override;
 /**
  * Hlavička deníku EDI (REG1TEST).
  *
- * Pozn.: tabulka i sloupce ponechány v původních názvech kvůli kompatibilitě.
  * Vlastní časové sloupce (`stamp`, `d_cas`) nejsou Laravel created_at/updated_at.
  *
- * @property int $ID
+ * @property int $id
  * @property int|null $id_kola
- * @property string $TDate
- * @property string $PCall
- * @property string $PWWLo
- * @property int $SPowe
+ * @property string $t_date
+ * @property string $p_call
+ * @property string $p_wwlo
+ * @property string $p_sect
+ * @property string $p_band
+ * @property string $r_name
+ * @property string|null $r_emai
+ * @property string $r_phon
+ * @property string $r_hbbs
+ * @property int $s_powe
+ * @property string|null $s_tx_eq
+ * @property string|null $s_ante
  * @property string|null $src
+ * @property string|null $remarks
+ * @property string|null $s_rcr
  * @property Carbon|null $stamp
  * @property Carbon|null $d_cas
- * @property string $PBand
  * @property-read Collection<int, Ediline> $lines
  * @property-read int $lines_count
  */
 #[Fillable([
-    'id_kola', 'TDate', 'PCall', 'PWWLo', 'PSect', 'PBand',
-    'RName', 'REmai', 'RPhon', 'RHBBS', 'SPowe', 'STXEq', 'SAnte',
-    'src', 'Remarks', 'SRCR',
+    'id_kola', 't_date', 'p_call', 'p_wwlo', 'p_sect', 'p_band',
+    'r_name', 'r_emai', 'r_phon', 'r_hbbs', 's_powe', 's_tx_eq', 's_ante',
+    'src', 'remarks', 's_rcr',
 ])]
-#[Table(name: 'edihead', key: 'ID')]
+#[Table(name: 'edihead')]
 #[WithoutTimestamps]
 class Edihead extends Model
 {
-    // Legacy tabulka s nestandardními názvy sloupců – preventAccessingMissingAttributes
-    // by přístupy jako $head->{'PCall'} i reálné sloupce vyhodila v testech/dev.
-    protected static $modelsShouldPreventAccessingMissingAttributes = false;
-
     /**
      * Jednotlivá spojení (QSO) tohoto deníku.
      *
@@ -52,7 +56,7 @@ class Edihead extends Model
      */
     public function lines(): HasMany
     {
-        return $this->hasMany(Ediline::class, 'IDS', 'ID');
+        return $this->hasMany(Ediline::class, 'edihead_id');
     }
 
     #[Override]
@@ -60,7 +64,7 @@ class Edihead extends Model
     {
         return [
             'id_kola' => 'integer',
-            'SPowe' => 'integer',
+            's_powe' => 'integer',
             'stamp' => 'datetime',
             'd_cas' => 'datetime',
         ];

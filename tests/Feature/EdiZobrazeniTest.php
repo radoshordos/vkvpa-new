@@ -34,9 +34,9 @@ class EdiZobrazeniTest extends TestCase
         ])."\n";
 
         return Edihead::create([
-            'TDate' => '20260315;20260315', 'PCall' => 'OK2KJT', 'PWWLo' => 'JN99AJ',
-            'PSect' => '', 'PBand' => '', 'RName' => 'X', 'RPhon' => '', 'RHBBS' => '',
-            'SPowe' => 100, 'src' => $raw,
+            't_date' => '20260315;20260315', 'p_call' => 'OK2KJT', 'p_wwlo' => 'JN99AJ',
+            'p_sect' => '', 'p_band' => '', 'r_name' => 'X', 'r_phon' => '', 'r_hbbs' => '',
+            's_powe' => 100, 'src' => $raw,
         ]);
     }
 
@@ -68,7 +68,7 @@ class EdiZobrazeniTest extends TestCase
         $head = $this->denik();
 
         $this->actingAs($this->admin())
-            ->get(route('edi.soubor', ['head' => $head->ID]))
+            ->get(route('edi.soubor', ['head' => $head->id]))
             ->assertOk()
             ->assertSee('OK1A')
             ->assertSee('OK1Z')
@@ -80,7 +80,7 @@ class EdiZobrazeniTest extends TestCase
         $head = $this->denik();
 
         $this->actingAs($this->admin())
-            ->get(route('edi.soubor.redukovany', ['head' => $head->ID]))
+            ->get(route('edi.soubor.redukovany', ['head' => $head->id]))
             ->assertOk()
             ->assertSee('OK1A')
             ->assertDontSee('OK1Z')
@@ -93,7 +93,7 @@ class EdiZobrazeniTest extends TestCase
         $head->update(['src' => null]);
 
         $this->actingAs($this->admin())
-            ->get(route('edi.soubor', ['head' => $head->ID]))
+            ->get(route('edi.soubor', ['head' => $head->id]))
             ->assertNotFound();
     }
 
@@ -103,7 +103,7 @@ class EdiZobrazeniTest extends TestCase
     {
         $head = $this->denik();
 
-        $this->get(route('edi.soubor', ['head' => $head->ID]))
+        $this->get(route('edi.soubor', ['head' => $head->id]))
             ->assertRedirect(route('login'));
     }
 
@@ -111,7 +111,7 @@ class EdiZobrazeniTest extends TestCase
     {
         $head = $this->denik();
 
-        $this->get(route('edi.soubor.redukovany', ['head' => $head->ID]))
+        $this->get(route('edi.soubor.redukovany', ['head' => $head->id]))
             ->assertRedirect(route('login'));
     }
 
@@ -120,7 +120,7 @@ class EdiZobrazeniTest extends TestCase
         $head = $this->denik();
 
         $this->actingAs($this->regularUser())
-            ->get(route('edi.soubor', ['head' => $head->ID]))
+            ->get(route('edi.soubor', ['head' => $head->id]))
             ->assertOk()
             ->assertSee('OK1A');
     }
@@ -130,7 +130,7 @@ class EdiZobrazeniTest extends TestCase
         $this->activeRound();
         $head = $this->denik();
 
-        $this->get(route('edi.soubor', ['head' => $head->ID]))
+        $this->get(route('edi.soubor', ['head' => $head->id]))
             ->assertForbidden();
     }
 
@@ -140,7 +140,7 @@ class EdiZobrazeniTest extends TestCase
         $head = $this->denik();
 
         $this->actingAs($this->regularUser())
-            ->get(route('edi.soubor', ['head' => $head->ID]))
+            ->get(route('edi.soubor', ['head' => $head->id]))
             ->assertForbidden();
     }
 
@@ -150,7 +150,7 @@ class EdiZobrazeniTest extends TestCase
         $head = $this->denik();
 
         $this->actingAs($this->regularUser())
-            ->get(route('edi.soubor.redukovany', ['head' => $head->ID]))
+            ->get(route('edi.soubor.redukovany', ['head' => $head->id]))
             ->assertForbidden();
     }
 
@@ -160,7 +160,7 @@ class EdiZobrazeniTest extends TestCase
         $head = $this->denik();
 
         $this->actingAs($this->admin())
-            ->get(route('edi.soubor', ['head' => $head->ID]))
+            ->get(route('edi.soubor', ['head' => $head->id]))
             ->assertOk()
             ->assertSee('OK1A');
     }
@@ -171,7 +171,7 @@ class EdiZobrazeniTest extends TestCase
         $head = $this->denik();
 
         $this->actingAs($this->admin())
-            ->get(route('edi.soubor.redukovany', ['head' => $head->ID]))
+            ->get(route('edi.soubor.redukovany', ['head' => $head->id]))
             ->assertOk()
             ->assertSee('OK1A');
     }

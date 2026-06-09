@@ -99,7 +99,7 @@ final readonly class ImportEdiAction
             'qrp' => $h->isQrp(),
             'lp' => $h->isLp(),
             'EDI' => true,
-            'EDI_ID' => $head->ID,
+            'EDI_ID' => $head->id,
             'schvaleno' => false,
         ]);
 

@@ -106,13 +106,13 @@ final class ScoringService
      */
     public function scoreEdi(Edihead $head): EdiScore
     {
-        $home = strtoupper(substr(trim((string) $head->PWWLo), 0, 4));
-        // Den závodu = YYMMDD ze začátku TDate (formát YYYYMMDD;YYYYMMDD).
-        $den = substr(trim((string) $head->TDate), 2, 6);
+        $home = strtoupper(substr(trim((string) $head->p_wwlo), 0, 4));
+        // Den závodu = YYMMDD ze začátku t_date (formát YYYYMMDD;YYYYMMDD).
+        $den = substr(trim((string) $head->t_date), 2, 6);
 
         $squares = $head->lines()
-            ->whereBetween('Time', [ContestWindow::from(), ContestWindow::to()])
-            ->when($den !== '', fn ($q) => $q->where('Date', $den))
+            ->whereBetween('time', [ContestWindow::from(), ContestWindow::to()])
+            ->when($den !== '', fn ($q) => $q->where('date', $den))
             ->get(['received_wwl'])
             ->map(static fn ($l): string => strtoupper(substr(trim($l->receivedWwl), 0, 4)))
             ->filter(static fn (string $sq): bool => $sq !== '')
