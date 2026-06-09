@@ -109,6 +109,21 @@ class VkvpaKola extends Model
     }
 
     /**
+     * Kolo, pro které se zobrazují průběžné výsledky: nejstarší aktivní,
+     * které ještě nebylo vyhodnocené. Když žádné není, průběžné výsledky
+     * se neukazují (stránka hlásí „vyhodnocování neprobíhá", položka menu
+     * je skrytá).
+     */
+    public static function aktualniProPrubezne(): ?self
+    {
+        return static::query()
+            ->active()
+            ->whereNull('vyhodnoceno')
+            ->orderBy('datum_konani')
+            ->first();
+    }
+
+    /**
      * Existuje vůbec nějaké aktivní kolo (pro zobrazení formuláře)?
      */
     public static function existujeAktivni(): bool

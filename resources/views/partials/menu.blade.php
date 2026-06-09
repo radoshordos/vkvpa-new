@@ -1,12 +1,19 @@
 {{-- Hlavní navigace. Použito ve dvou kontextech (desktop sidebar + mobilní drawer). --}}
+@php
+    // Průběžné výsledky se nabízejí, jen když je nějaké kolo k průběžnému
+    // zobrazení (aktivní a nevyhodnocené); once() = jeden dotaz na request.
+    $showPribezne = once(fn (): bool => \App\Models\VkvpaKola::aktualniProPrubezne() !== null);
+@endphp
 <nav>
 @unless($isAdmin)
     @foreach(config('navigation.public') as $item)
+        @continue(($item['key'] ?? null) === 'pribezne_vysledky' && ! $showPribezne)
         @include('partials.menu-item', $item)
     @endforeach
 @else
     <p class="nav-heading">{{ __('app.public_section') }}</p>
     @foreach(config('navigation.public') as $item)
+        @continue(($item['key'] ?? null) === 'pribezne_vysledky' && ! $showPribezne)
         @include('partials.menu-item', $item)
     @endforeach
 

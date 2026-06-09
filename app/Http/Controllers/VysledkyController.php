@@ -83,11 +83,7 @@ class VysledkyController extends Controller
     {
         // Průběžné výsledky se zobrazují vždy jen pro jedno kolo – nejstarší
         // aktivní, které ještě nebylo vyhodnocené. Výběr kola se nenabízí.
-        $kolo = VkvpaKola::query()
-            ->active()
-            ->whereNull('vyhodnoceno')
-            ->orderBy('datum_konani')
-            ->first();
+        $kolo = VkvpaKola::aktualniProPrubezne();
 
         $katId = $request->integer('kategorie');
 
