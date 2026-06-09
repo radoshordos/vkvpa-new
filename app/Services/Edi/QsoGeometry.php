@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Services\Edi;
 
+use App\Enums\KoloStav;
 use App\Models\Edihead;
 use App\Models\Ediline;
+use App\Models\VkvpaKola;
 use App\Support\ContestWindow;
 use App\Support\Maidenhead;
 use Illuminate\Support\Collection;
@@ -129,13 +131,23 @@ final class QsoGeometry
      * jednou, se souřadnicemi a lokátorem prvního platného výskytu a s počtem
      * spojení napříč všemi deníky kola. Jen QSO uvnitř závodního okna.
      *
+     * Pozor – fér­ovost: cizí stanice z kola se zveřejní až po uzávěrce, resp.
+     * vyhodnocení kola ({@see KoloStav::Uzavrene}/{@see KoloStav::Vyhodnocene}).
+     * Mapa i vizualizace jsou veřejné a běžný účastník je vidí hned po uploadu;
+     * během příjmu hlášení by tato vrstva odhalovala deníky soupeřů, proto se
+     * v tom případě vrací prázdná kolekce (vlastní deník bez kola se zobrazí).
+     *
      * @return Collection<int, array{lat: float, lon: float, call: string, wwl: string, count: int}>
      */
     public function roundStations(Edihead $head, int $minQso = 5): Collection
     {
-        $headIds = $head->id_kola === null
-            ? [$head->ID]
-            : Edihead::query()->where('id_kola', $head->id_kola)->pluck('ID')->all();
+        if (! $this->roundResultsDisclosable($head)) {
+            $headIds = [];
+        } elseif ($head->id_kola === null) {
+            $headIds = [$head->ID];
+        } else {
+            $headIds = Edihead::query()->where('id_kola', $head->id_kola)->pluck('ID')->all();
+        }
 
         /** @var array<string, array{count: int, lat: float|null, lon: float|null, wwl: string}> $stations */
         $stations = [];
@@ -193,5 +205,34 @@ final class QsoGeometry
         }
 
         return collect($out);
+    }
+
+    /**
+     * Čekají na zveřejnění ještě další mapová data? True, dokud kolo deníku
+     * není uzavřené/vyhodnocené – teprve pak mapy obsahují i vrstvu „všechny
+     * stanice z kola". Podklad pro upozornění v popisku map.
+     */
+    public function roundDataPending(Edihead $head): bool
+    {
+        return ! $this->roundResultsDisclosable($head);
+    }
+
+    /**
+     * Smí se vrstva „všechny stanice z kola" zveřejnit?
+     *
+     * Bez kola (`id_kola === null`) jde jen o vlastní deník – žádná cizí data,
+     * lze zobrazit. S kolem se cizí stanice odhalí až po uzávěrce nebo
+     * vyhodnocení; během příjmu hlášení (a u nenalezeného kola) se skryjí.
+     */
+    private function roundResultsDisclosable(Edihead $head): bool
+    {
+        if ($head->id_kola === null) {
+            return true;
+        }
+
+        $kolo = VkvpaKola::query()->find($head->id_kola);
+
+        return $kolo !== null
+            && in_array($kolo->stav(), [KoloStav::Uzavrene, KoloStav::Vyhodnocene], true);
     }
 }

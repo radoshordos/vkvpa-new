@@ -39,5 +39,8 @@
 </script>
 <h1>Mapa spojení {{ $pcall }} ({{ $homeLoc }})</h1>
 <p class="-mt-2 mb-3 text-sm text-muted">{{ $mode->label() }}</p>
+@if ($roundDataPending)
+  <p class="-mt-2 mb-3 text-sm text-muted">ℹ️ Po vyhodnocení kola bude mapa obsahovat více dat – přibude vrstva všech stanic z kola.</p>
+@endif
 <div class="table-wrap p-1"><div id="mapa"></div></div>
 @endsection

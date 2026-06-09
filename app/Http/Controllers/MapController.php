@@ -95,6 +95,7 @@ class MapController extends Controller
             'points' => $withPoints ? $this->points($head, $home) : collect(),
             'squares' => $withPoints ? collect() : $this->geometry->bigSquares($head),
             'roundStations' => $mode === MapMode::Crk ? $this->geometry->roundStations($head) : collect(),
+            'roundDataPending' => $mode === MapMode::Crk && $this->geometry->roundDataPending($head),
         ]);
     }
 

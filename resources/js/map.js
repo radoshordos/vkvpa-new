@@ -1,5 +1,6 @@
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { addFullscreenControl } from './leaflet-fullscreen.js';
 
 const cfg = window.__mapConfig;
 const HOME = cfg.home ? [cfg.home.lat, cfg.home.lon] : null;
@@ -10,6 +11,7 @@ L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '&copy; OpenStreetMap',
 }).addTo(map);
+addFullscreenControl(map);
 
 const bounds = [];
 

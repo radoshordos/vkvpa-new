@@ -1,6 +1,7 @@
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Chart, registerables } from 'chart.js';
+import { addFullscreenControl } from './leaflet-fullscreen.js';
 
 Chart.register(...registerables);
 
@@ -13,6 +14,7 @@ L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '&copy; OpenStreetMap',
 }).addTo(map);
+addFullscreenControl(map);
 
 const bounds = [];
 
@@ -31,6 +33,8 @@ const jezekLayer = L.layerGroup();
 const spendlikyLayer = L.layerGroup();
 // Vrstva: lokátory (velké čtverce)
 const lokatoryLayer = L.layerGroup();
+// Vrstva: CRK – kombinovaná mapa (paprsky + provoz + kružnice + mřížka + stanice z kola)
+const crkLayer = L.layerGroup();
 
 // Barvy dle druhu provozu: 1=SSB (modrá), 2=CW (oranžová), ostatní (šedá)
 function modeColor(mode) {
@@ -90,9 +94,88 @@ cfg.squares.forEach(function (s) {
         .bindPopup(`<strong>${s.square}</strong><br>${s.count} protistanic`);
 });
 
-// Výchozí vrstva: ježek
-jezekLayer.addTo(map);
+// ── Vrstva CRK: kombinovaná mapa ve stylu vkvzavody.crk.cz ─────────────────
 
+// Kružnice vzdáleností po 200 km (až 1200 km) s popiskem na severu.
+if (cfg.home) {
+    for (let r = 200000; r <= 1200000; r += 200000) {
+        L.circle([cfg.home.lat, cfg.home.lon], {
+            radius: r, color: 'red', weight: 1, fill: false, opacity: 0.5,
+        }).addTo(crkLayer);
+        const latOffset = r / 111320; // ~ stupně zem. šířky na metr
+        L.marker([cfg.home.lat + latOffset, cfg.home.lon], {
+            icon: L.divIcon({ className: 'km-label', html: r / 1000 + ' km', iconSize: null }),
+            interactive: false,
+        }).addTo(crkLayer);
+    }
+}
+
+// Paprsky z QTH do protistanic + špendlíky barevně dle druhu provozu.
+cfg.points.forEach(function (p) {
+    const mc = modeColor(p.mode);
+    if (cfg.home) {
+        L.polyline([[cfg.home.lat, cfg.home.lon], [p.lat, p.lon]], {
+            color: '#cc0000', weight: 1, opacity: 0.35,
+        }).addTo(crkLayer);
+    }
+    const popup = `<strong>${p.call}</strong> <span style="font-size:.8em;opacity:.7">${modeLabel(p.mode)}</span><br>${p.wwl}`
+        + (p.dist !== null ? `<br>${p.dist} km` : '')
+        + (p.azimut !== null ? `<br>azimut ${p.azimut}°` : '');
+    L.circleMarker([p.lat, p.lon], {
+        radius: 4, color: mc.stroke, fillColor: mc.fill, fillOpacity: 0.85, weight: 1.5,
+    }).addTo(crkLayer).bindPopup(popup);
+});
+
+// Všechny stanice z kola s ≥ 5 QSO.
+(cfg.roundStations || []).forEach(function (s) {
+    L.circleMarker([s.lat, s.lon], {
+        radius: 3, color: '#9933cc', fillColor: '#cc66ff', fillOpacity: 0.7,
+    }).addTo(crkLayer).bindPopup(`<strong>${s.call}</strong><br>${s.wwl}<br>${s.count} QSO`);
+});
+
+// Mřížka velkých čtverců (2° délky × 1° šířky) – překresluje se podle výřezu,
+// dokud je vrstva CRK aktivní (viz přepínání vrstev níže).
+const crkGrid = L.layerGroup().addTo(crkLayer);
+
+function bigSquareName(lng, lat) {
+    const a = 'A'.charCodeAt(0);
+    const fieldLng = Math.floor((lng + 180) / 20);
+    const fieldLat = Math.floor((lat + 90) / 10);
+    const sqLng = Math.floor(((lng + 180) % 20) / 2);
+    const sqLat = Math.floor((lat + 90) % 10);
+    return String.fromCharCode(a + fieldLng) + String.fromCharCode(a + fieldLat) + sqLng + sqLat;
+}
+
+function redrawCrkGrid() {
+    crkGrid.clearLayers();
+    const b = map.getBounds();
+    const zoom = map.getZoom();
+    const west = Math.floor(b.getWest() / 2) * 2;
+    const east = Math.ceil(b.getEast() / 2) * 2;
+    const south = Math.floor(b.getSouth());
+    const north = Math.ceil(b.getNorth());
+
+    for (let lat = south; lat <= north; lat++) {
+        L.polyline([[lat, west], [lat, east]], { color: '#000', weight: 1, opacity: 0.3 }).addTo(crkGrid);
+    }
+    for (let lng = west; lng <= east; lng += 2) {
+        L.polyline([[south, lng], [north, lng]], { color: '#000', weight: 1, opacity: 0.3 }).addTo(crkGrid);
+    }
+
+    // Názvy velkých čtverců jen při rozumném přiblížení (jinak by se slily).
+    if (zoom >= 5 && zoom <= 9) {
+        for (let lng = west; lng < east; lng += 2) {
+            for (let lat = south; lat < north; lat++) {
+                L.marker([lat + 0.5, lng + 1], {
+                    icon: L.divIcon({ className: 'loc-label', html: bigSquareName(lng, lat), iconSize: null }),
+                    interactive: false,
+                }).addTo(crkGrid);
+            }
+        }
+    }
+}
+
+// Výřez nastavíme dřív, než zapneme vrstvu – mřížka CRK čte map.getBounds().
 if (bounds.length > 0) {
     map.fitBounds(bounds, { padding: [24, 24] });
 } else {
@@ -100,18 +183,24 @@ if (bounds.length > 0) {
 }
 
 // Přepínání vrstev přes tlačítka
-const layers = { jezek: jezekLayer, spendliky: spendlikyLayer, lokatory: lokatoryLayer };
+const layers = { jezek: jezekLayer, spendliky: spendlikyLayer, lokatory: lokatoryLayer, crk: crkLayer };
+
+function showLayer(key) {
+    Object.values(layers).forEach((l) => map.removeLayer(l));
+    if (homeMarker) map.removeLayer(homeMarker);
+    map.off('moveend', redrawCrkGrid);
+    layers[key].addTo(map);
+    if (key === 'crk') { redrawCrkGrid(); map.on('moveend', redrawCrkGrid); }
+    if (homeMarker) homeMarker.addTo(map);
+    document.querySelectorAll('[data-map-layer]').forEach((b) => b.classList.toggle('active', b.dataset.mapLayer === key));
+}
+
 document.querySelectorAll('[data-map-layer]').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-        const key = btn.dataset.mapLayer;
-        Object.values(layers).forEach((l) => map.removeLayer(l));
-        if (homeMarker) map.removeLayer(homeMarker);
-        layers[key].addTo(map);
-        if (homeMarker) homeMarker.addTo(map);
-        document.querySelectorAll('[data-map-layer]').forEach((b) => b.classList.remove('active'));
-        btn.classList.add('active');
-    });
+    btn.addEventListener('click', () => showLayer(btn.dataset.mapLayer));
 });
+
+// Výchozí vrstva: CRK (kombinovaná mapa).
+showLayer('crk');
 
 // ── Chart.js: Časová osa QSO (bar) ────────────────────────────────────────
 

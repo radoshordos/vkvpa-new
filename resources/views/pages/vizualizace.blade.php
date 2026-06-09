@@ -1,6 +1,6 @@
 {{--
     Vizualizace EDI deníku: mapa, grafy, statistiky na jedné stránce.
-    Leaflet (mapa, 3 přepínatelné vrstvy) + Chart.js (timeline, azimutová růžice, histogram vzdáleností).
+    Leaflet (mapa, 4 přepínatelné vrstvy vč. kombinované CRK) + Chart.js (timeline, azimutová růžice, histogram vzdáleností).
 --}}
 @extends('layouts.app')
 
@@ -12,6 +12,9 @@
   <style>
     #viz-mapa { height: 52vh; width: 100%; border-radius: .5rem; isolation: isolate; }
     .sq-label { background: transparent; border: none; box-shadow: none; color: #fff; font-weight: 700; font-size: 11px; }
+    /* Popisky kružnic vzdáleností a mřížky lokátorů (vrstva „CRK"). */
+    .km-label { background: transparent; border: none; box-shadow: none; color: #c00; font-weight: bold; font-size: 11px; white-space: nowrap; text-shadow: 0 0 2px #fff, 0 0 2px #fff; }
+    .loc-label { background: transparent; border: none; box-shadow: none; color: #333; font-weight: bold; font-size: 11px; white-space: nowrap; text-shadow: 0 0 2px #fff, 0 0 2px #fff; }
     .map-tab { padding: .25rem .75rem; border-radius: .375rem; font-size: .8rem; font-weight: 600; cursor: pointer;
                border: 1px solid var(--color-line, #e2e8f0); background: var(--color-surface, #fff);
                color: var(--color-muted, #64748b); transition: background .15s, color .15s; }
@@ -29,6 +32,7 @@ window.__vizConfig = {
     home: @json($home),
     points: @json($mapPoints),
     squares: @json($squares),
+    roundStations: @json($roundStations),
     timeline: @json($timeline),
     azimuth: @json($azimuth),
     distHistogram: @json($distHistogram),
@@ -38,6 +42,9 @@ window.__vizConfig = {
 {{-- ── Hlavička ────────────────────────────────────────────────────────── --}}
 <h1 class="text-xl font-bold text-heading">Vizualizace deníku {{ $pcall }}</h1>
 <p class="text-sm text-muted mb-4">{{ $homeLoc }} · mapa a grafy (Leaflet + Chart.js)</p>
+@if ($roundDataPending)
+  <p class="text-sm text-muted mb-4 -mt-3">ℹ️ Po vyhodnocení kola budou mapy obsahovat více dat – do vrstvy CRK přibudou všechny stanice z kola.</p>
+@endif
 
 {{-- ── Statistické karty ───────────────────────────────────────────────── --}}
 <div class="grid grid-cols-2 gap-3 sm:grid-cols-4 mb-5">
@@ -58,7 +65,8 @@ window.__vizConfig = {
 <div class="rounded-lg border border-line bg-surface p-3 mb-5">
   <div class="flex items-center gap-2 mb-2 flex-wrap">
     <span class="text-sm font-semibold text-heading">Mapa</span>
-    <button class="map-tab active" data-map-layer="jezek">Ježek</button>
+    <button class="map-tab active" data-map-layer="crk">CRK</button>
+    <button class="map-tab" data-map-layer="jezek">Ježek</button>
     <button class="map-tab" data-map-layer="spendliky">Špendlíky</button>
     <button class="map-tab" data-map-layer="lokatory">Lokátory</button>
   </div>
