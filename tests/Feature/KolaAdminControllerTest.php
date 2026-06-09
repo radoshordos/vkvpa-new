@@ -67,7 +67,7 @@ class KolaAdminControllerTest extends TestCase
                 'aktivni' => '1',
                 'poznamka' => '',
             ])
-            ->assertRedirect(route('kola.index'))
+            ->assertRedirect(route('kola.admin.index'))
             ->assertSessionHas('announcement');
 
         $this->assertDatabaseHas('vkvpa_kola', [
@@ -130,7 +130,7 @@ class KolaAdminControllerTest extends TestCase
                 'aktivni' => '1',
                 'poznamka' => 'Poznámka',
             ])
-            ->assertRedirect(route('kola.index'))
+            ->assertRedirect(route('kola.admin.index'))
             ->assertSessionHas('announcement');
 
         $this->assertDatabaseHas('vkvpa_kola', [
@@ -151,7 +151,7 @@ class KolaAdminControllerTest extends TestCase
                 'datum_uzaverky' => '2026-02-01T23:59',
                 'poznamka' => '',
             ])
-            ->assertRedirect(route('kola.index'));
+            ->assertRedirect(route('kola.admin.index'));
 
         $this->assertDatabaseHas('vkvpa_kola', ['id' => $kolo->id, 'aktivni' => false]);
     }
@@ -186,7 +186,7 @@ class KolaAdminControllerTest extends TestCase
         $kolo = $this->makeKolo(['nazev' => 'Kolo 2026/01']);
 
         $this->actingAs($this->admin())
-            ->get(route('kola.index'))
+            ->get(route('kola.admin.index'))
             ->assertOk()
             ->assertSee(route('kola.admin.create'))
             ->assertSee(route('kola.admin.edit', $kolo->id));

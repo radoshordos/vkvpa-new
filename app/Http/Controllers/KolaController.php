@@ -13,10 +13,9 @@ class KolaController extends Controller
     public function index(): View
     {
         return view('pages.kola', [
-            'active'  => 'kola.index',
+            'active' => 'kola.index',
             'isAdmin' => false,
-            'kola'    => VkvpaKola::query()->withCount('hlaseni')->orderByDesc('datum_konani')->get(),
+            'kola' => VkvpaKola::query()->withCount('hlaseni')->orderByDesc('datum_konani')->get(),
         ]);
     }
-
 }
