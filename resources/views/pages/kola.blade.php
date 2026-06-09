@@ -31,7 +31,8 @@
         @php $stav = $k->stav(); @endphp
         <tr>
           <td class="whitespace-nowrap">{{ $k->datum_konani?->format('j. n. Y') }}</td>
-          <td class="whitespace-nowrap">{{ $k->datum_uzaverky?->format('j. n. Y H:i') }}</td>
+          {{-- isoFormat dddd = název dne v aktuálním jazyce (pátek / Friday) --}}
+          <td class="whitespace-nowrap">{{ $k->datum_uzaverky ? $k->datum_uzaverky->locale(app()->getLocale())->isoFormat('dddd D. M. YYYY HH:mm').' UTC' : '' }}</td>
           <td>{{ $k->nazev }}</td>
           <td class="text-right">{{ $k->hlaseni_count }}</td>
           <td>
