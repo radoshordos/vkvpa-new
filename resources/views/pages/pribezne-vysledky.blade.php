@@ -12,14 +12,12 @@
 <h1>{{ __('pages.pribezne.heading') }}</h1>
 
 <form method="get" action="{{ route('pribezne_vysledky') }}" class="card mb-4 flex flex-wrap items-end gap-4 p-3">
-    <div class="field mb-0">
-        <label class="label" for="kolo">{{ __('pages.pribezne.filter_round') }}</label>
-        <select id="kolo" name="kolo" class="select w-auto">
-            @foreach ($kola as $k)
-                <option value="{{ $k->id }}" @selected($kolo && $k->id === $kolo->id)>{{ $k->nazev }} ({{ $k->datum_konani?->format('j. n. Y') }})</option>
-            @endforeach
-        </select>
-    </div>
+    @if ($kolo)
+        <div class="field mb-0">
+            <span class="label">{{ __('pages.pribezne.filter_round') }}</span>
+            <strong>{{ $kolo->nazev }} ({{ $kolo->datum_konani?->format('j. n. Y') }})</strong>
+        </div>
+    @endif
     <div class="field mb-0">
         <label class="label" for="kategorie">{{ __('pages.pribezne.filter_category') }}</label>
         <select id="kategorie" name="kategorie" class="select w-auto">
@@ -134,10 +132,10 @@
 @push('scripts')
 <script>
 (function () {
-    var form = document.getElementById('kolo')?.closest('form');
+    var kategorie = document.getElementById('kategorie');
+    var form = kategorie ? kategorie.closest('form') : null;
     if (form) {
-        document.getElementById('kolo').addEventListener('change', function () { form.submit(); });
-        document.getElementById('kategorie').addEventListener('change', function () { form.submit(); });
+        kategorie.addEventListener('change', function () { form.submit(); });
     }
 }());
 </script>

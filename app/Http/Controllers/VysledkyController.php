@@ -81,12 +81,13 @@ class VysledkyController extends Controller
 
     public function pribezne(Request $request): View
     {
-        $aktivniKola = VkvpaKola::query()->active()->orderByDesc('datum_konani')->get();
-
-        $koloId = $request->integer('kolo');
-        $kolo = $koloId !== 0
-            ? $aktivniKola->firstWhere('id', $koloId)
-            : $aktivniKola->first();
+        // Průběžné výsledky se zobrazují vždy jen pro jedno kolo – nejstarší
+        // aktivní, které ještě nebylo vyhodnocené. Výběr kola se nenabízí.
+        $kolo = VkvpaKola::query()
+            ->active()
+            ->whereNull('vyhodnoceno')
+            ->orderBy('datum_konani')
+            ->first();
 
         $katId = $request->integer('kategorie');
 
@@ -102,7 +103,6 @@ class VysledkyController extends Controller
 
         return view('pages.pribezne-vysledky', [
             'active' => 'pribezne_vysledky',
-            'kola' => $aktivniKola,
             'kolo' => $kolo,
             'kategorie' => VkvpaKategorie::query()->orderBy('id')->whereIn('id', $obsazeneKatIds)->get()->keyBy('id'),
             'katId' => $katId,
