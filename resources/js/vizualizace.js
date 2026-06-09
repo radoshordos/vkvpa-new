@@ -1,6 +1,7 @@
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Chart, registerables } from 'chart.js';
+import { addFullscreenControl } from './leaflet-fullscreen.js';
 
 Chart.register(...registerables);
 
@@ -13,6 +14,7 @@ L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '&copy; OpenStreetMap',
 }).addTo(map);
+addFullscreenControl(map);
 
 const bounds = [];
 
