@@ -90,6 +90,29 @@ class HlaseniTest extends TestCase
         $this->assertTrue((bool) VkvpaData::firstOrFail()->schvaleno);
     }
 
+    public function test_hlaseni_page_hides_forms_outside_upload_window(): void
+    {
+        [$kolo] = $this->prepare();
+        $kolo->update(['aktivni' => false, 'datum_uzaverky' => now()->subDay()]);
+
+        // Mimo upload okno se EDI panel ani ruční formulář nenabízejí.
+        $this->get('/hlaseni?showfrm=1')
+            ->assertOk()
+            ->assertDontSee(route('edi.store'))
+            ->assertDontSee('name="znacka"', false);
+    }
+
+    public function test_hlaseni_page_shows_forms_in_prijem_state(): void
+    {
+        [$kolo] = $this->prepare();
+        // Den závodu proběhl, kolo neaktivní, uzávěrka v budoucnu → stav Příjem.
+        $kolo->update(['aktivni' => false, 'datum_uzaverky' => now()->addDay()]);
+
+        $this->get('/hlaseni')
+            ->assertOk()
+            ->assertSee(route('edi.store'));
+    }
+
     public function test_manual_report_rejected_outside_upload_window(): void
     {
         [$kolo, $kat] = $this->prepare();

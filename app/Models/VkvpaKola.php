@@ -134,6 +134,19 @@ class VkvpaKola extends Model
     }
 
     /**
+     * Je otevřené upload okno alespoň jednoho kola? Řídí zobrazení stránky
+     * hlášení (EDI upload i ruční formulář) – mimo okno se formuláře neukazují
+     * (a POST je stejně odmítne). Jediná definice okna je {@see self::prijimaHlaseni()}.
+     */
+    public static function existujeUploadOkno(): bool
+    {
+        return static::query()
+            ->whereNull('vyhodnoceno')
+            ->get()
+            ->contains(fn (self $kolo): bool => $kolo->prijimaHlaseni());
+    }
+
+    /**
      * Existuje vůbec nějaké aktivní kolo (pro zobrazení formuláře)?
      */
     public static function existujeAktivni(): bool

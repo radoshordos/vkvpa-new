@@ -42,7 +42,12 @@ class HlaseniController extends Controller
 
         return view('pages.hlaseni', [
             'active' => 'edit_hlaseni',
-            'maAktivniKolo' => VkvpaKola::existujeAktivni() || (bool) ($request->user()?->is_admin),
+            // Stránka hlášení (EDI i ruční formulář) jen v otevřeném upload okně;
+            // admin ji vidí vždy (opravy starých kol). Vlastní rozpracovaný řádek
+            // ze session smí účastník dokončit i po zavření okna.
+            'maAktivniKolo' => VkvpaKola::existujeUploadOkno()
+                || $edit !== null
+                || (bool) ($request->user()?->is_admin),
             'kola' => VkvpaKola::query()->orderByDesc('datum_konani')->limit(36)->get(),
             'kategorie' => VkvpaKategorie::query()->orderBy('id')->get(),
             'showManual' => $showManual,
@@ -58,8 +63,10 @@ class HlaseniController extends Controller
         $znacka = is_string($v['znacka'] ?? null) ? $v['znacka'] : '';
 
         // Hlášení (i manuální) lze odeslat jen v otevřeném upload okně kola.
-        // Admin smí ukládat kdykoliv (opravy a doplňování starých kol).
-        if (! (bool) ($request->user()?->is_admin)) {
+        // Admin smí ukládat kdykoliv (opravy a doplňování starých kol) a vlastní
+        // rezervovaný řádek (EDI nahraný na poslední chvíli) lze dokončit
+        // i těsně po zavření okna – vlastnictví hlídá StoreHlaseniRequest.
+        if ($idZaznamu === 0 && ! (bool) ($request->user()?->is_admin)) {
             $kolo = VkvpaKola::find($this->intFrom($v['kolo']));
 
             if ($kolo === null || ! $kolo->prijimaHlaseni()) {
