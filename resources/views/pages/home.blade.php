@@ -9,12 +9,6 @@
     $startZavodu = preg_replace('/^(\d{2})(\d{2})$/', '$1:$2', \App\Support\ContestWindow::from());
 @endphp
 
-{{-- ── Hero ──────────────────────────────────────────────────────── --}}
-<div class="mb-8">
-    <h1 class="!mb-1">{{ __('pages.home.heading') }}</h1>
-    <p class="text-muted">{{ __('pages.home.subtitle') }}</p>
-</div>
-
 {{-- ── Aktuální / nadcházející kolo ──────────────────────────────── --}}
 @if ($kolo)
 <div class="card mb-6 p-5">
