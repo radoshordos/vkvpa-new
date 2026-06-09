@@ -11,7 +11,7 @@
 <x-form-errors />
 
 {{-- Stejný design jako panel „Načíst EDI soubor" na /hlaseni --}}
-<div class="card mb-8 max-w-xl">
+<div class="card mb-8">
     <div class="flex items-center gap-3 border-b border-line px-5 py-4">
         <div class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-brand-soft">
             <x-icon name="file" class="h-5 w-5 text-brand" />
