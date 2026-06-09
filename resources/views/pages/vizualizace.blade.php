@@ -33,6 +33,7 @@ window.__vizConfig = {
     points: @json($mapPoints),
     squares: @json($squares),
     roundStations: @json($roundStations),
+    compare: @json($compare),
     timeline: @json($timeline),
     azimuth: @json($azimuth),
     distHistogram: @json($distHistogram),
@@ -43,7 +44,7 @@ window.__vizConfig = {
 <h1 class="text-xl font-bold text-heading">Vizualizace deníku {{ $pcall }}</h1>
 <p class="text-sm text-muted mb-4">{{ $homeLoc }} · mapa a grafy (Leaflet + Chart.js)</p>
 @if ($roundDataPending)
-  <p class="text-sm text-muted mb-4 -mt-3">ℹ️ Po vyhodnocení kola budou mapy obsahovat více dat – do vrstvy CRK přibudou všechny stanice z kola.</p>
+  <p class="text-sm text-muted mb-4 -mt-3">ℹ️ Po vyhodnocení kola budou mapy obsahovat více dat – do vrstvy CRK přibudou všechny stanice z kola a půjde porovnat deníky účastníků.</p>
 @endif
 
 {{-- ── Statistické karty ───────────────────────────────────────────────── --}}
@@ -69,6 +70,22 @@ window.__vizConfig = {
     <button class="map-tab" data-map-layer="jezek">Ježek</button>
     <button class="map-tab" data-map-layer="spendliky">Špendlíky</button>
     <button class="map-tab" data-map-layer="lokatory">Lokátory</button>
+    @if ($compare !== null)
+      <button class="map-tab" data-map-layer="porovnani">Porovnání</button>
+    @endif
+    {{-- Porovnání s deníkem soupeře z téhož kola (jen po uzávěrce/vyhodnocení). --}}
+    @if ($rivals->isNotEmpty())
+      <form method="get" class="ml-auto flex items-center gap-2">
+        <label for="porovnat" class="text-xs text-muted">Porovnat s:</label>
+        <select name="porovnat" id="porovnat" onchange="this.form.submit()"
+                class="text-xs rounded border border-line bg-surface text-heading px-2 py-1">
+          <option value="">— bez porovnání —</option>
+          @foreach ($rivals as $r)
+            <option value="{{ $r->id }}" @selected($compare !== null && $compare['rivalId'] === $r->id)>{{ $r->p_call }}</option>
+          @endforeach
+        </select>
+      </form>
+    @endif
   </div>
   <div id="viz-mapa"></div>
 </div>

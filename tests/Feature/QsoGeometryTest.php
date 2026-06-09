@@ -121,6 +121,76 @@ class QsoGeometryTest extends TestCase
         $this->assertCount(0, new QsoGeometry()->roundStations($headA));
     }
 
+    public function test_compare_with_returns_unique_and_common_stations(): void
+    {
+        $kolo = VkvpaKola::create([
+            'datum_konani' => '2026-03-15', 'datum_uzaverky' => '2026-03-20 23:59:59',
+            'nazev' => '03/2026', 'poznamka' => '', 'vyhodnoceno' => '2026-03-21 10:00:00',
+        ]);
+        [$headA, $headB] = $this->seedCompareLogs($kolo->id);
+
+        $cmp = new QsoGeometry()->compareWith($headA, $headB, Maidenhead::toLatLon('JN79DW'));
+
+        $this->assertNotNull($cmp);
+
+        // OK9SML udělal jen deník A, OK7UNI jen soupeř B, OK5BIG oba.
+        // Vzájemná spojení (OK1AAA ↔ OK1BBB) se do porovnání nepočítají.
+        $this->assertSame(['OK9SML'], array_column($cmp['onlyMine'], 'call'));
+        $this->assertSame(['OK7UNI'], array_column($cmp['onlyRival'], 'call'));
+        $this->assertSame(['OK5BIG'], array_column($cmp['both'], 'call'));
+
+        // Vzdálenost i u soupeřovy stanice se počítá od domácího QTH deníku A.
+        $this->assertNotNull($cmp['onlyRival'][0]['dist']);
+        $this->assertSame('JO70AA', $cmp['onlyRival'][0]['wwl']);
+    }
+
+    public function test_compare_with_hidden_while_round_open(): void
+    {
+        // Kolo v příjmu hlášení → porovnání by odhalilo soupeřův deník, vrací null.
+        $kolo = VkvpaKola::create([
+            'datum_konani' => '2026-03-15', 'datum_uzaverky' => '2026-03-20 23:59:59',
+            'nazev' => '03/2026', 'poznamka' => '', 'aktivni' => true,
+        ]);
+        [$headA, $headB] = $this->seedCompareLogs($kolo->id);
+
+        $this->assertNull(new QsoGeometry()->compareWith($headA, $headB, null));
+    }
+
+    public function test_compare_with_requires_same_round(): void
+    {
+        $kolo = VkvpaKola::create([
+            'datum_konani' => '2026-03-15', 'datum_uzaverky' => '2026-03-20 23:59:59',
+            'nazev' => '03/2026', 'poznamka' => '', 'vyhodnoceno' => '2026-03-21 10:00:00',
+        ]);
+        [$headA, $headB] = $this->seedCompareLogs($kolo->id);
+        $headB->update(['id_kola' => null]);
+
+        $this->assertNull(new QsoGeometry()->compareWith($headA, $headB, null));
+        $this->assertNull(new QsoGeometry()->compareWith($headA, $headA, null));
+    }
+
+    /**
+     * Dva deníky v jednom kole pro porovnání: OK5BIG udělali oba, OK9SML jen A,
+     * OK7UNI jen B; navíc vzájemné spojení A↔B (z porovnání se vynechává).
+     *
+     * @return array{Edihead, Edihead}
+     */
+    private function seedCompareLogs(int $idKola): array
+    {
+        $headA = Edihead::create(['id_kola' => $idKola, 't_date' => '20260315', 'p_call' => 'OK1AAA', 'p_wwlo' => 'JN79', 'p_band' => '144 MHz', 'r_name' => 'A', 'r_hbbs' => 'a@a.cz', 's_powe' => 100]);
+        $headB = Edihead::create(['id_kola' => $idKola, 't_date' => '20260315', 'p_call' => 'OK1BBB', 'p_wwlo' => 'JN89', 'p_band' => '144 MHz', 'r_name' => 'B', 'r_hbbs' => 'b@b.cz', 's_powe' => 100]);
+
+        Ediline::create(['edihead_id' => $headA->id, 'date' => '260315', 'time' => '0810', 'call_sign' => 'OK5BIG', 'received_wwl' => 'JN99AA']);
+        Ediline::create(['edihead_id' => $headA->id, 'date' => '260315', 'time' => '0815', 'call_sign' => 'OK9SML', 'received_wwl' => 'JO60AA']);
+        Ediline::create(['edihead_id' => $headA->id, 'date' => '260315', 'time' => '0820', 'call_sign' => 'OK1BBB', 'received_wwl' => 'JN89AA']);
+
+        Ediline::create(['edihead_id' => $headB->id, 'date' => '260315', 'time' => '0811', 'call_sign' => 'OK5BIG', 'received_wwl' => 'JN99AA']);
+        Ediline::create(['edihead_id' => $headB->id, 'date' => '260315', 'time' => '0816', 'call_sign' => 'OK7UNI', 'received_wwl' => 'JO70AA']);
+        Ediline::create(['edihead_id' => $headB->id, 'date' => '260315', 'time' => '0821', 'call_sign' => 'OK1AAA', 'received_wwl' => 'JN79AA']);
+
+        return [$headA, $headB];
+    }
+
     /**
      * Dva deníky v jednom kole: OK5BIG má 3 + 2 = 5 QSO v okně (projde),
      * OK9SML jen 1 (neprojde), jedno OK5BIG QSO je mimo závodní okno.
