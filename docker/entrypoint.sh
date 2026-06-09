@@ -22,6 +22,12 @@ else
     echo "[entrypoint] VAROVÁNÍ: ADMINER_AUTH_USER/ADMINER_AUTH_PASSWORD nejsou nastaveny – přístup k Adminer je odepřen (fail-closed)."
 fi
 
+# Storage symlink (public/storage → storage/app/public) – bezpečné spouštět
+# opakovaně; artisan to přeskočí pokud symlink již existuje.
+if [ -f artisan ]; then
+    php artisan storage:link --quiet || true
+fi
+
 # Předáme řízení původnímu entrypointu základního image (php:*-apache),
 # který provede standardní inicializaci a spustí apache2-foreground.
 exec docker-php-entrypoint "$@"
