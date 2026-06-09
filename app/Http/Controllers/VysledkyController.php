@@ -65,8 +65,9 @@ class VysledkyController extends Controller
 
         return view('pages.vysledky-listina', [
             'active' => 'vysledkova_listina',
-            // Nadcházející kola nemají co zobrazit – ve výběru se nenabízejí.
-            'kola' => VkvpaKola::query()->orderByDesc('datum_konani')->get()
+            // Nadcházející kola a kola bez jediného záznamu nemají co
+            // zobrazit – ve výběru se nenabízejí.
+            'kola' => VkvpaKola::query()->whereHas('hlaseni')->orderByDesc('datum_konani')->get()
                 ->reject(fn (VkvpaKola $k): bool => $k->stav() === KoloStav::Nadchazejici)
                 ->values(),
             'kolo' => $kolo,
