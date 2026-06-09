@@ -64,6 +64,7 @@ return [
     'hlaseni' => [
         'title' => 'Log import – VKV PA',
         'heading_edi' => 'Import EDI file',
+        'heading_manual' => 'No EDI file (fill in the report manually)',
         'error_line' => 'Invalid line',
         'import_warnings' => 'The log was imported, but please note:',
         'btn_upload' => 'upload',

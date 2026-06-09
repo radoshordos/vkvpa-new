@@ -66,6 +66,7 @@ return [
         'tab_edi' => 'Import EDI',
         'tab_manual' => 'Ruční vložení',
         'heading_edi' => 'Načíst EDI soubor',
+        'heading_manual' => 'Nemám EDI soubor (vyplním hlášení ručně)',
         'error_line' => 'Chybný řádek',
         'import_warnings' => 'Deník byl načten, ale upozorňujeme na:',
         'btn_upload' => 'nahrát',

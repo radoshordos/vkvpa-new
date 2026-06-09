@@ -87,7 +87,14 @@
     </x-alert>
 @endif
 
-<form action="{{ route('hlaseni.store') }}" method="post" class="card p-5 mb-6">
+<form action="{{ route('hlaseni.store') }}" method="post" class="card mb-6">
+    <div class="flex items-center gap-3 border-b border-line px-5 py-4">
+        <div class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-brand-soft">
+            <x-icon name="file" class="h-5 w-5 text-brand" />
+        </div>
+        <p class="text-sm font-semibold text-heading">{{ __('pages.hlaseni.heading_manual') }}</p>
+    </div>
+    <div class="p-5">
     @csrf
     <input type="hidden" name="id_zaznamu" value="{{ (int) ($e->id ?? 0) }}">
     <input type="hidden" name="EDIID" value="{{ (int) $val('EDIID', $e->EDI_ID ?? 0, 0) }}">
@@ -159,6 +166,7 @@
     <div class="mt-2 flex items-center justify-between">
         <a href="{{ route('hlaseni.index') }}" class="text-sm">{{ __('pages.hlaseni.btn_clear') }}</a>
         <button type="submit" name="Odeslat" value="Odeslat" class="btn btn-primary">{{ __('pages.hlaseni.btn_send') }}</button>
+    </div>
     </div>
 </form>
 @endif
