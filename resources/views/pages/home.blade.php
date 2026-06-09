@@ -188,6 +188,10 @@
 
 {{-- ── Nadcházející kola ───────────────────────────────────────────── --}}
 @if ($upcomingRounds->isNotEmpty())
+@php
+    // Start závodu z konfigurace závodního okna ('0800' → '08:00')
+    $startZavodu = preg_replace('/^(\d{2})(\d{2})$/', '$1:$2', \App\Support\ContestWindow::from());
+@endphp
 <div class="mt-8">
     <div class="section-head">{{ __('pages.home.upcoming_heading') }}</div>
     <div class="table-wrap">
@@ -203,9 +207,10 @@
             @foreach ($upcomingRounds as $r)
                 <tr>
                     <td class="font-medium">{{ $r->nazev }}</td>
-                    <td class="whitespace-nowrap">{{ $r->datum_konani->isoFormat('dddd D. MMMM YYYY') }}</td>
+                    {{-- Stejný formát jako na stránce kol: den + datum + čas UTC --}}
+                    <td class="whitespace-nowrap">{{ $r->datum_konani->locale(app()->getLocale())->isoFormat('dddd D. M. YYYY').' '.$startZavodu.' UTC' }}</td>
                     <td class="whitespace-nowrap text-muted">
-                        {{ $r->datum_uzaverky?->isoFormat('D. MMMM YYYY') ?? '—' }}
+                        {{ $r->datum_uzaverky ? $r->datum_uzaverky->locale(app()->getLocale())->isoFormat('dddd D. M. YYYY HH:mm').' UTC' : '—' }}
                     </td>
                 </tr>
             @endforeach
