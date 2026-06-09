@@ -4,6 +4,11 @@
 
 @section('content')
 
+@php
+    // Start závodu z konfigurace závodního okna ('0800' → '08:00')
+    $startZavodu = preg_replace('/^(\d{2})(\d{2})$/', '$1:$2', \App\Support\ContestWindow::from());
+@endphp
+
 {{-- ── Hero ──────────────────────────────────────────────────────── --}}
 <div class="mb-8">
     <h1 class="!mb-1">{{ __('pages.home.heading') }}</h1>
@@ -29,11 +34,11 @@
 
             <dl class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-sm">
                 <dt class="text-muted">{{ __('pages.home.contest_date') }}</dt>
-                <dd class="font-medium">{{ $kolo->datum_konani->isoFormat('dddd D. MMMM YYYY') }}</dd>
+                <dd class="font-medium">{{ $kolo->datum_konani->locale(app()->getLocale())->isoFormat('dddd D. M. YYYY').' '.$startZavodu.' UTC' }}</dd>
 
                 @if ($kolo->datum_uzaverky)
                 <dt class="text-muted">{{ __('pages.home.deadline') }}</dt>
-                <dd>{{ $kolo->datum_uzaverky->isoFormat('D. MMMM YYYY HH:mm') }}</dd>
+                <dd>{{ $kolo->datum_uzaverky->locale(app()->getLocale())->isoFormat('dddd D. M. YYYY HH:mm').' UTC' }}</dd>
                 @endif
 
                 @if ($kolo->vyhodnoceno)
@@ -188,10 +193,6 @@
 
 {{-- ── Nadcházející kola ───────────────────────────────────────────── --}}
 @if ($upcomingRounds->isNotEmpty())
-@php
-    // Start závodu z konfigurace závodního okna ('0800' → '08:00')
-    $startZavodu = preg_replace('/^(\d{2})(\d{2})$/', '$1:$2', \App\Support\ContestWindow::from());
-@endphp
 <div class="mt-8">
     <div class="section-head">{{ __('pages.home.upcoming_heading') }}</div>
     <div class="table-wrap">
