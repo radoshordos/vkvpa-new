@@ -30,7 +30,8 @@
 
         <div class="grid gap-x-5 sm:grid-cols-2">
             <x-field name="datum_konani" id="datum_konani" type="date" required
-                     :label="__('admin.kolo_field_date')" :value="$defKonani" :hint="__('admin.kolo_hint_date')" />
+                     :label="__('admin.kolo_field_date')" :value="$defKonani" :hint="$kolo ? null : __('admin.kolo_hint_date')"
+                     @if($kolo) readonly @endif />
 
             <x-field name="datum_uzaverky" id="datum_uzaverky" type="datetime-local" required
                      :label="__('admin.kolo_field_deadline')" :value="$defUzaverky" :hint="__('admin.kolo_hint_deadline')" />

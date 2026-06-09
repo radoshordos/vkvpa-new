@@ -241,6 +241,12 @@
         border-color: var(--brand);
         box-shadow: 0 0 0 3px color-mix(in oklab, var(--brand) 22%, transparent);
     }
+    .input[readonly] {
+        background-color: var(--surface-2);
+        color: var(--muted);
+        cursor: not-allowed;
+        border-style: dashed;
+    }
     .input-err {
         border-color: var(--danger) !important;
         background-color: var(--danger-soft);
