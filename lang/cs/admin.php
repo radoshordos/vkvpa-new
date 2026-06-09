@@ -5,7 +5,7 @@ declare(strict_types=1);
 return [
 
     // Navigace
-    'nav_dashboard' => 'Dashboard / statistiky',
+    'nav_dashboard' => 'Statistiky',
     'nav_rounds' => 'Kola závodu',
     'nav_reports' => 'Hlášení',
     'nav_logs' => 'Deníky – upload',

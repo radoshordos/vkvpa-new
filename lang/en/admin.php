@@ -5,7 +5,7 @@ declare(strict_types=1);
 return [
 
     // Navigation
-    'nav_dashboard' => 'Dashboard / statistics',
+    'nav_dashboard' => 'Statistics',
     'nav_rounds' => 'Contest rounds',
     'nav_reports' => 'Reports',
     'nav_logs' => 'Logs – upload',
