@@ -42,6 +42,9 @@ window.__vizConfig = {
 {{-- ── Hlavička ────────────────────────────────────────────────────────── --}}
 <h1 class="text-xl font-bold text-heading">Vizualizace deníku {{ $pcall }}</h1>
 <p class="text-sm text-muted mb-4">{{ $homeLoc }} · mapa a grafy (Leaflet + Chart.js)</p>
+@if ($roundDataPending)
+  <p class="text-sm text-muted mb-4 -mt-3">ℹ️ Po vyhodnocení kola budou mapy obsahovat více dat – do vrstvy CRK přibudou všechny stanice z kola.</p>
+@endif
 
 {{-- ── Statistické karty ───────────────────────────────────────────────── --}}
 <div class="grid grid-cols-2 gap-3 sm:grid-cols-4 mb-5">

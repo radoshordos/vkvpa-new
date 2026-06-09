@@ -208,6 +208,16 @@ final class QsoGeometry
     }
 
     /**
+     * Čekají na zveřejnění ještě další mapová data? True, dokud kolo deníku
+     * není uzavřené/vyhodnocené – teprve pak mapy obsahují i vrstvu „všechny
+     * stanice z kola". Podklad pro upozornění v popisku map.
+     */
+    public function roundDataPending(Edihead $head): bool
+    {
+        return ! $this->roundResultsDisclosable($head);
+    }
+
+    /**
      * Smí se vrstva „všechny stanice z kola" zveřejnit?
      *
      * Bez kola (`id_kola === null`) jde jen o vlastní deník – žádná cizí data,

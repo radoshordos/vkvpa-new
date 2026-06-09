@@ -6,13 +6,14 @@ namespace Tests\Feature;
 
 use App\Http\Controllers\MapController;
 use App\Models\Edihead;
+use App\Models\VkvpaKola;
 use App\Services\Edi\EdiImportService;
 use App\Services\Edi\EdiParser;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Tři mapové pohledy: M (ježek), N (špendlíky), S (velké čtverce).
+ * Čtyři mapové pohledy: M (ježek), N (špendlíky), S (velké čtverce), C (CRK).
  *
  * @see MapController
  */
@@ -72,5 +73,31 @@ class MapTest extends TestCase
             ->assertSeeHtml('OK2IMH')
             ->assertSeeHtml('roundStations')
             ->assertSeeHtml('window.__mapConfig');
+    }
+
+    public function test_crk_map_shows_pending_note_while_round_open(): void
+    {
+        $kolo = VkvpaKola::create([
+            'datum_konani' => '2026-03-15', 'datum_uzaverky' => '2026-03-20 23:59:59',
+            'nazev' => '03/2026', 'poznamka' => '', 'aktivni' => true,
+        ]);
+        $head = Edihead::create(['id_kola' => $kolo->id, 'TDate' => '20260315', 'PCall' => 'OK1AAA', 'PWWLo' => 'JN99', 'PBand' => '144 MHz', 'RName' => 'A', 'RHBBS' => 'a@a.cz', 'SPowe' => 100]);
+
+        $this->get(route('edi.mapa.crk', $head->ID))
+            ->assertOk()
+            ->assertSee('Po vyhodnocení kola');
+    }
+
+    public function test_crk_map_hides_pending_note_after_evaluation(): void
+    {
+        $kolo = VkvpaKola::create([
+            'datum_konani' => '2026-03-15', 'datum_uzaverky' => '2026-03-20 23:59:59',
+            'nazev' => '03/2026', 'poznamka' => '', 'vyhodnoceno' => '2026-03-21 10:00:00',
+        ]);
+        $head = Edihead::create(['id_kola' => $kolo->id, 'TDate' => '20260315', 'PCall' => 'OK1AAA', 'PWWLo' => 'JN99', 'PBand' => '144 MHz', 'RName' => 'A', 'RHBBS' => 'a@a.cz', 'SPowe' => 100]);
+
+        $this->get(route('edi.mapa.crk', $head->ID))
+            ->assertOk()
+            ->assertDontSee('Po vyhodnocení kola');
     }
 }
