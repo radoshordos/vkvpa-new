@@ -51,7 +51,6 @@ Webový systém pro správu a vyhodnocování závodů v pásmu VKV (Very High F
 | Statická analýza | PHPStan level 10 (Larastan) |
 | Code style | Laravel Pint |
 | Správa DB | Adminer (HTTP Basic Auth) |
-| iCalendar | eluceo/ical |
 | Geo výpočty | mjaschen/phpgeo |
 
 ---
@@ -66,7 +65,6 @@ Webový systém pro správu a vyhodnocování závodů v pásmu VKV (Very High F
 - **Výsledkové listiny** – přehled výsledků dle kola, kategorie a volacího znaku; vyhledávání
 - **Průběžné výsledky** – živá průběžná tabulka aktivního kola
 - **Roční výsledky** – kumulativní skóre přes všechna kola v roce
-- **iCal feed** – odběr termínů závodních kol jako `.ics` soubor (`/kola/kalendar.ics`); obsahuje upomínku 2 dny před každým závodem
 - **Mapové vizualizace** – čtyři typy Leaflet map pro každý deník:
   - **Ježek** – čáry z domácí stanice na všechna pracovaná QSO
   - **Špendlíky** – pin na každé QSO s vzdáleností a azimutem
@@ -214,7 +212,7 @@ app/
 │   │                       # EdiValidator, EdiValidationReport, QsoGeometry, EnrichedQso, BigSquareCount
 │   └── Scoring/            # ScoringService, EdiScoreDebugger, value objekty
 ├── Mail/                   # HlaseniPrijato, HlaseniProVyhodnocovatele
-└── Support/                # Maidenhead, ContestWindow, ContestCalendar, IcalFeed, VkvpaSettings
+└── Support/                # Maidenhead, ContestWindow, ContestCalendar, VkvpaSettings
 config/
 ├── navigation.php          # Struktura menu (ne hard-coded v Blade)
 ├── pulse.php               # Laravel Pulse konfigurace
@@ -473,7 +471,6 @@ VkvpaKola ──► Prispevek[]
 | GET | `/hlaseni` | `HlaseniController@index` | `hlaseni.index` |
 | POST | `/hlaseni` | `HlaseniController@store` | `hlaseni.store` |
 | GET | `/kola` | `KolaController@index` | `kola.index` |
-| GET | `/kola/kalendar.ics` | `KolaController@ical` | `kola.ical` |
 | GET | `/vysledky` | `VysledkyController@listina` | `vysledkova_listina` |
 | GET | `/vysledky/pribezne` | `VysledkyController@pribezne` | `pribezne_vysledky` |
 | GET | `/vysledky/rocni` | `VysledkyController@rocni` | `rocni_vysledky` |
