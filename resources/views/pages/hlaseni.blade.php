@@ -1,6 +1,5 @@
 {{--
-    Hlášení. Nahoře tab navigace; EDI panel nebo ruční formulář dle aktivní záložky.
-    Pod tím průběžné výsledky vybraného kola.
+    Hlášení. EDI upload nebo ruční formulář dle stavu; pod tím průběžné výsledky.
 --}}
 @extends('layouts.app')
 
@@ -27,45 +26,51 @@
 
 @if ($maAktivniKolo)
 
-{{-- ===== Tab navigace ===== --}}
-<div class="tab-nav">
-    <a href="{{ route('hlaseni.index') }}" class="tab-btn {{ !$showManual ? 'active' : '' }}">
-        <x-icon name="file" />
-        {{ __('pages.hlaseni.tab_edi') }}
-    </a>
-    <a href="{{ route('hlaseni.index', ['showfrm' => 1]) }}" class="tab-btn {{ $showManual ? 'active' : '' }}">
-        <x-icon name="pencil" />
-        {{ __('pages.hlaseni.tab_manual') }}
-    </a>
-</div>
-
 {{-- ===== EDI upload panel ===== --}}
 @if (!$showManual)
-<div class="card mb-6 p-5">
-    @if ($errors->has('upload'))
-        <x-alert type="error">
-            {{ $errors->first('upload') }}
-            @foreach (session('lineErrors', []) as $le)
-                <br><span class="font-normal">{{ __('pages.hlaseni.error_line') }}: {{ $le }}</span>
-            @endforeach
-        </x-alert>
-    @endif
+<div class="card mb-6">
+    <div class="flex items-center gap-3 border-b border-line px-5 py-4">
+        <div class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-brand-soft">
+            <x-icon name="file" class="h-5 w-5 text-brand" />
+        </div>
+        <p class="text-sm font-semibold text-heading">{{ __('pages.hlaseni.heading_edi') }}</p>
+    </div>
 
-    <form action="{{ route('edi.store') }}" method="post" enctype="multipart/form-data" class="flex flex-wrap items-center gap-3">
-        @csrf
-        <input type="file" name="upload" class="text-sm">
-        <button type="submit" class="btn btn-primary">{{ __('pages.hlaseni.btn_upload') }}</button>
-    </form>
+    <div class="px-5 py-4">
+        @if ($errors->has('upload'))
+            <x-alert type="error" class="mb-3">
+                {{ $errors->first('upload') }}
+                @foreach (session('lineErrors', []) as $le)
+                    <br><span class="font-normal">{{ __('pages.hlaseni.error_line') }}: {{ $le }}</span>
+                @endforeach
+            </x-alert>
+        @endif
 
-    <p class="mt-3 text-xs leading-relaxed text-muted">
-        {{ __('pages.hlaseni.edi_info') }}
-    </p>
+        <form action="{{ route('edi.store') }}" method="post" enctype="multipart/form-data">
+            @csrf
+            <label class="upload-zone" id="edi-zone">
+                <input
+                    type="file" name="upload" id="edi-file" accept=".edi,.txt" class="sr-only"
+                    onchange="var z=document.getElementById('edi-zone'),n=document.getElementById('edi-name');z.classList.toggle('has-file',!!this.files[0]);n.textContent=this.files[0]?this.files[0].name:''"
+                >
+                <svg class="upload-zone-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"/>
+                </svg>
+                <span id="edi-name" class="upload-zone-name">{{ __('pages.hlaseni.tab_edi') }}…</span>
+                <span class="upload-zone-hint">{{ __('pages.hlaseni.edi_info') }}</span>
+            </label>
 
-    <div class="mt-3 border-t border-line pt-3">
-        <a href="{{ route('hlaseni.index', ['showfrm' => 1]) }}" class="link-arrow">
-            {{ __('pages.hlaseni.no_edi_link') }}
-            <x-icon name="arrow-right" />
-        </a>
+            <div class="mt-3 flex items-center gap-3">
+                <button type="submit" class="btn btn-primary">{{ __('pages.hlaseni.btn_upload') }}</button>
+            </div>
+        </form>
+
+        <div class="mt-4 border-t border-line pt-4">
+            <a href="{{ route('hlaseni.index', ['showfrm' => 1]) }}" class="link-arrow">
+                {{ __('pages.hlaseni.no_edi_link') }}
+                <x-icon name="arrow-right" />
+            </a>
+        </div>
     </div>
 </div>
 @endif
