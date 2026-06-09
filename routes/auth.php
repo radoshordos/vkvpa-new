@@ -6,29 +6,16 @@ use App\Http\Controllers\Auth\AuthController;
 use Illuminate\Support\Facades\Route;
 
 /*
- * Routy autentizace (Fáze 4).
- * Vlož do routes/web.php (nebo načti přes require __DIR__.'/auth.php';).
- *
- * Fáze 6: na tyto pojmenované routy se přepnou odkazy v menu
- * (logout.php → route('logout'), ?str=login → route('login')).
+ * Routy autentizace (načítané z routes/web.php).
  */
 
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');
 
-// Legacy přihlášení přes jednorázový kód (?kod=) – nyní bezpečně:
+// Přihlášení přes jednorázový alfanumerický kód (token login, TTL dle vkvpa.token_ttl_days).
 Route::get('/login/token/{kod}', [AuthController::class, 'loginViaToken'])
     ->name('login.token')
     ->middleware('throttle:login-token')
     ->where('kod', '[A-Za-z0-9]+');
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-
-/*
- * Příklad ochrany administrace (Fáze 6 napojí konkrétní stránky):
- *
- * Route::middleware('admin')->group(function () {
- *     Route::get('/admin/kola', [KolaController::class, 'index'])->name('admin.kola');
- *     // …
- * });
- */

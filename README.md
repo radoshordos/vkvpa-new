@@ -162,7 +162,7 @@ Diagram stavu je v [`docs/kolo-lifecycle.svg`](docs/kolo-lifecycle.svg). Stav se
 
 ### Dvě databázové schémata
 
-**Legacy schéma** (`edihead`, `edilines`): zachováno z původního systému. Sloupce mají nestandardní PHP identifikátory (`Mode-code`, `Received-WWL`, `Sent QSO number` apod.). Přistupujte k nim přes `$line->{'Received-WWL'}`. PHPStan má `property.notFound` potlačeno pro soubory, které tyto sloupce používají. Oba modely mají `#[WithoutTimestamps]` (vlastní časové sloupce `stamp`, `d_cas`). Model `Ediline` používá **PHP 8.4 property hooks** (`$receivedWwl`, `$qsoPoints`, `$modeCode`, `$mode`, `$newWwl`) místo starších accessor metod.
+**EDI schéma** (`edihead`, `edilines`): odvozeno z původního systému, ale plně normalizováno na `snake_case` názvy sloupců (`mode_code`, `received_wwl`, `qso_points`, `t_date`, `p_call` apod.) – přistupuje se k nim jako k běžným Eloquent atributům, žádný magický `$line->{'...'}` přístup ani potlačení `property.notFound`. Oba modely mají `#[WithoutTimestamps]` (vlastní časové sloupce `stamp`, `d_cas`). Model `Ediline` navíc nabízí **PHP 8.4 property hooks** (`$receivedWwl`, `$qsoPoints`, `$modeCode`, `$mode`, `$newWwl`), které surové sloupce normalizují/castují. Původní SQL dump (se starými dash-názvy) je držen jen jako provenience v `database/source_sql/` a je vyloučen z PHPStan/Pint.
 
 **Aplikační schéma** (`vkvpa_*`): `VkvpaData` (závodní záznamy/výsledky), `VkvpaKola` (kola závodu), `VkvpaKategorie` (kategorie), `VkvpaPrihlaseni` (přihlašovací tokeny), `Prispevek` (diskuze ke kolům).
 
@@ -176,7 +176,7 @@ Model::preventSilentlyDiscardingAttributes();   // odhalí překlepy v $fillable
 Model::preventAccessingMissingAttributes();     // odhalí přístup na nenačtené sloupce
 ```
 
-Modely `Edihead`, `Ediline` a `User` mají per-model opt-out (`$modelsShouldPreventAccessingMissingAttributes = false`) kvůli legacy názvům sloupců a `Authenticatable` traitu.
+Model `User` má per-model opt-out (`$modelsShouldPreventAccessingMissingAttributes = false`) kvůli `Authenticatable` traitu. `Edihead`/`Ediline` žádný opt-out nepotřebují – po normalizaci schématu na `snake_case` se k jejich sloupcům přistupuje běžně.
 
 ### Adresářová struktura
 

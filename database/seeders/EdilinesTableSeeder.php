@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
-class EdilinesTableSeeder extends LegacyJsonTableSeeder
+class EdilinesTableSeeder extends JsonTableSeeder
 {
     protected string $table = 'edilines';
 

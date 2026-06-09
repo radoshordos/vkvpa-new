@@ -21,11 +21,10 @@ use App\Http\Controllers\VysledkyController;
 use Illuminate\Support\Facades\Route;
 
 /*
- * Routy aplikace (Fáze 6) – nahrazují index.php ?str= whitelist.
- * Legacy klíč ?str=X  →  pojmenovaná routa (name odpovídá klíči).
+ * Routy aplikace – pojmenované routy aplikace.
  */
 
-require __DIR__.'/auth.php'; // Fáze 4
+require __DIR__.'/auth.php';
 
 // Přepínání jazyka (cs / en) – ukládá volbu do session.
 Route::get('/lang/{locale}', function (string $locale) {

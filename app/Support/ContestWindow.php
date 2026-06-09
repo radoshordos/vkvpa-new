@@ -8,7 +8,7 @@ namespace App\Support;
  * Závodní časové okno (UTC) – QSO mimo se nezapočítávají.
  *
  * Hodnoty jsou konfigurovatelné přes config('vkvpa.contest_window.*').
- * Legacy pravidlo: `time BETWEEN 0800 AND 1100`
+ * Výchozí pravidlo: `time BETWEEN 0800 AND 1100` (UTC).
  */
 final class ContestWindow
 {

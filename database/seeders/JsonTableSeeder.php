@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
@@ -7,7 +9,10 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use JsonException;
 
-abstract class LegacyJsonTableSeeder extends Seeder
+/**
+ * Základ pro seedery plnící tabulku z JSON snapshotu v `seeders/data/{table}.json`.
+ */
+abstract class JsonTableSeeder extends Seeder
 {
     protected string $table;
 

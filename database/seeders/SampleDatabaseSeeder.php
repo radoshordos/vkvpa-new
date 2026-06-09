@@ -6,7 +6,10 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 
-class LegacyDatabaseSeeder extends Seeder
+/**
+ * Naplní DB ukázkovým datasetem (snapshot původního provozu → JSON v `seeders/data/`).
+ */
+class SampleDatabaseSeeder extends Seeder
 {
     public function run(): void
     {

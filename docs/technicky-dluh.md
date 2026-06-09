@@ -134,23 +134,24 @@ aplikace hodnotu vždy nastavuje explicitně, default je bezvýznamný.
 
 ---
 
-## P6 – Legacy schéma s nestandardními názvy sloupců (z velké části zkroceno)
+## P6 – Legacy schéma s nestandardními názvy sloupců ✅ vyřešeno
 
-**Pokrok od minula:** `Ediline` má teď **accessor vrstvu** –
-`receivedWwl()`, `qsoPoints()`, `newWwl()` (ř. 52–65) – která je jediným
-správným bodem přístupu k magickým stringům `Received-WWL`, `QSO-Points`,
-`New-WWL-(N)`. `ScoringService` a `QsoGeometry` je používají. 👍
+Tabulky `edihead`/`edilines` jsou nově **plně normalizované na `snake_case`**
+(`mode_code`, `received_wwl`, `qso_points`, `new_wwl_n`, `t_date`, `p_call`…).
+Magické dash-stringy (`Received-WWL`, `QSO-Points`, `New-WWL-(N)`, `Mode-code`,
+`Sent QSO number`) v aplikačním kódu **už nejsou** – přistupuje se k běžným
+Eloquent atributům. `Ediline` ponechává tenkou vrstvu PHP 8.4 property hooků
+(`receivedWwl`, `qsoPoints`, `modeCode`, `mode`, `newWwl`), které surové sloupce
+jen normalizují/castují (`trim`, int cast, enum `QsoMode`).
 
-**Vyřešeno:** poslední únik mimo accessory (`$l->{'Mode-code'}` ve
-`EdiVizualizaceController`) je zacelen – `Ediline` má teď `modeCode(): int` a
-controller ho používá. Magický `$line->{'...'}` přístup je tak soustředěný
-**výhradně** v modelu `Ediline`. (Volitelný další krok: nahradit `int` enumem
-SSB/CW.)
+Důsledky:
 
-Zbytek dluhu je **vědomě přijatý**: kvůli kompatibilitě nelze zapnout
-`preventAccessingMissingAttributes` (komentář v `AppServiceProvider:35`), takže
-překlep v názvu legacy sloupce neodhalí PHPStan ani runtime. Accessor vrstva
-plochu rizika dál zužuje.
+- **Žádné** `property.notFound` potlačení v PHPStan (level 10 čistý).
+- `preventAccessingMissingAttributes` je **zapnuté** (`AppServiceProvider`);
+  `Edihead`/`Ediline` nepotřebují žádný per-model opt-out (ten má jen `User`
+  kvůli `Authenticatable` traitu). Překlep v názvu sloupce teď odhalí runtime.
+- Původní SQL dump se starými dash-názvy zůstává jen jako provenience v
+  `database/source_sql/` (vyloučeno z PHPStan i Pint).
 
 ---
 

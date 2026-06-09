@@ -40,7 +40,7 @@ EDI files may arrive as Windows-1250; `EdiParser` converts via `iconv` before pr
 
 ### Database: Two Schemas
 
-**Legacy schema** (`edihead`, `edilines`): preserved verbatim from the original system. Columns use non-standard PHP identifiers (`Mode-code`, `Received-WWL`, `Sent QSO number`, etc.). Access these via `$line->{'Received-WWL'}` syntax. PHPStan's `property.notFound` is suppressed for files that use these columns (`ScoringService`, `QsoGeometry`). Both models carry `#[WithoutTimestamps]` since they have custom time columns (`stamp`, `d_cas`).
+**EDI schema** (`edihead`, `edilines`): derived from the original system but fully normalized to `snake_case` column names (`mode_code`, `received_wwl`, `qso_points`, `t_date`, `p_call`, etc.) — accessed as ordinary Eloquent attributes, no magic-string `$line->{'...'}` access and no `property.notFound` suppressions. `Ediline` exposes a few PHP 8.4 property hooks (`receivedWwl`, `qsoPoints`, `modeCode`, `mode`, `newWwl`) that normalize/cast the raw columns. Both models carry `#[WithoutTimestamps]` since they have custom time columns (`stamp`, `d_cas`). The original SQL dump (with the old dash column names) is kept for provenance only in `database/source_sql/` and is excluded from PHPStan/Pint.
 
 **Application schema** (`vkvpa_*` tables): `VkvpaData` (contest entry/result row), `VkvpaKola` (contest round), `VkvpaKategorie` (category), `VkvpaPrihlaseni`, `Prispevek` (discussion).
 

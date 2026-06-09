@@ -37,7 +37,8 @@ class AppServiceProvider extends ServiceProvider
         // Mimo produkci běží Eloquent ve striktním režimu: lazy loading vztahů
         // (zdroj N+1), tiché zahazování nevyplnitelných atributů a přístup
         // k neexistujícím atributům vyhodí výjimku – chyby se odhalí ve vývoji.
-        // Edihead/Ediline mají per-model opt-out (legacy sloupce s pomlčkami).
+        // User má per-model opt-out (Authenticatable trait); edihead/edilines
+        // jsou normalizované na snake_case, takže žádný opt-out nepotřebují.
         Model::preventLazyLoading(! $this->app->isProduction());
         Model::preventSilentlyDiscardingAttributes(! $this->app->isProduction());
         Model::preventAccessingMissingAttributes(! $this->app->isProduction());

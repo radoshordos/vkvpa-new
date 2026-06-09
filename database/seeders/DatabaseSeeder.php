@@ -11,8 +11,8 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            // Data z původní DB (legacy dump → JSON). Volá dílčí seedery.
-            LegacyDatabaseSeeder::class,
+            // Ukázkový dataset (snapshot původního provozu → JSON). Volá dílčí seedery.
+            SampleDatabaseSeeder::class,
 
             // Administrátorský účet „Beda".
             AdminUserSeeder::class,
