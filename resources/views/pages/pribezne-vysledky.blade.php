@@ -11,13 +11,12 @@
 
 <h1>{{ __('pages.pribezne.heading') }}</h1>
 
+@if ($kolo)
 <form method="get" action="{{ route('pribezne_vysledky') }}" class="card mb-4 flex flex-wrap items-end gap-4 p-3">
-    @if ($kolo)
-        <div class="field mb-0">
-            <span class="label">{{ __('pages.pribezne.filter_round') }}</span>
-            <strong>{{ $kolo->nazev }} ({{ $kolo->datum_konani?->format('j. n. Y') }})</strong>
-        </div>
-    @endif
+    <div class="field mb-0">
+        <span class="label">{{ __('pages.pribezne.filter_round') }}</span>
+        <strong>{{ $kolo->nazev }} ({{ $kolo->datum_konani?->format('j. n. Y') }})</strong>
+    </div>
     <div class="field mb-0">
         <label class="label" for="kategorie">{{ __('pages.pribezne.filter_category') }}</label>
         <select id="kategorie" name="kategorie" class="select w-auto">
@@ -29,9 +28,10 @@
     </div>
     <button type="submit" class="btn btn-primary">{{ __('pages.pribezne.btn_show') }}</button>
 </form>
+@endif
 
 @if (! $kolo)
-    <p class="text-muted">{{ __('pages.pribezne.no_round') }}</p>
+    <x-alert type="info" :message="__('pages.pribezne.no_round')" />
 @elseif ($vysledky->isEmpty())
     <p class="text-muted">{{ __('pages.pribezne.no_results') }}</p>
 @else

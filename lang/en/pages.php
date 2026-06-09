@@ -108,7 +108,7 @@ return [
         'filter_category' => 'Category',
         'filter_all' => 'All',
         'btn_show' => 'Show',
-        'no_round' => 'No round available.',
+        'no_round' => 'No evaluation in progress – no round is currently accepting submissions.',
         'no_results' => 'No log entries for this round yet.',
     ],
 

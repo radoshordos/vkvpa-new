@@ -110,7 +110,7 @@ return [
         'filter_category' => 'Kategorie',
         'filter_all' => 'Vše',
         'btn_show' => 'Zobrazit',
-        'no_round' => 'Žádné kolo k zobrazení.',
+        'no_round' => 'Vyhodnocování právě neprobíhá – žádné kolo aktuálně nepřijímá hlášení.',
         'no_results' => 'Pro toto kolo zatím nejsou žádná hlášení.',
     ],
 
