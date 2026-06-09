@@ -85,7 +85,7 @@ class EdiController extends Controller
             return $redirect;
         }
 
-        return $this->ediResponse($head, (string) $head->src, $head->PCall, 'edi');
+        return $this->ediResponse($head, (string) $head->src, $head->p_call, 'edi');
     }
 
     /**
@@ -101,7 +101,7 @@ class EdiController extends Controller
         $src = (string) $head->src;
         $reduced = $src === '' ? '' : $this->reducer->reduce($src);
 
-        return $this->ediResponse($head, $reduced, $head->PCall, 'edir');
+        return $this->ediResponse($head, $reduced, $head->p_call, 'edir');
     }
 
     /**
@@ -137,7 +137,7 @@ class EdiController extends Controller
         $base = $pcall !== '' ? $pcall : 'denik';
         // Sanitize: keep only safe ASCII chars to prevent header injection.
         $safe = preg_replace('/[^A-Za-z0-9\-]/', '_', $base) ?? 'denik';
-        $filename = sprintf('%s-%d-%s.edi', $safe, $head->ID, $variant);
+        $filename = sprintf('%s-%d-%s.edi', $safe, $head->id, $variant);
 
         return response($content, 200, [
             'Content-Type' => 'text/plain; charset=utf-8',

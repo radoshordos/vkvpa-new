@@ -22,15 +22,15 @@ class EdiVizualizaceController extends Controller
 
     public function show(Edihead $head): View
     {
-        $home = Maidenhead::toLatLon((string) $head->PWWLo);
+        $home = Maidenhead::toLatLon((string) $head->p_wwlo);
 
-        $enriched = $this->geometry->enrichedQsos($head, $home, 'Time');
+        $enriched = $this->geometry->enrichedQsos($head, $home, 'time');
 
         return view('pages.vizualizace', [
             'active' => '',
             'head' => $head,
-            'pcall' => (string) $head->PCall,
-            'homeLoc' => (string) $head->PWWLo,
+            'pcall' => (string) $head->p_call,
+            'homeLoc' => (string) $head->p_wwlo,
             'home' => $home,
             'mapPoints' => $enriched->map(fn (EnrichedQso $q): array => [
                 'lat' => $q->lat,

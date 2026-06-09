@@ -29,7 +29,7 @@ class EdiReducerTest extends TestCase
             '[END;]',
         ])."\n";
 
-        $out = (new EdiReducer)->reduce($raw);
+        $out = new EdiReducer()->reduce($raw);
 
         // Zůstávají jen QSO v okně a počet je přepočítán.
         $this->assertStringContainsString('[QSORecords;2]', $out);

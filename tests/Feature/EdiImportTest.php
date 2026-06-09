@@ -26,16 +26,16 @@ class EdiImportTest extends TestCase
         $head = new EdiImportService()->import($log);
 
         $this->assertInstanceOf(Edihead::class, $head);
-        $this->assertSame('OK2KJT', $head->PCall);
-        $this->assertSame(800, (int) $head->SPowe);
+        $this->assertSame('OK2KJT', $head->p_call);
+        $this->assertSame(800, (int) $head->s_powe);
 
-        $this->assertSame(2, Ediline::where('IDS', $head->ID)->count());
+        $this->assertSame(2, Ediline::where('edihead_id', $head->id)->count());
 
-        $first = Ediline::where('IDS', $head->ID)->orderBy('ID')->first();
+        $first = Ediline::where('edihead_id', $head->id)->orderBy('id')->first();
         $this->assertNotNull($first);
-        $this->assertSame('OK2IMH', $first->CallSign);
-        $this->assertSame('JN99BP', $first->{'Received-WWL'});
-        $this->assertSame(2, (int) $first->{'QSO-Points'});
+        $this->assertSame('OK2IMH', $first->call_sign);
+        $this->assertSame('JN99BP', $first->receivedWwl);
+        $this->assertSame(2, $first->qsoPoints);
 
         $this->assertCount(2, $head->lines);
     }
@@ -61,8 +61,8 @@ class EdiImportTest extends TestCase
         $head = new EdiImportService()->import($log);
 
         $this->assertInstanceOf(Edihead::class, $head);
-        $this->assertSame('OK1TEST', $head->PCall);
-        $this->assertSame(0, Ediline::where('IDS', $head->ID)->count());
+        $this->assertSame('OK1TEST', $head->p_call);
+        $this->assertSame(0, Ediline::where('edihead_id', $head->id)->count());
     }
 
     public function test_raw_source_is_persisted(): void

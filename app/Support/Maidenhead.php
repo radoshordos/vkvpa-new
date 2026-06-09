@@ -125,7 +125,7 @@ final class Maidenhead
     public static function distanceKm(float $lat1, float $lon1, float $lat2, float $lon2): float
     {
         try {
-            return (new Vincenty)->getDistance(
+            return new Vincenty()->getDistance(
                 new Coordinate($lat1, $lon1),
                 new Coordinate($lat2, $lon2),
             ) / 1000.0;
@@ -146,7 +146,7 @@ final class Maidenhead
      */
     public static function bearingDeg(float $lat1, float $lon1, float $lat2, float $lon2): float
     {
-        return (new BearingSpherical)->calculateBearing(
+        return new BearingSpherical()->calculateBearing(
             new Coordinate($lat1, $lon1),
             new Coordinate($lat2, $lon2),
         );

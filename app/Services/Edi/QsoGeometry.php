@@ -29,17 +29,17 @@ final class QsoGeometry
      * Obohacená QSO v závodním okně (s platnými souřadnicemi).
      *
      * @param  array{lat: float, lon: float}|null  $home  souřadnice domácího QTH
-     * @param  string  $orderColumn  sloupec řazení (např. 'Time' nebo 'Received-WWL')
+     * @param  string  $orderColumn  sloupec řazení (např. 'time' nebo 'received_wwl')
      * @return Collection<int, EnrichedQso>
      */
-    public function enrichedQsos(Edihead $head, ?array $home, string $orderColumn = 'Time'): Collection
+    public function enrichedQsos(Edihead $head, ?array $home, string $orderColumn = 'time'): Collection
     {
-        $homeSq = strtoupper(substr((string) $head->PWWLo, 0, 4));
+        $homeSq = strtoupper(substr((string) $head->p_wwlo, 0, 4));
 
         return $head->lines()
-            ->whereBetween('Time', [ContestWindow::from(), ContestWindow::to()])
+            ->whereBetween('time', [ContestWindow::from(), ContestWindow::to()])
             ->orderBy($orderColumn)
-            ->get(['lon', 'lat', 'CallSign', 'Received-WWL', 'Time', 'Mode-code'])
+            ->get(['lon', 'lat', 'call_sign', 'received_wwl', 'time', 'mode_code'])
             ->map(function (Ediline $l) use ($home, $head, $homeSq): ?EnrichedQso {
                 $lat = $l->lat;
                 $lon = $l->lon;
@@ -54,8 +54,8 @@ final class QsoGeometry
 
                 if ($lat === null || $lon === null) {
                     Log::debug('qso_geometry.skip', [
-                        'edihead_id' => $head->ID,
-                        'call' => (string) $l->CallSign,
+                        'edihead_id' => $head->id,
+                        'call' => (string) $l->call_sign,
                         'wwl' => $wwl,
                     ]);
 
@@ -67,17 +67,17 @@ final class QsoGeometry
                 $dist = $home === null ? null : (int) round(Maidenhead::distanceKm($home['lat'], $home['lon'], $lat, $lon));
                 $azimut = $home === null ? null : (int) round(Maidenhead::bearingDeg($home['lat'], $home['lon'], $lat, $lon));
 
-                $time = (string) $l->Time;
+                $time = (string) $l->time;
                 $timeMinutes = (int) substr($time, 0, 2) * 60 + (int) substr($time, 2, 2);
 
                 // Body za spojení přepočítáme z lokátorů (neplatný → 0); sloupec
-                // QSO-Points z deníku se ignoruje (shodně se ScoringService).
+                // qso_points z deníku se ignoruje (shodně se ScoringService).
                 $workedSq = strtoupper(substr(trim($wwl), 0, 4));
 
                 return new EnrichedQso(
                     lat: $lat,
                     lon: $lon,
-                    call: (string) $l->CallSign,
+                    call: (string) $l->call_sign,
                     wwl: $wwl,
                     points: Maidenhead::qsoPoints($homeSq, $workedSq),
                     dist: $dist,
@@ -99,7 +99,7 @@ final class QsoGeometry
     {
         $counts = [];
 
-        foreach ($head->lines()->whereBetween('Time', [ContestWindow::from(), ContestWindow::to()])->get(['Received-WWL']) as $l) {
+        foreach ($head->lines()->whereBetween('time', [ContestWindow::from(), ContestWindow::to()])->get(['received_wwl']) as $l) {
             $sq = strtoupper(substr(trim($l->receivedWwl), 0, 4));
             if (preg_match('/^[A-R]{2}\d{2}$/', $sq) === 1) {
                 $counts[$sq] = ($counts[$sq] ?? 0) + 1;
@@ -112,7 +112,7 @@ final class QsoGeometry
             $center = Maidenhead::bigSquareCenter((string) $sq);
 
             if ($center === null) {
-                Log::debug('qso_geometry.square.skip', ['edihead_id' => $head->ID, 'square' => $sq]);
+                Log::debug('qso_geometry.square.skip', ['edihead_id' => $head->id, 'square' => $sq]);
 
                 continue;
             }
@@ -149,9 +149,9 @@ final class QsoGeometry
         if (! $this->roundResultsDisclosable($head)) {
             return collect($out);
         } elseif ($head->id_kola === null) {
-            $headIds = [$head->ID];
+            $headIds = [$head->id];
         } else {
-            $headIds = Edihead::query()->where('id_kola', $head->id_kola)->pluck('ID')->all();
+            $headIds = Edihead::query()->where('id_kola', $head->id_kola)->pluck('id')->all();
         }
 
         /** @var array<string, array{count: int, lat: float|null, lon: float|null, wwl: string}> $stations */
@@ -159,12 +159,12 @@ final class QsoGeometry
 
         foreach (
             Ediline::query()
-                ->whereIn('IDS', $headIds)
-                ->whereBetween('Time', [ContestWindow::from(), ContestWindow::to()])
-                ->orderBy('Time')
-                ->get(['CallSign', 'Received-WWL', 'lon', 'lat']) as $l
+                ->whereIn('edihead_id', $headIds)
+                ->whereBetween('time', [ContestWindow::from(), ContestWindow::to()])
+                ->orderBy('time')
+                ->get(['call_sign', 'received_wwl', 'lon', 'lat']) as $l
         ) {
-            $call = strtoupper(trim((string) $l->CallSign));
+            $call = strtoupper(trim((string) $l->call_sign));
             if ($call === '') {
                 continue;
             }

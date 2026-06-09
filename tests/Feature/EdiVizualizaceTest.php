@@ -32,7 +32,7 @@ class EdiVizualizaceTest extends TestCase
     {
         $head = $this->importSample();
 
-        $this->get(route('edi.vizualizace', $head->ID))
+        $this->get(route('edi.vizualizace', $head->id))
             ->assertOk()
             ->assertSee('Vizualizace deníku')
             ->assertSeeHtml('OK2KJT')
@@ -43,7 +43,7 @@ class EdiVizualizaceTest extends TestCase
     {
         $head = $this->importSample();
 
-        $html = $this->get(route('edi.vizualizace', $head->ID))->getContent() ?: '';
+        $html = $this->get(route('edi.vizualizace', $head->id))->getContent() ?: '';
 
         // sample.edi: 2 QSO ve velkých čtvercích JN99 a JN89.
         $this->assertStringContainsString('OK2IMH', $html);
@@ -67,7 +67,7 @@ class EdiVizualizaceTest extends TestCase
         $head = new EdiImportService()->import(new EdiParser()->parse($edi));
         $head->update(['id_kola' => $kolo->id]);
 
-        $html = $this->get(route('edi.vizualizace', $head->ID))->getContent() ?: '';
+        $html = $this->get(route('edi.vizualizace', $head->id))->getContent() ?: '';
 
         $this->assertStringContainsString('roundStations:[]', str_replace(' ', '', $html));
         $this->assertStringContainsString('Po vyhodnocen', $html);
@@ -88,6 +88,6 @@ class EdiVizualizaceTest extends TestCase
         $head = new EdiImportService()->import(new EdiParser()->parse($edi));
         $head->update(['id_kola' => $kolo->id]);
 
-        $this->get(route('edi.vizualizace', $head->ID))->assertOk();
+        $this->get(route('edi.vizualizace', $head->id))->assertOk();
     }
 }

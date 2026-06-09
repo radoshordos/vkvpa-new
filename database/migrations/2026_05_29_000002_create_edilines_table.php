@@ -12,32 +12,31 @@ return new class extends Migration
             $table->charset = 'utf8mb4';
             $table->collation = 'utf8mb4_unicode_ci';
 
-            $table->integer('ID', true);
-            $table->integer('IDS');
-            $table->string('Date', 6)->nullable();
-            $table->string('Time', 4)->nullable();
-            $table->string('CallSign', 30)->nullable();
-            $table->integer('Mode-code')->nullable();
-            $table->string('Sent-RST', 3)->nullable();
-            $table->integer('Sent QSO number')->nullable();
-            $table->string('Received-RST', 3)->nullable();
-            $table->integer('Received QSO number')->nullable();
-            $table->string('Received exchange', 10)->nullable();
-            $table->string('Received-WWL', 6)->nullable();
-            $table->integer('QSO-Points')->nullable();
-            $table->string('New-Exchange-(N)', 10)->nullable();
-            $table->string('New-WWL-(N)', 1)->nullable();
-            $table->string('New-DXCC-(N)', 1)->nullable();
-            $table->string('Duplicate-QSO-(D)', 1)->nullable();
+            $table->integer('id', true);
+            $table->integer('edihead_id');
+            $table->string('date', 6)->nullable();
+            $table->string('time', 4)->nullable();
+            $table->string('call_sign', 30)->nullable();
+            $table->integer('mode_code')->nullable();
+            $table->string('sent_rst', 3)->nullable();
+            $table->integer('sent_qso_number')->nullable();
+            $table->string('received_rst', 3)->nullable();
+            $table->integer('received_qso_number')->nullable();
+            $table->string('received_exchange', 10)->nullable();
+            $table->string('received_wwl', 6)->nullable();
+            $table->integer('qso_points')->nullable();
+            $table->string('new_exchange_n', 10)->nullable();
+            $table->string('new_wwl_n', 1)->nullable();
+            $table->string('new_dxcc_n', 1)->nullable();
+            $table->string('duplicate_qso_d', 1)->nullable();
             $table->smallInteger('sqr')->nullable();
             $table->decimal('lon', 9, 6)->nullable();
             $table->decimal('lat', 8, 6)->nullable();
 
-            $table->index('IDS', 'IDS');
-            $table->index('Received-WWL', 'Received-WWL');
-            // Dotazy QSO vždy filtrují podle deníku (IDS) i závodního okna (Time).
-            $table->index(['IDS', 'Time'], 'edilines_ids_time_idx');
-            $table->foreign('IDS', 'edilines_ibfk_1')->references('ID')->on('edihead');
+            $table->index('edihead_id', 'edihead_id');
+            $table->index('received_wwl', 'received_wwl');
+            $table->index(['edihead_id', 'time'], 'edilines_edihead_id_time_idx');
+            $table->foreign('edihead_id', 'edilines_ibfk_1')->references('id')->on('edihead');
         });
     }
 

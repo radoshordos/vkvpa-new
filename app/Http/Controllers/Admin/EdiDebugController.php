@@ -50,9 +50,9 @@ class EdiDebugController extends Controller
                 ->with('lineErrors', $ediParseException->lineErrors);
         }
 
-        $edihead = Edihead::where('PCall', $log->header->pCall())
-            ->where('TDate', $log->header->tDate())
-            ->latest('ID')
+        $edihead = Edihead::where('p_call', $log->header->pCall())
+            ->where('t_date', $log->header->tDate())
+            ->latest('id')
             ->first();
 
         return view('pages.admin.edi-debug', [
