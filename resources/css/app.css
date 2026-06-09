@@ -438,6 +438,22 @@
         filter: brightness(0.92);
         color: #fff;
     }
+    .icon-btn svg {
+        width: 100%;
+        height: 100%;
+    }
+    /* Obrysová varianta pro ikonové odkazy (EDI / EDIR / vizualizace) –
+       stejná velikost a tvar jako barevná tlačítka P/U/X. */
+    .icon-btn-ghost {
+        background-color: var(--surface);
+        border: 1px solid var(--line);
+        color: var(--brand);
+    }
+    .icon-btn-ghost:hover {
+        background-color: var(--brand-soft);
+        color: var(--brand);
+        filter: none;
+    }
 
     /* ── Upload zóna (EDI import) ────────────────────────────────── */
     .upload-zone {

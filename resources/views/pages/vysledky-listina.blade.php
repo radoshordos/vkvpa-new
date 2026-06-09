@@ -124,7 +124,7 @@
                                 @endif
                                 @if ($r->EDI && $r->EDI_ID)
                                     {{-- EDI · EDIR: admin vždy, ostatní přihlášení jen mimo upload window --}}
-                                    <div class="whitespace-nowrap opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100">
+                                    <div class="mb-1 flex items-center gap-1 opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100">
                                         @if ($isAdmin || ! $uploadWindowOpen)
                                             <x-edi-odkaz :head="$r->EDI_ID" />
                                             <x-edi-odkaz :head="$r->EDI_ID" reduced />
@@ -134,7 +134,7 @@
                                     </div>
                                     @if ($isAdmin)
                                         {{-- Vizualizace deníku (mapy + grafy) – jen admin --}}
-                                        <div class="whitespace-nowrap opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100">
+                                        <div class="flex items-center gap-1 opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100">
                                             <x-vizualizace-odkaz :head="$r->EDI_ID" />
                                         </div>
                                     @endif
