@@ -1,7 +1,7 @@
 [
   {
     "id": 81,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170618;20170618",
     "p_call": "OK1VSJ",
     "p_wwlo": "JN69IS",
@@ -22,7 +22,7 @@
   },
   {
     "id": 82,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170618;20170618",
     "p_call": "OK1KZE",
     "p_wwlo": "JN79FX",
@@ -43,7 +43,7 @@
   },
   {
     "id": 83,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170618;20170619",
     "p_call": "OK1VOF",
     "p_wwlo": "JO80FD",
@@ -64,7 +64,7 @@
   },
   {
     "id": 84,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170618;20170619",
     "p_call": "OK1VOF",
     "p_wwlo": "JO80FD",
@@ -85,7 +85,7 @@
   },
   {
     "id": 85,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170618;20170618",
     "p_call": "OK6TW",
     "p_wwlo": "JN89JM",
@@ -106,7 +106,7 @@
   },
   {
     "id": 86,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170618;20170619",
     "p_call": "OK1VOF",
     "p_wwlo": "JO80FD",
@@ -127,7 +127,7 @@
   },
   {
     "id": 87,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170616;20170617",
     "p_call": "OK1IPS",
     "p_wwlo": "JO60VR",
@@ -148,7 +148,7 @@
   },
   {
     "id": 90,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170618;20170618",
     "p_call": "OK1MWW",
     "p_wwlo": "JN89EX",
@@ -169,7 +169,7 @@
   },
   {
     "id": 91,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170618;20170619",
     "p_call": "OK2BDR",
     "p_wwlo": "JN89VI",
@@ -190,7 +190,7 @@
   },
   {
     "id": 92,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170618;20170619",
     "p_call": "OK2BDR",
     "p_wwlo": "JN89VI",
@@ -211,7 +211,7 @@
   },
   {
     "id": 93,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170616;20170617",
     "p_call": "OK1DUG",
     "p_wwlo": "JO60WP",
@@ -232,7 +232,7 @@
   },
   {
     "id": 94,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170618;20170618",
     "p_call": "S56P",
     "p_wwlo": "JN76PO",
@@ -253,7 +253,7 @@
   },
   {
     "id": 95,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170618;20170618",
     "p_call": "S56P",
     "p_wwlo": "JN76PO",
@@ -274,7 +274,7 @@
   },
   {
     "id": 96,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170617;20170618",
     "p_call": "LZ2ZY",
     "p_wwlo": "KN13OT",
@@ -295,7 +295,7 @@
   },
   {
     "id": 97,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170618;20170618",
     "p_call": "OK1MHU",
     "p_wwlo": "JN69XU",
@@ -316,7 +316,7 @@
   },
   {
     "id": 98,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170618;20170618",
     "p_call": "HA1WD/P",
     "p_wwlo": "JN87FI",
@@ -337,7 +337,7 @@
   },
   {
     "id": 99,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170603;20170604",
     "p_call": "HA5HY",
     "p_wwlo": "JN97PP",
@@ -358,7 +358,7 @@
   },
   {
     "id": 100,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170603;20170604",
     "p_call": "HA5HY",
     "p_wwlo": "JN97PP",
@@ -379,7 +379,7 @@
   },
   {
     "id": 101,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170603;20170604",
     "p_call": "HA5HY",
     "p_wwlo": "JN97PP",
@@ -400,7 +400,7 @@
   },
   {
     "id": 102,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170603;20170604",
     "p_call": "HA5HY",
     "p_wwlo": "JN97PP",
@@ -421,7 +421,7 @@
   },
   {
     "id": 103,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170603;20170604",
     "p_call": "HA5HY",
     "p_wwlo": "JN97PP",
@@ -442,7 +442,7 @@
   },
   {
     "id": 104,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170618;20170618",
     "p_call": "HA5HY",
     "p_wwlo": "JN97PP",
@@ -463,7 +463,7 @@
   },
   {
     "id": 105,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170618;20170618",
     "p_call": "HA5HY",
     "p_wwlo": "JN97PP",
@@ -484,7 +484,7 @@
   },
   {
     "id": 106,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170618;20170618",
     "p_call": "HA5HY",
     "p_wwlo": "JN97PP",
@@ -505,7 +505,7 @@
   },
   {
     "id": 107,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170618;20170618",
     "p_call": "HA5HY",
     "p_wwlo": "JN97PP",
@@ -526,7 +526,7 @@
   },
   {
     "id": 108,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170618;20170618",
     "p_call": "HA5HY",
     "p_wwlo": "JN97PP",
@@ -547,7 +547,7 @@
   },
   {
     "id": 109,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170716;20170716",
     "p_call": "OK2ULQ",
     "p_wwlo": "JN99AK",
@@ -568,7 +568,7 @@
   },
   {
     "id": 110,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170716;20170716",
     "p_call": "OK2ULQ",
     "p_wwlo": "JN99AK",
@@ -589,7 +589,7 @@
   },
   {
     "id": 111,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170716;20170716",
     "p_call": "OK1MWW",
     "p_wwlo": "JN89DW",
@@ -610,7 +610,7 @@
   },
   {
     "id": 112,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170716;20170716",
     "p_call": "OK1KCR",
     "p_wwlo": "JN79VS",
@@ -631,7 +631,7 @@
   },
   {
     "id": 113,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170716;20170716",
     "p_call": "OK1IVU",
     "p_wwlo": "JN69QS",
@@ -652,7 +652,7 @@
   },
   {
     "id": 114,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170716;20170716",
     "p_call": "OK1IVU",
     "p_wwlo": "JN69QS",
@@ -673,7 +673,7 @@
   },
   {
     "id": 115,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170716;20170716",
     "p_call": "OK1KZE",
     "p_wwlo": "JN79FX",
@@ -694,7 +694,7 @@
   },
   {
     "id": 116,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170716;20170716",
     "p_call": "OK1VSJ",
     "p_wwlo": "JN69IS",
@@ -715,7 +715,7 @@
   },
   {
     "id": 117,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170716;20170716",
     "p_call": "OK1GTH",
     "p_wwlo": "JN69OU",
@@ -736,7 +736,7 @@
   },
   {
     "id": 118,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170716;20170716",
     "p_call": "OK1VSJ",
     "p_wwlo": "JN69IS",
@@ -757,7 +757,7 @@
   },
   {
     "id": 119,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170716;20170716",
     "p_call": "OK1MHU",
     "p_wwlo": "JN69XU",
@@ -778,7 +778,7 @@
   },
   {
     "id": 120,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170716;20170717",
     "p_call": "OK3DM",
     "p_wwlo": "JN79AV",
@@ -799,7 +799,7 @@
   },
   {
     "id": 121,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170716;20170716",
     "p_call": "OK1KNG",
     "p_wwlo": "JN69UN",
@@ -820,7 +820,7 @@
   },
   {
     "id": 122,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170716;20170716",
     "p_call": "OK2KZO",
     "p_wwlo": "JN88AU",
@@ -841,7 +841,7 @@
   },
   {
     "id": 123,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170716;20170716",
     "p_call": "OK1MHU",
     "p_wwlo": "JN69XU",
@@ -862,7 +862,7 @@
   },
   {
     "id": 124,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170716;20170717",
     "p_call": "OK1VOF",
     "p_wwlo": "JO80FD",
@@ -883,7 +883,7 @@
   },
   {
     "id": 125,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170716;20170717",
     "p_call": "OK2WKF",
     "p_wwlo": "JN89PW",
@@ -904,7 +904,7 @@
   },
   {
     "id": 126,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170716;20170716",
     "p_call": "OK1FQK",
     "p_wwlo": "JN79PP",
@@ -925,7 +925,7 @@
   },
   {
     "id": 127,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170716;20170716",
     "p_call": "OK1UFF",
     "p_wwlo": "JO60XR",
@@ -946,7 +946,7 @@
   },
   {
     "id": 128,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170304;20170305",
     "p_call": "DK0MM",
     "p_wwlo": "JN49JT",
@@ -967,7 +967,7 @@
   },
   {
     "id": 129,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170716;20170716",
     "p_call": "S56P",
     "p_wwlo": "JN76PO",
@@ -988,7 +988,7 @@
   },
   {
     "id": 130,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170304;20170305",
     "p_call": "OL9R",
     "p_wwlo": "JO70EC",
@@ -1009,7 +1009,7 @@
   },
   {
     "id": 131,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170716;20170716",
     "p_call": "SP6OWA",
     "p_wwlo": "JO71QA",
@@ -1030,7 +1030,7 @@
   },
   {
     "id": 132,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170716;20170716",
     "p_call": "SP6OWA",
     "p_wwlo": "JO71QA",
@@ -1051,7 +1051,7 @@
   },
   {
     "id": 133,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170716;20170716",
     "p_call": "SP6OWA",
     "p_wwlo": "JO71QA",
@@ -1072,7 +1072,7 @@
   },
   {
     "id": 134,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170716;20170716",
     "p_call": "HA5HY",
     "p_wwlo": "JN97PP",
@@ -1093,7 +1093,7 @@
   },
   {
     "id": 135,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170716;20170716",
     "p_call": "HA5HY",
     "p_wwlo": "JN97PP",
@@ -1114,7 +1114,7 @@
   },
   {
     "id": 136,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170820;20170820",
     "p_call": "OK2KJT",
     "p_wwlo": "JN99AJ",
@@ -1135,7 +1135,7 @@
   },
   {
     "id": 137,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170820;20170820",
     "p_call": "OK1HMP",
     "p_wwlo": "JO70EB",
@@ -1156,7 +1156,7 @@
   },
   {
     "id": 138,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170820;20170820",
     "p_call": "OK1MWW",
     "p_wwlo": "JN89DW",
@@ -1177,7 +1177,7 @@
   },
   {
     "id": 139,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170820;20170820",
     "p_call": "OK1HMP",
     "p_wwlo": "JO70EB",
@@ -1198,7 +1198,7 @@
   },
   {
     "id": 140,
-    "id_kola": 0,
+    "id_kola": null,
     "t_date": "20170820;20170820",
     "p_call": "OK1DSZ",
     "p_wwlo": "JN79AT",
