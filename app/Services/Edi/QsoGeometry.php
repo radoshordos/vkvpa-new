@@ -19,6 +19,8 @@ use Illuminate\Support\Facades\Log;
  * Dopočítává souřadnice protistanice z lokátoru, vzdálenost/azimut z domácího
  * QTH, body za spojení (z lokátorů, ne z deníku) a agregaci do velkých čtverců.
  * Vždy jen QSO uvnitř závodního okna.
+ *
+ * @phpstan-type CompareStation array{lat: float, lon: float, call: string, wwl: string, dist: int|null}
  */
 final class QsoGeometry
 {
@@ -208,6 +210,77 @@ final class QsoGeometry
         }
 
         return collect($out);
+    }
+
+    /**
+     * Porovnání dvou deníků téhož kola: které protistanice udělal jen tento
+     * deník, které jen soupeř a které oba (obdoba „stations worked by X, but
+     * not by Y" na vushf.dk). Stanice se párují podle značky; souřadnice,
+     * lokátor a vzdálenost se berou z prvního výskytu v daném deníku,
+     * vzdálenost vždy od domácího QTH tohoto deníku ($home). Značky obou
+     * porovnávaných stanic se vynechávají – vzájemné spojení není „náskok".
+     *
+     * Férovost jako u {@see roundStations()}: dokud kolo není uzavřené nebo
+     * vyhodnocené, cizí deník se nesmí odhalit a metoda vrací null. Deníky
+     * musí patřit do téhož (ne-null) kola.
+     *
+     * @param  array{lat: float, lon: float}|null  $home  souřadnice domácího QTH tohoto deníku
+     * @return array{onlyMine: list<CompareStation>, onlyRival: list<CompareStation>, both: list<CompareStation>}|null
+     */
+    public function compareWith(Edihead $head, Edihead $rival, ?array $home): ?array
+    {
+        if ($head->id_kola === null || $head->id_kola !== $rival->id_kola || $head->id === $rival->id) {
+            return null;
+        }
+
+        if (! $this->roundResultsDisclosable($head)) {
+            return null;
+        }
+
+        $skipCalls = [
+            strtoupper(trim($head->p_call)),
+            strtoupper(trim($rival->p_call)),
+        ];
+
+        $mine = $this->stationsByCall($head, $home, $skipCalls);
+        $theirs = $this->stationsByCall($rival, $home, $skipCalls);
+
+        return [
+            'onlyMine' => array_values(array_diff_key($mine, $theirs)),
+            'onlyRival' => array_values(array_diff_key($theirs, $mine)),
+            'both' => array_values(array_intersect_key($mine, $theirs)),
+        ];
+    }
+
+    /**
+     * Protistanice deníku (v závodním okně) klíčované normalizovanou značkou.
+     * Souřadnice/lokátor/vzdálenost z prvního výskytu, vzdálenost od $home.
+     *
+     * @param  array{lat: float, lon: float}|null  $home
+     * @param  list<string>  $skipCalls  značky, které se vynechají
+     * @return array<string, CompareStation>
+     */
+    private function stationsByCall(Edihead $head, ?array $home, array $skipCalls): array
+    {
+        $out = [];
+
+        foreach ($this->enrichedQsos($head, $home) as $q) {
+            $call = strtoupper(trim($q->call));
+
+            if ($call === '' || in_array($call, $skipCalls, true) || isset($out[$call])) {
+                continue;
+            }
+
+            $out[$call] = [
+                'lat' => $q->lat,
+                'lon' => $q->lon,
+                'call' => $call,
+                'wwl' => $q->wwl,
+                'dist' => $q->dist,
+            ];
+        }
+
+        return $out;
     }
 
     /**

@@ -94,6 +94,53 @@ cfg.squares.forEach(function (s) {
         .bindPopup(`<strong>${s.square}</strong><br>${s.count} protistanic`);
 });
 
+// ── Vrstva: porovnání s deníkem soupeře (po vzoru vushf.dk) ────────────────
+// Zelené body udělal jen tento deník, červené jen soupeř, šedé oba.
+// Server data vydá jen po uzávěrce kola (cfg.compare === null jinak).
+
+const porovnaniLayer = L.layerGroup();
+const compareLegend = L.control({ position: 'bottomright' });
+
+function comparePin(s, color, owner) {
+    return L.circleMarker([s.lat, s.lon], {
+        radius: 5, color: color.stroke, fillColor: color.fill, fillOpacity: 0.9, weight: 1.5,
+    }).bindPopup(`<strong>${s.call}</strong><br>${s.wwl}`
+        + (s.dist !== null ? `<br>${s.dist} km` : '')
+        + `<br><em>${owner}</em>`);
+}
+
+if (cfg.compare) {
+    const cmp = cfg.compare;
+    const mineCol = { stroke: '#15803d', fill: '#4ade80' };  // zelená – jen můj deník
+    const rivalCol = { stroke: '#b91c1c', fill: '#f87171' }; // červená – jen soupeř
+    const bothCol = { stroke: '#4b5563', fill: '#9ca3af' };  // šedá – oba
+
+    if (cmp.rivalHome) {
+        L.circleMarker([cmp.rivalHome.lat, cmp.rivalHome.lon], {
+            radius: 8, color: '#b45309', fillColor: '#f59e0b', fillOpacity: 0.9, weight: 2,
+        }).addTo(porovnaniLayer).bindPopup(`<strong>${cmp.rival}</strong><br>${cmp.rivalLoc}`);
+        bounds.push([cmp.rivalHome.lat, cmp.rivalHome.lon]);
+    }
+
+    cmp.both.forEach((s) => comparePin(s, bothCol, 'udělali oba').addTo(porovnaniLayer));
+    cmp.onlyMine.forEach((s) => comparePin(s, mineCol, `jen ${cfg.pcall}`).addTo(porovnaniLayer));
+    cmp.onlyRival.forEach((s) => {
+        comparePin(s, rivalCol, `jen ${cmp.rival}`).addTo(porovnaniLayer);
+        bounds.push([s.lat, s.lon]); // body z mého deníku už v bounds jsou
+    });
+
+    compareLegend.onAdd = function () {
+        const div = L.DomUtil.create('div');
+        div.style.cssText = 'background:rgba(255,255,255,.9);padding:6px 10px;border-radius:6px;font-size:12px;line-height:1.7;box-shadow:0 1px 4px rgba(0,0,0,.2)';
+        const dot = (c) => `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${c};margin-right:5px;vertical-align:middle"></span>`;
+        div.innerHTML = `<strong style="display:block;margin-bottom:2px">${cfg.pcall} vs. ${cmp.rival}</strong>`
+            + dot(mineCol.fill) + `jen ${cfg.pcall} (${cmp.onlyMine.length})<br>`
+            + dot(rivalCol.fill) + `jen ${cmp.rival} (${cmp.onlyRival.length})<br>`
+            + dot(bothCol.fill) + `oba (${cmp.both.length})`;
+        return div;
+    };
+}
+
 // ── Vrstva CRK: kombinovaná mapa ve stylu vkvzavody.crk.cz ─────────────────
 
 // Kružnice vzdáleností po 200 km (až 1200 km) s popiskem na severu.
@@ -184,6 +231,7 @@ if (bounds.length > 0) {
 
 // Přepínání vrstev přes tlačítka
 const layers = { jezek: jezekLayer, spendliky: spendlikyLayer, lokatory: lokatoryLayer, crk: crkLayer };
+if (cfg.compare) layers.porovnani = porovnaniLayer;
 
 function showLayer(key) {
     Object.values(layers).forEach((l) => map.removeLayer(l));
@@ -192,6 +240,11 @@ function showLayer(key) {
     layers[key].addTo(map);
     if (key === 'crk') { redrawCrkGrid(); map.on('moveend', redrawCrkGrid); }
     if (homeMarker) homeMarker.addTo(map);
+    // Legenda druhů provozu nedává ve vrstvě porovnání smysl – prohodí se s legendou porovnání.
+    if (cfg.compare) {
+        if (key === 'porovnani') { modeLegend.remove(); compareLegend.addTo(map); }
+        else { compareLegend.remove(); modeLegend.addTo(map); }
+    }
     document.querySelectorAll('[data-map-layer]').forEach((b) => b.classList.toggle('active', b.dataset.mapLayer === key));
 }
 
@@ -199,8 +252,8 @@ document.querySelectorAll('[data-map-layer]').forEach(function (btn) {
     btn.addEventListener('click', () => showLayer(btn.dataset.mapLayer));
 });
 
-// Výchozí vrstva: CRK (kombinovaná mapa).
-showLayer('crk');
+// Výchozí vrstva: porovnání (když je zvolen soupeř), jinak CRK (kombinovaná mapa).
+showLayer(cfg.compare ? 'porovnani' : 'crk');
 
 // ── Chart.js: barvy podle motivu (denní/noční) ─────────────────────────────
 // Text i mřížku grafů bereme z CSS proměnných motivu (--muted, --line), takže
