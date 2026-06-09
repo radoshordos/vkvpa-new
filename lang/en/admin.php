@@ -130,6 +130,7 @@ return [
     'importy_heading' => 'Bulk EDI log import',
     'importy_desc' => 'Upload a ZIP archive containing EDI files (<code>.edi</code> / <code>.txt</code>). Each file is processed using the same logic as individual submission via the report form. The contest round is determined automatically from <code>TDate</code> in each log header. Invalid files are skipped and the reason is shown. Maximum 200 files per import.',
     'importy_zip_label' => 'ZIP archive (max 20 MB)',
+    'importy_zip_hint' => 'ZIP with EDI files – click or drag and drop the archive here',
     'importy_btn' => 'Import',
     'importy_processed' => 'files processed',
     'importy_imported' => 'imported',

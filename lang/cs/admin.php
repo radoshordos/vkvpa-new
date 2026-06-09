@@ -130,6 +130,7 @@ return [
     'importy_heading' => 'Hromadný import EDI deníků',
     'importy_desc' => 'Nahraj ZIP archiv obsahující EDI soubory (<code>.edi</code> / <code>.txt</code>). Každý soubor se zpracuje stejnou logikou jako individuální nahrání přes formulář hlášení. Kolo závodu se určí automaticky z <code>TDate</code> v hlavičce každého deníku. Chybné soubory se přeskočí a ve výsledku se zobrazí důvod. Maximálně 200 souborů na jeden import.',
     'importy_zip_label' => 'ZIP archiv (max 20 MB)',
+    'importy_zip_hint' => 'ZIP s EDI soubory – klikni, nebo sem archiv přetáhni myší',
     'importy_btn' => 'Importovat',
     'importy_processed' => 'souborů zpracováno',
     'importy_imported' => 'importováno',

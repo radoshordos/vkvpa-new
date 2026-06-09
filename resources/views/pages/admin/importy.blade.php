@@ -10,13 +10,35 @@
 
 <x-form-errors />
 
-<div class="card mb-8 max-w-xl p-5">
-    <form method="post" action="{{ route('importy.store') }}" enctype="multipart/form-data" class="flex flex-wrap items-end gap-4">
-        @csrf
-        <x-field name="zip" id="zip" type="file" :label="__('admin.importy_zip_label')"
-                 wrapper="mb-0 min-w-48 flex-1" accept=".zip,application/zip" required />
-        <button type="submit" class="btn btn-primary">{{ __('admin.importy_btn') }}</button>
-    </form>
+{{-- Stejný design jako panel „Načíst EDI soubor" na /hlaseni --}}
+<div class="card mb-8 max-w-xl">
+    <div class="flex items-center gap-3 border-b border-line px-5 py-4">
+        <div class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-brand-soft">
+            <x-icon name="file" class="h-5 w-5 text-brand" />
+        </div>
+        <p class="text-sm font-semibold text-heading">{{ __('admin.importy_heading') }}</p>
+    </div>
+
+    <div class="px-5 py-4">
+        <form method="post" action="{{ route('importy.store') }}" enctype="multipart/form-data">
+            @csrf
+            <label class="upload-zone" id="zip-zone">
+                <input
+                    type="file" name="zip" id="zip-file" accept=".zip,application/zip" required class="sr-only"
+                    onchange="var z=document.getElementById('zip-zone'),n=document.getElementById('zip-name');z.classList.toggle('has-file',!!this.files[0]);n.textContent=this.files[0]?this.files[0].name:''"
+                >
+                <svg class="upload-zone-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"/>
+                </svg>
+                <span id="zip-name" class="upload-zone-name">{{ __('admin.importy_zip_label') }}…</span>
+                <span class="upload-zone-hint">{{ __('admin.importy_zip_hint') }}</span>
+            </label>
+
+            <div class="mt-3 flex items-center gap-3">
+                <button type="submit" class="btn btn-primary">{{ __('admin.importy_btn') }}</button>
+            </div>
+        </form>
+    </div>
 </div>
 
 @if ($results)
@@ -76,4 +98,35 @@
     @endif
 @endif
 
+@push('scripts')
+<script>
+(function () {
+    var zone  = document.getElementById('zip-zone');
+    var input = document.getElementById('zip-file');
+    if (! zone || ! input) return;
+
+    zone.addEventListener('dragover', function (e) {
+        e.preventDefault();
+        zone.classList.add('dragover');
+    });
+
+    zone.addEventListener('dragleave', function (e) {
+        if (! zone.contains(e.relatedTarget)) zone.classList.remove('dragover');
+    });
+
+    zone.addEventListener('drop', function (e) {
+        e.preventDefault();
+        zone.classList.remove('dragover');
+        if (e.dataTransfer && e.dataTransfer.files.length) {
+            input.files = e.dataTransfer.files;
+            input.dispatchEvent(new Event('change'));
+        }
+    });
+
+    // Drop mimo zónu nesmí otevřít soubor místo stránky
+    document.addEventListener('dragover', function (e) { e.preventDefault(); });
+    document.addEventListener('drop', function (e) { e.preventDefault(); });
+}());
+</script>
+@endpush
 @endsection
