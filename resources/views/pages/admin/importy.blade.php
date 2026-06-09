@@ -4,7 +4,7 @@
 
 <h1>{{ __('admin.importy_heading') }}</h1>
 
-<p class="mb-4 max-w-prose text-sm text-muted">
+<p class="mb-4 text-sm text-muted">
     {!! __('admin.importy_desc') !!}
 </p>
 
