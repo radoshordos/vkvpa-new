@@ -30,7 +30,7 @@
       @foreach ($kola as $k)
         @php $stav = $k->stav(); @endphp
         <tr>
-          <td class="whitespace-nowrap">{{ $k->datum_konani?->format('j. n. Y') }}</td>
+          <td class="whitespace-nowrap">{{ $k->datum_konani?->locale(app()->getLocale())->isoFormat('dddd D. M. YYYY') }}</td>
           {{-- isoFormat dddd = název dne v aktuálním jazyce (pátek / Friday) --}}
           <td class="whitespace-nowrap">{{ $k->datum_uzaverky ? $k->datum_uzaverky->locale(app()->getLocale())->isoFormat('dddd D. M. YYYY HH:mm').' UTC' : '' }}</td>
           <td>{{ $k->nazev }}</td>
