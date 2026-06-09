@@ -202,9 +202,22 @@ document.querySelectorAll('[data-map-layer]').forEach(function (btn) {
 // Výchozí vrstva: CRK (kombinovaná mapa).
 showLayer('crk');
 
+// ── Chart.js: barvy podle motivu (denní/noční) ─────────────────────────────
+// Text i mřížku grafů bereme z CSS proměnných motivu (--muted, --line), takže
+// ladí s paletou a s přepnutím třídy .dark. Výchozí šedá Chart.js by byla
+// v nočním režimu nečitelná a mřížka neviditelná.
+function applyChartTheme() {
+    const css = getComputedStyle(document.documentElement);
+    Chart.defaults.color = css.getPropertyValue('--muted').trim() || '#666';
+    Chart.defaults.borderColor = css.getPropertyValue('--line').trim() || 'rgba(0,0,0,.1)';
+}
+applyChartTheme();
+
+const charts = [];
+
 // ── Chart.js: Časová osa QSO (bar) ────────────────────────────────────────
 
-new Chart(document.getElementById('chartTimeline'), {
+charts.push(new Chart(document.getElementById('chartTimeline'), {
     type: 'bar',
     data: {
         labels: Object.keys(cfg.timeline),
@@ -229,7 +242,7 @@ new Chart(document.getElementById('chartTimeline'), {
             x: { grid: { display: false } },
         },
     },
-});
+}));
 
 // ── Chart.js: Azimutová růžice (polar area) ───────────────────────────────
 
@@ -238,7 +251,7 @@ const azColors = [
     'rgba(34,211,238,.75)', 'rgba(96,165,250,.75)', 'rgba(167,139,250,.75)', 'rgba(236,72,153,.75)',
 ];
 
-new Chart(document.getElementById('chartAzimuth'), {
+charts.push(new Chart(document.getElementById('chartAzimuth'), {
     type: 'polarArea',
     data: {
         labels: cfg.azimuth.labels,
@@ -259,16 +272,17 @@ new Chart(document.getElementById('chartAzimuth'), {
         scales: {
             r: {
                 beginAtZero: true,
-                ticks: { stepSize: 1, font: { size: 10 } },
+                // Průhledné pozadí popisků os – bílý backdrop by v nočním režimu rušil.
+                ticks: { stepSize: 1, font: { size: 10 }, backdropColor: 'transparent' },
             },
         },
         startAngle: -Math.PI / 8,
     },
-});
+}));
 
 // ── Chart.js: Histogram vzdáleností (bar) ─────────────────────────────────
 
-new Chart(document.getElementById('chartDist'), {
+charts.push(new Chart(document.getElementById('chartDist'), {
     type: 'bar',
     data: {
         labels: Object.keys(cfg.distHistogram).map((k) => k + ' km'),
@@ -293,4 +307,10 @@ new Chart(document.getElementById('chartDist'), {
             x: { grid: { display: false } },
         },
     },
-});
+}));
+
+// Živé přebarvení grafů při přepnutí denního/nočního režimu (třída .dark na <html>).
+new MutationObserver(() => {
+    applyChartTheme();
+    charts.forEach((ch) => ch.update());
+}).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });

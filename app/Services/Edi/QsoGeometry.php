@@ -14,12 +14,11 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Sdílená geometrie spojení pro mapové (MapController) a vizualizační
- * (EdiVizualizaceController) pohledy.
+ * Geometrie spojení pro vizualizační pohled ({@see EdiVizualizaceController}).
  *
- * Sjednocuje dříve duplikovaný kód: dopočet souřadnic protistanice z lokátoru,
- * vzdálenost/azimut z domácího QTH, body za spojení (z lokátorů, ne z deníku)
- * a agregaci do velkých čtverců. Vždy jen QSO uvnitř závodního okna.
+ * Dopočítává souřadnice protistanice z lokátoru, vzdálenost/azimut z domácího
+ * QTH, body za spojení (z lokátorů, ne z deníku) a agregaci do velkých čtverců.
+ * Vždy jen QSO uvnitř závodního okna.
  */
 final class QsoGeometry
 {

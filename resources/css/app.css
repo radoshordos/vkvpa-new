@@ -498,7 +498,7 @@
         transform: translateX(0.2rem);
     }
 
-    /* Odkazy EDI / mapy (EDI / EDIR / M / N / S). */
+    /* Akční odkazy v listinách (EDI, redukovaný EDI, vizualizace) – text i SVG ikony. */
     .action-link {
         display: inline-block;
         font-size: 0.7rem;

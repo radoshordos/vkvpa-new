@@ -160,7 +160,6 @@ app/
 │   └── EnsureUpcomingRoundsCommand.php   # Průběžné zakládání kol dle ContestCalendar
 ├── Enums/
 │   ├── KoloStav.php        # Enum: fáze kola (nadcházející / aktivní / uzavřené / vyhodnocené)
-│   ├── MapMode.php         # Enum: jezek / spendliky / lokatory / crk
 │   └── QsoMode.php         # Enum: SSB (1) / CW (2) / Other (0)
 ├── Events/
 │   └── EdiImported.php     # Event po úspěšném importu EDI deníku
@@ -195,18 +194,18 @@ public/
 resources/
 ├── css/app.css             # Tailwind 4 (@import 'tailwindcss', @theme)
 ├── js/
-│   ├── app.js              # Dark mode, mobilní menu
-│   ├── map.js              # Leaflet – tři samostatné mapové pohledy
-│   └── vizualizace.js      # Leaflet + Chart.js – komplexní EDI vizualizace
+│   ├── app.js                  # Dark mode, mobilní menu
+│   ├── leaflet-fullscreen.js   # Sdílený Leaflet ovládací prvek: celá obrazovka
+│   └── vizualizace.js          # Leaflet + Chart.js – komplexní EDI vizualizace (mapy + grafy)
 └── views/
     ├── auth/               # Přihlašovací formulář
     ├── emails/             # Šablony emailů
     ├── layouts/app.blade.php
-    ├── pages/              # Stránky (home, hlaseni, kola, vysledky, diskuse, map, edi-upload, admin/*)
+    ├── pages/              # Stránky (home, hlaseni, kola, vysledky, diskuse, vizualizace, edi-upload, admin/*)
     └── partials/           # menu, footer, menu-item, no-active-period
 ```
 
-Vite kompiluje tři oddělené JS entry-pointy (`app.js`, `map.js`, `vizualizace.js`) – každá stránka načítá jen co potřebuje.
+Vite kompiluje dva oddělené JS entry-pointy (`app.js`, `vizualizace.js`) – každá stránka načítá jen co potřebuje.
 
 ---
 
@@ -438,10 +437,6 @@ VkvpaKola ──► Prispevek[]
 | POST | `/edi` | `EdiController@store` | `edi.store` |
 | GET | `/edi/{head}/soubor` | `EdiController@zobrazit` | `edi.soubor` |
 | GET | `/edi/{head}/soubor-redukovany` | `EdiController@zobrazitRedukovany` | `edi.soubor.redukovany` |
-| GET | `/edi/{head}/mapa/jezek` | `MapController@jezek` | `edi.mapa.jezek` |
-| GET | `/edi/{head}/mapa/spendliky` | `MapController@spendliky` | `edi.mapa.spendliky` |
-| GET | `/edi/{head}/mapa/lokatory` | `MapController@lokatory` | `edi.mapa.lokatory` |
-| GET | `/edi/{head}/mapa/crk` | `MapController@crk` | `edi.mapa.crk` |
 | GET | `/edi/{head}/vizualizace` | `EdiVizualizaceController@show` | `edi.vizualizace` |
 | GET | `/lang/{locale}` | closure | `lang.switch` |
 | GET | `/login` | `AuthController` | `login` |
@@ -534,7 +529,6 @@ Všechny enumy jsou v `app/Enums/`. Backed enumy nesou hodnotu (`value`), která
 | Enum | Typ | Hodnoty | Použití |
 |------|-----|---------|---------|
 | `QsoMode` | `int` | `Ssb(1)`, `Cw(2)`, `Other(0)` | Druh provozu z EDI `Mode-code`; řídí barvy v mapách a vizualizaci. `fromCode()` mapuje neznámý kód na `Other`, `label()` vrací `SSB`/`CW`/`?` |
-| `MapMode` | `string` | `Jezek`, `Spendliky`, `Lokatory`, `Crk` | Typ mapového pohledu; hodnota (`value`) je segment URL i klíč pro JS. `label()` vrací český popisek pod nadpisem mapy |
 | `KoloStav` | `string` | `Nadchazejici`, `Aktivni`, `Prijem`, `Uzavrene`, `Vyhodnocene` | Fáze životního cyklu kola, odvozená z `aktivni`, `vyhodnoceno`, `datum_konani` a `datum_uzaverky` (viz `VkvpaKola::stav()`). `label()` vrací `Nadcházející`/`Probíhá`/`Příjem hlášení`/`Zpracování výsledků`/`Vyhodnocené`; `badgeClass()` barvu badge. Stejný stav pohání úvodku i admin přehled kol. |
 
 ### Rozlišení kategorií
@@ -592,16 +586,16 @@ Oba se při importu EDI nastaví automaticky z pole `SPowe` a předvyplní zašk
 
 ## Mapové pohledy
 
-Čtyři Leaflet-based mapové pohledy pro každý `Edihead` (`MapMode` enum):
+Mapa je součástí stránky vizualizace (`/edi/{head}/vizualizace`) jako čtyři přepínatelné Leaflet vrstvy. Dřívější samostatné stránky `/edi/{head}/mapa/*` (M/N/S/C) byly zrušeny – zjednodušení UX, vše je na jedné URL:
 
-| Trasa | Popis |
-|-------|-------|
-| `/edi/{head}/mapa/jezek` | Čáry z domácí stanice na všechna pracovaná QSO |
-| `/edi/{head}/mapa/spendliky` | Pin na každé QSO, popup s vzdáleností a azimutem |
-| `/edi/{head}/mapa/lokatory` | Velké čtverce s počtem QSO jako popisek |
-| `/edi/{head}/mapa/crk` | Kombinovaný pohled ve stylu vkvzavody.crk.cz |
+| Vrstva | Popis |
+|--------|-------|
+| CRK (výchozí) | Kombinovaný pohled ve stylu vkvzavody.crk.cz |
+| Ježek | Čáry z domácí stanice na všechna pracovaná QSO |
+| Špendlíky | Pin na každé QSO, popup s vzdáleností a azimutem |
+| Lokátory | Velké čtverce s počtem QSO jako popisek |
 
-Geometrie (souřadnice, vzdálenosti, azimuty) jsou centralizovány v `QsoGeometry` – sdíleno s `EdiVizualizaceController`.
+Geometrie (souřadnice, vzdálenosti, azimuty) je centralizována v `QsoGeometry`.
 
 Podpůrná třída `Maidenhead` zajišťuje převod lokátor ↔ lat/lon. Vzdálenosti a azimuty jsou počítány přes knihovnu **mjaschen/phpgeo** (Haversine/Vincenty).
 
@@ -609,7 +603,7 @@ Podpůrná třída `Maidenhead` zajišťuje převod lokátor ↔ lat/lon. Vzdál
 
 ## EDI vizualizace
 
-Trasa `GET /edi/{head}/vizualizace` (`edi.vizualizace`) zobrazí komplexní analytickou stránku pro konkrétní EDI deník. Na rozdíl od čtyř samostatných mapových pohledů kombinuje vše dohromady na jedné URL.
+Trasa `GET /edi/{head}/vizualizace` (`edi.vizualizace`) zobrazí komplexní analytickou stránku pro konkrétní EDI deník – mapu (čtyři přepínatelné vrstvy) i grafy na jedné URL. Toto je jediný mapový pohled; samostatné stránky byly zrušeny.
 
 ### Komponenty stránky
 
@@ -676,7 +670,7 @@ GET /edi/{head}/vizualizace
         ▼
 EdiVizualizaceController::show(Edihead)
         │
-        ├── QsoGeometry::enrich()  ─► EnrichedQso[] (sdíleno s MapController)
+        ├── QsoGeometry::enrich()  ─► EnrichedQso[]
         ├── squares()              ─► agregace do 4-znakových čtverců
         ├── timeline()             ─► array<string, int>  (label → počet QSO)
         ├── azimuthRose()          ─► array{labels, data} (8 sektorů)

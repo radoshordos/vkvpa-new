@@ -17,7 +17,6 @@ use App\Http\Controllers\HlaseniController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\KolaController;
 use App\Http\Controllers\MailImageController;
-use App\Http\Controllers\MapController;
 use App\Http\Controllers\VysledkyController;
 use Illuminate\Support\Facades\Route;
 
@@ -69,16 +68,9 @@ Route::post('/edi', [EdiController::class, 'store'])->middleware('throttle:edi-u
 Route::get('/edi/{head}/soubor', [EdiController::class, 'zobrazit'])->name('edi.soubor');
 Route::get('/edi/{head}/soubor-redukovany', [EdiController::class, 'zobrazitRedukovany'])->name('edi.soubor.redukovany');
 
-// Mapové pohledy na spojení stanice (sloupec „Akce / EDI" ve výsledkové listině):
-//   M – ježek (čáry do protistanic), N – špendlíky (značka/km/azimut),
-//   S – velké čtverce (lokátory) s počtem protistanic,
-//   C – kombinovaná mapa ve stylu vkvzavody.crk.cz.
-Route::get('/edi/{head}/mapa/jezek', [MapController::class, 'jezek'])->name('edi.mapa.jezek');
-Route::get('/edi/{head}/mapa/spendliky', [MapController::class, 'spendliky'])->name('edi.mapa.spendliky');
-Route::get('/edi/{head}/mapa/lokatory', [MapController::class, 'lokatory'])->name('edi.mapa.lokatory');
-Route::get('/edi/{head}/mapa/crk', [MapController::class, 'crk'])->name('edi.mapa.crk');
-
-// Komplexní vizualizace deníku: mapa + grafy na jedné stránce (Leaflet + Chart.js).
+// Komplexní vizualizace deníku: mapy (4 přepínatelné vrstvy: CRK, ježek,
+// špendlíky, lokátory) + grafy na jedné stránce (Leaflet + Chart.js).
+// Nahrazuje dřívější samostatné mapové pohledy /edi/{head}/mapa/* (M/N/S/C).
 Route::get('/edi/{head}/vizualizace', [EdiVizualizaceController::class, 'show'])->name('edi.vizualizace');
 
 // --- Administrace (chráněno middleware z Fáze 4) ---
