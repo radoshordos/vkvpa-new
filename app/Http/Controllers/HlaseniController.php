@@ -55,11 +55,12 @@ class HlaseniController extends Controller
     {
         $v = $request->validated();
         $idZaznamu = $this->intFrom($v['id_zaznamu'] ?? 0);
+        $znacka = is_string($v['znacka'] ?? null) ? $v['znacka'] : '';
 
         $payload = [
             'id_kola' => $this->intFrom($v['kolo']),
-            'id_kategorie' => isset($v['kategorie']) ? (int) $v['kategorie'] : null,
-            'znacka' => $v['znacka'],
+            'id_kategorie' => isset($v['kategorie']) && is_numeric($v['kategorie']) ? (int) $v['kategorie'] : null,
+            'znacka' => $znacka,
             'locator' => $v['locator'],
             'pocet' => $this->intFrom($v['pocet'] ?? 0),
             'bodu_za_qso' => $this->intFrom($v['bodu_za_qso'] ?? 0),
@@ -82,9 +83,9 @@ class HlaseniController extends Controller
         if ($idZaznamu > 0) {
             VkvpaData::findOrFail($idZaznamu)->update($payload);
         } else {
-            if (VkvpaData::query()->where('id_kola', $payload['id_kola'])->where('znacka', $payload['znacka'])->exists()) {
+            if (VkvpaData::query()->where('id_kola', $payload['id_kola'])->where('znacka', $znacka)->exists()) {
                 return back()
-                    ->withErrors(['znacka' => 'Pro toto kolo již existuje hlášení pro značku '.$payload['znacka'].'.'])
+                    ->withErrors(['znacka' => 'Pro toto kolo již existuje hlášení pro značku '.$znacka.'.'])
                     ->withInput();
             }
 
