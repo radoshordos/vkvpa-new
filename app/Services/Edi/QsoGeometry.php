@@ -22,6 +22,9 @@ use Illuminate\Support\Facades\Log;
  */
 final class QsoGeometry
 {
+    /** @var array<int, bool> */
+    private array $disclosableCache = [];
+
     /**
      * Obohacená QSO v závodním okně (s platnými souřadnicemi).
      *
@@ -140,8 +143,11 @@ final class QsoGeometry
      */
     public function roundStations(Edihead $head, int $minQso = 5): Collection
     {
+        /** @var array<int, array{lat: float, lon: float, call: string, wwl: string, count: int}> $out */
+        $out = [];
+
         if (! $this->roundResultsDisclosable($head)) {
-            $headIds = [];
+            return collect($out);
         } elseif ($head->id_kola === null) {
             $headIds = [$head->ID];
         } else {
@@ -187,8 +193,6 @@ final class QsoGeometry
             }
         }
 
-        $out = [];
-
         foreach ($stations as $call => $s) {
             if ($s['count'] < $minQso || $s['lat'] === null || $s['lon'] === null) {
                 continue;
@@ -207,31 +211,29 @@ final class QsoGeometry
     }
 
     /**
-     * Čekají na zveřejnění ještě další mapová data? True, dokud kolo deníku
-     * není uzavřené/vyhodnocené – teprve pak mapy obsahují i vrstvu „všechny
-     * stanice z kola". Podklad pro upozornění v popisku map.
-     */
-    public function roundDataPending(Edihead $head): bool
-    {
-        return ! $this->roundResultsDisclosable($head);
-    }
-
-    /**
      * Smí se vrstva „všechny stanice z kola" zveřejnit?
      *
      * Bez kola (`id_kola === null`) jde jen o vlastní deník – žádná cizí data,
      * lze zobrazit. S kolem se cizí stanice odhalí až po uzávěrce nebo
      * vyhodnocení; během příjmu hlášení (a u nenalezeného kola) se skryjí.
+     *
+     * Výsledek je memoizován per `id_kola` pro trvání requestu – volání
+     * `roundStations()` a dotaz controlleru na stav tak sdílí jeden SELECT.
      */
-    private function roundResultsDisclosable(Edihead $head): bool
+    public function roundResultsDisclosable(Edihead $head): bool
     {
-        if ($head->id_kola === null) {
-            return true;
+        $key = $head->id_kola ?? -1;
+
+        if (! array_key_exists($key, $this->disclosableCache)) {
+            if ($head->id_kola === null) {
+                $this->disclosableCache[$key] = true;
+            } else {
+                $kolo = VkvpaKola::query()->find($head->id_kola);
+                $this->disclosableCache[$key] = $kolo !== null
+                    && in_array($kolo->stav(), [KoloStav::Uzavrene, KoloStav::Vyhodnocene], true);
+            }
         }
 
-        $kolo = VkvpaKola::query()->find($head->id_kola);
-
-        return $kolo !== null
-            && in_array($kolo->stav(), [KoloStav::Uzavrene, KoloStav::Vyhodnocene], true);
+        return $this->disclosableCache[$key];
     }
 }

@@ -6,6 +6,7 @@ namespace Tests\Feature;
 
 use App\Http\Controllers\EdiVizualizaceController;
 use App\Models\Edihead;
+use App\Models\VkvpaKola;
 use App\Services\Edi\EdiImportService;
 use App\Services\Edi\EdiParser;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -49,5 +50,44 @@ class EdiVizualizaceTest extends TestCase
         $this->assertStringContainsString('OK2IWU', $html);
         $this->assertStringContainsString('JN99', $html);
         $this->assertStringContainsString('JN89', $html);
+    }
+
+    public function test_round_stations_hidden_while_round_open(): void
+    {
+        // Aktivní kolo (příjem hlášení) → vrstva roundStations musí být prázdná.
+        $kolo = VkvpaKola::create([
+            'datum_konani' => '2026-03-15',
+            'datum_uzaverky' => now()->addDays(7)->toDateTimeString(),
+            'nazev' => '03/2026',
+            'poznamka' => '',
+            'aktivni' => true,
+        ]);
+
+        $edi = (string) file_get_contents(__DIR__.'/../fixtures/sample.edi');
+        $head = new EdiImportService()->import(new EdiParser()->parse($edi));
+        $head->update(['id_kola' => $kolo->id]);
+
+        $html = $this->get(route('edi.vizualizace', $head->ID))->getContent() ?: '';
+
+        $this->assertStringContainsString('roundStations:[]', str_replace(' ', '', $html));
+        $this->assertStringContainsString('Po vyhodnocen', $html);
+    }
+
+    public function test_round_stations_visible_after_round_evaluated(): void
+    {
+        // Vyhodnocené kolo → vrstva roundStations se smí zobrazit.
+        $kolo = VkvpaKola::create([
+            'datum_konani' => '2026-03-15',
+            'datum_uzaverky' => '2026-03-20 23:59:59',
+            'nazev' => '03/2026',
+            'poznamka' => '',
+            'vyhodnoceno' => '2026-03-21 10:00:00',
+        ]);
+
+        $edi = (string) file_get_contents(__DIR__.'/../fixtures/sample.edi');
+        $head = new EdiImportService()->import(new EdiParser()->parse($edi));
+        $head->update(['id_kola' => $kolo->id]);
+
+        $this->get(route('edi.vizualizace', $head->ID))->assertOk();
     }
 }

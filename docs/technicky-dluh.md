@@ -139,7 +139,7 @@ aplikace hodnotu vždy nastavuje explicitně, default je bezvýznamný.
 **Pokrok od minula:** `Ediline` má teď **accessor vrstvu** –
 `receivedWwl()`, `qsoPoints()`, `newWwl()` (ř. 52–65) – která je jediným
 správným bodem přístupu k magickým stringům `Received-WWL`, `QSO-Points`,
-`New-WWL-(N)`. `ScoringService` i `MapController` je už používají. 👍
+`New-WWL-(N)`. `ScoringService` a `QsoGeometry` je používají. 👍
 
 **Vyřešeno:** poslední únik mimo accessory (`$l->{'Mode-code'}` ve
 `EdiVizualizaceController`) je zacelen – `Ediline` má teď `modeCode(): int` a
