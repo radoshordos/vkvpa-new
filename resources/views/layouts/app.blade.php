@@ -61,7 +61,7 @@
 
     {{-- ── Horní lišta ──────────────────────────────────────────────── --}}
     <header class="sticky top-0 z-30 border-b border-line bg-surface/95 backdrop-blur">
-      <div class="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4">
+      <div class="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4 2xl:max-w-[88rem]">
         {{-- Hamburger (mobil) – jen pro přihlášené, nepřihlášení menu nemají --}}
         @auth
           <button type="button" data-drawer-open
@@ -107,7 +107,7 @@
       </div>
     </header>
 
-    <div class="mx-auto flex max-w-6xl gap-6 px-4 py-6">
+    <div class="mx-auto flex max-w-6xl gap-6 px-4 py-6 2xl:max-w-[88rem]">
       {{-- ── Postranní navigace (desktop) – jen pro přihlášené ─────── --}}
       @auth
         <aside class="hidden w-52 shrink-0 lg:block">

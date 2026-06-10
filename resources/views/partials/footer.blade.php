@@ -1,5 +1,5 @@
 <footer class="mt-8 border-t border-line bg-surface">
-  <div class="mx-auto max-w-6xl px-4 py-6 text-xs text-muted">
+  <div class="mx-auto max-w-6xl px-4 py-6 text-xs text-muted 2xl:max-w-[88rem]">
     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
 
       {{-- Sloupec 1: Kontakt a autorská práva --}}
