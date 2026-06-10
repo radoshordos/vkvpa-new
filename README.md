@@ -10,6 +10,7 @@ Webový systém pro správu a vyhodnocování závodů v pásmu VKV (Very High F
 
 - [Technologie](#technologie)
 - [Funkce](#funkce)
+- [Úvodní stránka](#úvodní-stránka)
 - [Náhledy aplikace](#náhledy-aplikace)
 - [Architektura](#architektura)
 - [Instalace](#instalace)
@@ -57,7 +58,7 @@ Webový systém pro správu a vyhodnocování závodů v pásmu VKV (Very High F
 
 ## Funkce
 
-- **Úvodní stránka** – dynamický stav závodního kola (aktivní / nadcházející / lhůta pro odevzdání / vyhodnocování / vyhodnoceno), živé výsledky během závodního okna, odpočítávání do startu nebo uzávěrky, přehled příštích 3 kol
+- **Úvodní stránka** – reaguje na životní cyklus závodního kola (viz [Úvodní stránka](#úvodní-stránka)): odpočet do startu / konce závodu / uzávěrky, živé výsledky, počítadlo přijatých hlášení, karta posledního vyhodnoceného kola, poslední příspěvky z diskuse, přehled příštích 3 kol
 - **Registrace deníků** – formulář se záložkami: upload EDI souboru nebo ruční zadání (bez EDI)
 - **EDI import** – reaktivní Livewire upload `.edi` souborů (REF 01 formát), bez překreslení stránky; podporuje Windows-1250 kódování
 - **EDI validace** – kontrola kvality deníku (duplicitní volaná stanice, neplatné lokátory, QSO mimo závodní okno, neshoda deklarovaného a skutečného počtu); varování se zobrazí závodníkovi bez blokování importu
@@ -87,6 +88,30 @@ Webový systém pro správu a vyhodnocování závodů v pásmu VKV (Very High F
 - **Token přihlášení** – jednorázový odkaz s platností 5 dní
 - **PWA** – instalovatelná webová aplikace (manifest + service worker s offline fallbackem)
 - **Bezpečnostní hlavičky** – CSP, HSTS, X-Frame-Options, Permissions-Policy
+
+---
+
+## Úvodní stránka
+
+Úvodní stránka (`/`, `HomeController`) je rozcestník pro závodníky a **reaguje na životní cyklus závodního kola**. Hero karta zobrazuje jedno kolo vybrané prioritou: **aktivní → nejbližší nadcházející → poslední proběhlé**. Stav kola (`KoloStav`) určuje obsah karty:
+
+| Fáze | Kdy | Co úvodka zobrazuje |
+|------|-----|---------------------|
+| **Nadcházející** | přede dnem závodu | datum a čas startu, odpočet do startu (08:00 UTC), info o upload okně; pod hero kartou navíc **karta posledního vyhodnoceného kola** s odkazem na výsledkovou listinu |
+| **Závod právě probíhá** | den závodu 08:00–11:00 UTC | odpočet do **konce závodu** (11:00 UTC), tlačítko pro odeslání deníku, živé výsledky, počítadlo přijatých hlášení |
+| **Příjem hlášení** | po závodě až do uzávěrky | odpočet do **uzávěrky**, tlačítko pro odeslání deníku, živé průběžné výsledky (auto-refresh 60 s), počítadlo „zatím přijato N hlášení" |
+| **Zpracování výsledků** | po uzávěrce, před vyhodnocením | poznámka o zpracování, živá tabulka výsledků |
+| **Vyhodnocené** | po vyhodnocení | tlačítko na výsledkovou listinu |
+
+„Závod právě probíhá" je **prezentační podstav** odvozený v `HomeController` (ne nový case v `KoloStav`): platí, když aktuální čas leží v závodním okně (`ContestWindow`, 08:00–11:00 UTC) dne `datum_konani` — funguje i tehdy, když cron kolo ještě formálně neaktivoval.
+
+Další prvky nezávislé na fázi:
+
+- **Diskuse** – tlačítko „Diskuse ke kolu" (s počtem příspěvků) v hero kartě + sekce **„Z diskuse"** s posledními 3 příspěvky napříč koly
+- **Odpočet s auto-přepnutím** – po doběhnutí na nulu se stránka sama přenačte a zobrazí novou fázi (ochrana proti reload smyčce: reload se vyzbrojí jen pokud byl cíl při načtení v budoucnu)
+- **Místní čas vedle UTC** – u startu závodu a uzávěrky JS doplní čas v časové zóně prohlížeče (`data-local-time`, skryto pokud je místní čas shodný s UTC; bez JS zůstává jen UTC)
+- **Rychlé odkazy** – odeslání deníku, průběžné/výsledkové/roční výsledky
+- **Plánovaná kola** – mini-kalendář příštích 3 kol
 
 ---
 

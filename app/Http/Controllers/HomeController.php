@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Enums\KoloStav;
+use App\Models\Prispevek;
 use App\Models\VkvpaData;
 use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
+use App\Support\ContestWindow;
 use Illuminate\Support\Carbon;
 use Illuminate\View\View;
 
@@ -23,13 +25,38 @@ class HomeController extends Controller
             ?? VkvpaKola::query()->orderByDesc('datum_konani')->first();
 
         $state = $kolo ? $this->stateKey($kolo->stav()) : null;
+
+        // Prezentační podstav „závod právě probíhá" (08:00–11:00 UTC v den
+        // závodu) – KoloStav zůstává zdrojem pravdy, jen úvodka během
+        // závodního okna odpočítává do konce závodu místo do uzávěrky.
+        if ($kolo && in_array($state, ['active', 'deadline'], true) && $this->isContestRunning($kolo, $now)) {
+            $state = 'running';
+        }
+
         $countdownTarget = ($kolo && $state) ? $this->resolveCountdownTarget($kolo, $state) : null;
-        $liveMode = in_array($state, ['active', 'deadline', 'evaluating'], true);
+        $liveMode = in_array($state, ['running', 'active', 'deadline', 'evaluating'], true);
 
         $kategorie = VkvpaKategorie::query()->orderBy('id')->get()->keyBy('id');
         $vysledky = ($kolo && $liveMode)
             ? VkvpaData::prubezne($kolo->id)->get()
             : collect();
+
+        // Poslední vyhodnocené kolo – kompaktní karta s odkazem na výsledky,
+        // jen když hero ukazuje nadcházející kolo (jinak by výsledky
+        // předchozího kola z úvodky mezi koly úplně zmizely).
+        $posledniVyhodnocene = $state === 'upcoming'
+            ? VkvpaKola::query()->whereNotNull('vyhodnoceno')->orderByDesc('datum_konani')->first()
+            : null;
+
+        // Diskuse: počet příspěvků ke kolu v hero + poslední 3 příspěvky
+        // napříč koly (mezi koly je diskuse aktuálního kola prázdná).
+        $diskuseCount = $kolo ? Prispevek::query()->where('kolo_id', $kolo->id)->count() : 0;
+        $posledniPrispevky = Prispevek::query()
+            ->with('kolo')
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->limit(3)
+            ->get();
 
         // Next upcoming rounds (for mini-calendar), excluding the round already shown.
         $excludeId = $kolo?->id;
@@ -43,6 +70,7 @@ class HomeController extends Controller
         return view('pages.home', compact(
             'kolo', 'state', 'countdownTarget', 'liveMode',
             'vysledky', 'kategorie', 'upcomingRounds',
+            'posledniVyhodnocene', 'diskuseCount', 'posledniPrispevky',
         ));
     }
 
@@ -63,14 +91,38 @@ class HomeController extends Controller
     }
 
     /**
+     * Probíhá právě závodní okno kola (den `datum_konani`,
+     * {@see ContestWindow::from()}–{@see ContestWindow::to()} UTC)?
+     */
+    private function isContestRunning(VkvpaKola $kolo, Carbon $now): bool
+    {
+        return $now->between(
+            $this->contestWindowTime($kolo, ContestWindow::from()),
+            $this->contestWindowTime($kolo, ContestWindow::to()),
+        );
+    }
+
+    /**
+     * Okraj závodního okna jako Carbon: den závodu + čas 'HHMM' v UTC.
+     */
+    private function contestWindowTime(VkvpaKola $kolo, string $hhmm): Carbon
+    {
+        return $kolo->datum_konani->copy()
+            ->setTime((int) substr($hhmm, 0, 2), (int) substr($hhmm, 2, 2))
+            ->setTimezone('UTC');
+    }
+
+    /**
      * Returns the Carbon datetime the JS countdown should count down to.
      * upcoming → contest day at 08:00 UTC (start of contest window)
+     * running → end of the contest window (11:00 UTC)
      * active / deadline → submission deadline
      */
     private function resolveCountdownTarget(VkvpaKola $kolo, string $state): ?Carbon
     {
         return match ($state) {
             'upcoming' => $kolo->datum_konani->copy()->setTime(8, 0, 0)->setTimezone('UTC'),
+            'running' => $this->contestWindowTime($kolo, ContestWindow::to()),
             'active', 'deadline' => $kolo->datum_uzaverky,
             default => null,
         };

@@ -6,7 +6,12 @@
 
 @php
     // Start závodu z konfigurace závodního okna ('0800' → '08:00')
-    $startZavodu = preg_replace('/^(\d{2})(\d{2})$/', '$1:$2', \App\Support\ContestWindow::from());
+    $oknoOd = \App\Support\ContestWindow::from();
+    $startZavodu = preg_replace('/^(\d{2})(\d{2})$/', '$1:$2', $oknoOd);
+    // Unix timestamp startu závodu pro přepočet na místní čas prohlížeče.
+    $startTs = fn (\App\Models\VkvpaKola $k): int => $k->datum_konani->copy()
+        ->setTime((int) substr($oknoOd, 0, 2), (int) substr($oknoOd, 2, 2))
+        ->getTimestamp();
 @endphp
 
 {{-- ── Aktuální / nadcházející kolo ──────────────────────────────── --}}
@@ -18,6 +23,7 @@
         <div class="min-w-0 flex-1">
             <div class="mb-1 text-xs font-semibold uppercase tracking-wide text-muted">
                 @if ($state === 'upcoming')  {{ __('pages.home.state_upcoming') }}
+                @elseif ($state === 'running') {{ __('pages.home.state_running') }}
                 @elseif ($state === 'active') {{ __('pages.home.state_active') }}
                 @elseif ($state === 'deadline') {{ __('pages.home.state_deadline') }}
                 @elseif ($state === 'evaluating') {{ __('pages.home.state_evaluating') }}
@@ -28,11 +34,17 @@
 
             <dl class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-sm">
                 <dt class="text-muted">{{ __('pages.home.contest_date') }}</dt>
-                <dd class="font-medium">{{ $kolo->datum_konani->locale(app()->getLocale())->isoFormat('dddd D. M. YYYY').' '.$startZavodu.' UTC' }}</dd>
+                <dd class="font-medium">
+                    {{ $kolo->datum_konani->locale(app()->getLocale())->isoFormat('dddd D. M. YYYY').' '.$startZavodu.' UTC' }}
+                    <span class="font-normal text-muted" data-local-time="{{ $startTs($kolo) }}" data-local-suffix="{{ __('pages.home.local_time_suffix') }}"></span>
+                </dd>
 
                 @if ($kolo->datum_uzaverky)
                 <dt class="text-muted">{{ __('pages.home.deadline') }}</dt>
-                <dd>{{ $kolo->datum_uzaverky->locale(app()->getLocale())->isoFormat('dddd D. M. YYYY HH:mm').' UTC' }}</dd>
+                <dd>
+                    {{ $kolo->datum_uzaverky->locale(app()->getLocale())->isoFormat('dddd D. M. YYYY HH:mm').' UTC' }}
+                    <span class="text-muted" data-local-time="{{ $kolo->datum_uzaverky->getTimestamp() }}" data-local-suffix="{{ __('pages.home.local_time_suffix') }}"></span>
+                </dd>
                 @endif
 
                 @if ($kolo->vyhodnoceno)
@@ -55,6 +67,7 @@
             <div id="js-countdown" class="font-mono text-3xl font-bold tabular-nums text-heading">--:--:--</div>
             <div class="mt-1 text-xs text-muted">
                 @if ($state === 'upcoming') {{ __('pages.home.countdown_to_start') }}
+                @elseif ($state === 'running') {{ __('pages.home.countdown_to_end') }}
                 @else {{ __('pages.home.countdown_to_deadline') }}
                 @endif
             </div>
@@ -72,7 +85,7 @@
         <span>
             @if ($state === 'upcoming')
                 {{ __('pages.home.upload_window_upcoming', ['date' => $uploadDate, 'deadline' => $uploadDeadline]) }}
-            @elseif (in_array($state, ['active', 'deadline']))
+            @elseif (in_array($state, ['running', 'active', 'deadline']))
                 <span class="font-medium text-green-600 dark:text-green-400">
                     {{ __('pages.home.upload_window_open', ['deadline' => $uploadDeadline]) }}
                 </span>
@@ -84,17 +97,46 @@
         </span>
     </div>
 
+    {{-- Počet zatím přijatých hlášení (během příjmu) --}}
+    @if (in_array($state, ['running', 'active', 'deadline']))
+    <p class="mt-3 text-sm text-muted">
+        {{ trans_choice('pages.home.received_count', $vysledky->count(), ['count' => $vysledky->count()]) }}
+    </p>
+    @endif
+
     {{-- CTA tlačítka --}}
     <div class="mt-4 flex flex-wrap gap-3">
-        @if (in_array($state, ['active', 'deadline']))
+        @if (in_array($state, ['running', 'active', 'deadline']))
             <a href="{{ route('hlaseni.index') }}" class="btn btn-primary">{{ __('pages.home.btn_submit') }}</a>
         @endif
-        @if (in_array($state, ['evaluating', 'evaluated', 'active', 'deadline']))
+        @if (in_array($state, ['evaluating', 'evaluated', 'running', 'active', 'deadline']))
             <a href="{{ route('pribezne_vysledky', ['kolo' => $kolo->id]) }}" class="btn">{{ __('pages.home.btn_interim') }}</a>
         @endif
         @if ($state === 'evaluated')
             <a href="{{ route('vysledkova_listina', ['kolo' => $kolo->id]) }}" class="btn btn-primary">{{ __('pages.home.btn_results') }}</a>
         @endif
+        <a href="{{ route('diskuse.show', $kolo->id) }}" class="btn">
+            {{ __('pages.home.btn_discussion') }}@if ($diskuseCount > 0) ({{ $diskuseCount }})@endif
+        </a>
+    </div>
+</div>
+@endif
+
+{{-- ── Poslední vyhodnocené kolo (jen když hero ukazuje nadcházející) ── --}}
+@if ($posledniVyhodnocene)
+<div class="card mb-6 p-4">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+            <div class="text-xs font-semibold uppercase tracking-wide text-muted">{{ __('pages.home.last_evaluated_heading') }}</div>
+            <div class="mt-0.5 font-bold">{{ $posledniVyhodnocene->nazev }}</div>
+            @if ($posledniVyhodnocene->vyhodnoceno)
+            <div class="text-xs text-muted">{{ __('pages.home.evaluated_at') }}: {{ $posledniVyhodnocene->vyhodnoceno->locale(app()->getLocale())->isoFormat('D. M. YYYY HH:mm') }}</div>
+            @endif
+        </div>
+        <div class="flex flex-wrap gap-2">
+            <a href="{{ route('vysledkova_listina', ['kolo' => $posledniVyhodnocene->id]) }}" class="btn btn-primary">{{ __('pages.home.btn_results') }}</a>
+            <a href="{{ route('diskuse.show', $posledniVyhodnocene->id) }}" class="btn">{{ __('pages.home.btn_discussion') }}</a>
+        </div>
     </div>
 </div>
 @endif
@@ -185,6 +227,28 @@
     </a>
 </div>
 
+{{-- ── Z diskuse (poslední příspěvky napříč koly) ─────────────────── --}}
+@if ($posledniPrispevky->isNotEmpty())
+<div class="mt-8">
+    <div class="section-head flex items-center justify-between">
+        <span>{{ __('pages.home.discussion_heading') }}</span>
+        <a href="{{ route('diskuse.index') }}" class="text-xs font-normal text-muted hover:underline">{{ __('pages.home.discussion_all') }}</a>
+    </div>
+    <div class="grid gap-3 sm:grid-cols-3">
+        @foreach ($posledniPrispevky as $p)
+        <a href="{{ route('diskuse.show', $p->kolo_id) }}" class="card block p-4 hover:border-brand hover:bg-surface-2 transition-colors">
+            <div class="flex items-baseline justify-between gap-2">
+                <span class="mono text-sm font-bold">{{ $p->znacka }}</span>
+                <span class="text-xs text-muted">{{ $p->created_at->locale(app()->getLocale())->diffForHumans() }}</span>
+            </div>
+            <div class="mt-0.5 text-xs text-muted">{{ $p->kolo->nazev }}</div>
+            <p class="mt-2 text-sm">{{ \Illuminate\Support\Str::limit($p->text, 120) }}</p>
+        </a>
+        @endforeach
+    </div>
+</div>
+@endif
+
 {{-- ── Nadcházející kola ───────────────────────────────────────────── --}}
 @if ($upcomingRounds->isNotEmpty())
 <div class="mt-8">
@@ -203,7 +267,10 @@
                 <tr>
                     <td class="font-medium">{{ $r->nazev }}</td>
                     {{-- Stejný formát jako na stránce kol: den + datum + čas UTC --}}
-                    <td class="whitespace-nowrap">{{ $r->datum_konani->locale(app()->getLocale())->isoFormat('dddd D. M. YYYY').' '.$startZavodu.' UTC' }}</td>
+                    <td class="whitespace-nowrap">
+                        {{ $r->datum_konani->locale(app()->getLocale())->isoFormat('dddd D. M. YYYY').' '.$startZavodu.' UTC' }}
+                        <span class="text-muted" data-local-time="{{ $startTs($r) }}" data-local-suffix="{{ __('pages.home.local_time_suffix') }}"></span>
+                    </td>
                     <td class="whitespace-nowrap text-muted">
                         {{ $r->datum_uzaverky ? $r->datum_uzaverky->locale(app()->getLocale())->isoFormat('dddd D. M. YYYY HH:mm').' UTC' : '—' }}
                     </td>
@@ -225,12 +292,21 @@
     var countdownEl = document.getElementById('js-countdown');
     var target = {{ $countdownTarget->getTimestamp() }} * 1000;
 
+    {{-- Auto-přepnutí: po doběhnutí odpočtu se stránka přenačte a server
+         vykreslí nový stav kola. Reload se vyzbrojí jen tehdy, když byl cíl
+         při načtení v budoucnu – ochrana proti reload smyčce (posun hodin). --}}
+    var reloadArmed = target > Date.now();
+
     function pad(n) { return String(n).padStart(2, '0'); }
 
     function updateCountdown() {
         var diff = target - Date.now();
         if (diff <= 0) {
             countdownEl.textContent = '00:00:00';
+            if (reloadArmed) {
+                reloadArmed = false;
+                setTimeout(function () { window.location.reload(); }, 3000);
+            }
             return;
         }
         var d = Math.floor(diff / 86400000);
