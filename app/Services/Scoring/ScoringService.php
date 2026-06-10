@@ -164,11 +164,19 @@ final class ScoringService
         // Cache::flexible (stale-while-revalidate): do `fresh` s vrací z cache, do
         // `stale` s vrací starou hodnotu a obnoví ji na pozadí. Invaliduje se cíleně
         // v {@see self::rankRound()} přes forgetYearlyCache().
-        return Cache::flexible(
+        //
+        // Cachují se jen pole atributů, ne modely: `cache.serializable_classes`
+        // je `false`, takže objekty by se z cache vrátily jako __PHP_Incomplete_Class.
+        /** @var list<array<string, mixed>> $rows */
+        $rows = Cache::flexible(
             $this->yearlyCacheKey($year, $qrpOnly, $lpOnly),
             [VkvpaSettings::yearlyCacheFresh(), VkvpaSettings::yearlyCacheStale()],
-            fn (): Collection => $this->computeYearlyResults($year, $qrpOnly, $lpOnly),
+            fn (): array => $this->computeYearlyResults($year, $qrpOnly, $lpOnly)
+                ->map(static fn (VkvpaData $row): array => $row->getAttributes())
+                ->all(),
         );
+
+        return VkvpaData::query()->hydrate($rows);
     }
 
     /**
@@ -206,7 +214,8 @@ final class ScoringService
     /** Klíč cache ročních výsledků pro daný rok a kombinaci výkonových filtrů. */
     private function yearlyCacheKey(int $year, bool $qrpOnly, bool $lpOnly): string
     {
-        return sprintf('vkvpa:yearly:%d:%d:%d', $year, $qrpOnly ? 1 : 0, $lpOnly ? 1 : 0);
+        // v2: hodnota je pole polí atributů (dřív serializovaná kolekce modelů).
+        return sprintf('vkvpa:yearly:v2:%d:%d:%d', $year, $qrpOnly ? 1 : 0, $lpOnly ? 1 : 0);
     }
 
     /** Zahodí cache ročních výsledků daného roku (všechny kombinace výkonových filtrů). */
