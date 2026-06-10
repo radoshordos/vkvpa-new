@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Http\Controllers\Admin\EdiDebugController;
+use App\Models\Edihead;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -48,6 +49,28 @@ class EdiDebugPageTest extends TestCase
             ->assertOk()
             ->assertSee('body za spojení') // skóre headline se vykreslil
             ->assertSee('započteno');     // tabulka rozpadu
+    }
+
+    public function test_show_from_db_hides_upload_form(): void
+    {
+        $src = (string) file_get_contents(__DIR__.'/../fixtures/sample.edi');
+        $head = Edihead::create([
+            'id_kola' => 1,
+            't_date' => '20260315',
+            'p_call' => 'OK1AAA',
+            'p_wwlo' => 'JN79',
+            'p_band' => '144 MHz',
+            'r_name' => 'A',
+            'r_hbbs' => 'a@a.cz',
+            's_powe' => 100,
+            'src' => $src,
+        ]);
+
+        $this->actingAs($this->admin())
+            ->get(route('edi.debug.show', $head))
+            ->assertOk()
+            ->assertSee('body za spojení')
+            ->assertDontSee('enctype="multipart/form-data"', false);
     }
 
     public function test_invalid_file_shows_error(): void

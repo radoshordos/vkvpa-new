@@ -41,6 +41,8 @@
     </x-alert>
 @endif
 
+{{-- Upload jen pro ruční kontrolu; při prokliku z URL jde rozpad z deníku v DB. --}}
+@unless ($zDatabaze)
 <form class="card mb-5 mt-4 flex flex-wrap items-end gap-4 p-4" action="{{ route('edi.debug.store') }}" method="post" enctype="multipart/form-data">
     @csrf
     <div class="field mb-0">
@@ -50,6 +52,7 @@
     </div>
     <button type="submit" class="btn btn-primary">{{ __('admin.debug_btn') }}</button>
 </form>
+@endunless
 
 @if ($report)
     {{-- Hlavička deníku --}}

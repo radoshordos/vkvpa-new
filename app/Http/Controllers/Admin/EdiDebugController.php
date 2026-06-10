@@ -34,6 +34,7 @@ class EdiDebugController extends Controller
             'report' => null,
             'filename' => null,
             'edihead' => null,
+            'zDatabaze' => false,
         ]);
     }
 
@@ -62,6 +63,7 @@ class EdiDebugController extends Controller
             'report' => $this->debugger->analyze($log),
             'filename' => $head->p_call,
             'edihead' => $head,
+            'zDatabaze' => true,
         ]);
     }
 
@@ -88,6 +90,7 @@ class EdiDebugController extends Controller
             'report' => $this->debugger->analyze($log),
             'filename' => preg_replace('/[^A-Za-z0-9._\-]/', '_', basename((string) $request->file('upload')->getClientOriginalName())),
             'edihead' => $edihead,
+            'zDatabaze' => false,
         ]);
     }
 }
