@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 use Override;
 
 /**
@@ -21,7 +22,7 @@ use Override;
  *
  * @property int $id
  * @property int $id_kola
- * @property int $id_kategorie
+ * @property int|null $id_kategorie
  * @property bool $qrp
  * @property bool $lp
  * @property string $znacka
@@ -41,7 +42,7 @@ use Override;
  * @property bool $schvaleno
  * @property bool $odeslano
  * @property string $session_id
- * @property string|null $timestamp
+ * @property Carbon|null $timestamp
  * @property-read VkvpaKola|null $kolo
  * @property-read VkvpaKategorie|null $kategorie
  * @property-read Edihead|null $edihead

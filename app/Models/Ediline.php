@@ -17,9 +17,9 @@ use Override;
  *
  * @property int $id
  * @property int $edihead_id
- * @property string $date
- * @property string $time
- * @property string $call_sign
+ * @property string|null $date
+ * @property string|null $time
+ * @property string|null $call_sign
  * @property int|null $mode_code
  * @property string|null $sent_rst
  * @property int|null $sent_qso_number
@@ -32,7 +32,7 @@ use Override;
  * @property string|null $new_wwl_n
  * @property string|null $new_dxcc_n
  * @property string|null $duplicate_qso_d
- * @property int $sqr
+ * @property int|null $sqr
  * @property float|null $lon
  * @property float|null $lat
  * @property-read Edihead|null $head

@@ -66,7 +66,9 @@ final class SkokanService
             $d = (int) $r->body - $prevBody[$key];
             $delta[$r->id] = $d;
             if ($d > 0) {
-                $maxByKat[$r->id_kategorie] = max($maxByKat[$r->id_kategorie] ?? 0, $d);
+                // Záznam bez kategorie (id_kategorie NULL) se sdružuje pod klíčem 0.
+                $kat = $r->id_kategorie ?? 0;
+                $maxByKat[$kat] = max($maxByKat[$kat] ?? 0, $d);
             }
         }
 
@@ -76,7 +78,7 @@ final class SkokanService
             $d = $delta[$r->id];
             $out[$r->id] = [
                 'delta' => $d,
-                'top' => $d !== null && $d > 0 && ($maxByKat[$r->id_kategorie] ?? 0) === $d,
+                'top' => $d !== null && $d > 0 && ($maxByKat[$r->id_kategorie ?? 0] ?? 0) === $d,
             ];
         }
 

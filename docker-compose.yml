@@ -26,6 +26,11 @@ services:
                 condition: service_healthy
     db:
         image: mysql:8.0
+        # ALLOW_INVALID_DATES NAHRAZUJE celý serverový sql_mode (zahodí i
+        # STRICT_TRANS_TABLES) – nutné pro import legacy dumpu
+        # (database/source_sql/ obsahuje nulová/neplatná data). Aplikace tím
+        # není dotčena: Laravel si přes `strict => true` (config/database.php)
+        # nastavuje plný striktní sql_mode per session.
         command: --sql-mode="ALLOW_INVALID_DATES"
         environment:
             MYSQL_DATABASE: ${DB_DATABASE:-digipa}
