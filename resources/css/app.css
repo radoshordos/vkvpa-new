@@ -454,6 +454,19 @@
         color: var(--brand-fg);
         filter: none;
     }
+    /* Textová varianta ikonového odkazu (ikona + popisek „Statistiky"). */
+    .icon-btn-label {
+        width: auto;
+        gap: 0.25rem;
+        padding: 0.2rem 0.45rem;
+        font-size: 0.72rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+    .icon-btn-label svg {
+        width: 0.85rem;
+        height: 0.85rem;
+    }
 
     /* ── Upload zóna (EDI import) ────────────────────────────────── */
     .upload-zone {
