@@ -58,7 +58,9 @@
                         <th class="num">{{ __('pages.vysledky.col_mult') }}</th>
                         <th class="num">{{ __('pages.vysledky.col_total') }}</th>
                         <th>{{ __('pages.vysledky.col_soapbox') }}</th>
-                        <th>{{ __('pages.vysledky.col_actions') }}</th>
+                        <th>{{ __('pages.vysledky.col_edi') }}</th>
+                        <th>{{ __('pages.vysledky.col_stats') }}</th>
+                        @if ($isAdmin)<th>{{ __('pages.vysledky.col_actions') }}</th>@endif
                     </tr>
                 </thead>
                 <tbody>
@@ -96,21 +98,27 @@
                         </td>
                         <td class="text-danger">{{ $r->soapbox }}@if ($r->poznamka)<br><i class="text-muted">{{ $r->poznamka }}</i>@endif</td>
                         <td>
-                            @if ($isAdmin)
-                                @include('partials.zaznam-akce', ['r' => $r])
-                            @elseif ($r->edihead_id)
-                                {{-- EDI · EDIR jen mimo upload window; vizualizace je veřejná vždy --}}
+                            @if ($r->edihead_id)
+                                {{-- EDI · EDIR: admin vždy, ostatní jen mimo upload window --}}
                                 <div class="flex items-center gap-1">
-                                    @if (! $uploadWindowOpen)
+                                    @if ($isAdmin || ! $uploadWindowOpen)
                                         <x-edi-odkaz :head="$r->edihead_id" />
                                         <x-edi-odkaz :head="$r->edihead_id" reduced />
                                     @else
                                         <span class="action-link cursor-not-allowed opacity-50" title="{{ __('app.edi_restricted_body') }}">{{ __('app.edi_restricted_label') }}</span>
                                     @endif
-                                    <x-vizualizace-odkaz :head="$r->edihead_id" />
                                 </div>
                             @endif
                         </td>
+                        <td>
+                            @if ($r->edihead_id)
+                                {{-- Statistiky deníku – veřejné vždy --}}
+                                <x-vizualizace-odkaz :head="$r->edihead_id" />
+                            @endif
+                        </td>
+                        @if ($isAdmin)
+                            <td>@include('partials.zaznam-akce', ['r' => $r, 'bezEdi' => true])</td>
+                        @endif
                     </tr>
                 @endforeach
                 </tbody>

@@ -2,8 +2,10 @@
     Admin nástroje vyhodnocení nad záznamem hlášení ($r = VkvpaData):
     1. řádek: P převzít · U upravit · X smazat (mazání potvrzuje modal
     z partials/del-modal – stránka ho musí includovat).
-    2. řádek: EDI · EDIR · vizualizace, má-li záznam nahraný deník.
+    2. řádek: EDI · EDIR · statistiky, má-li záznam nahraný deník;
+    $bezEdi = true ho vynechá (stránka má pro EDI a statistiky vlastní sloupce).
 --}}
+@php $bezEdi = $bezEdi ?? false; @endphp
 <div class="mb-1 flex items-center gap-1">
     <form method="post" action="{{ route('zaznam.update', ['zaznam' => $r->id]) }}">
         @csrf
@@ -25,8 +27,8 @@
         </button>
     </form>
 </div>
-@if ($r->edihead_id)
-    {{-- EDI · EDIR · vizualizace – admin má vždy přístup --}}
+@if (! $bezEdi && $r->edihead_id)
+    {{-- EDI · EDIR · statistiky – admin má vždy přístup --}}
     <div class="flex items-center gap-1">
         <x-edi-odkaz :head="$r->edihead_id" />
         <x-edi-odkaz :head="$r->edihead_id" reduced />
