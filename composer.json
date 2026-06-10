@@ -84,7 +84,7 @@
             "@php artisan queue:restart",
             "npm run build"
         ],
-        "stan": "phpstan analyse",
+        "stan": "@php vendor/bin/phpstan analyse --memory-limit=1G",
         "lint": "pint --test"
     },
     "extra": {
