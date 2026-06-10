@@ -61,6 +61,7 @@ return [
         'col_name' => 'Name',
         'col_count' => 'Records',
         'col_state' => 'Status',
+        'col_active' => 'Active',
         'col_evaluated' => 'Evaluated',
         'col_actions' => 'Actions',
         'btn_create' => '+ Add round',

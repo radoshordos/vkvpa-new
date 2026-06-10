@@ -61,6 +61,7 @@ return [
         'col_name' => 'Název',
         'col_count' => 'Záznamů',
         'col_state' => 'Stav',
+        'col_active' => 'Aktivní',
         'col_evaluated' => 'Vyhodnoceno',
         'col_actions' => 'Akce',
         'btn_create' => '+ Přidat kolo',

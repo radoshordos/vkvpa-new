@@ -26,6 +26,7 @@
         <th>{{ __('pages.kola.col_name') }}</th>
         <th class="text-right"><abbr title="{{ __('pages.kola.col_count') }}">Σ</abbr></th>
         <th>{{ __('pages.kola.col_state') }}</th>
+        @if ($isAdmin)<th class="text-center">{{ __('pages.kola.col_active') }}</th>@endif
         <th>{{ __('pages.kola.col_evaluated') }}</th>
         @if ($isAdmin)<th>{{ __('pages.kola.col_actions') }}</th>@endif
       </tr>
@@ -42,6 +43,10 @@
           <td>
             <span class="badge {{ $stav->badgeClass() }}">{{ $stav->label() }}</span>
           </td>
+          @if ($isAdmin)
+            {{-- Příznak „aktivni“ = příjem hlášení je otevřen (interní, jen pro adminy) --}}
+            <td class="text-center">{{ $k->aktivni ? '✓' : '—' }}</td>
+          @endif
           <td class="whitespace-nowrap">{{ $k->vyhodnoceno?->format('j. n. Y H:i') ?? '—' }}</td>
           @if ($isAdmin)
             <td>
