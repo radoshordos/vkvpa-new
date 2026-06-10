@@ -149,7 +149,7 @@
             <x-badge variant="warn" class="mr-2">LIVE</x-badge>
             {{ __('pages.home.live_heading') }}
         </span>
-        <span class="text-xs font-normal text-muted">
+        <span class="text-xs font-normal text-white/85">
             {{ __('pages.home.live_refresh_in') }} <span id="js-refresh-counter">60</span> s
         </span>
     </div>
@@ -232,7 +232,7 @@
 <div class="mt-8">
     <div class="section-head flex items-center justify-between">
         <span>{{ __('pages.home.discussion_heading') }}</span>
-        <a href="{{ route('diskuse.index') }}" class="text-xs font-normal text-muted hover:underline">{{ __('pages.home.discussion_all') }}</a>
+        <a href="{{ route('diskuse.index') }}" class="text-xs font-normal text-white/85 underline hover:text-white">{{ __('pages.home.discussion_all') }}</a>
     </div>
     <div class="grid gap-3 sm:grid-cols-3">
         @foreach ($posledniPrispevky as $p)
