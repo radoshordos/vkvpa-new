@@ -20,6 +20,7 @@ RUN a2enmod rewrite
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 COPY docker/apache/000-default.conf /etc/apache2/sites-available/000-default.conf
 COPY docker/php/uploads.ini /usr/local/etc/php/conf.d/uploads.ini
+COPY docker/php/performance.ini /usr/local/etc/php/conf.d/performance.ini
 
 RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 

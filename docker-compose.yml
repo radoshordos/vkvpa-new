@@ -5,6 +5,11 @@ services:
             dockerfile: Dockerfile
         volumes:
             - ./:/var/www/html
+            # vendor/ žije v named volume (nativní FS kontejneru) – přes
+            # Windows bind-mount je čtení tisíců souborů ~100× pomalejší
+            # (TTFB ~5 s). Po změně composer.json spusť `composer install`
+            # UVNITŘ kontejneru: docker compose exec web composer install
+            - vendordata:/var/www/html/vendor
         ports:
             - "8080:80"
         environment:
@@ -38,3 +43,4 @@ services:
             retries: 10
 volumes:
     dbdata:
+    vendordata:
