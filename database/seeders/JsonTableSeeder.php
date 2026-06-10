@@ -46,7 +46,7 @@ abstract class JsonTableSeeder extends Seeder
     /**
      * @return list<array<string, mixed>>
      */
-    private function rows(): array
+    protected function rows(): array
     {
         /** @var list<array<string, mixed>> $rows */
         $rows = json_decode(
