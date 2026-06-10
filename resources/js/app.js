@@ -40,6 +40,24 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+// ── Místní čas vedle UTC ───────────────────────────────────────────────────
+// <span data-local-time="unix" data-local-suffix="místního času"> – doplní
+// čas v časové zóně prohlížeče. Vynechá se, když je místní čas shodný s UTC,
+// a bez JS zůstane stránka beze změny (server renderuje jen UTC).
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('[data-local-time]').forEach((el) => {
+        const ts = parseInt(el.dataset.localTime, 10);
+        if (!Number.isFinite(ts)) return;
+        const date = new Date(ts * 1000);
+        if (date.getTimezoneOffset() === 0) return;
+        const time = new Intl.DateTimeFormat(document.documentElement.lang || 'cs', {
+            hour: '2-digit',
+            minute: '2-digit',
+        }).format(date);
+        el.textContent = `(${time} ${el.dataset.localSuffix || ''})`.trim();
+    });
+});
+
 // ── Globální delegované handlery ───────────────────────────────────────────
 // Náhrada za inline onchange/onclick atributy – ty CSP s nonce blokuje
 // (event handler atribut nonce nést nemůže). Delegace na document funguje
