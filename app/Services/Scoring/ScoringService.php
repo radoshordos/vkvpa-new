@@ -192,7 +192,7 @@ final class ScoringService
             ->whereYear('vkvpa_kola.datum_konani', $year)
             ->selectRaw('vkvpa_data.id_kategorie as kategorie_id, vkvpa_data.znacka')
             ->selectRaw(
-                'SUM(CASE WHEN vkvpa_data.EDI_ID = 0 AND vkvpa_data.id_kola >= ? THEN 0 ELSE vkvpa_data.body END) as celkem',
+                'SUM(CASE WHEN vkvpa_data.edihead_id IS NULL AND vkvpa_data.id_kola >= ? THEN 0 ELSE vkvpa_data.body END) as celkem',
                 [VkvpaSettings::nonEdiNullifyFromKolo()],
             )
             ->groupBy('vkvpa_data.id_kategorie', 'vkvpa_data.znacka')

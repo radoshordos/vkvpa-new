@@ -34,7 +34,7 @@ The core flow for submitting a contest log:
 1. `EdiParser::parse(string)` → `EdiLog` (value object with `EdiHeader` + `EdiQso[]` + raw source)
 2. `EdiImportService::import(EdiLog)` → writes to `edihead` + `edilines` tables in one transaction
 3. `ScoringService::scoreEdi(Edihead)` → computes `EdiScore` (pocet × nasobice = body)
-4. `EdiController::store()` orchestrates steps 1–3, creates a `VkvpaData` row, and stores `EDI_ID`
+4. `EdiController::store()` orchestrates steps 1–3, creates a `VkvpaData` row linked via `edihead_id` (nullable FK; `NULL` = entry without an EDI log)
 
 EDI files may arrive as Windows-1250; `EdiParser` converts via `iconv` before processing. Real-world fixture EDI files live in `resources/edi/` and are used in unit tests.
 

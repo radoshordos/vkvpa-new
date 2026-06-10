@@ -119,7 +119,7 @@ class EdiPipelineIntegrationTest extends TestCase
         $this->upload();
 
         $row = VkvpaData::firstOrFail();
-        $head = Edihead::findOrFail((int) $row->EDI_ID);
+        $head = Edihead::findOrFail((int) $row->edihead_id);
 
         $direct = app(ScoringService::class)->scoreEdi($head);
 
@@ -129,15 +129,14 @@ class EdiPipelineIntegrationTest extends TestCase
         $this->assertSame($direct->body, $row->body);
     }
 
-    public function test_upload_stores_edi_flag_and_edi_id(): void
+    public function test_upload_stores_edihead_id(): void
     {
         $this->koloProBrezen2026();
         $this->upload();
 
         $row = VkvpaData::firstOrFail();
-        $this->assertTrue($row->EDI, 'EDI příznak musí být true');
-        $this->assertGreaterThan(0, $row->EDI_ID, 'EDI_ID musí odkazovat na edihead');
-        $this->assertNotNull(Edihead::find($row->EDI_ID), 'Edihead musí existovat');
+        $this->assertNotNull($row->edihead_id, 'edihead_id musí odkazovat na edihead');
+        $this->assertNotNull(Edihead::find($row->edihead_id), 'Edihead musí existovat');
     }
 
     public function test_upload_creates_reserved_row_with_schvaleno_false(): void
@@ -208,7 +207,7 @@ class EdiPipelineIntegrationTest extends TestCase
                 'bodu_za_qso' => $row->bodu_za_qso,
                 'nasobice' => $row->nasobice,
                 'body' => $row->body,
-                'EDIID' => $row->EDI_ID,
+                'edihead_id' => $row->edihead_id,
             ])
             ->assertRedirect(route('vysledkova_listina', ['kolo' => $row->id_kola]));
 

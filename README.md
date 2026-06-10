@@ -142,7 +142,7 @@ EdiImportService::import(EdiLog) ──► edihead + edilines (transakce)
 ScoringService::scoreEdi(Edihead) ──► EdiScore (boduZaQso × nasobice = body)
         │
         ▼
-ImportEdiAction ──► VkvpaData row + EDI_ID + EdiImported event
+ImportEdiAction ──► VkvpaData row + edihead_id + EdiImported event
         │
         ▼
 SendEdiMailsListener (queue) ──► HlaseniPrijato + HlaseniProVyhodnocovatele

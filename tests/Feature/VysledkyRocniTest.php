@@ -51,8 +51,8 @@ class VysledkyRocniTest extends TestCase
             'odeslano' => false,
             'qrp' => $qrp,
             'lp' => $lp,
-            'EDI' => $edi,
-            'EDI_ID' => $edi ? 1 : 0,
+            // FK na edihead se v sqlite testech nevynucuje – id 1 nemusí existovat.
+            'edihead_id' => $edi ? 1 : null,
         ]);
     }
 

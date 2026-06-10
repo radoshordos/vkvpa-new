@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreHlaseniRequest;
 use App\Jobs\RankRoundJob;
+use App\Models\Edihead;
 use App\Models\VkvpaData;
 use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
@@ -93,7 +94,7 @@ class HlaseniController extends Controller
             'telefon' => $v['telefon'] ?? '',
             'soapbox' => $v['soapbox'] ?? '',
             'poznamka' => $v['poznamka'] ?? '',
-            'EDI_ID' => $this->intFrom($v['EDIID'] ?? 0),
+            'edihead_id' => $this->ediheadIdFrom($v['edihead_id'] ?? 0),
             // Jen administrátor smí záznam rovnou „převzít". Hlášení od veřejnosti
             // zůstává ve stavu „Čeká" (schvaleno=false), dokud ho vyhodnocovatel
             // nepřevezme – brání to podvržení veřejně zobrazených výsledků.
@@ -135,5 +136,16 @@ class HlaseniController extends Controller
     private function intFrom(mixed $value): int
     {
         return is_numeric($value) ? (int) $value : 0;
+    }
+
+    /**
+     * Vazba na EDI deník z formuláře (hidden pole, 0 = bez deníku). Neexistující
+     * id se zahodí – sloupec má cizí klíč a podvržená hodnota by skončila 500.
+     */
+    private function ediheadIdFrom(mixed $value): ?int
+    {
+        $id = $this->intFrom($value);
+
+        return $id > 0 && Edihead::query()->whereKey($id)->exists() ? $id : null;
     }
 }

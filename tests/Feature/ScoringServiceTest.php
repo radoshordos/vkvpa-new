@@ -19,10 +19,13 @@ class ScoringServiceTest extends TestCase
 {
     use RefreshDatabase;
 
+    /** Pořadí vytvořeného kola v rámci testu – datum_konani je v DB unikátní. */
+    private int $koloSeq = 0;
+
     private function kolo(string $nazev = 'Kolo 2026'): VkvpaKola
     {
         return VkvpaKola::create([
-            'datum_konani' => now()->subDay(),
+            'datum_konani' => sprintf('2026-%02d-18', ($this->koloSeq++ % 12) + 1),
             'datum_uzaverky' => now()->addDays(5),
             'nazev' => $nazev,
             'poznamka' => '',
@@ -166,10 +169,10 @@ class ScoringServiceTest extends TestCase
         $k2 = $this->kolo('2. kolo 2026'); // ID=2, na prahu → non-EDI nulifikace
 
         $e1 = $this->entry($k1->id, $kat->id, 'OK1A', 100);
-        $e1->update(['poradi' => 1]); // EDI_ID=0 (default) → pod prahem, počítá se
+        $e1->update(['poradi' => 1]); // edihead_id=NULL (default) → pod prahem, počítá se
 
         $e2 = $this->entry($k2->id, $kat->id, 'OK1A', 200);
-        $e2->update(['poradi' => 1]); // EDI_ID=0 (default) → na/nad prahem → 0 bodů
+        $e2->update(['poradi' => 1]); // edihead_id=NULL (default) → na/nad prahem → 0 bodů
 
         $res = app(ScoringService::class)->yearlyResults(2026);
 
@@ -272,7 +275,7 @@ class ScoringServiceTest extends TestCase
             'poznamka' => '',
         ]);
         $e = $this->entry($kolo->id, $kat->id, 'OK1A', 100);
-        $e->update(['poradi' => 1, 'EDI_ID' => 1]);
+        $e->update(['poradi' => 1, 'edihead_id' => 1]);
 
         $scoring = app(ScoringService::class);
         $this->assertNotNull($scoring->yearlyResults(2026)->firstWhere('znacka', 'OK1A'));
@@ -286,8 +289,8 @@ class ScoringServiceTest extends TestCase
         $k2 = $this->kolo('2. kolo 2026');
         $e1 = $this->entry($k1->id, $kat->id, 'OK1A', 100);
         $e2 = $this->entry($k2->id, $kat->id, 'OK1A', 150);
-        $e1->update(['poradi' => 1, 'EDI_ID' => 1]);
-        $e2->update(['poradi' => 1, 'EDI_ID' => 1]);
+        $e1->update(['poradi' => 1, 'edihead_id' => 1]);
+        $e2->update(['poradi' => 1, 'edihead_id' => 1]);
 
         $res = app(ScoringService::class)->yearlyResults(2026);
 

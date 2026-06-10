@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests\Admin;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Override;
 
 /**
@@ -25,7 +26,12 @@ class KoloRequest extends FormRequest
     {
         return [
             'nazev' => ['required', 'string', 'max:250'],
-            'datum_konani' => ['required', 'date'],
+            // Kolo se koná třetí neděli v měsíci → jeden den = nejvýš jedno kolo
+            // (DB to jistí unikátním indexem, tady chceme hezkou hlášku).
+            'datum_konani' => [
+                'required', 'date',
+                Rule::unique('vkvpa_kola', 'datum_konani')->ignore($this->route('kolo')),
+            ],
             'datum_uzaverky' => ['required', 'date'],
             'aktivni' => ['boolean'],
             'poznamka' => ['nullable', 'string', 'max:250'],
@@ -39,6 +45,7 @@ class KoloRequest extends FormRequest
             'nazev.required' => 'Název kola je povinný.',
             'datum_konani.required' => 'Datum konání je povinné.',
             'datum_konani.date' => 'Datum konání není platné datum.',
+            'datum_konani.unique' => 'Pro toto datum už kolo existuje.',
             'datum_uzaverky.required' => 'Datum uzávěrky je povinné.',
             'datum_uzaverky.date' => 'Datum uzávěrky není platné datum.',
         ];

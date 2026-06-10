@@ -97,7 +97,7 @@
     <div class="p-5">
     @csrf
     <input type="hidden" name="id_zaznamu" value="{{ (int) ($e->id ?? 0) }}">
-    <input type="hidden" name="EDIID" value="{{ (int) $val('EDIID', $e->EDI_ID ?? 0, 0) }}">
+    <input type="hidden" name="edihead_id" value="{{ (int) $val('edihead_id', $e->edihead_id ?? 0, 0) }}">
 
     <div class="grid gap-x-5 sm:grid-cols-2">
         <x-field name="kolo" :label="__('pages.hlaseni.field_period')" required>
@@ -201,8 +201,8 @@
                     <td class="mono font-bold">
                         {{ $r->znacka }}{{ $r->qrp ? ' /QRP' : '' }}
                         {{-- Vizualizace vlastního deníku – jen pro řádek aktuálního závodníka s nahraným EDI --}}
-                        @if ($e && $r->id === $e->id && (int) $r->EDI_ID > 0)
-                            <x-vizualizace-odkaz :head="(int) $r->EDI_ID" target="_blank" class="ml-1" />
+                        @if ($e && $r->id === $e->id && $r->edihead_id !== null)
+                            <x-vizualizace-odkaz :head="$r->edihead_id" target="_blank" class="ml-1" />
                         @endif
                     </td>
                     <td class="mono whitespace-nowrap">{{ $r->locator }}</td>

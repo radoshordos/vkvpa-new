@@ -36,11 +36,10 @@ use Override;
  * @property string $poznamka
  * @property string $soapbox
  * @property string $ip
- * @property bool $EDI
- * @property int $EDI_ID
+ * @property int|null $edihead_id
  * @property int $poradi
  * @property bool $schvaleno
- * @property string|null $odeslano
+ * @property bool $odeslano
  * @property string $session_id
  * @property string|null $timestamp
  * @property-read VkvpaKola|null $kolo
@@ -54,7 +53,7 @@ use Override;
 #[Fillable([
     'id_kola', 'id_kategorie', 'qrp', 'lp', 'znacka', 'locator',
     'pocet', 'bodu_za_qso', 'nasobice', 'body', 'jmeno', 'mail',
-    'telefon', 'poznamka', 'soapbox', 'ip', 'EDI', 'EDI_ID',
+    'telefon', 'poznamka', 'soapbox', 'ip', 'edihead_id',
     'poradi', 'schvaleno', 'odeslano', 'session_id',
 ])]
 #[Table(name: 'vkvpa_data', key: 'id')]
@@ -76,7 +75,7 @@ class VkvpaData extends Model
     /** @return BelongsTo<Edihead, $this> */
     public function edihead(): BelongsTo
     {
-        return $this->belongsTo(Edihead::class, 'EDI_ID', 'ID');
+        return $this->belongsTo(Edihead::class, 'edihead_id');
     }
 
     /**
@@ -92,7 +91,7 @@ class VkvpaData extends Model
     }
 
     /**
-     * Scope: záznamy nahrané přes EDI soubor (EDI = true).
+     * Scope: záznamy nahrané přes EDI soubor (mají vazbu na deník).
      *
      * @param  Builder<VkvpaData>  $query
      * @return Builder<VkvpaData>
@@ -100,7 +99,7 @@ class VkvpaData extends Model
     #[Scope]
     protected function hasEdi(Builder $query): Builder
     {
-        return $query->where('EDI', true);
+        return $query->whereNotNull('edihead_id');
     }
 
     /**
@@ -134,8 +133,7 @@ class VkvpaData extends Model
             'bodu_za_qso' => 'integer',
             'nasobice' => 'integer',
             'body' => 'integer',
-            'EDI' => 'boolean',
-            'EDI_ID' => 'integer',
+            'edihead_id' => 'integer',
             'poradi' => 'integer',
             'schvaleno' => 'boolean',
             'odeslano' => 'boolean',

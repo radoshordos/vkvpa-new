@@ -75,7 +75,7 @@ class ApiVysledkyTest extends TestCase
             'id_kola' => $kolo->id, 'id_kategorie' => $kat->id,
             'znacka' => 'OK1XY', 'locator' => 'JN79FX', 'schvaleno' => true,
             'body' => 500, 'pocet' => 10, 'nasobice' => 5, 'bodu_za_qso' => 100,
-            'EDI' => true, 'qrp' => false, 'poradi' => 1,
+            'edihead_id' => 1, 'qrp' => false, 'poradi' => 1,
         ]);
 
         $this->getJson("/api/vysledky/{$kolo->id}")

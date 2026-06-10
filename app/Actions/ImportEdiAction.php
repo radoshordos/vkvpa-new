@@ -111,8 +111,7 @@ final readonly class ImportEdiAction
                     'body' => $score->body,
                     'qrp' => $h->isQrp(),
                     'lp' => $h->isLp(),
-                    'EDI' => true,
-                    'EDI_ID' => $head->id,
+                    'edihead_id' => $head->id,
                     'schvaleno' => false,
                 ]);
             });

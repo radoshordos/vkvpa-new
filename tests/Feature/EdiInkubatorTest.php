@@ -152,7 +152,7 @@ class EdiInkubatorTest extends TestCase
             'qrp' => false, 'lp' => false, 'znacka' => 'OK2KJT', 'locator' => 'JN99AJ',
             'pocet' => 2, 'bodu_za_qso' => 7, 'nasobice' => 2, 'body' => 14,
             'jmeno' => 'Test', 'mail' => 't@t.cz', 'telefon' => '', 'poznamka' => '',
-            'soapbox' => '', 'ip' => '', 'EDI' => true, 'EDI_ID' => $head->id,
+            'soapbox' => '', 'ip' => '', 'edihead_id' => $head->id,
             'poradi' => 1, 'schvaleno' => true, 'session_id' => '',
         ]);
 

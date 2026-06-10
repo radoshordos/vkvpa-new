@@ -21,10 +21,13 @@ class SchedulingAndCacheTest extends TestCase
 {
     use RefreshDatabase;
 
+    /** Pořadí vytvořeného kola v rámci testu – datum_konani je v DB unikátní. */
+    private int $koloSeq = 0;
+
     private function kolo(string $nazev, string $uzaverka, bool $aktivni = true): VkvpaKola
     {
         return VkvpaKola::create([
-            'datum_konani' => now()->subMonth(),
+            'datum_konani' => now()->subMonth()->subDays($this->koloSeq++)->toDateString(),
             'datum_uzaverky' => $uzaverka,
             'nazev' => $nazev,
             'poznamka' => '',

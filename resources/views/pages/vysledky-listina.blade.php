@@ -122,18 +122,18 @@
                                         </form>
                                     </div>
                                 @endif
-                                @if ($r->EDI && $r->EDI_ID)
+                                @if ($r->edihead_id)
                                     {{-- EDI · EDIR · vizualizace: admin vždy, ostatní přihlášení jen mimo upload window --}}
                                     <div class="flex items-center gap-1">
                                         @if ($isAdmin || ! $uploadWindowOpen)
-                                            <x-edi-odkaz :head="$r->EDI_ID" />
-                                            <x-edi-odkaz :head="$r->EDI_ID" reduced />
+                                            <x-edi-odkaz :head="$r->edihead_id" />
+                                            <x-edi-odkaz :head="$r->edihead_id" reduced />
                                         @else
                                             <span class="action-link cursor-not-allowed opacity-50" title="{{ __('app.edi_restricted_body') }}">{{ __('app.edi_restricted_label') }}</span>
                                         @endif
                                         @if ($isAdmin)
                                             {{-- Vizualizace deníku (mapy + grafy) – jen admin --}}
-                                            <x-vizualizace-odkaz :head="$r->EDI_ID" />
+                                            <x-vizualizace-odkaz :head="$r->edihead_id" />
                                         @endif
                                     </div>
                                 @endif

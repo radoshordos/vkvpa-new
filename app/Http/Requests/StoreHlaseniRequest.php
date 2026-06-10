@@ -58,8 +58,7 @@ class StoreHlaseniRequest extends FormRequest
     {
         return [
             'id_zaznamu' => ['nullable', 'integer'],
-            'EDIID' => ['nullable', 'integer'],
-            'EDI' => ['nullable', 'boolean'],
+            'edihead_id' => ['nullable', 'integer'],
             'kolo' => ['required', 'integer', 'exists:vkvpa_kola,id'],
             'kategorie' => ['nullable', 'integer', 'exists:vkvpa_kategorie,id'],
             'znacka' => ['required', 'string', 'max:10'],

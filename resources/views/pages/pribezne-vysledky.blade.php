@@ -93,12 +93,12 @@
                                     </button>
                                 </form>
                             </div>
-                            @if ($r->EDI && $r->EDI_ID)
+                            @if ($r->edihead_id)
                                 {{-- EDI · EDIR · vizualizace – admin má vždy přístup --}}
                                 <div class="flex items-center gap-1">
-                                    <x-edi-odkaz :head="$r->EDI_ID" />
-                                    <x-edi-odkaz :head="$r->EDI_ID" reduced />
-                                    <x-vizualizace-odkaz :head="$r->EDI_ID" />
+                                    <x-edi-odkaz :head="$r->edihead_id" />
+                                    <x-edi-odkaz :head="$r->edihead_id" reduced />
+                                    <x-vizualizace-odkaz :head="$r->edihead_id" />
                                 </div>
                             @endif
                         </td>

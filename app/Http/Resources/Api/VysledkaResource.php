@@ -26,7 +26,7 @@ final class VysledkaResource extends JsonResource
             'nasobice' => $this->nasobice,
             'bodu_za_qso' => $this->bodu_za_qso,
             'qrp' => $this->qrp,
-            'edi' => $this->EDI,
+            'edi' => $this->edihead_id !== null,
         ];
     }
 }

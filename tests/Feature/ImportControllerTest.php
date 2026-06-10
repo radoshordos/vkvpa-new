@@ -93,7 +93,9 @@ class ImportControllerTest extends TestCase
         $this->assertSame(1, $results['imported']);
         $this->assertSame(0, $results['errors']);
 
-        $this->assertDatabaseHas('vkvpa_data', ['znacka' => 'OK2KJT', 'EDI' => true]);
+        $row = VkvpaData::query()->where('znacka', 'OK2KJT')->first();
+        $this->assertNotNull($row);
+        $this->assertNotNull($row->edihead_id, 'Import musí provázat hlášení s deníkem');
     }
 
     public function test_store_imports_multiple_edi_files_from_zip(): void
@@ -125,7 +127,7 @@ class ImportControllerTest extends TestCase
         VkvpaData::create([
             'id_kola' => $kolo->id, 'id_kategorie' => 0, 'znacka' => 'OK2KJT',
             'locator' => 'JN99AJ', 'pocet' => 1, 'nasobice' => 1, 'body' => 1,
-            'bodu_za_qso' => 1, 'schvaleno' => false, 'EDI' => true,
+            'bodu_za_qso' => 1, 'schvaleno' => false,
         ]);
 
         $zip = $this->makeZip(['ok2kjt.edi' => $this->sampleEdi('OK2KJT')]);
