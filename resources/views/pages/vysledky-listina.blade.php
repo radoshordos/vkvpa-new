@@ -99,41 +99,15 @@
                         @if ($isAdmin || $isAuth)
                             <td>
                                 @if ($isAdmin)
-                                    {{-- 1. řádek: P převzít · U upravit · X smazat --}}
-                                    <div class="mb-1 flex items-center gap-1">
-                                        <form method="post" action="{{ route('zaznam.update', ['zaznam' => $r->id]) }}">
-                                            @csrf
-                                            @method('PATCH')
-                                            <button type="submit" @class(['icon-btn', 'icon-btn-p', 'icon-btn-p-off' => ! $r->schvaleno])
-                                                    title="{{ $r->schvaleno ? 'Vrátit mezi nepřevzaté (odebrat převzetí)' : 'Převzít záznam (vyhodnocovatel viděl)' }}">
-                                                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="2 8.5 6 12.5 14 3.5"/></svg>
-                                            </button>
-                                        </form>
-                                        <a href="{{ route('hlaseni.index', ['id' => $r->id]) }}" class="icon-btn icon-btn-u" title="Upravit záznam">
-                                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.5 2.5a1.5 1.5 0 0 1 2 2L5 13l-3 1 1-3 8.5-8.5z"/></svg>
-                                        </a>
-                                        <form method="post" action="{{ route('zaznam.destroy', ['zaznam' => $r->id]) }}">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="button" class="icon-btn icon-btn-x" title="Smazat záznam"
-                                                    data-del-znacka="{{ $r->znacka }}">
-                                                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="2" y1="4" x2="14" y2="4"/><path d="M5 4V2.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 .5.5V4M13 4v9a1.5 1.5 0 0 1-1.5 1.5h-5A1.5 1.5 0 0 1 3 13V4"/></svg>
-                                            </button>
-                                        </form>
-                                    </div>
-                                @endif
-                                @if ($r->edihead_id)
-                                    {{-- EDI · EDIR · vizualizace: admin vždy, ostatní přihlášení jen mimo upload window --}}
+                                    @include('partials.zaznam-akce', ['r' => $r])
+                                @elseif ($r->edihead_id)
+                                    {{-- EDI · EDIR: přihlášení (ne-admin) jen mimo upload window --}}
                                     <div class="flex items-center gap-1">
-                                        @if ($isAdmin || ! $uploadWindowOpen)
+                                        @if (! $uploadWindowOpen)
                                             <x-edi-odkaz :head="$r->edihead_id" />
                                             <x-edi-odkaz :head="$r->edihead_id" reduced />
                                         @else
                                             <span class="action-link cursor-not-allowed opacity-50" title="{{ __('app.edi_restricted_body') }}">{{ __('app.edi_restricted_label') }}</span>
-                                        @endif
-                                        @if ($isAdmin)
-                                            {{-- Vizualizace deníku (mapy + grafy) – jen admin --}}
-                                            <x-vizualizace-odkaz :head="$r->edihead_id" />
                                         @endif
                                     </div>
                                 @endif
@@ -147,18 +121,9 @@
     @endforeach
 @endif
 
-{{-- Modal pro potvrzení smazání záznamu --}}
-<div id="del-overlay" role="dialog" aria-modal="true" aria-labelledby="del-modal-title"
-     class="fixed inset-0 z-50 hidden items-center justify-center bg-black/45 p-4">
-    <div class="card w-full max-w-sm p-5">
-        <h2 id="del-modal-title" class="mb-2 text-base font-bold text-danger">{{ __('pages.vysledky.delete_title') }}</h2>
-        <p id="del-modal-msg" class="mb-4 text-sm text-ink"></p>
-        <div class="flex justify-end gap-2">
-            <button type="button" id="del-cancel" class="btn btn-ghost btn-sm">{{ __('pages.vysledky.btn_cancel') }}</button>
-            <button type="button" id="del-confirm" class="btn btn-danger btn-sm">{{ __('pages.vysledky.btn_delete') }}</button>
-        </div>
-    </div>
-</div>
+@if ($isAdmin)
+    @include('partials.del-modal')
+@endif
 
 @push('scripts')
 <script @cspNonce>
@@ -169,48 +134,6 @@
         document.getElementById('qrp').addEventListener('change', function () { filterForm.submit(); });
         document.getElementById('lp').addEventListener('change', function () { filterForm.submit(); });
     }
-}());
-</script>
-<script @cspNonce>
-(function () {
-    var overlay    = document.getElementById('del-overlay');
-    var msgEl      = document.getElementById('del-modal-msg');
-    var confirmBtn = document.getElementById('del-confirm');
-    var cancelBtn  = document.getElementById('del-cancel');
-    var pending    = null;
-    var confirmTpl = @js(__('pages.vysledky.delete_confirm', ['callsign' => ':callsign']));
-
-    function openDelModal(btn, znacka) {
-        pending = btn.closest('form');
-        msgEl.textContent = confirmTpl.replace(':callsign', znacka);
-        overlay.classList.remove('hidden');
-        overlay.classList.add('flex');
-        confirmBtn.focus();
-    }
-
-    // Tlačítka mazání – dřív inline onclick, ten CSP s nonce neumožňuje.
-    document.querySelectorAll('button[data-del-znacka]').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            openDelModal(btn, btn.getAttribute('data-del-znacka'));
-        });
-    });
-
-    confirmBtn.addEventListener('click', function () {
-        close();
-        if (pending) { pending.submit(); }
-    });
-
-    function close() {
-        overlay.classList.add('hidden');
-        overlay.classList.remove('flex');
-        pending = null;
-    }
-
-    cancelBtn.addEventListener('click', close);
-    overlay.addEventListener('click', function (e) { if (e.target === overlay) close(); });
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && ! overlay.classList.contains('hidden')) close();
-    });
 }());
 </script>
 @endpush

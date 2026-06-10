@@ -8,6 +8,7 @@
 @section('content')
 @php
     $e = $edit ?? null;
+    $isAdmin = (bool) (auth()->user()?->is_admin);
     $val = fn (string $name, $editVal = null, $def = '') => old($name, $editVal ?? $def);
 @endphp
 
@@ -192,6 +193,7 @@
                     <th class="num">{{ __('pages.hlaseni.col_total') }}</th>
                     <th>{{ __('pages.hlaseni.col_name_note') }}</th>
                     <th>{{ __('pages.hlaseni.col_status') }}</th>
+                    @if ($isAdmin)<th>{{ __('pages.vysledky.col_actions') }}</th>@endif
                 </tr>
             </thead>
             <tbody>
@@ -217,12 +219,19 @@
                             <x-badge variant="warn">{{ __('pages.hlaseni.status_pending') }}</x-badge>
                         @endif
                     </td>
+                    @if ($isAdmin)
+                        <td>@include('partials.zaznam-akce', ['r' => $r])</td>
+                    @endif
                 </tr>
             @endforeach
             </tbody>
         </table>
     </div>
 @endforeach
+
+@if ($isAdmin)
+    @include('partials.del-modal')
+@endif
 @endif
 
 @push('scripts')
