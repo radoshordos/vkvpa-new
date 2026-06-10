@@ -10,7 +10,6 @@ use App\Services\Edi\EnrichedQso;
 use App\Services\Edi\QsoGeometry;
 use App\Support\Maidenhead;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
@@ -26,15 +25,12 @@ class EdiVizualizaceController extends Controller
 {
     public function __construct(private readonly QsoGeometry $geometry) {}
 
-    public function show(Request $request, Edihead $head): View|RedirectResponse
+    public function show(Request $request, Edihead $head): View
     {
-        if (! auth()->user()?->is_admin) {
-            if (VkvpaKola::existujeAktivni()) {
-                abort(403);
-            }
-            if (! auth()->check()) {
-                return redirect()->route('login');
-            }
+        // Admin vždy; ostatní (i nepřihlášení) jen mimo otevřené upload window,
+        // aby během příjmu hlášení neunikaly deníky soupeřů.
+        if (! auth()->user()?->is_admin && VkvpaKola::existujeAktivni()) {
+            abort(403);
         }
 
         $home = Maidenhead::toLatLon((string) $head->p_wwlo);

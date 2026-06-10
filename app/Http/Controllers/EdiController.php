@@ -78,14 +78,11 @@ class EdiController extends Controller
      * Přístup:
      *   – admin: vždy povolen,
      *   – otevřené upload window (aktivní kolo): 403 Omezeno,
-     *   – nepřihlášený, žádné aktivní kolo: přesměrování na přihlášení,
-     *   – přihlášený, žádné aktivní kolo: povolen.
+     *   – jinak (žádné aktivní kolo): povolen i nepřihlášeným.
      */
-    public function zobrazit(Edihead $head): Response|RedirectResponse
+    public function zobrazit(Edihead $head): Response
     {
-        if ($redirect = $this->checkEdiAccess()) {
-            return $redirect;
-        }
+        $this->assertEdiAccess();
 
         return $this->ediResponse($head, (string) $head->src, $head->p_call, 'edi');
     }
@@ -94,11 +91,9 @@ class EdiController extends Controller
      * Zobrazí REDUKOVANÝ EDI soubor (oříznutý na závodní okno 08:00–11:00 UTC).
      * Stejná přístupová pravidla jako {@see zobrazit()}.
      */
-    public function zobrazitRedukovany(Edihead $head): Response|RedirectResponse
+    public function zobrazitRedukovany(Edihead $head): Response
     {
-        if ($redirect = $this->checkEdiAccess()) {
-            return $redirect;
-        }
+        $this->assertEdiAccess();
 
         $src = (string) $head->src;
         $reduced = $src === '' ? '' : $this->reducer->reduce($src);
@@ -107,27 +102,15 @@ class EdiController extends Controller
     }
 
     /**
-     * Vrátí redirect (pokud je přístup odepřen) nebo null (přístup povolen).
-     * Admin má vždy přístup. Ostatní uživatelé jsou blokováni v době
-     * otevřeného upload window; mimo window se vyžaduje přihlášení.
-     *
-     * @return RedirectResponse|null null = přístup povolen
+     * Admin má vždy přístup. Ostatní (včetně nepřihlášených) jsou blokováni
+     * (403) jen v době otevřeného upload window, aby během příjmu hlášení
+     * neunikaly deníky soupeřů.
      */
-    private function checkEdiAccess(): ?RedirectResponse
+    private function assertEdiAccess(): void
     {
-        if (auth()->user()?->is_admin) {
-            return null;
-        }
-
-        if (VkvpaKola::existujeAktivni()) {
+        if (! auth()->user()?->is_admin && VkvpaKola::existujeAktivni()) {
             abort(403);
         }
-
-        if (! auth()->check()) {
-            return redirect()->route('login');
-        }
-
-        return null;
     }
 
     private function ediResponse(Edihead $head, string $content, string $pcall, string $variant): Response

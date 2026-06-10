@@ -7,7 +7,6 @@
 @section('content')
 @php
     $isAdmin = (bool) (auth()->user()?->is_admin);
-    $isAuth  = auth()->check();
     $uploadWindowOpen = $uploadWindowOpen ?? false;
 @endphp
 
@@ -59,7 +58,7 @@
                         <th class="num">{{ __('pages.vysledky.col_mult') }}</th>
                         <th class="num">{{ __('pages.vysledky.col_total') }}</th>
                         <th>{{ __('pages.vysledky.col_soapbox') }}</th>
-                        @if ($isAdmin || $isAuth)<th>{{ __('pages.vysledky.col_actions') }}</th>@endif
+                        <th>{{ __('pages.vysledky.col_actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -96,23 +95,22 @@
                             @endif
                         </td>
                         <td class="text-danger">{{ $r->soapbox }}@if ($r->poznamka)<br><i class="text-muted">{{ $r->poznamka }}</i>@endif</td>
-                        @if ($isAdmin || $isAuth)
-                            <td>
-                                @if ($isAdmin)
-                                    @include('partials.zaznam-akce', ['r' => $r])
-                                @elseif ($r->edihead_id)
-                                    {{-- EDI · EDIR: přihlášení (ne-admin) jen mimo upload window --}}
-                                    <div class="flex items-center gap-1">
-                                        @if (! $uploadWindowOpen)
-                                            <x-edi-odkaz :head="$r->edihead_id" />
-                                            <x-edi-odkaz :head="$r->edihead_id" reduced />
-                                        @else
-                                            <span class="action-link cursor-not-allowed opacity-50" title="{{ __('app.edi_restricted_body') }}">{{ __('app.edi_restricted_label') }}</span>
-                                        @endif
-                                    </div>
-                                @endif
-                            </td>
-                        @endif
+                        <td>
+                            @if ($isAdmin)
+                                @include('partials.zaznam-akce', ['r' => $r])
+                            @elseif ($r->edihead_id)
+                                {{-- EDI · EDIR · vizualizace: veřejnost i přihlášení (ne-admin) jen mimo upload window --}}
+                                <div class="flex items-center gap-1">
+                                    @if (! $uploadWindowOpen)
+                                        <x-edi-odkaz :head="$r->edihead_id" />
+                                        <x-edi-odkaz :head="$r->edihead_id" reduced />
+                                        <x-vizualizace-odkaz :head="$r->edihead_id" />
+                                    @else
+                                        <span class="action-link cursor-not-allowed opacity-50" title="{{ __('app.edi_restricted_body') }}">{{ __('app.edi_restricted_label') }}</span>
+                                    @endif
+                                </div>
+                            @endif
+                        </td>
                     </tr>
                 @endforeach
                 </tbody>

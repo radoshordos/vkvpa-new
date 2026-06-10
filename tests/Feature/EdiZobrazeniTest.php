@@ -101,20 +101,20 @@ class EdiZobrazeniTest extends TestCase
 
     // ─── Přístupová pravidla ───────────────────────────────────────────────────
 
-    public function test_guest_redirected_to_login_when_no_active_round(): void
+    public function test_guest_sees_edi_when_no_active_round(): void
     {
         $head = $this->denik();
 
         $this->get(route('edi.soubor', ['head' => $head->id]))
-            ->assertRedirect(route('login'));
+            ->assertOk();
     }
 
-    public function test_guest_redirected_to_login_for_edir_when_no_active_round(): void
+    public function test_guest_sees_edir_when_no_active_round(): void
     {
         $head = $this->denik();
 
         $this->get(route('edi.soubor.redukovany', ['head' => $head->id]))
-            ->assertRedirect(route('login'));
+            ->assertOk();
     }
 
     public function test_authenticated_user_can_view_edi_when_no_active_round(): void

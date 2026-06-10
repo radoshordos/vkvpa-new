@@ -41,12 +41,12 @@ class EdiVizualizaceTest extends TestCase
         return User::create(['name' => 'Admin', 'password' => Hash::make('x'), 'is_admin' => true]);
     }
 
-    public function test_anonymous_redirected_to_login(): void
+    public function test_anonymous_sees_vizualizace_when_no_active_round(): void
     {
         $head = $this->importSample();
 
         $this->get(route('edi.vizualizace', $head->id))
-            ->assertRedirect(route('login'));
+            ->assertOk();
     }
 
     public function test_vizualizace_renders_for_logged_in_user(): void
