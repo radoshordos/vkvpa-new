@@ -7,6 +7,7 @@ namespace Tests\Feature;
 use App\Models\Prispevek;
 use App\Models\User;
 use App\Models\VkvpaKola;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
@@ -70,6 +71,51 @@ class DiskuseTest extends TestCase
         $this->get(route('diskuse.show', $kolo->id))
             ->assertOk()
             ->assertSee('Buďte první');
+    }
+
+    public function test_selectbox_omits_old_kola_without_prispevky(): void
+    {
+        $aktualni = $this->kolo();
+        $stareBez = VkvpaKola::create([
+            'datum_konani' => now()->subYears(2),
+            'datum_uzaverky' => now()->subYears(2),
+            'nazev' => '01/2024',
+            'poznamka' => '',
+        ]);
+        $stareS = VkvpaKola::create([
+            'datum_konani' => now()->subYears(3),
+            'datum_uzaverky' => now()->subYears(3),
+            'nazev' => '01/2023',
+            'poznamka' => '',
+        ]);
+        Prispevek::create(['kolo_id' => $stareS->id, 'znacka' => 'OK1AB', 'text' => 'Starý příspěvek.', 'ip' => '127.0.0.1']);
+
+        $kola = $this->get(route('diskuse.show', $aktualni->id))
+            ->assertOk()
+            ->viewData('kola');
+
+        $this->assertInstanceOf(Collection::class, $kola);
+        $this->assertTrue($kola->contains('id', $aktualni->id));
+        $this->assertTrue($kola->contains('id', $stareS->id));
+        $this->assertFalse($kola->contains('id', $stareBez->id));
+    }
+
+    public function test_selectbox_always_contains_displayed_kolo(): void
+    {
+        $this->kolo();
+        $stare = VkvpaKola::create([
+            'datum_konani' => now()->subYears(2),
+            'datum_uzaverky' => now()->subYears(2),
+            'nazev' => '01/2024',
+            'poznamka' => '',
+        ]);
+
+        $kola = $this->get(route('diskuse.show', $stare->id))
+            ->assertOk()
+            ->viewData('kola');
+
+        $this->assertInstanceOf(Collection::class, $kola);
+        $this->assertTrue($kola->contains('id', $stare->id));
     }
 
     // ------------------------------------------------------------------

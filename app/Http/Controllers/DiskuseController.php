@@ -34,7 +34,14 @@ class DiskuseController extends Controller
             ->orderBy('created_at')
             ->get();
 
-        $kola = VkvpaKola::query()->orderByDesc('datum_konani')->get();
+        $kola = VkvpaKola::query()
+            ->where(function ($query) use ($kolo): void {
+                $query->where('datum_konani', '>=', now()->subYear()->toDateString())
+                    ->orWhereHas('diskuse')
+                    ->orWhere('id', $kolo->id);
+            })
+            ->orderByDesc('datum_konani')
+            ->get();
 
         return view('pages.diskuse', [
             'active' => 'diskuse.index',
