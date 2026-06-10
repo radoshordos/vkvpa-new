@@ -298,4 +298,25 @@ class ScoringServiceTest extends TestCase
         $this->assertNotNull($row);
         $this->assertSame(250, (int) $row->celkem);
     }
+
+    /**
+     * Kdyby v jednom měsíci omylem existovala dvě kola (unique je jen na celý
+     * den), TDate se musí deterministicky spárovat s nejstarším z nich.
+     */
+    public function test_kolo_for_tdate_picks_earliest_round_of_month(): void
+    {
+        $pozdejsi = VkvpaKola::create([
+            'datum_konani' => '2031-07-20', 'datum_uzaverky' => now()->addDays(5),
+            'nazev' => 'Červenec B', 'poznamka' => '',
+        ]);
+        $drivejsi = VkvpaKola::create([
+            'datum_konani' => '2031-07-06', 'datum_uzaverky' => now()->addDays(5),
+            'nazev' => 'Červenec A', 'poznamka' => '',
+        ]);
+
+        $id = app(ScoringService::class)->koloForTDate('20310720;20310720');
+
+        $this->assertSame($drivejsi->id, $id);
+        $this->assertNotSame($pozdejsi->id, $id);
+    }
 }

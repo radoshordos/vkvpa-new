@@ -11,8 +11,7 @@
     <form method="get" action="{{ url('/diskuse') }}" class="field mb-0">
         <label class="label" for="kolo_sel">{{ __('pages.diskuse.filter_round') }}</label>
         <div class="flex items-center gap-2">
-            <select id="kolo_sel" name="kolo" class="select w-auto"
-                    onchange="this.form.submit()">
+            <select id="kolo_sel" name="kolo" class="select w-auto" data-autosubmit>
                 @foreach ($kola as $k)
                     <option value="{{ $k->id }}" @selected($k->id === $kolo->id)>
                         {{ $k->nazev }} ({{ $k->datum_konani?->format('j. n. Y') }})
@@ -54,7 +53,7 @@
                             @csrf
                             @method('DELETE')
                             <button type="button" class="btn btn-danger btn-sm"
-                                    onclick="confirmDelete(this.closest('form'), @js($p->znacka))"
+                                    data-confirm-znacka="{{ $p->znacka }}"
                                     title="{{ __('pages.diskuse.btn_delete') }}">{{ __('pages.diskuse.btn_delete') }}</button>
                         </form>
                     @endif
@@ -145,7 +144,7 @@
 </div>
 
 @push('scripts')
-<script>
+<script @cspNonce>
 (function () {
     var overlay    = document.getElementById('del-overlay');
     var msgEl      = document.getElementById('del-msg');
@@ -154,13 +153,20 @@
     var pending    = null;
     var confirmTpl = @js(__('pages.diskuse.delete_confirm', ['callsign' => ':callsign']));
 
-    window.confirmDelete = function (form, znacka) {
+    function confirmDelete(form, znacka) {
         pending = form;
         msgEl.textContent = confirmTpl.replace(':callsign', znacka);
         overlay.classList.remove('hidden');
         overlay.classList.add('flex');
         confirmBtn.focus();
-    };
+    }
+
+    // Tlačítka mazání – dřív inline onclick, ten CSP s nonce neumožňuje.
+    document.querySelectorAll('button[data-confirm-znacka]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            confirmDelete(btn.closest('form'), btn.getAttribute('data-confirm-znacka'));
+        });
+    });
 
     confirmBtn.addEventListener('click', function () {
         close();

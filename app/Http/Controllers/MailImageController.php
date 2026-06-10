@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Support\VkvpaSettings;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
@@ -16,11 +17,13 @@ class MailImageController extends Controller
     public function show(Request $request): Response
     {
         $text = base64_decode((string) $request->query('text'), true) ?: '';
-        // Jen tisknutelné ASCII, ať nelze podstrčit nic divného.
-        $text = preg_replace('/[^\x20-\x7E]/', '', $text) ?? '';
-        // Strop délky: šířka obrázku se odvozuje od délky textu, příliš dlouhý
-        // vstup by jinak alokoval nepřiměřeně velký obrázek (DoS přes paměť/CPU).
-        $text = substr($text, 0, 100);
+
+        // Allowlist (adresy z patičky, config vkvpa.mail_image_allowlist):
+        // endpoint nemá vykreslovat libovolný podstrčený text z naší domény.
+        // Vstup z allowlistu zároveň přirozeně omezuje délku/znaky obrázku.
+        if (! in_array($text, VkvpaSettings::mailImageAllowlist(), true)) {
+            abort(404);
+        }
 
         $width = max(1, strlen($text) * 12);
         $im = imagecreate($width, 16);

@@ -25,7 +25,7 @@
             <label class="upload-zone" id="zip-zone">
                 <input
                     type="file" name="zip" id="zip-file" accept=".zip,application/zip" required class="sr-only"
-                    onchange="var z=document.getElementById('zip-zone'),n=document.getElementById('zip-name');z.classList.toggle('has-file',!!this.files[0]);n.textContent=this.files[0]?this.files[0].name:''"
+                    data-file-zone="zip-zone" data-file-name="zip-name"
                 >
                 <svg class="upload-zone-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                     <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"/>
@@ -99,7 +99,7 @@
 @endif
 
 @push('scripts')
-<script>
+<script @cspNonce>
 (function () {
     var zone  = document.getElementById('zip-zone');
     var input = document.getElementById('zip-file');

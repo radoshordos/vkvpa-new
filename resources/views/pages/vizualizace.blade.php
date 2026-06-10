@@ -25,7 +25,7 @@
 @section('content')
 
 {{-- Inline JS config pro vizualizace.js --}}
-<script>
+<script @cspNonce>
 window.__vizConfig = {
     pcall: @json($pcall),
     homeLoc: @json($homeLoc),
@@ -79,7 +79,7 @@ window.__vizConfig = {
       <button class="map-tab" data-map-layer="porovnani">Porovnání</button>
       <form method="get" id="porovnat-form" class="ml-auto hidden items-center gap-2">
         <label for="porovnat" class="text-xs text-muted">Porovnat s:</label>
-        <select name="porovnat" id="porovnat" onchange="this.form.submit()"
+        <select name="porovnat" id="porovnat" data-autosubmit
                 class="text-xs rounded border border-line bg-surface text-heading px-2 py-1">
           <option value="">— bez porovnání —</option>
           @foreach ($rivals as $r)

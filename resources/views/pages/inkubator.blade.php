@@ -24,7 +24,7 @@
 @section('content')
 
 {{-- Inline JS config pro inkubator.js --}}
-<script>
+<script @cspNonce>
 window.__inkubatorConfig = {
     pcall: @json($pcall),
     homeLoc: @json($homeLoc),
@@ -100,7 +100,7 @@ window.__inkubatorConfig = {
   @if ($rivals->isNotEmpty())
     <form method="get" class="flex items-center gap-2 mb-2 justify-end">
       <label for="porovnat" class="text-xs text-muted">Porovnat průběh s:</label>
-      <select name="porovnat" id="porovnat" onchange="this.form.submit()"
+      <select name="porovnat" id="porovnat" data-autosubmit
               class="text-xs rounded border border-line bg-surface text-heading px-2 py-1">
         <option value="">— bez porovnání —</option>
         @foreach ($rivals as $r)

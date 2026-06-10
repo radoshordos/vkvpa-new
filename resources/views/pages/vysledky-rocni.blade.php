@@ -24,7 +24,7 @@
 <h2>{{ __('pages.rocni.subheading', ['year' => $rok]) }}</h2>
 
 @push('scripts')
-<script>
+<script @cspNonce>
 (function () {
     var form = document.getElementById('rok')?.closest('form');
     if (form) {

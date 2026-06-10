@@ -8,6 +8,7 @@ use App\Models\Prispevek;
 use App\Models\VkvpaData;
 use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
+use App\Support\VkvpaSettings;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -165,5 +166,86 @@ class SecurityTest extends TestCase
         $this->get(route('diskuse.show', $kolo->id))
             ->assertOk()
             ->assertSee('name="_token"', false);
+    }
+
+    // ------------------------------------------------------------------
+    // CSP – inline skripty přes nonce, ne 'unsafe-inline'
+
+    public function test_csp_script_src_uses_nonce_instead_of_unsafe_inline(): void
+    {
+        $response = $this->get('/')->assertOk();
+
+        $csp = (string) $response->headers->get('Content-Security-Policy');
+        $scriptSrc = $this->cspDirective($csp, 'script-src');
+        $this->assertStringNotContainsString("'unsafe-inline'", $scriptSrc);
+
+        // Stejný nonce musí nést inline skripty stránky, jinak je prohlížeč zablokuje.
+        $response->assertSee('nonce="'.$this->cspNonceOf($scriptSrc).'"', false);
+    }
+
+    public function test_csp_nonce_differs_per_request(): void
+    {
+        $first = (string) $this->get('/')->headers->get('Content-Security-Policy');
+        $second = (string) $this->get('/')->headers->get('Content-Security-Policy');
+
+        $this->assertNotSame(
+            $this->cspNonceOf($this->cspDirective($first, 'script-src')),
+            $this->cspNonceOf($this->cspDirective($second, 'script-src')),
+        );
+    }
+
+    /** Hodnota dané direktivy z CSP hlavičky (selže-li parsování, selže test). */
+    private function cspDirective(string $csp, string $name): string
+    {
+        preg_match('/'.preg_quote($name, '/').' ([^;]+)/', $csp, $m);
+        $value = $m[1] ?? '';
+        $this->assertNotSame('', $value, "CSP neobsahuje direktivu {$name}: {$csp}");
+
+        return $value;
+    }
+
+    /** Nonce z hodnoty script-src direktivy (selže-li parsování, selže test). */
+    private function cspNonceOf(string $scriptSrc): string
+    {
+        preg_match("/'nonce-([^']+)'/", $scriptSrc, $m);
+        $nonce = $m[1] ?? '';
+        $this->assertNotSame('', $nonce, "script-src neobsahuje nonce: {$scriptSrc}");
+
+        return $nonce;
+    }
+
+    // ------------------------------------------------------------------
+    // Obrázek e-mailu – jen adresy z allowlistu (patička)
+
+    public function test_mail_image_renders_allowlisted_address(): void
+    {
+        $this->get(route('mail.image', ['text' => base64_encode(VkvpaSettings::contactMail())]))
+            ->assertOk()
+            ->assertHeader('Content-Type', 'image/png');
+    }
+
+    public function test_mail_image_rejects_arbitrary_text(): void
+    {
+        $this->get(route('mail.image', ['text' => base64_encode('volejte 900 123 456')]))
+            ->assertNotFound();
+    }
+
+    // ------------------------------------------------------------------
+    // Přepínač jazyka – návrat jen na interní cestu (žádný open redirect)
+
+    public function test_lang_switch_does_not_redirect_to_foreign_host(): void
+    {
+        $this->withHeader('referer', 'https://evil.example/phishing')
+            ->get(route('lang.switch', 'en'))
+            ->assertRedirect('/phishing'); // jen cesta na vlastním hostu, ne evil.example
+
+        $this->assertSame('en', session('locale'));
+    }
+
+    public function test_lang_switch_returns_to_internal_page(): void
+    {
+        $this->withHeader('referer', url('/vysledky'))
+            ->get(route('lang.switch', 'cs'))
+            ->assertRedirect('/vysledky');
     }
 }

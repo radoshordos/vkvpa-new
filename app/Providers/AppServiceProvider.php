@@ -11,6 +11,7 @@ use App\Support\VkvpaSettings;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
@@ -45,6 +46,14 @@ class AppServiceProvider extends ServiceProvider
 
         // Pulse dashboard – přístup jen pro adminů.
         Gate::define('viewPulse', fn (User $user) => (bool) $user->is_admin);
+
+        // CSP nonce pro inline <script> bloky v Blade: <script @cspNonce>.
+        // Nonce generuje SecurityHeaders middleware (Vite::useCspNonce()); mimo
+        // HTTP request (testy, maily) je null → vykreslí se prázdný atribut.
+        Blade::directive(
+            'cspNonce',
+            static fn (): string => "<?php echo 'nonce=\"'.e(\Illuminate\Support\Facades\Vite::cspNonce() ?? '').'\"'; ?>",
+        );
 
         Event::listen(EdiImported::class, SendEdiMailsListener::class);
 

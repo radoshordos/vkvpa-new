@@ -39,3 +39,26 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.key === 'Escape') setDrawer(false);
     });
 });
+
+// ── Globální delegované handlery ───────────────────────────────────────────
+// Náhrada za inline onchange/onclick atributy – ty CSP s nonce blokuje
+// (event handler atribut nonce nést nemůže). Delegace na document funguje
+// i pro DOM přerenderovaný Livewirem.
+
+// <select data-autosubmit> – změna hodnoty odešle nejbližší formulář.
+document.addEventListener('change', (e) => {
+    const el = e.target instanceof Element ? e.target.closest('[data-autosubmit]') : null;
+    if (el && el.form) el.form.submit();
+});
+
+// <input type=file data-file-zone="id" data-file-name="id"> – zvýrazní
+// drop-zónu a ukáže jméno vybraného souboru.
+document.addEventListener('change', (e) => {
+    const input = e.target;
+    if (!(input instanceof HTMLInputElement) || input.type !== 'file' || !input.dataset.fileZone) return;
+    const zone = document.getElementById(input.dataset.fileZone);
+    const name = document.getElementById(input.dataset.fileName || '');
+    const file = input.files && input.files[0];
+    if (zone) zone.classList.toggle('has-file', !!file);
+    if (name) name.textContent = file ? file.name : '';
+});

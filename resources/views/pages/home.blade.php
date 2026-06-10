@@ -216,7 +216,7 @@
 @endif
 
 @push('scripts')
-<script>
+<script @cspNonce>
 (function () {
     'use strict';
 

@@ -32,7 +32,9 @@ Route::get('/lang/{locale}', function (string $locale) {
         session(['locale' => $locale]);
     }
 
-    return redirect()->back();
+    // Jen interní cesta z předchozí URL (bez hostu, fallback '/') – plné
+    // `back()` přebírá hlavičku Referer a umožnilo by open redirect na cizí web.
+    return redirect(url()->previousPath());
 })->name('lang.switch');
 
 // Výchozí stránka = úvodní obrazovka.

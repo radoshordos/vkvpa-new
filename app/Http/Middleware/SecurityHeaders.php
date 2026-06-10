@@ -6,6 +6,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Vite;
 use Symfony\Component\HttpFoundation\Response;
 
 class SecurityHeaders
@@ -13,6 +14,11 @@ class SecurityHeaders
     /** @param Closure(Request): Response $next */
     public function handle(Request $request, Closure $next): Response
     {
+        // Nonce per request pro inline <script> – musí vzniknout PŘED renderem
+        // view. @vite i @livewireScripts si ho z Vite::cspNonce() přeberou samy,
+        // vlastní inline skripty ho vkládají direktivou @cspNonce.
+        $nonce = Vite::useCspNonce();
+
         $response = $next($request);
 
         $response->headers->set('X-Content-Type-Options', 'nosniff');
@@ -26,15 +32,20 @@ class SecurityHeaders
         // tile.openstreetmap.org: Leaflet map tiles (img-src + connect-src).
         // 'unsafe-inline' for style-src: required by Leaflet and inline style attributes.
         //
-        // Laravel Pulse bundluje Alpine.js, který vyhodnocuje x-data výrazy přes new Function()
-        // – to vyžaduje 'unsafe-eval'. Přidáváme ho cíleně jen pro /pulse/* cestu,
-        // aby hlavní aplikace zůstala s přísnějším pravidlem.
+        // script-src: místo 'unsafe-inline' per-request nonce – inline skript bez
+        // nonce (typický payload XSS) prohlížeč nespustí. Externí skripty kryje
+        // host-source (cdn.jsdelivr.net).
+        //
+        // Výjimka Laravel Pulse: bundluje Alpine.js (x-data výrazy přes
+        // new Function() → 'unsafe-eval') a vlastní inline skripty bez možnosti
+        // doplnit náš nonce → pro /pulse/* zůstává 'unsafe-inline' + 'unsafe-eval'
+        // (nonce tam být nesmí – jeho přítomnost 'unsafe-inline' deaktivuje).
         $pulsePathRaw = config('pulse.path', 'pulse');
         $pulsePath = is_string($pulsePathRaw) ? $pulsePathRaw : 'pulse';
         $isPulse = str_starts_with($request->path(), $pulsePath);
         $scriptSrc = $isPulse
             ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' cdn.jsdelivr.net"
-            : "script-src 'self' 'unsafe-inline' cdn.jsdelivr.net";
+            : "script-src 'self' 'nonce-{$nonce}' cdn.jsdelivr.net";
 
         $response->headers->set('Content-Security-Policy', implode('; ', [
             "default-src 'self'",

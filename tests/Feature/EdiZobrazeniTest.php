@@ -7,7 +7,9 @@ namespace Tests\Feature;
 use App\Http\Controllers\EdiController;
 use App\Models\Edihead;
 use App\Models\User;
+use App\Models\VkvpaData;
 use App\Models\VkvpaKola;
+use App\Support\VkvpaSettings;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
@@ -174,5 +176,55 @@ class EdiZobrazeniTest extends TestCase
             ->get(route('edi.soubor.redukovany', ['head' => $head->id]))
             ->assertOk()
             ->assertSee('OK1A');
+    }
+
+    // ─── Čerstvost neschválených záznamů (vkvpa.fresh_unapproved_days) ────────
+
+    /** Neschválený záznam v neaktivním kole drží blokaci jen po dobu čerstvosti. */
+    public function test_fresh_unapproved_record_keeps_edi_blocked(): void
+    {
+        $kolo = $this->closedRound();
+        $this->unapprovedEntry($kolo->id); // timestamp = teď (DB default)
+        $head = $this->denik();
+
+        $this->actingAs($this->regularUser())
+            ->get(route('edi.soubor', ['head' => $head->id]))
+            ->assertForbidden();
+    }
+
+    public function test_stale_unapproved_record_no_longer_blocks_edi_view(): void
+    {
+        $kolo = $this->closedRound();
+        $entry = $this->unapprovedEntry($kolo->id);
+        $entry->forceFill([
+            'timestamp' => now()->subDays(VkvpaSettings::freshUnapprovedDays() + 1),
+        ])->save();
+
+        $head = $this->denik();
+
+        $this->actingAs($this->regularUser())
+            ->get(route('edi.soubor', ['head' => $head->id]))
+            ->assertOk()
+            ->assertSee('OK1A');
+    }
+
+    private function closedRound(): VkvpaKola
+    {
+        return VkvpaKola::create([
+            'nazev' => 'Staré kolo',
+            'datum_konani' => now()->subDays(60),
+            'datum_uzaverky' => now()->subDays(50),
+            'aktivni' => false,
+            'poznamka' => '',
+        ]);
+    }
+
+    private function unapprovedEntry(int $idKola): VkvpaData
+    {
+        return VkvpaData::create([
+            'id_kola' => $idKola, 'znacka' => 'OK9ZAP', 'locator' => 'JN99AJ',
+            'pocet' => 0, 'bodu_za_qso' => 0, 'nasobice' => 0, 'body' => 0,
+            'schvaleno' => false, 'odeslano' => false,
+        ]);
     }
 }

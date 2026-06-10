@@ -92,7 +92,7 @@ class VkvpaKola extends Model
 
         return VkvpaData::query()
             ->where('id_kola', $this->id)
-            ->where('schvaleno', false)
+            ->freshUnapproved()
             ->exists();
     }
 
@@ -155,7 +155,7 @@ class VkvpaKola extends Model
             return true;
         }
 
-        return VkvpaData::query()->where('schvaleno', false)->exists();
+        return VkvpaData::query()->freshUnapproved()->exists();
     }
 
     /**

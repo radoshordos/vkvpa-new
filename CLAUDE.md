@@ -91,7 +91,11 @@ Menu structure is declared in `config/navigation.php` (not hard-coded in Blade).
 
 ### Mail
 
-Two Mailable classes: `HlaseniPrijato` (confirmation to contestant) and `HlaseniProVyhodnocovatele` (notification to contest judges). Email address in footer is rendered as an image via `MailImageController` (obfuscation against scrapers).
+Two Mailable classes: `HlaseniPrijato` (confirmation to contestant) and `HlaseniProVyhodnocovatele` (notification to contest judges). Email address in footer is rendered as an image via `MailImageController` (obfuscation against scrapers; only texts from `vkvpa.mail_image_allowlist` are rendered, anything else is 404).
+
+### CSP (Content Security Policy)
+
+`SecurityHeaders` middleware sends a nonce-based CSP — `script-src` has **no** `'unsafe-inline'`. Every inline `<script>` in Blade MUST carry the `@cspNonce` directive (`<script @cspNonce>`), otherwise the browser silently blocks it. Inline event handler attributes (`onclick=`, `onchange=`, …) are blocked by CSP entirely — use `data-*` attributes + listeners (global delegated handlers `[data-autosubmit]` and `[data-file-zone]` live in `resources/js/app.js`). `@vite` and `@livewireScripts` pick the nonce up automatically from `Vite::cspNonce()`. Exception: `/pulse/*` keeps `'unsafe-inline' 'unsafe-eval'` (vendor views, Alpine).
 
 ### Code Style
 

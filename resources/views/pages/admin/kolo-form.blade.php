@@ -57,7 +57,7 @@
 </div>
 
 @push('scripts')
-<script>
+<script @cspNonce>
 (function () {
     var datumKonani   = document.getElementById('datum_konani');
     var datumUzaverky = document.getElementById('datum_uzaverky');

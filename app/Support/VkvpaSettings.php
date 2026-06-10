@@ -51,6 +51,11 @@ final class VkvpaSettings
         return Config::integer('vkvpa.non_edi_nullify_from_kolo', 91);
     }
 
+    public static function freshUnapprovedDays(): int
+    {
+        return Config::integer('vkvpa.fresh_unapproved_days', 28);
+    }
+
     public static function yearlyCacheFresh(): int
     {
         return Config::integer('vkvpa.yearly_cache_fresh', 300);
@@ -71,6 +76,13 @@ final class VkvpaSettings
     {
         /** @var list<string> */
         return Config::array('vkvpa.domestic_prefixes', ['OK', 'OL']);
+    }
+
+    /** @return list<string> */
+    public static function mailImageAllowlist(): array
+    {
+        /** @var list<string> */
+        return Config::array('vkvpa.mail_image_allowlist', []);
     }
 
     public static function contestWindowFrom(): string

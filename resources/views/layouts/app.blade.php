@@ -43,7 +43,7 @@
     <meta name="twitter:image" content="{{ $ogImage }}">
 
     {{-- Tmavý režim bez probliknutí: nastav třídu .dark dřív, než se vykreslí tělo. --}}
-    <script>
+    <script @cspNonce>
       (function () {
         try {
           var t = localStorage.getItem('theme');
@@ -143,7 +143,7 @@
     @stack('scripts')
 
     {{-- Registrace service workeru (PWA / offline). V lokálním vývoji vynecháno. --}}
-    <script>
+    <script @cspNonce>
       if ('serviceWorker' in navigator
           && location.hostname !== 'localhost'
           && location.hostname !== '127.0.0.1') {

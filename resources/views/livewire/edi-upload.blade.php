@@ -80,7 +80,7 @@
 
   {{-- Delegovaná obsluha drag & drop – listenery visí na dokumentu, takže
        fungují i po Livewire re-renderu; guard brání dvojí registraci. --}}
-  <script>
+  <script @cspNonce>
     if (! window.__ediDropzoneInit) {
       window.__ediDropzoneInit = true;
 

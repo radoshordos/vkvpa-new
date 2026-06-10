@@ -9,6 +9,13 @@ return [
     'contact_mail' => env('CONTACT_MAIL', 'ok1vum@hamradio.cz'),
     'contact_name' => env('CONTACT_NAME', 'Míla OK1VUM'),
 
+    // Texty, které smí MailImageController vykreslit jako PNG (adresy z patičky).
+    // Jiný vstup vrací 404 – endpoint nemá generovat obrázky s libovolným textem.
+    'mail_image_allowlist' => [
+        env('CONTACT_MAIL', 'ok1vum@hamradio.cz'),
+        'ok1mab@hamradio.cz',
+    ],
+
     // Admin účet pro seeder – čtení přes config() je bezpečné i při kešování.
     'admin_user' => env('ADMIN_USER'),
     'admin_email' => env('ADMIN_EMAIL', 'admin@example.com'),
@@ -28,6 +35,11 @@ return [
 
     // Od tohoto kola se hlášení bez EDI do ročního součtu nezapočítávají.
     'non_edi_nullify_from_kolo' => 91,
+
+    // Neschválený záznam se počítá jako „čerstvý" (drží kolo v aktivním stavu
+    // a blokuje veřejný přístup k EDI souborům) jen po tuto dobu od podání.
+    // Starší zapomenuté záznamy už aktivitu nedrží.
+    'fresh_unapproved_days' => 28,
 
     // Cache ročních výsledků (Cache::flexible): doba „čerstvosti" a krajní doba
     // platnosti staré hodnoty (stale-while-revalidate), v sekundách.
