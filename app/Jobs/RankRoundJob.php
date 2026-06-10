@@ -10,8 +10,12 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 
 /**
- * Přepočítá pořadí v kole (ScoringService::rankRound) jako asynchronní úloha.
- * ShouldBeUnique zabrání souběžnému spuštění dvou jobů pro stejné kolo.
+ * Přepočítá pořadí v kole (ScoringService::rankRound).
+ *
+ * Spouští se synchronně (dispatchSync) – rankRound je levný (pár UPDATE
+ * v transakci) a přepočet pořadí i invalidace cache ročních výsledků tak
+ * nezávisí na běžícím queue workeru. Třída zůstává queueable pro případné
+ * asynchronní použití; ShouldBeUnique pak zabrání souběhu pro stejné kolo.
  */
 final class RankRoundJob implements ShouldBeUnique, ShouldQueue
 {

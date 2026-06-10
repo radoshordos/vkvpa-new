@@ -57,6 +57,14 @@ EDI files may arrive as Windows-1250; `EdiParser` converts via `iconv` before pr
 
 `NON_EDI_NULLIFY_FROM_KOLO = 91`: entries without an EDI file are counted as 0 points in yearly totals for rounds ≥ 91.
 
+`RankRoundJob` runs synchronously (`dispatchSync`) so ranking and cache invalidation never depend on a queue worker; every mutation of a ranked entry (admin toggle/delete/edit, round evaluation) must dispatch it.
+
+### Caching
+
+`config/cache.php` keeps Laravel's secure default `serializable_classes => false` — objects are never unserialized from cache, so **only plain arrays/scalars may be cached** (a cached Eloquent collection comes back as `__PHP_Incomplete_Class`). Two application caches exist:
+- Yearly results (`ScoringService::yearlyResults()`): `Cache::flexible` over attribute arrays, rehydrated via `VkvpaData::hydrate()`; invalidated by `rankRound()`. A round belongs to the year of its `datum_konani` (not the year in `nazev`).
+- "All round stations" map layer (`QsoGeometry::roundStations()`): per-round TTL cache (`vkvpa.round_stations_cache_ttl`); no targeted invalidation needed because the layer is only disclosed after the round closes, when the data no longer changes.
+
 ### Map Views
 
 The map lives on the visualization page (`/edi/{head}/vizualizace`, `EdiVizualizaceController`) as four switchable Leaflet layers (no separate map routes — they were removed for UX simplicity):

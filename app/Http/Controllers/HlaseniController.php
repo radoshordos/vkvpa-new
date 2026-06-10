@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreHlaseniRequest;
+use App\Jobs\RankRoundJob;
 use App\Models\VkvpaData;
 use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
@@ -100,7 +101,14 @@ class HlaseniController extends Controller
         ];
 
         if ($idZaznamu > 0) {
-            VkvpaData::findOrFail($idZaznamu)->update($payload);
+            $zaznam = VkvpaData::findOrFail($idZaznamu);
+            $puvodniKolo = $zaznam->id_kola;
+            $zaznam->update($payload);
+
+            // Přesun záznamu do jiného kola → přepočítat i původní kolo.
+            if ($puvodniKolo !== $payload['id_kola']) {
+                RankRoundJob::dispatchSync($puvodniKolo);
+            }
         } else {
             if (VkvpaData::query()->where('id_kola', $payload['id_kola'])->where('znacka', $znacka)->exists()) {
                 return back()
@@ -110,6 +118,11 @@ class HlaseniController extends Controller
 
             VkvpaData::create($payload);
         }
+
+        // Admin editace mění body/převzetí už zařazeného záznamu – pořadí kola
+        // a cache ročních výsledků se musí přepočítat hned. U veřejného hlášení
+        // (schvaleno=false, poradi=0) je přepočet neškodný.
+        RankRoundJob::dispatchSync($payload['id_kola']);
 
         $request->session()->forget('owned_data_id');
 

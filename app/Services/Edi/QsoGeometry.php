@@ -10,7 +10,9 @@ use App\Models\Ediline;
 use App\Models\VkvpaKola;
 use App\Support\ContestWindow;
 use App\Support\Maidenhead;
+use App\Support\VkvpaSettings;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -145,16 +147,41 @@ final class QsoGeometry
      */
     public function roundStations(Edihead $head, int $minQso = 5): Collection
     {
-        /** @var array<int, array{lat: float, lon: float, call: string, wwl: string, count: int}> $out */
-        $out = [];
-
         if (! $this->roundResultsDisclosable($head)) {
-            return collect($out);
+            /** @var list<array{lat: float, lon: float, call: string, wwl: string, count: int}> $rows */
+            $rows = [];
         } elseif ($head->id_kola === null) {
-            $headIds = [$head->id];
+            // Deník bez kola agreguje jen sám sebe – levné, bez cache.
+            $rows = $this->computeRoundStations([$head->id], $minQso);
         } else {
-            $headIds = Edihead::query()->where('id_kola', $head->id_kola)->pluck('id')->all();
+            // Vrstva se vydává až po uzávěrce kola a od té chvíle se data
+            // prakticky nemění → stačí TTL, cílená invalidace není potřeba.
+            // Cachují se jen pole (cache.serializable_classes je false,
+            // objekty by se z cache vrátily jako __PHP_Incomplete_Class).
+            /** @var list<array{lat: float, lon: float, call: string, wwl: string, count: int}> $rows */
+            $rows = Cache::remember(
+                sprintf('vkvpa:round-stations:%d:%d', $head->id_kola, $minQso),
+                VkvpaSettings::roundStationsCacheTtl(),
+                fn (): array => $this->computeRoundStations(
+                    Edihead::query()->where('id_kola', $head->id_kola)->pluck('id')->all(),
+                    $minQso,
+                ),
+            );
         }
+
+        return collect($rows);
+    }
+
+    /**
+     * Výpočet vrstvy „všechny stanice z kola" nad danými deníky.
+     *
+     * @param  array<mixed>  $headIds  id deníků (`edihead.id`)
+     * @return list<array{lat: float, lon: float, call: string, wwl: string, count: int}>
+     */
+    private function computeRoundStations(array $headIds, int $minQso): array
+    {
+        /** @var list<array{lat: float, lon: float, call: string, wwl: string, count: int}> $out */
+        $out = [];
 
         /** @var array<string, array{count: int, lat: float|null, lon: float|null, wwl: string}> $stations */
         $stations = [];
@@ -209,7 +236,7 @@ final class QsoGeometry
             ];
         }
 
-        return collect($out);
+        return $out;
     }
 
     /**

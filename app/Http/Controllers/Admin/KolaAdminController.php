@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\KoloRequest;
 use App\Models\VkvpaKola;
+use App\Services\Scoring\ScoringService;
 use App\Support\ContestCalendar;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
@@ -104,9 +105,17 @@ class KolaAdminController extends Controller
         ]);
     }
 
-    public function update(KoloRequest $request, VkvpaKola $kolo): RedirectResponse
+    public function update(KoloRequest $request, VkvpaKola $kolo, ScoringService $scoring): RedirectResponse
     {
+        $puvodniRok = $kolo->datum_konani->year;
         $kolo->update($request->toModel());
+
+        // Roční výsledky se agregují podle roku `datum_konani` – přesun kola
+        // do jiného roku musí shodit cache obou dotčených let.
+        if ($kolo->datum_konani->year !== $puvodniRok) {
+            $scoring->forgetYearlyCache($puvodniRok);
+            $scoring->forgetYearlyCache($kolo->datum_konani->year);
+        }
 
         Log::info('admin.kolo.update', [
             'kolo_id' => $kolo->id,

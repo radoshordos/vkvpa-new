@@ -61,6 +61,11 @@ final class VkvpaSettings
         return Config::integer('vkvpa.yearly_cache_stale', 1800);
     }
 
+    public static function roundStationsCacheTtl(): int
+    {
+        return Config::integer('vkvpa.round_stations_cache_ttl', 3600);
+    }
+
     /** @return list<string> */
     public static function domesticPrefixes(): array
     {

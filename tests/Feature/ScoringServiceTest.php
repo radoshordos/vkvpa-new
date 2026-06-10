@@ -261,6 +261,24 @@ class ScoringServiceTest extends TestCase
         $this->assertSame(1, $score->nasobice);
     }
 
+    public function test_yearly_results_use_datum_konani_year_not_nazev(): void
+    {
+        $kat = $this->kategorie();
+        // Kolo s chybným rokem v názvu – rozhodovat musí rok `datum_konani`.
+        $kolo = VkvpaKola::create([
+            'datum_konani' => '2026-05-17',
+            'datum_uzaverky' => '2026-05-31',
+            'nazev' => '5. kolo 2025',
+            'poznamka' => '',
+        ]);
+        $e = $this->entry($kolo->id, $kat->id, 'OK1A', 100);
+        $e->update(['poradi' => 1, 'EDI_ID' => 1]);
+
+        $scoring = app(ScoringService::class);
+        $this->assertNotNull($scoring->yearlyResults(2026)->firstWhere('znacka', 'OK1A'));
+        $this->assertNull($scoring->yearlyResults(2025)->firstWhere('znacka', 'OK1A'));
+    }
+
     public function test_yearly_results_aggregates_by_callsign(): void
     {
         $kat = $this->kategorie();

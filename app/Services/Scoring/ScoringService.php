@@ -154,7 +154,8 @@ final class ScoringService
     }
 
     /**
-     * Roční výsledky: součet bodů přes kola roku, po kategoriích a značkách.
+     * Roční výsledky: součet bodů přes kola roku (dle roku `datum_konani`),
+     * po kategoriích a značkách.
      *
      * @return \Illuminate\Database\Eloquent\Collection<int, VkvpaData>
      */
@@ -188,7 +189,7 @@ final class ScoringService
             ->join('vkvpa_kola', 'vkvpa_data.id_kola', '=', 'vkvpa_kola.id')
             ->where('vkvpa_data.schvaleno', true)
             ->where('vkvpa_data.poradi', '<>', 0)
-            ->where('vkvpa_kola.nazev', 'like', '%'.$year)
+            ->whereYear('vkvpa_kola.datum_konani', $year)
             ->selectRaw('vkvpa_data.id_kategorie as kategorie_id, vkvpa_data.znacka')
             ->selectRaw(
                 'SUM(CASE WHEN vkvpa_data.EDI_ID = 0 AND vkvpa_data.id_kola >= ? THEN 0 ELSE vkvpa_data.body END) as celkem',
@@ -219,7 +220,7 @@ final class ScoringService
     }
 
     /** Zahodí cache ročních výsledků daného roku (všechny kombinace výkonových filtrů). */
-    private function forgetYearlyCache(?int $year): void
+    public function forgetYearlyCache(?int $year): void
     {
         if ($year === null) {
             return;
@@ -234,15 +235,10 @@ final class ScoringService
 
     /**
      * Rok kola pro invalidaci cache – stejná konvence jako yearlyResults()
-     * (rok je na konci `nazev`, např. „1. kolo 2026").
+     * (rok z `datum_konani`).
      */
     private function yearOfRound(int $koloId): ?int
     {
-        $nazev = VkvpaKola::query()->whereKey($koloId)->value('nazev');
-        if (! is_string($nazev) || preg_match('/(\d{4})\s*$/', $nazev, $m) !== 1) {
-            return null;
-        }
-
-        return (int) $m[1];
+        return VkvpaKola::query()->whereKey($koloId)->first(['datum_konani'])?->datum_konani->year;
     }
 }

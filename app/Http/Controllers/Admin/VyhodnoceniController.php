@@ -22,7 +22,7 @@ class VyhodnoceniController extends Controller
     /** Přepočítá pořadí v kole (vyhodnoceni.php). */
     public function vyhodnotit(VkvpaKola $kolo): RedirectResponse
     {
-        RankRoundJob::dispatch($kolo->id);
+        RankRoundJob::dispatchSync($kolo->id);
 
         Log::info('admin.kolo.vyhodnotit', [
             'kolo_id' => $kolo->id,
@@ -37,7 +37,7 @@ class VyhodnoceniController extends Controller
     /** Uzavře kolo (uzavreni.php) – přepočítá pořadí a nastaví vyhodnoceno. */
     public function uzavrit(VkvpaKola $kolo): RedirectResponse
     {
-        RankRoundJob::dispatch($kolo->id);
+        RankRoundJob::dispatchSync($kolo->id);
         $this->scoring->closeRound($kolo->id);
 
         Log::info('admin.kolo.uzavrit', [

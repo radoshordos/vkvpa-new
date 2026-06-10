@@ -34,6 +34,10 @@ return [
     'yearly_cache_fresh' => (int) env('YEARLY_CACHE_FRESH', 300),
     'yearly_cache_stale' => (int) env('YEARLY_CACHE_STALE', 1800),
 
+    // Cache mapové vrstvy „všechny stanice z kola" (sekundy). Vrstva se vydává
+    // až po uzávěrce kola, od té chvíle se data prakticky nemění – stačí TTL.
+    'round_stations_cache_ttl' => (int) env('ROUND_STATIONS_CACHE_TTL', 3600),
+
     // Prefixy tuzemských stanic (určuje DX vs. domácí kategorie).
     'domestic_prefixes' => ['OK', 'OL'],
 

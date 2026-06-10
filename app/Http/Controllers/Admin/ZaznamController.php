@@ -48,7 +48,7 @@ class ZaznamController extends Controller
 
         $prevzato = ! $zaznam->schvaleno;
         $zaznam->update(['schvaleno' => $prevzato]);
-        RankRoundJob::dispatch($idKola);
+        RankRoundJob::dispatchSync($idKola);
 
         Log::info($prevzato ? 'admin.zaznam.prevzit' : 'admin.zaznam.odebrat-prevzeti', [
             'zaznam_id' => $zaznam->id,
@@ -81,7 +81,7 @@ class ZaznamController extends Controller
         $znacka = $zaznam->znacka;
 
         $zaznam->delete();
-        RankRoundJob::dispatch($idKola);
+        RankRoundJob::dispatchSync($idKola);
 
         Log::info('admin.zaznam.smazat', [
             'zaznam_id' => $zaznam->id,

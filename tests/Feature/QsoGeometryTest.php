@@ -15,6 +15,7 @@ use App\Services\Edi\EnrichedQso;
 use App\Services\Edi\QsoGeometry;
 use App\Support\Maidenhead;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 /**
@@ -119,6 +120,28 @@ class QsoGeometryTest extends TestCase
         $headA = $this->seedRoundLogs($kolo->id);
 
         $this->assertCount(0, new QsoGeometry()->roundStations($headA));
+    }
+
+    public function test_round_stations_are_cached_per_round(): void
+    {
+        $kolo = VkvpaKola::create([
+            'datum_konani' => '2026-03-15', 'datum_uzaverky' => '2026-03-20 23:59:59',
+            'nazev' => '03/2026', 'poznamka' => '', 'vyhodnoceno' => '2026-03-21 10:00:00',
+        ]);
+        $headA = $this->seedRoundLogs($kolo->id);
+
+        $this->assertCount(1, new QsoGeometry()->roundStations($headA));
+
+        // Nová stanice nad prahem přidaná po prvním čtení – do vypršení TTL
+        // se vrací cachovaná vrstva (po uzávěrce se data reálně nemění).
+        foreach (['0830', '0831', '0832', '0833', '0834'] as $t) {
+            Ediline::create(['edihead_id' => $headA->id, 'date' => '260315', 'time' => $t, 'call_sign' => 'OK7NEW', 'received_wwl' => 'JO80AA']);
+        }
+        $this->assertCount(1, new QsoGeometry()->roundStations($headA));
+
+        // Po zahození cache se vrstva přepočítá.
+        Cache::flush();
+        $this->assertCount(2, new QsoGeometry()->roundStations($headA));
     }
 
     public function test_compare_with_returns_unique_and_common_stations(): void
