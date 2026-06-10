@@ -8,5 +8,5 @@ class VkvpaKolaTableSeeder extends JsonTableSeeder
 {
     protected string $table = 'vkvpa_kola';
 
-    protected ?int $autoIncrement = 133;
+    protected ?int $autoIncrement = 135;
 }
