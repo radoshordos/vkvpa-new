@@ -12,6 +12,7 @@ use App\Exceptions\TDateMismatchException;
 use App\Exceptions\TDateNotContestDayException;
 use App\Exceptions\UnknownBandException;
 use App\Exceptions\UnknownSectionException;
+use App\Exceptions\UploadWindowClosedException;
 use App\Services\Edi\EdiParser;
 use App\Services\Edi\EdiValidator;
 use Illuminate\Support\Facades\Log;
@@ -88,10 +89,12 @@ class EdiUpload extends Component
             }
 
             try {
-                $row = $action->execute($log);
+                // Admin smí importovat deník i mimo upload okno (opravy starých kol).
+                $row = $action->execute($log, enforceUploadWindow: ! (bool) auth()->user()?->is_admin);
             } catch (
                 TDateNotContestDayException|RoundNotFoundException|TDateMismatchException|
-                DuplicateEdiException|UnknownBandException|UnknownSectionException $e
+                DuplicateEdiException|UnknownBandException|UnknownSectionException|
+                UploadWindowClosedException $e
             ) {
                 $this->state = 'error';
                 $this->errorMessage = $e->getMessage();

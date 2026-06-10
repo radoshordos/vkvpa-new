@@ -55,7 +55,8 @@ class EdiController extends Controller
         }
 
         try {
-            $row = $this->action->execute($log);
+            // Admin smí importovat deník i mimo upload okno (opravy starých kol).
+            $row = $this->action->execute($log, enforceUploadWindow: ! (bool) $request->user()?->is_admin);
         } catch (TDateNotContestDayException|RoundNotFoundException|TDateMismatchException|DuplicateEdiException|UnknownBandException|UnknownSectionException|UploadWindowClosedException $e) {
             return back()->withErrors(['upload' => $e->getMessage()]);
         }
