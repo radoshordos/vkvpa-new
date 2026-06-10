@@ -165,10 +165,13 @@ class EdiVizualizaceTest extends TestCase
             ->assertOk()
             ->getContent() ?: '';
 
-        // Výběr soupeře se nabízí, ale vrstva porovnání bez volby není.
+        // Tlačítko porovnání se nabízí; výběr soupeře je ve výchozím stavu
+        // skrytý (ukáže ho až aktivace vrstvy Porovnání ve vizualizace.js)
+        // a bez volby nejsou žádná data porovnání.
         $this->assertStringContainsString('Porovnat s', $html);
         $this->assertStringContainsString('compare:null', str_replace(' ', '', $html));
-        $this->assertStringNotContainsString('data-map-layer="porovnani"', $html);
+        $this->assertStringContainsString('data-map-layer="porovnani"', $html);
+        $this->assertStringContainsString('id="porovnat-form" class="ml-auto hidden', $html);
     }
 
     public function test_compare_hidden_while_round_open(): void

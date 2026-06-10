@@ -229,9 +229,10 @@ if (bounds.length > 0) {
     map.setView([50, 15], 6);
 }
 
-// Přepínání vrstev přes tlačítka
-const layers = { jezek: jezekLayer, spendliky: spendlikyLayer, lokatory: lokatoryLayer, crk: crkLayer };
-if (cfg.compare) layers.porovnani = porovnaniLayer;
+// Přepínání vrstev přes tlačítka. Vrstva porovnání existuje vždy (tlačítko se
+// renderuje, jen když jsou soupeři) – bez zvoleného soupeře je prázdná a slouží
+// k zobrazení výběru „Porovnat s:".
+const layers = { jezek: jezekLayer, spendliky: spendlikyLayer, lokatory: lokatoryLayer, crk: crkLayer, porovnani: porovnaniLayer };
 
 function showLayer(key) {
     Object.values(layers).forEach((l) => map.removeLayer(l));
@@ -241,9 +242,18 @@ function showLayer(key) {
     if (key === 'crk') { redrawCrkGrid(); map.on('moveend', redrawCrkGrid); }
     if (homeMarker) homeMarker.addTo(map);
     // Legenda druhů provozu nedává ve vrstvě porovnání smysl – prohodí se s legendou porovnání.
-    if (cfg.compare) {
-        if (key === 'porovnani') { modeLegend.remove(); compareLegend.addTo(map); }
-        else { compareLegend.remove(); modeLegend.addTo(map); }
+    if (key === 'porovnani') {
+        modeLegend.remove();
+        if (cfg.compare) compareLegend.addTo(map);
+    } else {
+        if (cfg.compare) compareLegend.remove();
+        modeLegend.addTo(map);
+    }
+    // Výběr soupeře se ukazuje jen při aktivní vrstvě porovnání.
+    const porovnatForm = document.getElementById('porovnat-form');
+    if (porovnatForm) {
+        porovnatForm.classList.toggle('hidden', key !== 'porovnani');
+        porovnatForm.classList.toggle('flex', key === 'porovnani');
     }
     document.querySelectorAll('[data-map-layer]').forEach((b) => b.classList.toggle('active', b.dataset.mapLayer === key));
 }
