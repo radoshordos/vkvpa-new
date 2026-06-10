@@ -76,8 +76,11 @@ class EdiVizualizaceTest extends TestCase
         $this->assertStringContainsString('JN89', $html);
     }
 
-    public function test_active_round_blocks_non_admin(): void
+    public function test_active_round_does_not_block_non_admin(): void
     {
+        // Vizualizace je veřejná i během otevřeného upload okna – ukazuje jen
+        // vlastní deník; citlivé vrstvy (roundStations, porovnání) se hlídají
+        // samostatně (viz testy níže).
         VkvpaKola::create([
             'datum_konani' => '2026-03-15',
             'datum_uzaverky' => now()->addDays(7)->toDateTimeString(),
@@ -90,7 +93,7 @@ class EdiVizualizaceTest extends TestCase
 
         $this->actingAs($this->user())
             ->get(route('edi.vizualizace', $head->id))
-            ->assertForbidden();
+            ->assertOk();
     }
 
     public function test_round_stations_hidden_while_round_open(): void

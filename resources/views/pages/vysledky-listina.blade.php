@@ -99,15 +99,15 @@
                             @if ($isAdmin)
                                 @include('partials.zaznam-akce', ['r' => $r])
                             @elseif ($r->edihead_id)
-                                {{-- EDI · EDIR · vizualizace: veřejnost i přihlášení (ne-admin) jen mimo upload window --}}
+                                {{-- EDI · EDIR jen mimo upload window; vizualizace je veřejná vždy --}}
                                 <div class="flex items-center gap-1">
                                     @if (! $uploadWindowOpen)
                                         <x-edi-odkaz :head="$r->edihead_id" />
                                         <x-edi-odkaz :head="$r->edihead_id" reduced />
-                                        <x-vizualizace-odkaz :head="$r->edihead_id" />
                                     @else
                                         <span class="action-link cursor-not-allowed opacity-50" title="{{ __('app.edi_restricted_body') }}">{{ __('app.edi_restricted_label') }}</span>
                                     @endif
+                                    <x-vizualizace-odkaz :head="$r->edihead_id" />
                                 </div>
                             @endif
                         </td>

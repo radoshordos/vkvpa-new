@@ -19,6 +19,6 @@ return [
     'no_active_body' => 'EDI files can only be submitted during an active period.',
     'edi_restricted_title' => 'Restricted / Omezeno',
     'edi_restricted_body' => 'Log files are restricted during the submission window to prevent copying from other participants\' logs. EDI files will be available after the round closes.',
-    'edi_restricted_label' => 'Restricted',
+    'edi_restricted_label' => 'EDI Restricted',
     'back_home' => 'Back to home',
 ];

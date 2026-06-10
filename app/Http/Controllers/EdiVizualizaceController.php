@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Edihead;
-use App\Models\VkvpaKola;
 use App\Services\Edi\EnrichedQso;
 use App\Services\Edi\QsoGeometry;
 use App\Support\Maidenhead;
@@ -27,12 +26,9 @@ class EdiVizualizaceController extends Controller
 
     public function show(Request $request, Edihead $head): View
     {
-        // Admin vždy; ostatní (i nepřihlášení) jen mimo otevřené upload window,
-        // aby během příjmu hlášení neunikaly deníky soupeřů.
-        if (! auth()->user()?->is_admin && VkvpaKola::existujeAktivni()) {
-            abort(403);
-        }
-
+        // Vizualizace je veřejná vždy (zobrazuje jen vlastní deník účastníka);
+        // citlivé vrstvy se hlídají samostatně: roundStations i porovnání
+        // soupeřů se vydávají až po uzavření kola (viz QsoGeometry / comparison).
         $home = Maidenhead::toLatLon((string) $head->p_wwlo);
 
         $enriched = $this->geometry->enrichedQsos($head, $home, 'time');
