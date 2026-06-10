@@ -42,7 +42,10 @@ window.__vizConfig = {
 
 {{-- ── Hlavička ────────────────────────────────────────────────────────── --}}
 <h1 class="text-xl font-bold text-heading">Vizualizace deníku {{ $pcall }}</h1>
-<p class="text-sm text-muted mb-4">{{ $homeLoc }} · mapa a grafy (Leaflet + Chart.js)</p>
+<p class="text-sm text-muted mb-4">
+  {{ $homeLoc }} · mapa a grafy (Leaflet + Chart.js) ·
+  <a href="{{ route('edi.inkubator', ['head' => $head]) }}" class="underline hover:text-heading">🧪 Vizuální inkubátor</a>
+</p>
 @if ($roundDataPending)
   <p class="text-sm text-muted mb-4 -mt-3">ℹ️ Po vyhodnocení kola budou mapy obsahovat více dat – do vrstvy CRK přibudou všechny stanice z kola a půjde porovnat deníky účastníků.</p>
 @endif
