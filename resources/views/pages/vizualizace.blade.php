@@ -170,8 +170,45 @@ window.__vizConfig = {
 </div>
 
 {{-- ── Graf: histogram vzdáleností ──────────────────────────────────────── --}}
-<div class="rounded-lg border border-line bg-surface p-3">
+<div class="rounded-lg border border-line bg-surface p-3 mb-5">
   <canvas id="chartDist"></canvas>
 </div>
+
+{{-- ── TOP ODX ─────────────────────────────────────────────────────────── --}}
+<div class="section-head">TOP ODX – nejvzdálenější spojení</div>
+@if ($odx === [])
+  <p class="text-muted mb-4">Žádná spojení se spočítanou vzdáleností.</p>
+@else
+<div class="table-wrap">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th class="num">#</th>
+        <th>Značka</th>
+        <th>Lokátor</th>
+        <th class="num">km</th>
+        <th class="num">Azimut</th>
+        <th>Čas</th>
+        <th>Mód</th>
+        <th class="num">Body</th>
+      </tr>
+    </thead>
+    <tbody>
+    @foreach ($odx as $i => $o)
+      <tr>
+        <td class="num font-bold">{{ $i + 1 }}.</td>
+        <td class="mono font-bold">{{ $o['call'] }}</td>
+        <td class="mono">{{ $o['wwl'] }}</td>
+        <td class="num font-bold">{{ $o['dist'] }}</td>
+        <td class="num">{{ $o['azimut'] !== null ? $o['azimut'] . '°' : '—' }}</td>
+        <td class="mono">{{ $o['cas'] }}</td>
+        <td>{{ $o['mode'] }}</td>
+        <td class="num">{{ $o['points'] }}</td>
+      </tr>
+    @endforeach
+    </tbody>
+  </table>
+</div>
+@endif
 
 @endsection

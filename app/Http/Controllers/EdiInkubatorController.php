@@ -14,10 +14,10 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 /**
- * Vizuální inkubátor – doplňkové tabulky deníku: TOP ODX, nové násobiče
- * a nezapočítaná QSO. Grafy a mapa s přehráváním se přestěhovaly na stránku
- * „Vizualizace" ({@see EdiVizualizaceController}); porovnání s deníkem
- * soupeře žije na samostatné stránce ({@see EdiPorovnaniController}).
+ * Vizuální inkubátor – doplňkové tabulky deníku: nové násobiče
+ * a nezapočítaná QSO. Grafy, mapa s přehráváním i TOP ODX se přestěhovaly
+ * na stránku „Vizualizace" ({@see EdiVizualizaceController}); porovnání
+ * s deníkem soupeře žije na samostatné stránce ({@see EdiPorovnaniController}).
  *
  * Geometrii spojení počítá sdílená {@see QsoGeometry}, agregace
  * {@see DenikStatistiky}.
@@ -52,7 +52,6 @@ class EdiInkubatorController extends Controller
             'pcall' => (string) $head->p_call,
             'homeLoc' => (string) $head->p_wwlo,
             'homeSq' => $homeSq,
-            'odx' => $this->statistiky->topOdx($enriched),
             'nasobice' => $this->statistiky->noveNasobice($enriched, $homeSq),
             'nezapocitana' => $this->statistiky->nezapocitana($head),
             'porovnaniDostupne' => $this->porovnani->hasRivals($head),

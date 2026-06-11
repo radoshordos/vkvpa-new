@@ -81,7 +81,8 @@ Webový systém pro správu a vyhodnocování závodů v pásmu VKV (Very High F
   - Body podle čtverců – vodorovné sloupce: kolik bodů přinesl který velký čtverec
   - Celoroční trend – body a pořadí stanice ve všech kolech roku
   - Histogram vzdáleností – Chart.js Bar chart, pásma 0–50 / 50–100 / 100–200 / 200–400 / 400–700 / 700+ km
-- **Vizuální inkubátor** – doplňkové tabulky deníku (`/edi/{head}/vizualni-inkubator`): TOP ODX, nové násobiče, nezapočítaná QSO
+  - TOP ODX – tabulka 10 nejvzdálenějších spojení (km, azimut, čas, mód, body)
+- **Vizuální inkubátor** – doplňkové tabulky deníku (`/edi/{head}/vizualni-inkubator`): nové násobiče, nezapočítaná QSO
 - **Porovnání deníků** – samostatná stránka hráč vs. hráč (`/edi/{head}/porovnani`): mapa rozdílů v protistanicích, překryvný graf průběhu skóre, tempo obou stanic a směrová růžice; jen deníky z téhož kola a kategorie, soupeřův deník až po uzávěrce kola
 - **Diskuse** – komentáře k závodním kolům (throttle ochrana, moderace adminem)
 - **Admin dashboard** – statistiky sezóny, trend účasti, distribuce kategorií, top 10 stanic
@@ -798,11 +799,10 @@ Trasa `GET /edi/{head}/vizualni-inkubator` (`edi.inkubator`) obsahuje **doplňko
 
 | Komponenta | Popis |
 |------------|-------|
-| **TOP ODX** | Tabulka 10 nejvzdálenějších spojení (km, azimut, čas, mód, body) |
 | **Nové násobiče** | Chronologický seznam: které QSO přineslo dosud nepracovaný velký čtverec |
 | **Nezapočítaná QSO** | QSO mimo závodní okno / mimo den závodu / označené duplicity (prvních 50 řádků) |
 
-Grafy a mapa s přehráváním deníku byly z inkubátoru přesunuty na stránku [EDI vizualizace](#edi-vizualizace); porovnání se soupeřem na samostatnou stránku [Porovnání deníků](#porovnání-deníků). Agregace počítá sdílená služba `DenikStatistiky` (`app/Services/Edi/DenikStatistiky.php`).
+Grafy, mapa s přehráváním deníku i tabulka TOP ODX byly z inkubátoru přesunuty na stránku [EDI vizualizace](#edi-vizualizace); porovnání se soupeřem na samostatnou stránku [Porovnání deníků](#porovnání-deníků). Agregace počítá sdílená služba `DenikStatistiky` (`app/Services/Edi/DenikStatistiky.php`).
 
 ---
 

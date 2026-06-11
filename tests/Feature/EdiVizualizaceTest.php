@@ -159,6 +159,7 @@ class EdiVizualizaceTest extends TestCase
         $this->assertStringContainsString('chartCtverce', $html);
         $this->assertStringContainsString('data-map-layer="playback"', $html);
         $this->assertStringContainsString('data-az-metric="km"', $html);
+        $this->assertStringContainsString('TOP ODX', $html);
     }
 
     public function test_cumulative_score_follows_scoring_rules(): void

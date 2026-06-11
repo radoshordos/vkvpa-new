@@ -57,7 +57,7 @@ class EdiInkubatorTest extends TestCase
             ->assertSeeHtml('OK2KJT');
     }
 
-    public function test_tables_contain_odx_and_multipliers(): void
+    public function test_tables_contain_multipliers(): void
     {
         $head = $this->importSample();
 
@@ -65,12 +65,11 @@ class EdiInkubatorTest extends TestCase
             ->get(route('edi.inkubator', $head->id))
             ->getContent() ?: '';
 
-        // sample.edi: 2 QSO (OK2IMH v JN99, OK2IWU v JN89).
-        $this->assertStringContainsString('OK2IMH', $html);
+        // Nový násobič JN89 přinesl OK2IWU (vlastní čtverec JN99 je násobič
+        // č. 1 automaticky). TOP ODX se přestěhoval na stránku Vizualizace.
         $this->assertStringContainsString('OK2IWU', $html);
-        $this->assertStringContainsString('TOP ODX', $html);
-        // Nový násobič JN89 (vlastní čtverec JN99 je násobič č. 1 automaticky).
         $this->assertStringContainsString('JN89', $html);
+        $this->assertStringNotContainsString('TOP ODX', $html);
     }
 
     public function test_charts_moved_to_vizualizace_page(): void

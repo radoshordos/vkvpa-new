@@ -75,6 +75,7 @@ class EdiVizualizaceController extends Controller
             'sezona' => $this->statistiky->sezona($head),
             'tempo' => $this->statistiky->tempo($enriched, $fromMin, $toMin),
             'modeStats' => $this->statistiky->modeStats($enriched),
+            'odx' => $this->statistiky->topOdx($enriched),
             'nezapocitanaCelkem' => $this->statistiky->nezapocitana($head)['celkem'],
             'distHistogram' => $this->distHistogram($enriched),
             'stats' => $this->stats($enriched),

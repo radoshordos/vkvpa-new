@@ -1,8 +1,8 @@
 {{--
-    Vizuální inkubátor – doplňkové tabulky EDI deníku: TOP ODX, nové násobiče
-    a nezapočítaná QSO. Grafy a mapa s přehráváním se přestěhovaly na stránku
-    Vizualizace (route edi.vizualizace); porovnání se soupeřem je na stránce
-    Porovnání deníků (route edi.porovnani).
+    Vizuální inkubátor – doplňkové tabulky EDI deníku: nové násobiče
+    a nezapočítaná QSO. Grafy, mapa s přehráváním i TOP ODX se přestěhovaly
+    na stránku Vizualizace (route edi.vizualizace); porovnání se soupeřem je
+    na stránce Porovnání deníků (route edi.porovnani).
 --}}
 @extends('layouts.app')
 
@@ -21,43 +21,6 @@
     · <a href="{{ route('edi.porovnani', ['head' => $head]) }}" class="underline hover:text-heading">⚔️ Porovnání deníků</a>
   @endif
 </p>
-
-{{-- ── TOP ODX ─────────────────────────────────────────────────────────── --}}
-<div class="section-head">TOP ODX – nejvzdálenější spojení</div>
-@if ($odx === [])
-  <p class="text-muted mb-4">Žádná spojení se spočítanou vzdáleností.</p>
-@else
-<div class="table-wrap mb-5">
-  <table class="data-table">
-    <thead>
-      <tr>
-        <th class="num">#</th>
-        <th>Značka</th>
-        <th>Lokátor</th>
-        <th class="num">km</th>
-        <th class="num">Azimut</th>
-        <th>Čas</th>
-        <th>Mód</th>
-        <th class="num">Body</th>
-      </tr>
-    </thead>
-    <tbody>
-    @foreach ($odx as $i => $o)
-      <tr>
-        <td class="num font-bold">{{ $i + 1 }}.</td>
-        <td class="mono font-bold">{{ $o['call'] }}</td>
-        <td class="mono">{{ $o['wwl'] }}</td>
-        <td class="num font-bold">{{ $o['dist'] }}</td>
-        <td class="num">{{ $o['azimut'] !== null ? $o['azimut'] . '°' : '—' }}</td>
-        <td class="mono">{{ $o['cas'] }}</td>
-        <td>{{ $o['mode'] }}</td>
-        <td class="num">{{ $o['points'] }}</td>
-      </tr>
-    @endforeach
-    </tbody>
-  </table>
-</div>
-@endif
 
 {{-- ── Nové násobiče ───────────────────────────────────────────────────── --}}
 <div class="section-head">Nové násobiče (velké čtverce)</div>
