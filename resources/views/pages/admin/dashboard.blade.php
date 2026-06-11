@@ -2,7 +2,7 @@
 @section('title', 'Dashboard – VKV PA')
 
 @push('head')
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js"></script>
+@vite('resources/js/dashboard.js')
 @endpush
 
 @section('content')
@@ -188,93 +188,16 @@
 
 @push('scripts')
 <script @cspNonce>
-(function () {
-    const isDark = document.documentElement.classList.contains('dark');
-    const gridColor  = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
-    const textColor  = isDark ? '#a1a1aa' : '#71717a';
-    const brandColor = '#6366f1';
-    const prevColor  = '#a78bfa';
-
-    Chart.defaults.color = textColor;
-    Chart.defaults.borderColor = gridColor;
-
-    // Graf: účastníci per kolo
-    new Chart(document.getElementById('chartKola'), {
-        type: 'bar',
-        data: {
-            labels: @json($trendKola->pluck('nazev')),
-            datasets: [{
-                label: 'Účastníci',
-                data: @json($trendKola->pluck('pocet')),
-                backgroundColor: brandColor + 'cc',
-                borderRadius: 4,
-            }],
-        },
-        options: {
-            plugins: { legend: { display: false } },
-            scales: {
-                y: { beginAtZero: true, ticks: { stepSize: 1 } },
-                x: { ticks: { maxRotation: 45 } },
-            },
-        },
-    });
-
-    // Graf: distribuce kategorií
-    const katLabels = @json($kategorieData->map(fn ($r) => $kategorie[$r->id_kategorie]?->nazev ?? "kat {$r->id_kategorie}")->values());
-    const katData   = @json($kategorieData->pluck('pocet'));
-    const palette   = ['#6366f1','#8b5cf6','#a78bfa','#c4b5fd','#ddd6fe','#ede9fe','#4f46e5','#7c3aed'];
-
-    new Chart(document.getElementById('chartKategorie'), {
-        type: 'doughnut',
-        data: {
-            labels: katLabels,
-            datasets: [{
-                data: katData,
-                backgroundColor: palette,
-                borderWidth: 2,
-                borderColor: isDark ? '#18181b' : '#ffffff',
-            }],
-        },
-        options: {
-            plugins: { legend: { position: 'right' } },
-            cutout: '65%',
-        },
-    });
-
-    // Graf: rok vs. rok
-    const aktData  = @json($kolaRoku->pluck('pocet_schvalenych')->values());
-    const prevData = @json($trendPredchoziRok->pluck('pocet')->values());
-    const maxLen   = Math.max(aktData.length, prevData.length);
-    const koloLabels = Array.from({ length: maxLen }, (_, i) => `${i + 1}. kolo`);
-
-    new Chart(document.getElementById('chartRokVsRok'), {
-        type: 'bar',
-        data: {
-            labels: koloLabels,
-            datasets: [
-                {
-                    label: '{{ $rok - 1 }}',
-                    data: prevData,
-                    backgroundColor: prevColor + 'aa',
-                    borderRadius: 3,
-                },
-                {
-                    label: '{{ $rok }}',
-                    data: aktData,
-                    backgroundColor: brandColor + 'cc',
-                    borderRadius: 3,
-                },
-            ],
-        },
-        options: {
-            plugins: { legend: { position: 'top' } },
-            scales: {
-                y: { beginAtZero: true, ticks: { stepSize: 1 } },
-                x: { ticks: { maxRotation: 0 } },
-            },
-        },
-    });
-})();
+window.__dashboardConfig = {
+    rok: {{ $rok }},
+    rokPredchozi: {{ $rok - 1 }},
+    trendKolaLabels: @json($trendKola->pluck('nazev')),
+    trendKolaData: @json($trendKola->pluck('pocet')),
+    katLabels: @json($kategorieData->map(fn ($r) => $kategorie[$r->id_kategorie]?->nazev ?? "kat {$r->id_kategorie}")->values()),
+    katData: @json($kategorieData->pluck('pocet')),
+    aktData: @json($kolaRoku->pluck('pocet_schvalenych')->values()),
+    prevData: @json($trendPredchoziRok->pluck('pocet')->values()),
+};
 </script>
 @endpush
 
