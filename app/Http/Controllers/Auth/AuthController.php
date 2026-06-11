@@ -24,7 +24,7 @@ class AuthController extends Controller
     public function showLoginForm(Request $request): View|RedirectResponse
     {
         if (Auth::check()) {
-            return redirect()->intended('/');
+            return redirect()->intended($this->homeAfterLogin());
         }
 
         return view('auth.login');
@@ -49,7 +49,7 @@ class AuthController extends Controller
         $request->session()->regenerate();
         $request->session()->put('prihlasen', $username);
 
-        return redirect()->intended('/');
+        return redirect()->intended($this->homeAfterLogin());
     }
 
     /**
@@ -103,7 +103,15 @@ class AuthController extends Controller
             return redirect()->route('hlaseni.index', ['id' => $confirm]);
         }
 
-        return redirect()->intended('/');
+        return redirect()->intended($this->homeAfterLogin());
+    }
+
+    /** Výchozí stránka po přihlášení: admin míří na statistiky, ostatní na úvod. */
+    private function homeAfterLogin(): string
+    {
+        return Auth::user()?->is_admin === true
+            ? route('admin.dashboard')
+            : '/';
     }
 
     public function logout(Request $request): RedirectResponse

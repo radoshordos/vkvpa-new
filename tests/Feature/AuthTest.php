@@ -45,10 +45,11 @@ class AuthTest extends TestCase
     {
         $this->admin('tajne-heslo');
 
+        // Admin přistává po přihlášení na statistikách.
         $this->post('/login', [
             'username' => 'Beda',
             'heslo' => 'tajne-heslo',
-        ])->assertRedirect('/');
+        ])->assertRedirect(route('admin.dashboard'));
 
         $this->assertAuthenticated();
         $this->assertSame('Beda', session('prihlasen'));
@@ -89,7 +90,7 @@ class AuthTest extends TestCase
         $this->createToken('abc123', userId: $admin->id);
 
         $this->get(route('login.token', ['kod' => 'abc123']))
-            ->assertRedirect('/');
+            ->assertRedirect(route('admin.dashboard'));
 
         $this->assertAuthenticatedAs($admin);
         $this->assertSame($admin->name, session('prihlasen'));
