@@ -67,11 +67,14 @@ EDI files may arrive as Windows-1250; `EdiParser` converts via `iconv` before pr
 
 ### Map Views
 
-The map lives on the visualization page (`/edi/{head}/vizualizace`, `EdiVizualizaceController`) as four switchable Leaflet layers (no separate map routes — they were removed for UX simplicity):
+The map lives on the visualization page (`/edi/{head}/vizualizace`, `EdiVizualizaceController`) as five switchable Leaflet layers (no separate map routes — they were removed for UX simplicity):
 - `crk` (default) – combined view (rays + mode pins + distance circles + locator grid + all round stations)
 - `jezek` – lines from home station to all worked stations
 - `spendliky` – pins per QSO with distance/bearing popup
 - `lokatory` – big squares (4-char Maidenhead) with QSO counts
+- `playback` – QSOs appear chronologically, driven by a time slider + play button
+
+Chart aggregations (timeline with multipliers, weighted azimuth rose, points per square, season trend, tempo, mode stats, uncounted QSOs) live in the shared `DenikStatistiky` service; the visualization page renders the charts, while "Vizuální inkubátor" (`/edi/{head}/vizualni-inkubator`) keeps only supplementary tables (TOP ODX, new multipliers, uncounted QSOs) and has no JS entry point.
 
 The `crk` "all round stations" layer (`QsoGeometry::roundStations()`) is withheld until the round is closed/evaluated (`KoloStav`) to avoid leaking competitors' logs during reception. Each Leaflet map also has a fullscreen toggle (`resources/js/leaflet-fullscreen.js`).
 

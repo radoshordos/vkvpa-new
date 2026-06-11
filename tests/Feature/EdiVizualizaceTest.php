@@ -142,6 +142,54 @@ class EdiVizualizaceTest extends TestCase
             ->assertOk();
     }
 
+    public function test_config_contains_charts_moved_from_inkubator(): void
+    {
+        // Grafy přestěhované z inkubátoru: průběh skóre, timeline s násobiči,
+        // vážená růžice, body podle čtverců + mapa s přehráváním (okno, časy).
+        $head = $this->importSample();
+
+        $html = $this->actingAs($this->user())
+            ->get(route('edi.vizualizace', $head->id))
+            ->assertOk()
+            ->getContent() ?: '';
+
+        $this->assertStringContainsString('cumulative', $html);
+        $this->assertStringContainsString('squarePoints', $html);
+        $this->assertStringContainsString('chartPrubeh', $html);
+        $this->assertStringContainsString('chartCtverce', $html);
+        $this->assertStringContainsString('data-map-layer="playback"', $html);
+        $this->assertStringContainsString('data-az-metric="km"', $html);
+    }
+
+    public function test_cumulative_score_follows_scoring_rules(): void
+    {
+        $head = $this->importSample();
+
+        $html = $this->actingAs($this->user())
+            ->get(route('edi.vizualizace', $head->id))
+            ->getContent() ?: '';
+
+        // QSO 1 (JN99BP, vlastní čtverec): 2 b. × 1 násobič = 2.
+        // QSO 2 (JN89PV, sousední čtverec 3 b.): součet 5 b. × 2 násobiče = 10.
+        $compact = str_replace(' ', '', $html);
+        $this->assertStringContainsString('"body":2', $compact);
+        $this->assertStringContainsString('"body":10', $compact);
+    }
+
+    public function test_sezona_trend_from_public_results(): void
+    {
+        $head = $this->seedEvaluatedRoundWithRivalEntry();
+
+        $html = $this->actingAs($this->user())
+            ->get(route('edi.vizualizace', $head->id))
+            ->assertOk()
+            ->getContent() ?: '';
+
+        $compact = str_replace(' ', '', $html);
+        $this->assertStringContainsString('"body":[14]', $compact);
+        $this->assertStringContainsString('"poradi":[1]', $compact);
+    }
+
     public function test_compare_moved_to_standalone_page(): void
     {
         // Porovnání deníků se přesunulo na samostatnou stránku (edi.porovnani);

@@ -66,18 +66,22 @@ Webový systém pro správu a vyhodnocování závodů v pásmu VKV (Very High F
 - **Výsledkové listiny** – přehled výsledků dle kola, kategorie a volacího znaku; vyhledávání
 - **Průběžné výsledky** – živá průběžná tabulka aktivního kola
 - **Roční výsledky** – kumulativní skóre přes všechna kola v roce
-- **Mapové vizualizace** – čtyři typy Leaflet map pro každý deník:
+- **Mapové vizualizace** – pět typů Leaflet map pro každý deník:
   - **Ježek** – čáry z domácí stanice na všechna pracovaná QSO
   - **Špendlíky** – pin na každé QSO s vzdáleností a azimutem
   - **Lokátory** – velké čtverce (4-znakový Maidenhead) s počtem QSO
   - **CRK mapa** – kombinovaný pohled ve stylu vkvzavody.crk.cz
+  - **Přehrávání** – QSO se objevují chronologicky podle slideru 08:00–11:00 (tlačítko ▶)
 - **EDI vizualizace** – komplexní analytická stránka na jedné URL (`/edi/{head}/vizualizace`):
-  - Statistické karty – počet QSO, unique lokátory, max/průměr vzdálenost
-  - Interaktivní Leaflet mapa s přepínatelnými vrstvami (CRK / ježek / špendlíky / lokátory), body rozlišeny barvou dle druhu provozu (**modrá = SSB**, **oranžová = CW**)
-  - Azimutová růžice – Chart.js PolarArea chart, 8 světových stran (45° sektory)
-  - Časová osa QSO – Chart.js Bar chart, 15minutové intervaly v závodním okně 08:00–11:00 UTC
+  - Statistické karty – počet QSO, unique lokátory, max/průměr vzdálenost, tempo závodu (špička, pauza, průměr), souhrn po druzích provozu
+  - Interaktivní Leaflet mapa s přepínatelnými vrstvami (CRK / ježek / špendlíky / lokátory / přehrávání), body rozlišeny barvou dle druhu provozu (**modrá = SSB**, **oranžová = CW**)
+  - Průběh skóre – schodový Chart.js graf: kumulativní body za spojení × průběžný počet násobičů
+  - Časová osa QSO s násobiči – skládaný Chart.js Bar chart, 15minutové intervaly v závodním okně 08:00–11:00 UTC, zvýrazněná QSO s novým násobičem
+  - Vážená azimutová růžice – Chart.js PolarArea chart, 8 světových stran (45° sektory), přepínání vážení počet/km/body
+  - Body podle čtverců – vodorovné sloupce: kolik bodů přinesl který velký čtverec
+  - Celoroční trend – body a pořadí stanice ve všech kolech roku
   - Histogram vzdáleností – Chart.js Bar chart, pásma 0–50 / 50–100 / 100–200 / 200–400 / 400–700 / 700+ km
-- **Vizuální inkubátor** – experimentální vizualizace deníku (`/edi/{head}/vizualni-inkubator`): přehrávání deníku na mapě, průběh skóre, nové násobiče, TOP ODX, tempo závodu, vážená azimutová růžice, body podle čtverců, nezapočítaná QSO, celoroční trend stanice
+- **Vizuální inkubátor** – doplňkové tabulky deníku (`/edi/{head}/vizualni-inkubator`): TOP ODX, nové násobiče, nezapočítaná QSO
 - **Porovnání deníků** – samostatná stránka hráč vs. hráč (`/edi/{head}/porovnani`): mapa rozdílů v protistanicích, překryvný graf průběhu skóre, tempo obou stanic a směrová růžice; jen deníky z téhož kola a kategorie, soupeřův deník až po uzávěrce kola
 - **Diskuse** – komentáře k závodním kolům (throttle ochrana, moderace adminem)
 - **Admin dashboard** – statistiky sezóny, trend účasti, distribuce kategorií, top 10 stanic
@@ -255,10 +259,9 @@ resources/
 ├── js/
 │   ├── app.js                  # Dark mode, mobilní menu, delegované handlery (data-autosubmit, data-file-zone)
 │   ├── dashboard.js            # Chart.js grafy admin dashboardu
-│   ├── inkubator.js            # Leaflet + Chart.js – vizuální inkubátor (přehrávání deníku, průběh skóre …)
 │   ├── leaflet-fullscreen.js   # Sdílený Leaflet ovládací prvek: celá obrazovka
 │   ├── porovnani.js            # Leaflet + Chart.js – porovnání dvou deníků (mapa rozdílů, grafy)
-│   └── vizualizace.js          # Leaflet + Chart.js – komplexní EDI vizualizace (mapy + grafy)
+│   └── vizualizace.js          # Leaflet + Chart.js – komplexní EDI vizualizace (mapy vč. přehrávání + grafy)
 └── views/
     ├── auth/               # Přihlašovací formulář
     ├── emails/             # Šablony emailů
@@ -274,7 +277,7 @@ docs/
 └── technicky-dluh.md       # Dokumentace technického dluhu
 ```
 
-Vite kompiluje pět oddělených JS entry-pointů (`app.js`, `vizualizace.js`, `inkubator.js`, `porovnani.js`, `dashboard.js`) – každá stránka načítá jen co potřebuje.
+Vite kompiluje čtyři oddělené JS entry-pointy (`app.js`, `vizualizace.js`, `porovnani.js`, `dashboard.js`) – každá stránka načítá jen co potřebuje. Vizuální inkubátor je čistě serverová stránka bez vlastního JS.
 
 ---
 
@@ -681,13 +684,13 @@ Podpůrná třída `Maidenhead` zajišťuje převod lokátor ↔ lat/lon. Vzdál
 
 ## EDI vizualizace
 
-Trasa `GET /edi/{head}/vizualizace` (`edi.vizualizace`) zobrazí komplexní analytickou stránku pro konkrétní EDI deník – mapu (čtyři přepínatelné vrstvy) i grafy na jedné URL. Toto je jediný mapový pohled; samostatné stránky byly zrušeny. Stránka je veřejná (zobrazuje jen vlastní deník účastníka) a v hlavičce odkazuje na [vizuální inkubátor](#vizuální-inkubátor) a – existuje-li aspoň jeden soupeř v téže kategorii – na [porovnání deníků](#porovnání-deníků).
+Trasa `GET /edi/{head}/vizualizace` (`edi.vizualizace`) zobrazí komplexní analytickou stránku pro konkrétní EDI deník – mapu (pět přepínatelných vrstev vč. přehrávání deníku) i grafy na jedné URL. Toto je jediný mapový pohled; samostatné stránky byly zrušeny. Stránka je veřejná (zobrazuje jen vlastní deník účastníka) a v hlavičce odkazuje na [vizuální inkubátor](#vizuální-inkubátor) a – existuje-li aspoň jeden soupeř v téže kategorii – na [porovnání deníků](#porovnání-deníků).
 
 ### Komponenty stránky
 
 #### Statistické karty
 
-Čtyři souhrnné metriky vypočítané ze záznamů v závodním okně:
+Souhrnné metriky vypočítané ze záznamů v závodním okně:
 
 | Metrika | Popis |
 |---------|-------|
@@ -695,6 +698,8 @@ Trasa `GET /edi/{head}/vizualizace` (`edi.vizualizace`) zobrazí komplexní anal
 | Unique lokátory | Počet různých 4-znakových Maidenhead čtverců protistanic |
 | Max. vzdálenost | Nejdelší spojení v km (Haversine) |
 | Průměr vzdálenost | Průměrná vzdálenost přes všechna QSO v km |
+| Tempo závodu | Špička (nejlepší klouzavá hodina), nejdelší pauza mezi QSO, průměrné tempo QSO/hod, počet nezapočítaných QSO |
+| Druhy provozu | SSB / CW / ostatní: počet QSO, body, průměrná a max vzdálenost |
 
 #### Interaktivní mapa (Leaflet)
 
@@ -706,27 +711,36 @@ Jeden mapový widget s přepínatelnými vrstvami bez reload stránky:
 | **Ježek** | Čáry z domácí stanice + body protistanic | modrá = SSB, oranžová = CW |
 | **Špendlíky** | Body protistanic s popupem (volací znak, WWL, vzdálenost, azimut) | modrá = SSB, oranžová = CW |
 | **Lokátory** | Velké čtverce s počtem QSO jako popisek | fialová |
+| **Přehrávání** | QSO se objevují chronologicky (paprsek + špendlík) podle slideru 08:00–11:00 a tlačítka ▶ | modrá = SSB, oranžová = CW |
 
 Body jsou barevně rozlišeny dle `QsoMode`:
 - **Modrá** (`#60a5fa`) – SSB (`QsoMode::Ssb`)
 - **Oranžová** (`#fbbf24`) – CW (`QsoMode::Cw`)
 - **Šedá** – neznámý mód (`QsoMode::Other`)
 
-#### Azimutová růžice (Chart.js PolarArea)
+#### Průběh skóre (Chart.js Line)
 
-Polární graf rozdělující QSO do 8 sektorů po 45°, počítáno po směru hodinových ručiček od severu:
+Schodový graf: kumulativní body za spojení × průběžný počet násobičů po každém QSO (`QsoGeometry::prubehSkore()`, sdíleno se stránkou porovnání deníků).
+
+#### Vážená azimutová růžice (Chart.js PolarArea)
+
+Polární graf rozdělující QSO do 8 sektorů po 45°, počítáno po směru hodinových ručiček od severu, s přepínáním vážení: počet QSO / součet km / součet bodů.
 
 ```
 S (0°) → SV (45°) → V (90°) → JV (135°) → J (180°) → JZ (225°) → Z (270°) → SZ (315°)
 ```
 
-#### Časová osa QSO (Chart.js Bar)
+#### Časová osa QSO s násobiči (Chart.js Bar)
 
-Sloupcový graf s 12 intervaly po 15 minutách pokrývajícími závodní okno:
+Skládaný sloupcový graf s 12 intervaly po 15 minutách pokrývajícími závodní okno; zvlášť QSO, která přinesla nový násobič:
 
 ```
 08:00 | 08:15 | 08:30 | 08:45 | 09:00 | 09:15 | 09:30 | 09:45 | 10:00 | 10:15 | 10:30 | 10:45
 ```
+
+#### Body podle čtverců + celoroční trend
+
+Vodorovné sloupce (kolik bodů přinesl který velký čtverec) a vývoj bodů + pořadí stanice ve všech kolech roku (z veřejné výsledkové listiny).
 
 #### Histogram vzdáleností (Chart.js Bar)
 
@@ -749,14 +763,20 @@ GET /edi/{head}/vizualizace
         ▼
 EdiVizualizaceController::show(Edihead)
         │
-        ├── QsoGeometry::enrichedQsos()    ─► EnrichedQso[]
-        ├── QsoGeometry::bigSquares()      ─► agregace do 4-znakových čtverců
-        ├── QsoGeometry::roundStations()   ─► stanice z kola (po uzávěrce, TTL cache)
-        ├── PorovnaniRivals::hasRivals()   ─► zobrazit odkaz na porovnání?
-        ├── timeline()                     ─► array<string, int>  (label → počet QSO)
-        ├── azimuthRose()                  ─► array{labels, data} (8 sektorů)
-        ├── distHistogram()                ─► array<string, int>  (pásmo → počet QSO)
-        └── stats()                        ─► array{pocet, maxDist, avgDist, uniqueSq}
+        ├── QsoGeometry::enrichedQsos()       ─► EnrichedQso[]
+        ├── QsoGeometry::bigSquares()         ─► agregace do 4-znakových čtverců
+        ├── QsoGeometry::roundStations()      ─► stanice z kola (po uzávěrce, TTL cache)
+        ├── QsoGeometry::prubehSkore()        ─► kumulativní skóre po QSO
+        ├── PorovnaniRivals::hasRivals()      ─► zobrazit odkaz na porovnání?
+        ├── DenikStatistiky::noveNasobice()   ─► chronologie nových čtverců
+        ├── DenikStatistiky::timeline()       ─► {labels, celkem, nove} (15min intervaly)
+        ├── DenikStatistiky::azimuthRose()    ─► {labels, pocet, km, body} (8 sektorů)
+        ├── DenikStatistiky::bodyPodleCtvercu() ─► body po velkých čtvercích
+        ├── DenikStatistiky::sezona()         ─► celoroční trend stanice
+        ├── DenikStatistiky::tempo()          ─► špička / pauza / průměr
+        ├── DenikStatistiky::modeStats()      ─► souhrn po druzích provozu
+        ├── distHistogram()                   ─► array<string, int>  (pásmo → počet QSO)
+        └── stats()                           ─► array{pocet, maxDist, avgDist, uniqueSq}
                 │
                 ▼
         pages/vizualizace.blade.php
@@ -764,33 +784,25 @@ EdiVizualizaceController::show(Edihead)
                 ├── window.__vizConfig = { ...vše jako JSON }
                 └── @vite('resources/js/vizualizace.js')
                             │
-                            ├── Leaflet – mapa s vrstvami + legenda
-                            └── Chart.js – 3 grafy
+                            ├── Leaflet – mapa s 5 vrstvami (vč. přehrávání) + legenda
+                            └── Chart.js – 6 grafů
 ```
 
 ---
 
 ## Vizuální inkubátor
 
-Trasa `GET /edi/{head}/vizualni-inkubator` (`edi.inkubator`) je **experimentální vizualizace deníku** nad rámec stránky Vizualizace. Přístup: přihlášení uživatelé; běžným uživatelům je stránka nedostupná, dokud existuje aktivní kolo (admin ji vidí vždy).
+Trasa `GET /edi/{head}/vizualni-inkubator` (`edi.inkubator`) obsahuje **doplňkové tabulky deníku** nad rámec stránky Vizualizace. Přístup: přihlášení uživatelé; běžným uživatelům je stránka nedostupná, dokud existuje aktivní kolo (admin ji vidí vždy). Stránka je čistě serverová (bez JS).
 
 ### Komponenty stránky
 
 | Komponenta | Popis |
 |------------|-------|
-| **Tempo závodu** | Karty: špička (nejlepší klouzavá hodina), nejdelší pauza mezi QSO, průměrné tempo QSO/hod, počet nezapočítaných QSO |
-| **Souhrn po druzích provozu** | SSB / CW / ostatní: počet QSO, body, průměrná a max vzdálenost |
-| **Přehrávání deníku na mapě** | Leaflet mapa se sliderem 08:00–11:00 a tlačítkem ▶ – QSO se objevují chronologicky (paprsek + špendlík) |
-| **Průběh skóre** | Schodový Chart.js graf: kumulativní body za spojení × průběžný počet násobičů po každém QSO |
-| **Timeline s násobiči** | Skládaný sloupcový graf po 15 minutách: celkový počet QSO + QSO, která přinesla nový násobič |
-| **Vážená azimutová růžice** | PolarArea s přepínáním vážení: počet QSO / součet km / součet bodů v 8 sektorech |
-| **Body podle čtverců** | Vodorovné sloupce: kolik bodů přinesl který velký čtverec |
-| **Celoroční trend** | Body a pořadí stanice ve všech kolech roku (z veřejné výsledkové listiny) |
 | **TOP ODX** | Tabulka 10 nejvzdálenějších spojení (km, azimut, čas, mód, body) |
 | **Nové násobiče** | Chronologický seznam: které QSO přineslo dosud nepracovaný velký čtverec |
 | **Nezapočítaná QSO** | QSO mimo závodní okno / mimo den závodu / označené duplicity (prvních 50 řádků) |
 
-Výpočet průběhu skóre (`QsoGeometry::prubehSkore()`) je sdílený se stránkou porovnání deníků. Porovnání se soupeřem bylo z inkubátoru přesunuto na samostatnou stránku [Porovnání deníků](#porovnání-deníků).
+Grafy a mapa s přehráváním deníku byly z inkubátoru přesunuty na stránku [EDI vizualizace](#edi-vizualizace); porovnání se soupeřem na samostatnou stránku [Porovnání deníků](#porovnání-deníků). Agregace počítá sdílená služba `DenikStatistiky` (`app/Services/Edi/DenikStatistiky.php`).
 
 ---
 

@@ -54,11 +54,10 @@ class EdiInkubatorTest extends TestCase
             ->get(route('edi.inkubator', $head->id))
             ->assertOk()
             ->assertSee('Vizuální inkubátor')
-            ->assertSeeHtml('OK2KJT')
-            ->assertSeeHtml('window.__inkubatorConfig');
+            ->assertSeeHtml('OK2KJT');
     }
 
-    public function test_config_contains_points_cumulative_and_odx(): void
+    public function test_tables_contain_odx_and_multipliers(): void
     {
         $head = $this->importSample();
 
@@ -69,25 +68,25 @@ class EdiInkubatorTest extends TestCase
         // sample.edi: 2 QSO (OK2IMH v JN99, OK2IWU v JN89).
         $this->assertStringContainsString('OK2IMH', $html);
         $this->assertStringContainsString('OK2IWU', $html);
-        $this->assertStringContainsString('cumulative', $html);
         $this->assertStringContainsString('TOP ODX', $html);
         // Nový násobič JN89 (vlastní čtverec JN99 je násobič č. 1 automaticky).
         $this->assertStringContainsString('JN89', $html);
     }
 
-    public function test_cumulative_score_follows_scoring_rules(): void
+    public function test_charts_moved_to_vizualizace_page(): void
     {
+        // Grafy a mapa s přehráváním se přestěhovaly na stránku Vizualizace –
+        // inkubátor zůstává jen u tabulek a na vizualizaci odkazuje.
         $head = $this->importSample();
 
         $html = $this->actingAs($this->user())
             ->get(route('edi.inkubator', $head->id))
             ->getContent() ?: '';
 
-        // QSO 1 (JN99BP, vlastní čtverec): 2 b. × 1 násobič = 2.
-        // QSO 2 (JN89PV, sousední čtverec 3 b.): součet 5 b. × 2 násobiče = 10.
-        $compact = str_replace(' ', '', $html);
-        $this->assertStringContainsString('"body":2', $compact);
-        $this->assertStringContainsString('"body":10', $compact);
+        $this->assertStringContainsString(route('edi.vizualizace', ['head' => $head->id]), $html);
+        $this->assertStringNotContainsString('window.__inkubatorConfig', $html);
+        $this->assertStringNotContainsString('chartPrubeh', $html);
+        $this->assertStringNotContainsString('ink-mapa', $html);
     }
 
     public function test_active_round_blocks_non_admin(): void
@@ -148,30 +147,6 @@ class EdiInkubatorTest extends TestCase
             ->getContent() ?: '';
 
         $this->assertStringNotContainsString(route('edi.porovnani', ['head' => $head->id]), $html);
-    }
-
-    public function test_sezona_trend_from_public_results(): void
-    {
-        [$head] = $this->seedEvaluatedRoundWithRival();
-
-        $kategorie = VkvpaKategorie::create(['nazev' => '144 MHz', 'popis' => '', 'zkratka' => 'A', 'dxid' => 0]);
-        VkvpaData::create([
-            'id_kola' => $head->id_kola, 'id_kategorie' => $kategorie->id,
-            'qrp' => false, 'lp' => false, 'znacka' => 'OK2KJT', 'locator' => 'JN99AJ',
-            'pocet' => 2, 'bodu_za_qso' => 7, 'nasobice' => 2, 'body' => 14,
-            'jmeno' => 'Test', 'mail' => 't@t.cz', 'telefon' => '', 'poznamka' => '',
-            'soapbox' => '', 'ip' => '', 'edihead_id' => $head->id,
-            'poradi' => 1, 'schvaleno' => true, 'session_id' => '',
-        ]);
-
-        $html = $this->actingAs($this->user())
-            ->get(route('edi.inkubator', $head->id))
-            ->assertOk()
-            ->getContent() ?: '';
-
-        $compact = str_replace(' ', '', $html);
-        $this->assertStringContainsString('"body":[14]', $compact);
-        $this->assertStringContainsString('"poradi":[1]', $compact);
     }
 
     /**

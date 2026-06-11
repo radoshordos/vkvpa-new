@@ -5,23 +5,28 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Edihead;
+use App\Services\Edi\DenikStatistiky;
 use App\Services\Edi\EnrichedQso;
 use App\Services\Edi\PorovnaniRivals;
 use App\Services\Edi\QsoGeometry;
+use App\Support\ContestWindow;
 use App\Support\Maidenhead;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
 /**
- * Komplexní vizualizace deníku: mapa + grafy na jedné stránce. Geometrii spojení
- * (souřadnice, vzdálenost, azimut, body, čtverce) počítá sdílená {@see QsoGeometry};
- * tento controller z ní jen odvozuje agregace pro grafy. Porovnání s deníkem
- * soupeře žije na samostatné stránce ({@see EdiPorovnaniController}).
+ * Komplexní vizualizace deníku: mapa (vč. přehrávání deníku) + grafy na jedné
+ * stránce. Geometrii spojení (souřadnice, vzdálenost, azimut, body, čtverce)
+ * počítá sdílená {@see QsoGeometry}, agregace pro grafy {@see DenikStatistiky}.
+ * Doplňkové tabulky (TOP ODX, násobiče, nezapočítaná QSO) jsou na stránce
+ * Vizuální inkubátor; porovnání s deníkem soupeře na stránce Porovnání deníků
+ * ({@see EdiPorovnaniController}).
  */
 class EdiVizualizaceController extends Controller
 {
     public function __construct(
         private readonly QsoGeometry $geometry,
+        private readonly DenikStatistiky $statistiky,
         private readonly PorovnaniRivals $porovnani,
     ) {}
 
@@ -31,15 +36,23 @@ class EdiVizualizaceController extends Controller
         // citlivá vrstva roundStations se vydává až po uzavření kola
         // (viz QsoGeometry).
         $home = Maidenhead::toLatLon((string) $head->p_wwlo);
+        $homeSq = strtoupper(substr((string) $head->p_wwlo, 0, 4));
 
         $enriched = $this->geometry->enrichedQsos($head, $home, 'time');
+
+        $fromMin = DenikStatistiky::minutes(ContestWindow::from());
+        $toMin = DenikStatistiky::minutes(ContestWindow::to());
+
+        $nasobice = $this->statistiky->noveNasobice($enriched, $homeSq);
 
         return view('pages.vizualizace', [
             'active' => '',
             'head' => $head,
             'pcall' => (string) $head->p_call,
             'homeLoc' => (string) $head->p_wwlo,
+            'homeSq' => $homeSq,
             'home' => $home,
+            'window' => ['from' => $fromMin, 'to' => $toMin],
             'mapPoints' => $enriched->map(fn (EnrichedQso $q): array => [
                 'lat' => $q->lat,
                 'lon' => $q->lon,
@@ -49,65 +62,23 @@ class EdiVizualizaceController extends Controller
                 'dist' => $q->dist,
                 'azimut' => $q->azimut,
                 'mode' => $q->mode->value,
+                'time' => $q->timeMinutes,
             ]),
             'squares' => $this->geometry->bigSquares($head),
             'roundStations' => $this->geometry->roundStations($head),
             'roundDataPending' => ! $this->geometry->roundResultsDisclosable($head),
             'porovnaniDostupne' => $this->porovnani->hasRivals($head),
-            'timeline' => $this->timeline($enriched),
-            'azimuth' => $this->azimuthRose($enriched),
+            'cumulative' => $this->geometry->prubehSkore($enriched, $homeSq),
+            'timeline' => $this->statistiky->timeline($enriched, $nasobice, $fromMin, $toMin),
+            'azimuth' => $this->statistiky->azimuthRose($enriched),
+            'squarePoints' => $this->statistiky->bodyPodleCtvercu($enriched),
+            'sezona' => $this->statistiky->sezona($head),
+            'tempo' => $this->statistiky->tempo($enriched, $fromMin, $toMin),
+            'modeStats' => $this->statistiky->modeStats($enriched),
+            'nezapocitanaCelkem' => $this->statistiky->nezapocitana($head)['celkem'],
             'distHistogram' => $this->distHistogram($enriched),
             'stats' => $this->stats($enriched),
         ]);
-    }
-
-    /**
-     * 15-minutové intervaly 08:00–11:00 → počty QSO.
-     *
-     * @param  Collection<int, EnrichedQso>  $lines
-     * @return array<string, int>
-     */
-    private function timeline(Collection $lines): array
-    {
-        $buckets = [];
-
-        for ($min = 480; $min < 660; $min += 15) {
-            $buckets[sprintf('%02d:%02d', intdiv($min, 60), $min % 60)] = 0;
-        }
-
-        foreach ($lines as $l) {
-            $slot = intdiv($l->timeMinutes - 480, 15) * 15 + 480;
-
-            if ($slot >= 480 && $slot < 660) {
-                $key = sprintf('%02d:%02d', intdiv($slot, 60), $slot % 60);
-                $buckets[$key]++;
-            }
-        }
-
-        return $buckets;
-    }
-
-    /**
-     * 8 světových stran (45° sektorů) po směru hodinových ručiček od severu → počty QSO.
-     *
-     * @param  Collection<int, EnrichedQso>  $lines
-     * @return array{labels: array<string>, data: array<int, int>}
-     */
-    private function azimuthRose(Collection $lines): array
-    {
-        $labels = ['S', 'SV', 'V', 'JV', 'J', 'JZ', 'Z', 'SZ'];
-        /** @var array<int, int> $counts */
-        $counts = array_fill(0, 8, 0);
-
-        foreach ($lines as $l) {
-            if ($l->azimut === null) {
-                continue;
-            }
-            $sector = (int) (($l->azimut + 22.5) / 45) % 8;
-            $counts[$sector]++;
-        }
-
-        return ['labels' => $labels, 'data' => $counts];
     }
 
     /**

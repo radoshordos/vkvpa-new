@@ -1,6 +1,8 @@
 {{--
     Vizualizace EDI deníku: mapa, grafy, statistiky na jedné stránce.
-    Leaflet (mapa, 4 přepínatelné vrstvy vč. kombinované CRK) + Chart.js (timeline, azimutová růžice, histogram vzdáleností).
+    Leaflet (mapa, 5 přepínatelných vrstev vč. kombinované CRK a přehrávání)
+    + Chart.js (průběh skóre, timeline s násobiči, vážená azimutová růžice,
+    body podle čtverců, celoroční trend, histogram vzdáleností).
 --}}
 @extends('layouts.app')
 
@@ -19,6 +21,7 @@
                border: 1px solid var(--color-line, #e2e8f0); background: var(--color-surface, #fff);
                color: var(--color-muted, #64748b); transition: background .15s, color .15s; }
     .map-tab.active, .map-tab:hover { background: var(--color-brand, #3b82f6); color: #fff; border-color: transparent; }
+    #viz-cas { accent-color: var(--color-brand, #3b82f6); }
   </style>
 @endpush
 
@@ -30,11 +33,15 @@ window.__vizConfig = {
     pcall: @json($pcall),
     homeLoc: @json($homeLoc),
     home: @json($home),
+    window: @json($window),
     points: @json($mapPoints),
     squares: @json($squares),
     roundStations: @json($roundStations),
+    cumulative: @json($cumulative),
     timeline: @json($timeline),
     azimuth: @json($azimuth),
+    squarePoints: @json($squarePoints),
+    sezona: @json($sezona),
     distHistogram: @json($distHistogram),
 };
 </script>
@@ -56,9 +63,9 @@ window.__vizConfig = {
 @endif
 
 {{-- ── Statistické karty ───────────────────────────────────────────────── --}}
-<div class="grid grid-cols-2 gap-3 sm:grid-cols-4 mb-5">
+<div class="grid grid-cols-2 gap-3 sm:grid-cols-4 mb-3">
   @foreach ([
-    ['Počet QSO',       $stats['pocet'],    'b.'],
+    ['Počet QSO',       $stats['pocet'],    ''],
     ['Unique lokátory', $stats['uniqueSq'], ''],
     ['Max. vzdálenost', $stats['maxDist'],  'km'],
     ['Průměr vzdálenost', $stats['avgDist'],'km'],
@@ -70,7 +77,41 @@ window.__vizConfig = {
   @endforeach
 </div>
 
-{{-- ── Mapa s přepínatelnými vrstvami ─────────────────────────────────── --}}
+{{-- ── Tempo závodu + nezapočítaná QSO ─────────────────────────────────── --}}
+<div class="grid grid-cols-2 gap-3 sm:grid-cols-4 mb-3">
+  <div class="rounded-lg border border-line bg-surface p-3 text-center">
+    <div class="text-2xl font-bold text-heading">{{ $tempo['spickaQso'] }}<span class="text-sm font-normal text-muted ml-1">QSO/hod</span></div>
+    <div class="text-xs text-muted mt-0.5">Špička {{ $tempo['spicka'] ?? '—' }}</div>
+  </div>
+  <div class="rounded-lg border border-line bg-surface p-3 text-center">
+    <div class="text-2xl font-bold text-heading">{{ $tempo['pauza'] ?? '—' }}<span class="text-sm font-normal text-muted ml-1">min</span></div>
+    <div class="text-xs text-muted mt-0.5">Nejdelší pauza {{ $tempo['pauzaKdy'] ? '(' . $tempo['pauzaKdy'] . ')' : '' }}</div>
+  </div>
+  <div class="rounded-lg border border-line bg-surface p-3 text-center">
+    <div class="text-2xl font-bold text-heading">{{ $tempo['prumer'] }}<span class="text-sm font-normal text-muted ml-1">QSO/hod</span></div>
+    <div class="text-xs text-muted mt-0.5">Průměrné tempo</div>
+  </div>
+  <div class="rounded-lg border border-line bg-surface p-3 text-center">
+    <div class="text-2xl font-bold text-heading">{{ $nezapocitanaCelkem }}</div>
+    <div class="text-xs text-muted mt-0.5">Nezapočítaná / označená QSO</div>
+  </div>
+</div>
+
+{{-- ── Souhrn po druzích provozu ───────────────────────────────────────── --}}
+@if ($modeStats !== [])
+<div class="grid grid-cols-1 gap-3 sm:grid-cols-{{ min(3, count($modeStats)) }} mb-5">
+  @foreach ($modeStats as $m)
+  <div class="rounded-lg border border-line bg-surface p-3">
+    <div class="text-sm font-semibold text-heading mb-1">{{ $m['label'] === '?' ? 'Ostatní druhy provozu' : $m['label'] }}</div>
+    <div class="text-xs text-muted">
+      {{ $m['pocet'] }} QSO · {{ $m['body'] }} b. za spojení · Ø {{ $m['avgDist'] }} km · max {{ $m['maxDist'] }} km
+    </div>
+  </div>
+  @endforeach
+</div>
+@endif
+
+{{-- ── Mapa s přepínatelnými vrstvami (vč. přehrávání deníku) ──────────── --}}
 <div class="rounded-lg border border-line bg-surface p-3 mb-5">
   <div class="flex items-center gap-2 mb-2 flex-wrap">
     <span class="text-sm font-semibold text-heading">Mapa</span>
@@ -78,17 +119,53 @@ window.__vizConfig = {
     <button class="map-tab" data-map-layer="jezek">Ježek</button>
     <button class="map-tab" data-map-layer="spendliky">Špendlíky</button>
     <button class="map-tab" data-map-layer="lokatory">Lokátory</button>
+    <button class="map-tab" data-map-layer="playback">Přehrávání</button>
+  </div>
+  {{-- Ovládání přehrávání – viditelné jen v režimu „Přehrávání" (řídí JS). --}}
+  <div id="viz-playback-controls" class="hidden items-center gap-3 mb-2 flex-wrap">
+    <button type="button" id="viz-play" class="map-tab">▶ Přehrát</button>
+    <input type="range" id="viz-cas" class="flex-1 min-w-40"
+           min="{{ $window['from'] }}" max="{{ $window['to'] }}" value="{{ $window['to'] }}" step="1">
+    <span class="text-sm font-mono font-semibold text-heading" id="viz-cas-label"></span>
+    <span class="text-xs text-muted"><span id="viz-qso-count">0</span> QSO</span>
   </div>
   <div id="viz-mapa"></div>
 </div>
 
-{{-- ── Grafy: azimutová růžice + časová osa ───────────────────────────── --}}
+{{-- ── Průběh skóre ────────────────────────────────────────────────────── --}}
+<div class="rounded-lg border border-line bg-surface p-3 mb-4">
+  <canvas id="chartPrubeh"></canvas>
+  <p class="text-xs text-muted mt-2">Orientační průběh: kumulativní body za spojení × průběžný počet násobičů (vlastní čtverec {{ $homeSq }} se počítá od začátku). Počítá se jen z QSO s platným lokátorem.</p>
+</div>
+
+{{-- ── Grafy: timeline s násobiči + vážená azimutová růžice ───────────── --}}
 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 mb-4">
   <div class="rounded-lg border border-line bg-surface p-3">
-    <canvas id="chartAzimuth"></canvas>
+    <canvas id="chartTimeline"></canvas>
   </div>
   <div class="rounded-lg border border-line bg-surface p-3">
-    <canvas id="chartTimeline"></canvas>
+    <div class="flex items-center gap-2 mb-1 flex-wrap">
+      <span class="text-xs text-muted">Vážit podle:</span>
+      <button type="button" class="map-tab active" data-az-metric="pocet">Počet QSO</button>
+      <button type="button" class="map-tab" data-az-metric="km">Kilometry</button>
+      <button type="button" class="map-tab" data-az-metric="body">Body</button>
+    </div>
+    <canvas id="chartAzimuth"></canvas>
+  </div>
+</div>
+
+{{-- ── Grafy: body podle čtverců + celoroční trend ─────────────────────── --}}
+<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 mb-4">
+  <div class="rounded-lg border border-line bg-surface p-3">
+    <canvas id="chartCtverce"></canvas>
+  </div>
+  <div class="rounded-lg border border-line bg-surface p-3">
+    @if ($sezona !== null)
+      <canvas id="chartSezona"></canvas>
+      <p class="text-xs text-muted mt-2">Body a pořadí stanice {{ $pcall }} v kolech roku (z veřejné výsledkové listiny).</p>
+    @else
+      <p class="text-sm text-muted">Celoroční trend zatím není k dispozici – deník nemá přiřazené kolo nebo stanice nemá schválené záznamy.</p>
+    @endif
   </div>
 </div>
 
