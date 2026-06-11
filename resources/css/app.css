@@ -325,6 +325,11 @@
         background-color: var(--ok);
         color: #fff;
     }
+    /* LP (<100 W) – stejná rodina jako QRP (≤5 W), ale měkčí provedení. */
+    .badge-lp {
+        background-color: var(--ok-soft);
+        color: var(--ok);
+    }
     .badge-brand {
         background-color: var(--brand-soft);
         color: var(--brand);
