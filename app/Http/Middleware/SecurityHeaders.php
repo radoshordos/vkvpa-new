@@ -28,7 +28,7 @@ class SecurityHeaders
         $response->headers->set('X-Permitted-Cross-Domain-Policies', 'none');
 
         // Prevent plugin-based attacks, base-tag injection, and framing by foreign origins.
-        // jsdelivr.net: chart.js (admin dashboard) + swagger-ui (api-docs).
+        // jsdelivr.net: swagger-ui (api-docs).
         // tile.openstreetmap.org: Leaflet map tiles (img-src + connect-src).
         // 'unsafe-inline' for style-src: required by Leaflet and inline style attributes.
         //
