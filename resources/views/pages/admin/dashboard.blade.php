@@ -40,7 +40,7 @@
 
         {{-- Čekající na schválení – zvýrazněno pokud jsou nevyřízené záznamy --}}
         <a href="{{ route('deniky.index') }}"
-           class="rounded-xl border p-4 transition hover:border-brand
+           class="no-underline rounded-xl border p-4 transition hover:border-brand
                   {{ $cekajici > 0
                       ? 'border-amber-400 bg-amber-50 dark:border-amber-500 dark:bg-amber-950/20'
                       : 'border-line bg-surface' }}">
