@@ -7,6 +7,8 @@ namespace Tests\Feature;
 use App\Http\Controllers\EdiVizualizaceController;
 use App\Models\Edihead;
 use App\Models\User;
+use App\Models\VkvpaData;
+use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
 use App\Services\Edi\EdiImportService;
 use App\Services\Edi\EdiParser;
@@ -143,8 +145,9 @@ class EdiVizualizaceTest extends TestCase
     public function test_compare_moved_to_standalone_page(): void
     {
         // Porovnání deníků se přesunulo na samostatnou stránku (edi.porovnani);
-        // vizualizace na ni jen odkazuje a sama porovnání nenabízí.
-        $head = $this->importSample();
+        // vizualizace na ni jen odkazuje (když je s kým porovnávat) a sama
+        // porovnání nenabízí.
+        $head = $this->seedEvaluatedRoundWithRivalEntry();
 
         $html = $this->actingAs($this->user())
             ->get(route('edi.vizualizace', $head->id))
@@ -154,5 +157,57 @@ class EdiVizualizaceTest extends TestCase
         $this->assertStringContainsString(route('edi.porovnani', ['head' => $head->id]), $html);
         $this->assertStringNotContainsString('data-map-layer="porovnani"', $html);
         $this->assertStringNotContainsString('Porovnat s', $html);
+    }
+
+    public function test_compare_link_hidden_without_rival_in_same_category(): void
+    {
+        // Deník bez kola (a tedy bez soupeře z téže kategorie) → odkaz na
+        // stránku porovnání se nezobrazuje, neměla by co nabídnout.
+        $head = $this->importSample();
+
+        $html = $this->actingAs($this->user())
+            ->get(route('edi.vizualizace', $head->id))
+            ->assertOk()
+            ->getContent() ?: '';
+
+        $this->assertStringNotContainsString(route('edi.porovnani', ['head' => $head->id]), $html);
+    }
+
+    /**
+     * Vyhodnocené kolo se dvěma deníky (OK2KJT ze sample.edi + soupeř OK1BBB)
+     * a schválenými záznamy listiny v téže kategorii – porovnání je dostupné.
+     */
+    private function seedEvaluatedRoundWithRivalEntry(): Edihead
+    {
+        $kolo = VkvpaKola::create([
+            'datum_konani' => '2026-03-15',
+            'datum_uzaverky' => '2026-03-20 23:59:59',
+            'nazev' => '03/2026',
+            'poznamka' => '',
+            'vyhodnoceno' => '2026-03-21 10:00:00',
+        ]);
+
+        $head = $this->importSample();
+        $head->update(['id_kola' => $kolo->id]);
+
+        $rival = Edihead::create([
+            'id_kola' => $kolo->id, 't_date' => '20260315', 'p_call' => 'OK1BBB', 'p_wwlo' => 'JN89',
+            'p_band' => '144 MHz', 'r_name' => 'B', 'r_hbbs' => 'b@b.cz', 's_powe' => 100,
+        ]);
+
+        $kategorie = VkvpaKategorie::create(['nazev' => '144 MHz', 'popis' => '', 'zkratka' => 'A', 'dxid' => 0]);
+
+        foreach ([[$head, 'OK2KJT'], [$rival, 'OK1BBB']] as [$h, $znacka]) {
+            VkvpaData::create([
+                'id_kola' => $kolo->id, 'id_kategorie' => $kategorie->id,
+                'qrp' => false, 'lp' => false, 'znacka' => $znacka, 'locator' => 'JN99AJ',
+                'pocet' => 2, 'bodu_za_qso' => 7, 'nasobice' => 2, 'body' => 14,
+                'jmeno' => 'Test', 'mail' => 't@t.cz', 'telefon' => '', 'poznamka' => '',
+                'soapbox' => '', 'ip' => '', 'edihead_id' => $h->id,
+                'poradi' => 1, 'schvaleno' => true, 'session_id' => '',
+            ]);
+        }
+
+        return $head;
     }
 }

@@ -43,7 +43,12 @@ window.__vizConfig = {
 <h1 class="text-xl font-bold text-heading">Vizualizace deníku {{ $pcall }}</h1>
 <p class="text-sm text-muted mb-4">
   {{ $homeLoc }} · mapa a grafy (Leaflet + Chart.js) ·
-  <a href="{{ route('edi.porovnani', ['head' => $head]) }}" class="underline hover:text-heading">⚔️ Porovnání deníků</a> ·
+  {{-- Odkaz na porovnání jen když existuje aspoň jeden soupeř z téhož kola
+       a kategorie (a kolo už je uzavřené/vyhodnocené) – jinak by stránka
+       porovnání neměla co nabídnout. --}}
+  @if ($porovnaniDostupne)
+    <a href="{{ route('edi.porovnani', ['head' => $head]) }}" class="underline hover:text-heading">⚔️ Porovnání deníků</a> ·
+  @endif
   <a href="{{ route('edi.inkubator', ['head' => $head]) }}" class="underline hover:text-heading">🧪 Vizuální inkubátor</a>
 </p>
 @if ($roundDataPending)

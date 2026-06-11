@@ -8,6 +8,7 @@ use App\Models\Edihead;
 use App\Models\VkvpaData;
 use App\Models\VkvpaKola;
 use App\Services\Edi\EnrichedQso;
+use App\Services\Edi\PorovnaniRivals;
 use App\Services\Edi\QsoGeometry;
 use App\Support\ContestWindow;
 use App\Support\Maidenhead;
@@ -26,7 +27,10 @@ use Illuminate\View\View;
  */
 class EdiInkubatorController extends Controller
 {
-    public function __construct(private readonly QsoGeometry $geometry) {}
+    public function __construct(
+        private readonly QsoGeometry $geometry,
+        private readonly PorovnaniRivals $porovnani,
+    ) {}
 
     public function show(Edihead $head): View|RedirectResponse
     {
@@ -78,6 +82,7 @@ class EdiInkubatorController extends Controller
             'tempo' => $this->tempo($enriched, $fromMin, $toMin),
             'nezapocitana' => $this->nezapocitana($head),
             'sezona' => $this->sezona($head),
+            'porovnaniDostupne' => $this->porovnani->hasRivals($head),
         ]);
     }
 

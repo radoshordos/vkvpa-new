@@ -5,11 +5,10 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Edihead;
-use App\Models\VkvpaData;
+use App\Services\Edi\PorovnaniRivals;
 use App\Services\Edi\QsoGeometry;
 use App\Support\ContestWindow;
 use App\Support\Maidenhead;
-use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -18,23 +17,25 @@ use Illuminate\View\View;
  * v protistanicích (jen já / jen soupeř / oba) a překryvný graf průběhu skóre.
  * Funkce sem byla přesunuta ze stránek „Vizualizace" a „Vizuální inkubátor".
  *
- * Porovnat lze jen deníky z téhož kola a téže kategorie – soupeři se nabízejí
- * podle schválených záznamů výsledkové listiny ({@see VkvpaData}). Pravidlo
- * férovosti je shodné s vizualizací: soupeřův deník se vydá až po uzávěrce,
- * resp. vyhodnocení kola ({@see QsoGeometry::roundResultsDisclosable()}).
+ * Výběr soupeřů (totéž kolo a kategorie, až po uzávěrce kola) řeší sdílená
+ * {@see PorovnaniRivals}.
  *
  * @phpstan-import-type CompareStation from QsoGeometry
  */
 class EdiPorovnaniController extends Controller
 {
-    public function __construct(private readonly QsoGeometry $geometry) {}
+    public function __construct(
+        private readonly QsoGeometry $geometry,
+        private readonly PorovnaniRivals $porovnani,
+    ) {}
 
     public function show(Request $request, Edihead $head): View
     {
         $home = Maidenhead::toLatLon((string) $head->p_wwlo);
         $homeSq = strtoupper(substr((string) $head->p_wwlo, 0, 4));
 
-        [$rivals, $rival] = $this->rivals($request, $head);
+        $rivals = $this->porovnani->rivals($head);
+        $rival = $rivals->firstWhere('id', $request->integer('porovnat'));
 
         $compare = null;
         $rivalCumulative = null;
@@ -86,48 +87,6 @@ class EdiPorovnaniController extends Controller
             ],
             'roundDataPending' => $head->id_kola !== null && ! $this->geometry->roundResultsDisclosable($head),
         ]);
-    }
-
-    /**
-     * Soupeři pro porovnání: deníky z téhož kola a téže kategorie (podle
-     * schválených záznamů výsledkové listiny), seřazené podle značky. Druhý
-     * prvek je zvolený soupeř (query parametr `porovnat`), pokud je v nabídce.
-     *
-     * Vydává se až po uzávěrce/vyhodnocení kola; bez kola nebo bez záznamu
-     * s kategorií se nenabízí nic.
-     *
-     * @return array{0: EloquentCollection<int, Edihead>, 1: Edihead|null}
-     */
-    private function rivals(Request $request, Edihead $head): array
-    {
-        if ($head->id_kola === null || ! $this->geometry->roundResultsDisclosable($head)) {
-            return [new EloquentCollection, null];
-        }
-
-        $entry = VkvpaData::query()
-            ->approved()
-            ->where('edihead_id', $head->id)
-            ->first(['id_kategorie']);
-
-        if ($entry === null || $entry->id_kategorie === null) {
-            return [new EloquentCollection, null];
-        }
-
-        $rivalHeadIds = VkvpaData::query()
-            ->approved()
-            ->where('id_kola', $head->id_kola)
-            ->where('id_kategorie', $entry->id_kategorie)
-            ->whereNotNull('edihead_id')
-            ->where('edihead_id', '!=', $head->id)
-            ->pluck('edihead_id');
-
-        $rivals = Edihead::query()
-            ->whereIn('id', $rivalHeadIds)
-            ->where('id_kola', $head->id_kola)
-            ->orderBy('p_call')
-            ->get();
-
-        return [$rivals, $rivals->firstWhere('id', $request->integer('porovnat'))];
     }
 
     /**

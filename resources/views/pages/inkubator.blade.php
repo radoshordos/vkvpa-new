@@ -44,8 +44,12 @@ window.__inkubatorConfig = {
 <h1 class="text-xl font-bold text-heading">🧪 Vizuální inkubátor – {{ $pcall }}</h1>
 <p class="text-sm text-muted mb-4">
   {{ $homeLoc }} · experimentální vizualizace deníku ·
-  <a href="{{ route('edi.vizualizace', ['head' => $head]) }}" class="underline hover:text-heading">zpět na vizualizaci</a> ·
-  <a href="{{ route('edi.porovnani', ['head' => $head]) }}" class="underline hover:text-heading">⚔️ Porovnání deníků</a>
+  <a href="{{ route('edi.vizualizace', ['head' => $head]) }}" class="underline hover:text-heading">zpět na vizualizaci</a>
+  {{-- Odkaz na porovnání jen když existuje aspoň jeden soupeř z téhož kola
+       a kategorie (a kolo už je uzavřené/vyhodnocené). --}}
+  @if ($porovnaniDostupne)
+    · <a href="{{ route('edi.porovnani', ['head' => $head]) }}" class="underline hover:text-heading">⚔️ Porovnání deníků</a>
+  @endif
 </p>
 
 {{-- ── Tempo závodu + nezapočítaná QSO ─────────────────────────────────── --}}

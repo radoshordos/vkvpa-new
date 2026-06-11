@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Edihead;
 use App\Services\Edi\EnrichedQso;
+use App\Services\Edi\PorovnaniRivals;
 use App\Services\Edi\QsoGeometry;
 use App\Support\Maidenhead;
 use Illuminate\Support\Collection;
@@ -19,7 +20,10 @@ use Illuminate\View\View;
  */
 class EdiVizualizaceController extends Controller
 {
-    public function __construct(private readonly QsoGeometry $geometry) {}
+    public function __construct(
+        private readonly QsoGeometry $geometry,
+        private readonly PorovnaniRivals $porovnani,
+    ) {}
 
     public function show(Edihead $head): View
     {
@@ -49,6 +53,7 @@ class EdiVizualizaceController extends Controller
             'squares' => $this->geometry->bigSquares($head),
             'roundStations' => $this->geometry->roundStations($head),
             'roundDataPending' => ! $this->geometry->roundResultsDisclosable($head),
+            'porovnaniDostupne' => $this->porovnani->hasRivals($head),
             'timeline' => $this->timeline($enriched),
             'azimuth' => $this->azimuthRose($enriched),
             'distHistogram' => $this->distHistogram($enriched),
