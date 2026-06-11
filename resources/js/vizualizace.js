@@ -275,8 +275,8 @@ document.querySelectorAll('[data-map-layer]').forEach(function (btn) {
     btn.addEventListener('click', () => showLayer(btn.dataset.mapLayer));
 });
 
-// Výchozí vrstva: CRK (kombinovaná mapa).
-showLayer('crk');
+// Výchozí vrstva: přehrávání deníku (slider na konci okna = celý deník).
+showLayer('playback');
 
 // ── Chart.js: barvy podle motivu (denní/noční) ─────────────────────────────
 // Text i mřížku grafů bereme z CSS proměnných motivu (--muted, --line), takže

@@ -707,11 +707,11 @@ Jeden mapový widget s přepínatelnými vrstvami bez reload stránky:
 
 | Vrstva | Popis | Barvy |
 |--------|-------|-------|
-| **CRK** (výchozí) | Kombinovaná mapa ve stylu vkvzavody.crk.cz: paprsky, kružnice vzdáleností po 200 km, mřížka velkých čtverců, všechny stanice z kola (≥ 5 QSO, po uzávěrce) | modrá = SSB, oranžová = CW, fialová = stanice z kola |
+| **CRK** | Kombinovaná mapa ve stylu vkvzavody.crk.cz: paprsky, kružnice vzdáleností po 200 km, mřížka velkých čtverců, všechny stanice z kola (≥ 5 QSO, po uzávěrce) | modrá = SSB, oranžová = CW, fialová = stanice z kola |
 | **Ježek** | Čáry z domácí stanice + body protistanic | modrá = SSB, oranžová = CW |
 | **Špendlíky** | Body protistanic s popupem (volací znak, WWL, vzdálenost, azimut) | modrá = SSB, oranžová = CW |
 | **Lokátory** | Velké čtverce s počtem QSO jako popisek | fialová |
-| **Přehrávání** | QSO se objevují chronologicky (paprsek + špendlík) podle slideru 08:00–11:00 a tlačítka ▶ | modrá = SSB, oranžová = CW |
+| **Přehrávání** (výchozí) | QSO se objevují chronologicky (paprsek + špendlík) podle slideru 08:00–11:00 a tlačítka ▶ | modrá = SSB, oranžová = CW |
 
 Body jsou barevně rozlišeny dle `QsoMode`:
 - **Modrá** (`#60a5fa`) – SSB (`QsoMode::Ssb`)

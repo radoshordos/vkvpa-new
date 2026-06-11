@@ -115,11 +115,11 @@ window.__vizConfig = {
 <div class="rounded-lg border border-line bg-surface p-3 mb-5">
   <div class="flex items-center gap-2 mb-2 flex-wrap">
     <span class="text-sm font-semibold text-heading">Mapa</span>
-    <button class="map-tab active" data-map-layer="crk">CRK</button>
+    <button class="map-tab active" data-map-layer="playback">Přehrávání</button>
+    <button class="map-tab" data-map-layer="crk">CRK</button>
     <button class="map-tab" data-map-layer="jezek">Ježek</button>
     <button class="map-tab" data-map-layer="spendliky">Špendlíky</button>
     <button class="map-tab" data-map-layer="lokatory">Lokátory</button>
-    <button class="map-tab" data-map-layer="playback">Přehrávání</button>
   </div>
   {{-- Ovládání přehrávání – viditelné jen v režimu „Přehrávání" (řídí JS). --}}
   <div id="viz-playback-controls" class="hidden items-center gap-3 mb-2 flex-wrap">
