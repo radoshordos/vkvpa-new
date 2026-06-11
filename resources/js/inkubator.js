@@ -124,7 +124,8 @@ applyChartTheme();
 
 const charts = [];
 
-// ── Průběh skóre (schodová čára, volitelně proti soupeři) ──────────────────
+// ── Průběh skóre (schodová čára; porovnání se soupeřem je na stránce
+//    Porovnání deníků – porovnani.js) ───────────────────────────────────────
 
 function cumulativeDataset(label, series, stroke, fill) {
     return {
@@ -138,20 +139,15 @@ function cumulativeDataset(label, series, stroke, fill) {
     };
 }
 
-const prubehDatasets = [cumulativeDataset(cfg.pcall, cfg.cumulative, 'rgba(59,130,246,1)', 'rgba(59,130,246,.4)')];
-if (cfg.rival && cfg.rivalCumulative) {
-    prubehDatasets.push(cumulativeDataset(cfg.rival.call, cfg.rivalCumulative, 'rgba(239,68,68,1)', 'rgba(239,68,68,.4)'));
-}
-
 charts.push(new Chart(document.getElementById('chartPrubeh'), {
     type: 'line',
-    data: { datasets: prubehDatasets },
+    data: { datasets: [cumulativeDataset(cfg.pcall, cfg.cumulative, 'rgba(59,130,246,1)', 'rgba(59,130,246,.4)')] },
     options: {
         responsive: true,
         maintainAspectRatio: true,
         aspectRatio: 3,
         plugins: {
-            legend: { display: prubehDatasets.length > 1 },
+            legend: { display: false },
             title: { display: true, text: 'Průběh skóre (body za spojení × násobiče)', font: { size: 13 } },
             tooltip: { callbacks: { title: (its) => its.length ? hhmm(its[0].parsed.x) + ' UTC' : '' } },
         },

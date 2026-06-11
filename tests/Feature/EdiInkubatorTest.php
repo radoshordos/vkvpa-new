@@ -38,11 +38,6 @@ class EdiInkubatorTest extends TestCase
         return User::create(['name' => 'Test', 'password' => Hash::make('x'), 'is_admin' => false]);
     }
 
-    private function admin(): User
-    {
-        return User::create(['name' => 'Admin', 'password' => Hash::make('x'), 'is_admin' => true]);
-    }
-
     public function test_anonymous_redirected_to_login(): void
     {
         $head = $this->importSample();
@@ -112,8 +107,10 @@ class EdiInkubatorTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_rival_overlay_available_after_round_evaluated(): void
+    public function test_compare_moved_to_standalone_page(): void
     {
+        // Porovnání průběhu se soupeřem se přesunulo na samostatnou stránku
+        // (edi.porovnani); inkubátor na ni jen odkazuje a výběr nenabízí.
         [$head, $rival] = $this->seedEvaluatedRoundWithRival();
 
         $html = $this->actingAs($this->user())
@@ -121,25 +118,9 @@ class EdiInkubatorTest extends TestCase
             ->assertOk()
             ->getContent() ?: '';
 
-        $this->assertStringContainsString('Porovnat průběh s', $html);
-        $this->assertStringContainsString('"call":"OK1BBB"', str_replace(' ', '', $html));
-        $this->assertStringContainsString('rivalCumulative', $html);
-    }
-
-    public function test_rival_hidden_while_round_open(): void
-    {
-        // Kolo v příjmu hlášení → průběh soupeře by odhalil jeho deník;
-        // query parametr se ignoruje a výběr se nenabízí (ani adminovi).
-        [$head, $rival] = $this->seedEvaluatedRoundWithRival(aktivni: true);
-
-        $html = $this->actingAs($this->admin())
-            ->get(route('edi.inkubator', ['head' => $head->id, 'porovnat' => $rival->id]))
-            ->assertOk()
-            ->getContent() ?: '';
-
-        $this->assertStringContainsString('rivalCumulative:null', str_replace(' ', '', $html));
+        $this->assertStringContainsString(route('edi.porovnani', ['head' => $head->id]), $html);
         $this->assertStringNotContainsString('Porovnat průběh s', $html);
-        $this->assertStringNotContainsString('OK1BBB', $html);
+        $this->assertStringNotContainsString('rivalCumulative', $html);
     }
 
     public function test_sezona_trend_from_public_results(): void

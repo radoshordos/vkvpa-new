@@ -1,8 +1,9 @@
 {{--
     Vizuální inkubátor – experimentální vizualizace EDI deníku:
-    přehrávání deníku na mapě, průběh skóre (volitelně proti soupeři),
-    nové násobiče, TOP ODX, vážená azimutová růžice, body podle čtverců,
-    tempo závodu, nezapočítaná QSO a celoroční trend stanice.
+    přehrávání deníku na mapě, průběh skóre, nové násobiče, TOP ODX,
+    vážená azimutová růžice, body podle čtverců, tempo závodu,
+    nezapočítaná QSO a celoroční trend stanice. Porovnání se soupeřem
+    je na samostatné stránce Porovnání deníků (route edi.porovnani).
 --}}
 @extends('layouts.app')
 
@@ -32,8 +33,6 @@ window.__inkubatorConfig = {
     window: @json($window),
     points: @json($mapPoints),
     cumulative: @json($cumulative),
-    rival: @json($rival),
-    rivalCumulative: @json($rivalCumulative),
     timeline: @json($timeline),
     azimuth: @json($azimuth),
     squarePoints: @json($squarePoints),
@@ -45,7 +44,8 @@ window.__inkubatorConfig = {
 <h1 class="text-xl font-bold text-heading">🧪 Vizuální inkubátor – {{ $pcall }}</h1>
 <p class="text-sm text-muted mb-4">
   {{ $homeLoc }} · experimentální vizualizace deníku ·
-  <a href="{{ route('edi.vizualizace', ['head' => $head]) }}" class="underline hover:text-heading">zpět na vizualizaci</a>
+  <a href="{{ route('edi.vizualizace', ['head' => $head]) }}" class="underline hover:text-heading">zpět na vizualizaci</a> ·
+  <a href="{{ route('edi.porovnani', ['head' => $head]) }}" class="underline hover:text-heading">⚔️ Porovnání deníků</a>
 </p>
 
 {{-- ── Tempo závodu + nezapočítaná QSO ─────────────────────────────────── --}}
@@ -95,20 +95,8 @@ window.__inkubatorConfig = {
   <div id="ink-mapa"></div>
 </div>
 
-{{-- ── Průběh skóre (+ volba soupeře po uzávěrce kola) ─────────────────── --}}
+{{-- ── Průběh skóre (porovnání se soupeřem je na stránce Porovnání deníků) ── --}}
 <div class="rounded-lg border border-line bg-surface p-3 mb-4">
-  @if ($rivals->isNotEmpty())
-    <form method="get" class="flex items-center gap-2 mb-2 justify-end">
-      <label for="porovnat" class="text-xs text-muted">Porovnat průběh s:</label>
-      <select name="porovnat" id="porovnat" data-autosubmit
-              class="text-xs rounded border border-line bg-surface text-heading px-2 py-1">
-        <option value="">— bez porovnání —</option>
-        @foreach ($rivals as $r)
-          <option value="{{ $r->id }}" @selected($rival !== null && $rival['id'] === $r->id)>{{ $r->p_call }}</option>
-        @endforeach
-      </select>
-    </form>
-  @endif
   <canvas id="chartPrubeh"></canvas>
   <p class="text-xs text-muted mt-2">Orientační průběh: kumulativní body za spojení × průběžný počet násobičů (vlastní čtverec {{ $homeSq }} se počítá od začátku). Počítá se jen z QSO s platným lokátorem.</p>
 </div>
