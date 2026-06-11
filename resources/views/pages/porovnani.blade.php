@@ -1,7 +1,8 @@
 {{--
     Porovnání dvou deníků (hráč vs. hráč) z téhož kola a téže kategorie:
-    mapa rozdílů v protistanicích (jen já / jen soupeř / oba) + překryvný
-    graf průběhu skóre. Přesunuto ze stránek Vizualizace a Vizuální inkubátor.
+    mapa rozdílů v protistanicích (jen já / jen soupeř / oba), překryvný
+    graf průběhu skóre, tempo obou stanic po 15 minutách a směrová růžice.
+    Přesunuto ze stránek Vizualizace a Vizuální inkubátor.
 --}}
 @extends('layouts.app')
 
@@ -27,6 +28,8 @@ window.__porovnaniConfig = {
     compare: @json($compare),
     cumulative: @json($cumulative),
     rivalCumulative: @json($rivalCumulative),
+    timeline: @json($timeline),
+    azimuth: @json($azimuth),
 };
 </script>
 
@@ -95,6 +98,16 @@ window.__porovnaniConfig = {
     <div class="rounded-lg border border-line bg-surface p-3 mb-4">
       <canvas id="chartPrubeh"></canvas>
       <p class="text-xs text-muted mt-2">Orientační průběh: kumulativní body za spojení × průběžný počet násobičů (vlastní čtverec se počítá od začátku). Počítá se jen z QSO s platným lokátorem.</p>
+    </div>
+
+    {{-- ── Grafy: tempo obou stanic + směrová růžice ───────────────────── --}}
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 mb-4">
+      <div class="rounded-lg border border-line bg-surface p-3">
+        <canvas id="chartTimeline"></canvas>
+      </div>
+      <div class="rounded-lg border border-line bg-surface p-3">
+        <canvas id="chartAzimuth"></canvas>
+      </div>
     </div>
   @endif
 @endif

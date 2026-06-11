@@ -74,6 +74,27 @@ class EdiPorovnaniTest extends TestCase
         $this->assertStringContainsString('OK9ZZZ', $html);
         $this->assertStringContainsString('rivalCumulative', $html);
         $this->assertStringContainsString('Udělali oba', $html);
+
+        // Porovnávací grafy: tempo po 15 minutách a směrová růžice obou stanic.
+        $this->assertStringContainsString('"mine"', $compact);
+        $this->assertStringContainsString('chartTimeline', $html);
+        $this->assertStringContainsString('chartAzimuth', $html);
+    }
+
+    public function test_charts_hidden_without_selected_rival(): void
+    {
+        // Bez zvoleného soupeře nejsou data porovnávacích grafů ani plátna.
+        [$head] = $this->seedRound();
+
+        $html = $this->actingAs($this->user())
+            ->get(route('edi.porovnani', $head->id))
+            ->assertOk()
+            ->getContent() ?: '';
+
+        $compact = str_replace(' ', '', $html);
+        $this->assertStringContainsString('timeline:null', $compact);
+        $this->assertStringContainsString('azimuth:null', $compact);
+        $this->assertStringNotContainsString('chartTimeline', $html);
     }
 
     public function test_rival_select_shown_without_selection(): void

@@ -134,6 +134,95 @@ if (prubehEl && cfg.compare && cfg.rivalCumulative) {
     }));
 }
 
+// ── Tempo obou stanic: QSO po 15 minutách vedle sebe ───────────────────────
+
+const timelineEl = document.getElementById('chartTimeline');
+
+if (timelineEl && cfg.compare && cfg.timeline) {
+    charts.push(new Chart(timelineEl, {
+        type: 'bar',
+        data: {
+            labels: cfg.timeline.labels,
+            datasets: [
+                {
+                    label: cfg.pcall,
+                    data: cfg.timeline.mine,
+                    backgroundColor: 'rgba(59, 130, 246, 0.75)',
+                    borderColor: 'rgba(59, 130, 246, 1)',
+                    borderWidth: 1,
+                    borderRadius: 3,
+                },
+                {
+                    label: cfg.compare.rival,
+                    data: cfg.timeline.rival,
+                    backgroundColor: 'rgba(239, 68, 68, 0.75)',
+                    borderColor: 'rgba(239, 68, 68, 1)',
+                    borderWidth: 1,
+                    borderRadius: 3,
+                },
+            ],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } },
+                title: { display: true, text: 'QSO v čase (15min intervaly)', font: { size: 13 } },
+            },
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1 } },
+                x: { grid: { display: false } },
+            },
+        },
+    }));
+}
+
+// ── Směrová růžice obou stanic (radar – dvě průhledné plochy přes sebe) ────
+
+const azimuthEl = document.getElementById('chartAzimuth');
+
+if (azimuthEl && cfg.compare && cfg.azimuth) {
+    charts.push(new Chart(azimuthEl, {
+        type: 'radar',
+        data: {
+            labels: cfg.azimuth.labels,
+            datasets: [
+                {
+                    label: cfg.pcall,
+                    data: cfg.azimuth.mine,
+                    borderColor: 'rgba(59, 130, 246, 1)',
+                    backgroundColor: 'rgba(59, 130, 246, 0.25)',
+                    borderWidth: 2,
+                    pointRadius: 2,
+                },
+                {
+                    label: cfg.compare.rival,
+                    data: cfg.azimuth.rival,
+                    borderColor: 'rgba(239, 68, 68, 1)',
+                    backgroundColor: 'rgba(239, 68, 68, 0.25)',
+                    borderWidth: 2,
+                    pointRadius: 2,
+                },
+            ],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } },
+                title: { display: true, text: 'Směry QSO (počet)', font: { size: 13 } },
+            },
+            scales: {
+                r: {
+                    beginAtZero: true,
+                    // Průhledné pozadí popisků os – bílý backdrop by v nočním režimu rušil.
+                    ticks: { stepSize: 1, font: { size: 10 }, backdropColor: 'transparent' },
+                },
+            },
+        },
+    }));
+}
+
 // Živé přebarvení grafů při přepnutí denního/nočního režimu (třída .dark na <html>).
 new MutationObserver(() => {
     applyChartTheme();
