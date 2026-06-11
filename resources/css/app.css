@@ -385,6 +385,13 @@
         text-align: right;
         font-variant-numeric: tabular-nums;
     }
+    /* Postradatelný sloupec: v úzkém kontejneru (.table-wrap je container)
+       se skryje, aby tabulka nepotřebovala horizontální scroll. */
+    @container (max-width: 30rem) {
+        table.data-table .cq-hide-narrow {
+            display: none;
+        }
+    }
 
     /* Technická data – značky, lokátory, čísla – monospace pro líc sloupců. */
     .mono {
@@ -453,6 +460,14 @@
         background-color: var(--brand);
         color: var(--brand-fg);
         filter: none;
+    }
+    /* Na dotykových zařízeních zvětšit dotykovou plochu (WCAG 2.5.8). */
+    @media (pointer: coarse) {
+        .icon-btn:not(.icon-btn-label) {
+            width: 2.25rem;
+            height: 2.25rem;
+            padding: 0.45rem;
+        }
     }
     /* Textová varianta ikonového odkazu (ikona + popisek „Statistiky"). */
     .icon-btn-label {
