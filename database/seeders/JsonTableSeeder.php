@@ -49,12 +49,10 @@ abstract class JsonTableSeeder extends Seeder
     protected function rows(): array
     {
         /** @var list<array<string, mixed>> $rows */
-        $rows = json_decode(
-            (string) file_get_contents(database_path(sprintf('seeders/data/%s.json', $this->table))),
-            true,
-            512,
-            JSON_THROW_ON_ERROR,
-        );
+        $rows = sprintf('seeders/data/%s.json', $this->table)
+            |> database_path(...)
+            |> file_get_contents(...)
+            |> (fn (string|false $x): mixed => json_decode((string) $x, true, 512, JSON_THROW_ON_ERROR));
 
         return $rows;
     }

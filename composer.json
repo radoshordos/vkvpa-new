@@ -6,7 +6,7 @@
     "keywords": ["laravel", "framework"],
     "license": "MIT",
     "require": {
-        "php": "^8.4",
+        "php": "^8.5",
         "ext-gd": "*",
         "ext-pdo": "*",
         "dg/adminer-custom": "^3.3",

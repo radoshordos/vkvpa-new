@@ -3,6 +3,11 @@
 > Stav k **2026-06-11**, větev `claude/php-8.5-migration-ig91fd`.
 > Navazuje na `docs/technicky-dluh.md` a na předchozí (vrácený) pokus o
 > migraci na PHP 8.5 z 2026-06-04/05.
+>
+> **Realizace dokončena** – Krok A i doporučená/volitelná část Kroku B
+> (B1, B2) jsou implementované a ověřené na PHP 8.5.7 (viz „Stav realizace"
+> na konci dokumentu). B5 zůstává samostatným follow-upem dle doporučení
+> níže.
 
 ## Shrnutí
 
@@ -40,13 +45,13 @@ Mezitím byl `LegacyJsonTableSeeder` přejmenován/zrefaktorován na
 
 ## Krok A – verzovací bump
 
-| Soubor | Změna |
-|---|---|
-| `composer.json` | `"php": "^8.4"` → `"php": "^8.5"` |
-| `composer.lock` | `composer update --lock` (přepočítá `content-hash` a sekci `platform.php`; bez re-resolvingu balíčků) |
-| `Dockerfile` | `FROM php:8.4-apache` → `FROM php:8.5-apache` |
-| `.github/workflows/ci.yml` | `php-version: '8.4'` → `'8.5'` ve všech 3 jobech (`test`, `analyse`, `audit`) |
-| `CLAUDE.md` | „Laravel 13 / PHP 8.4 web application" → „Laravel 13 / PHP 8.5 web application" |
+| Soubor | Změna | Stav |
+|---|---|---|
+| `composer.json` | `"php": "^8.4"` → `"php": "^8.5"` | ✅ |
+| `composer.lock` | `composer update --lock` (přepočítá `content-hash` a sekci `platform.php`; bez re-resolvingu balíčků) | ✅ |
+| `Dockerfile` | `FROM php:8.4-apache` → `FROM php:8.5-apache` | ✅ |
+| `.github/workflows/ci.yml` | `php-version: '8.4'` → `'8.5'` ve všech 3 jobech (`test`, `analyse`, `audit`) | ✅ |
+| `CLAUDE.md` | „Laravel 13 / PHP 8.4 web application" → „Laravel 13 / PHP 8.5 web application" | ✅ |
 
 Kompatibilita závislostí ověřena přes `composer.lock` – žádná nemá horní
 mez blokující 8.5:
@@ -72,7 +77,7 @@ instaluje (gd s freetype/jpeg, pdo_mysql, pdo_sqlite, zip, intl), jsou pro
 
 ## Krok B – modernizace kódu (nové prvky PHP 8.5)
 
-### B1. `#[Override]` na vlastnostech seederů — doporučeno
+### B1. `#[Override]` na vlastnostech seederů — ✅ provedeno
 
 7 tříd dědících z `JsonTableSeeder` přepisuje `protected string $table` a
 `protected ?int $autoIncrement` z rodiče bez označení. Na PHP 8.4 atribut
@@ -101,7 +106,10 @@ Je to přesný protipól commitu `fc1224f` a sjednotí styl s `#[Override]` na
 metodách, který projekt už všude jinde používá (modely, FormRequesty,
 `AppServiceProvider`).
 
-### B2. Pipe operátor `\|>` — volitelné, kosmetické
+**Provedeno:** všech 7 seederů má `use Override;` a `#[Override]` na obou
+vlastnostech (`$table`, `$autoIncrement`).
+
+### B2. Pipe operátor `\|>` — ✅ provedeno
 
 `JsonTableSeeder::rows()` šel kvůli 8.4 z pipe na vnořená volání. Lze vrátit:
 
@@ -119,8 +127,8 @@ protected function rows(): array
 ```
 
 Obě varianty jsou PHPStan level 10 čisté a Pint je nemění – jde o estetiku,
-ne o funkční zlepšení. Doporučuji ponechat na zvážení (je to doslovný revert
-vlastní historie projektu).
+ne o funkční zlepšení. **Provedeno** – `JsonTableSeeder::rows()` používá pipe
+operátor (doslovný revert vlastní historie projektu).
 
 Další velmi častý vzor `strtoupper(substr(trim($x), 0, 4))` (extrakce
 „velkého čtverce" z lokátoru, ~8 výskytů v `QsoGeometry`, `ScoringService`,
@@ -178,12 +186,12 @@ následnou úlohu, po jednom místě a s ověřením testů.
 
 ## Doporučené pořadí prací
 
-| # | Úkol | Náklad | Riziko |
-|---|------|--------|--------|
-| 1 | Krok A – verzovací bump (composer/Dockerfile/CI/CLAUDE.md) + `composer update --lock` | nízký | nízké – ověřeno zeleně i bez této změny |
-| 2 | B1 – `#[Override]` na 7 seederech (14 vlastností) | triviální | žádné |
-| 3 | (volitelně) B2 – pipe operátor v `JsonTableSeeder::rows()` | triviální | žádné, jen styl |
-| 4 | (volitelně, samostatně) B5 – `#[\NoDiscard]` na vybraných metodách po auditu volání | střední | nutné ověřit testy/PHPStan |
+| # | Úkol | Náklad | Riziko | Stav |
+|---|------|--------|--------|------|
+| 1 | Krok A – verzovací bump (composer/Dockerfile/CI/CLAUDE.md) + `composer update --lock` | nízký | nízké – ověřeno zeleně i bez této změny | ✅ |
+| 2 | B1 – `#[Override]` na 7 seederech (14 vlastností) | triviální | žádné | ✅ |
+| 3 | B2 – pipe operátor v `JsonTableSeeder::rows()` | triviální | žádné, jen styl | ✅ |
+| 4 | (samostatně, mimo tuto migraci) B5 – `#[\NoDiscard]` na vybraných metodách po auditu volání | střední | nutné ověřit testy/PHPStan | – |
 
 ## Ověření / test plán
 
@@ -197,5 +205,31 @@ následnou úlohu, po jednom místě a s ověřením testů.
 6. Docker: `docker compose build web` s novým `Dockerfile`
    (`php:8.5-apache`) + `docker compose exec web composer setup` – ověřit
    instalaci rozšíření (gd/freetype/jpeg, pdo_mysql, pdo_sqlite, zip, intl).
+   Neprovedeno v této session (bez přístupu k Dockeru) – doporučeno ověřit
+   v CI jobu `build`/při dalším nasazení.
 7. CI: push větve, sledovat všechny 4 joby (`test`, `analyse`, `audit`,
    `build`).
+
+## Stav realizace (2026-06-11)
+
+Implementovány a commitnuty Krok A i doporučená/volitelná část Kroku B
+(B1, B2). B5 zůstává samostatným follow-upem dle doporučení výše.
+
+Po implementaci znovu ověřeno na lokálně nainstalovaném PHP 8.5.7:
+
+| Nástroj | Výsledek |
+|---|---|
+| `composer test` | **326 testů / 958 asercí – vše prochází** |
+| `composer stan` (level 10) | **0 chyb** |
+| `composer lint` | **bez nálezů** |
+
+B5 (`#[\NoDiscard]`) byl v rámci této session prověřen – všechna volání
+kandidátních metod (`ScoringService::scoreEdi()`, `EdiParser::parse()`,
+`Maidenhead::qsoPoints()`/`distanceKm()`/`bearingDeg()`,
+`EdiValidator::validate()`, `CategoryResolver::resolve()`) buď používají
+návratovou hodnotu, nebo ji zahazují jen v testech `expectException(...)`,
+kde metoda vyhodí výjimku dřív, než by mohla vrátit hodnotu (tedy by
+nezpůsobily `E_DEPRECATED`). Přesto zůstává mimo tuto migraci jako
+samostatná úloha – přidání atributu je nevratná změna chování (nově hlásí
+deprecation při zahození hodnoty kdekoli v budoucím kódu) a zaslouží si
+vlastní commit/review nezávisle na verzovací migraci.
