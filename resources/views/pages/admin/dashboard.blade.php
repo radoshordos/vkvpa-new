@@ -128,7 +128,7 @@
                                 {{ $kolo->nazev }}
                             </a>
                         </td>
-                        <td class="num text-sm text-muted">{{ $kolo->datum_konani->format('d.\u{00a0}m.\u{00a0}Y') }}</td>
+                        <td class="num whitespace-nowrap text-sm text-muted">{{ $kolo->datum_konani->format('j. n. Y') }}</td>
                         <td class="num">{{ $kolo->pocet_celkem }}</td>
                         <td class="num">
                             <div class="flex items-center justify-end gap-2">
