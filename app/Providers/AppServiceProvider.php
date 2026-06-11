@@ -6,14 +6,12 @@ namespace App\Providers;
 
 use App\Events\EdiImported;
 use App\Listeners\SendEdiMailsListener;
-use App\Models\User;
 use App\Support\VkvpaSettings;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Override;
@@ -43,9 +41,6 @@ class AppServiceProvider extends ServiceProvider
         Model::preventLazyLoading(! $this->app->isProduction());
         Model::preventSilentlyDiscardingAttributes(! $this->app->isProduction());
         Model::preventAccessingMissingAttributes(! $this->app->isProduction());
-
-        // Pulse dashboard – přístup jen pro adminů.
-        Gate::define('viewPulse', fn (User $user) => (bool) $user->is_admin);
 
         // CSP nonce pro inline <script> bloky v Blade: <script @cspNonce>.
         // Nonce generuje SecurityHeaders middleware (Vite::useCspNonce()); mimo

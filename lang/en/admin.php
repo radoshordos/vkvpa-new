@@ -13,7 +13,6 @@ return [
     'nav_categories' => 'Category management',
     'nav_imports' => 'EDI bulk import',
     'nav_api_docs' => 'API documentation',
-    'nav_pulse' => 'Pulse monitoring',
 
     // Login
     'login_title' => 'Login – VKV PA',
