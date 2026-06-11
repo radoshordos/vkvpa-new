@@ -10,8 +10,6 @@ return [
     'admin_login' => 'Admin login',
     'logged_in_as' => 'Logged in as',
     'logout' => 'Log out',
-    'public_section' => 'Public',
-    'administration' => 'Administration',
     'contact_evaluator' => 'Contest evaluator: Míla OK1VUM,',
     'hosted_by' => 'This application is hosted on',
     'useful_links' => 'Useful links',

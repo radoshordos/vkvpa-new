@@ -10,8 +10,6 @@ return [
     'admin_login' => 'Přihlášení admin',
     'logged_in_as' => 'Přihlášen',
     'logout' => 'Odhlásit',
-    'public_section' => 'Veřejná část',
-    'administration' => 'Administrace',
     'contact_evaluator' => 'Kontakt na vyhodnocovatele: Míla OK1VUM,',
     'hosted_by' => 'Tato aplikace je hostována na serveru',
     'useful_links' => 'Užitečné odkazy',

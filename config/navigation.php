@@ -5,19 +5,44 @@ declare(strict_types=1);
 /**
  * Struktura hlavního menu.
  *
+ * 'menu' je seznam tematických skupin; nadpisy skupin se zobrazují jen
+ * administrátorům (ne-admin vidí pouze veřejné položky jako plochý seznam).
+ * Položky s 'admin' => true vidí jen administrátor.
+ *
  * Položky s 'key' jsou interní (pojmenovaná routa, podporují aktivní stav).
  * Položky s 'url' jsou externí.
- * 'trans' je klíč do překladového souboru nav.php (zobrazí se v aktuálním jazyce).
+ * 'trans' je klíč do překladových souborů (zobrazí se v aktuálním jazyce).
  */
 
 return [
 
-    'public' => [
-        ['key' => 'hlaseni.index',      'trans' => 'nav.log_import'],
-        ['key' => 'pribezne_vysledky',  'trans' => 'nav.interim_results'],
-        ['key' => 'vysledkova_listina', 'trans' => 'nav.results'],
-        ['key' => 'rocni_vysledky',     'trans' => 'nav.year_results'],
-        ['key' => 'diskuse.index',      'trans' => 'nav.discussion'],
+    'menu' => [
+        [
+            'heading' => 'nav.group_logs',
+            'items' => [
+                ['key' => 'hlaseni.index',    'trans' => 'nav.log_import'],
+                ['key' => 'deniky.index',     'trans' => 'admin.nav_logs',      'admin' => true],
+                ['key' => 'importy.index',    'trans' => 'admin.nav_imports',   'admin' => true],
+                ['key' => 'edi.debug.create', 'trans' => 'admin.nav_edi_debug', 'admin' => true],
+            ],
+        ],
+        [
+            'heading' => 'nav.group_results',
+            'items' => [
+                ['key' => 'pribezne_vysledky',  'trans' => 'nav.interim_results'],
+                ['key' => 'vysledkova_listina', 'trans' => 'nav.results'],
+                ['key' => 'rocni_vysledky',     'trans' => 'nav.year_results'],
+                ['key' => 'admin.dashboard',    'trans' => 'admin.nav_dashboard', 'admin' => true],
+            ],
+        ],
+        [
+            'heading' => 'nav.group_contest',
+            'items' => [
+                ['key' => 'kola.admin.index', 'trans' => 'admin.nav_rounds',     'admin' => true],
+                ['key' => 'kategorie.index',  'trans' => 'admin.nav_categories', 'admin' => true],
+                ['key' => 'diskuse.index',    'trans' => 'nav.discussion'],
+            ],
+        ],
     ],
 
     'footer' => [
@@ -25,16 +50,6 @@ return [
         ['url' => 'http://www.ok1kpa.com/pa-podminky.htm',                          'trans' => 'nav.official_rules',  'target' => '_blank'],
         ['url' => 'http://www.ok1kpa.com/',                                          'trans' => 'nav.official_archive', 'target' => '_blank'],
         ['url' => 'http://www.crk.cz/',                                              'trans' => 'nav.official_web',    'target' => '_blank'],
-    ],
-
-    'admin' => [
-        // Abecedně podle českých názvů
-        ['key' => 'deniky.index',     'trans' => 'admin.nav_logs'],
-        ['key' => 'importy.index',    'trans' => 'admin.nav_imports'],
-        ['key' => 'edi.debug.create', 'trans' => 'admin.nav_edi_debug'],
-        ['key' => 'kola.admin.index', 'trans' => 'admin.nav_rounds'],
-        ['key' => 'kategorie.index',  'trans' => 'admin.nav_categories'],
-        ['key' => 'admin.dashboard',  'trans' => 'admin.nav_dashboard'],
     ],
 
 ];
