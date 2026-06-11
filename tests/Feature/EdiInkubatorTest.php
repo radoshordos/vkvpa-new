@@ -38,11 +38,6 @@ class EdiInkubatorTest extends TestCase
         return User::create(['name' => 'Test', 'password' => Hash::make('x'), 'is_admin' => false]);
     }
 
-    private function admin(): User
-    {
-        return User::create(['name' => 'Admin', 'password' => Hash::make('x'), 'is_admin' => true]);
-    }
-
     public function test_anonymous_redirected_to_login(): void
     {
         $head = $this->importSample();
@@ -112,34 +107,47 @@ class EdiInkubatorTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_rival_overlay_available_after_round_evaluated(): void
+    public function test_compare_moved_to_standalone_page(): void
     {
+        // Porovnání průběhu se soupeřem se přesunulo na samostatnou stránku
+        // (edi.porovnani); inkubátor na ni jen odkazuje (když je s kým
+        // porovnávat – soupeř v téže kategorii) a výběr nenabízí.
         [$head, $rival] = $this->seedEvaluatedRoundWithRival();
+
+        $kategorie = VkvpaKategorie::create(['nazev' => '144 MHz', 'popis' => '', 'zkratka' => 'A', 'dxid' => 0]);
+        foreach ([[$head, 'OK2KJT'], [$rival, 'OK1BBB']] as [$h, $znacka]) {
+            VkvpaData::create([
+                'id_kola' => $head->id_kola, 'id_kategorie' => $kategorie->id,
+                'qrp' => false, 'lp' => false, 'znacka' => $znacka, 'locator' => 'JN99AJ',
+                'pocet' => 2, 'bodu_za_qso' => 7, 'nasobice' => 2, 'body' => 14,
+                'jmeno' => 'Test', 'mail' => 't@t.cz', 'telefon' => '', 'poznamka' => '',
+                'soapbox' => '', 'ip' => '', 'edihead_id' => $h->id,
+                'poradi' => 1, 'schvaleno' => true, 'session_id' => '',
+            ]);
+        }
 
         $html = $this->actingAs($this->user())
             ->get(route('edi.inkubator', ['head' => $head->id, 'porovnat' => $rival->id]))
             ->assertOk()
             ->getContent() ?: '';
 
-        $this->assertStringContainsString('Porovnat průběh s', $html);
-        $this->assertStringContainsString('"call":"OK1BBB"', str_replace(' ', '', $html));
-        $this->assertStringContainsString('rivalCumulative', $html);
+        $this->assertStringContainsString(route('edi.porovnani', ['head' => $head->id]), $html);
+        $this->assertStringNotContainsString('Porovnat průběh s', $html);
+        $this->assertStringNotContainsString('rivalCumulative', $html);
     }
 
-    public function test_rival_hidden_while_round_open(): void
+    public function test_compare_link_hidden_without_rival_in_same_category(): void
     {
-        // Kolo v příjmu hlášení → průběh soupeře by odhalil jeho deník;
-        // query parametr se ignoruje a výběr se nenabízí (ani adminovi).
-        [$head, $rival] = $this->seedEvaluatedRoundWithRival(aktivni: true);
+        // Soupeř existuje, ale bez schváleného záznamu listiny v téže
+        // kategorii → odkaz na stránku porovnání se nezobrazuje.
+        [$head] = $this->seedEvaluatedRoundWithRival();
 
-        $html = $this->actingAs($this->admin())
-            ->get(route('edi.inkubator', ['head' => $head->id, 'porovnat' => $rival->id]))
+        $html = $this->actingAs($this->user())
+            ->get(route('edi.inkubator', $head->id))
             ->assertOk()
             ->getContent() ?: '';
 
-        $this->assertStringContainsString('rivalCumulative:null', str_replace(' ', '', $html));
-        $this->assertStringNotContainsString('Porovnat průběh s', $html);
-        $this->assertStringNotContainsString('OK1BBB', $html);
+        $this->assertStringNotContainsString(route('edi.porovnani', ['head' => $head->id]), $html);
     }
 
     public function test_sezona_trend_from_public_results(): void

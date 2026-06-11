@@ -6,34 +6,33 @@ namespace App\Http\Controllers;
 
 use App\Models\Edihead;
 use App\Services\Edi\EnrichedQso;
+use App\Services\Edi\PorovnaniRivals;
 use App\Services\Edi\QsoGeometry;
 use App\Support\Maidenhead;
-use Illuminate\Database\Eloquent\Collection as EloquentCollection;
-use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
 /**
  * Komplexní vizualizace deníku: mapa + grafy na jedné stránce. Geometrii spojení
  * (souřadnice, vzdálenost, azimut, body, čtverce) počítá sdílená {@see QsoGeometry};
- * tento controller z ní jen odvozuje agregace pro grafy.
- *
- * @phpstan-import-type CompareStation from QsoGeometry
+ * tento controller z ní jen odvozuje agregace pro grafy. Porovnání s deníkem
+ * soupeře žije na samostatné stránce ({@see EdiPorovnaniController}).
  */
 class EdiVizualizaceController extends Controller
 {
-    public function __construct(private readonly QsoGeometry $geometry) {}
+    public function __construct(
+        private readonly QsoGeometry $geometry,
+        private readonly PorovnaniRivals $porovnani,
+    ) {}
 
-    public function show(Request $request, Edihead $head): View
+    public function show(Edihead $head): View
     {
         // Vizualizace je veřejná vždy (zobrazuje jen vlastní deník účastníka);
-        // citlivé vrstvy se hlídají samostatně: roundStations i porovnání
-        // soupeřů se vydávají až po uzavření kola (viz QsoGeometry / comparison).
+        // citlivá vrstva roundStations se vydává až po uzavření kola
+        // (viz QsoGeometry).
         $home = Maidenhead::toLatLon((string) $head->p_wwlo);
 
         $enriched = $this->geometry->enrichedQsos($head, $home, 'time');
-
-        [$rivals, $compare] = $this->comparison($request, $head, $home);
 
         return view('pages.vizualizace', [
             'active' => '',
@@ -54,55 +53,12 @@ class EdiVizualizaceController extends Controller
             'squares' => $this->geometry->bigSquares($head),
             'roundStations' => $this->geometry->roundStations($head),
             'roundDataPending' => ! $this->geometry->roundResultsDisclosable($head),
-            'rivals' => $rivals,
-            'compare' => $compare,
+            'porovnaniDostupne' => $this->porovnani->hasRivals($head),
             'timeline' => $this->timeline($enriched),
             'azimuth' => $this->azimuthRose($enriched),
             'distHistogram' => $this->distHistogram($enriched),
             'stats' => $this->stats($enriched),
         ]);
-    }
-
-    /**
-     * Soupeři z téhož kola (pro výběr porovnání) + data porovnání, je-li
-     * v query parametru `porovnat` zvolen platný soupeř. Obojí se vydá až po
-     * uzávěrce/vyhodnocení kola – do té doby prázdný seznam a null (stejné
-     * pravidlo jako vrstva „všechny stanice z kola").
-     *
-     * @param  array{lat: float, lon: float}|null  $home
-     * @return array{0: EloquentCollection<int, Edihead>, 1: array{rivalId: int, rival: string, rivalLoc: string, rivalHome: array{lat: float, lon: float}|null, onlyMine: list<CompareStation>, onlyRival: list<CompareStation>, both: list<CompareStation>}|null}
-     */
-    private function comparison(Request $request, Edihead $head, ?array $home): array
-    {
-        if ($head->id_kola === null || ! $this->geometry->roundResultsDisclosable($head)) {
-            return [new EloquentCollection, null];
-        }
-
-        $rivals = Edihead::query()
-            ->where('id_kola', $head->id_kola)
-            ->whereKeyNot($head->id)
-            ->orderBy('p_call')
-            ->get();
-
-        $rival = $rivals->firstWhere('id', $request->integer('porovnat'));
-
-        if ($rival === null) {
-            return [$rivals, null];
-        }
-
-        $diff = $this->geometry->compareWith($head, $rival, $home);
-
-        if ($diff === null) {
-            return [$rivals, null];
-        }
-
-        return [$rivals, [
-            'rivalId' => $rival->id,
-            'rival' => (string) $rival->p_call,
-            'rivalLoc' => (string) $rival->p_wwlo,
-            'rivalHome' => Maidenhead::toLatLon((string) $rival->p_wwlo),
-            ...$diff,
-        ]];
     }
 
     /**

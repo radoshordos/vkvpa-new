@@ -311,6 +311,47 @@ final class QsoGeometry
     }
 
     /**
+     * Průběžné skóre po každém QSO: kumulativní body za spojení × průběžný
+     * počet násobičů (různé velké čtverce včetně vlastního – ten se počítá
+     * vždy, shodně se ScoringService::scoreEdi()). Orientační průběh –
+     * počítá se jen z QSO s platným lokátorem. Sdíleno inkubátorem a
+     * stránkou porovnání deníků.
+     *
+     * @param  Collection<int, EnrichedQso>  $lines
+     * @return list<array{t: int, cas: string, call: string, points: int, nasobice: int, body: int}>
+     */
+    public function prubehSkore(Collection $lines, string $homeSq): array
+    {
+        $sum = 0;
+        /** @var array<string, true> $squares */
+        $squares = [];
+        if (preg_match('/^[A-R]{2}\d{2}$/', $homeSq) === 1) {
+            $squares[$homeSq] = true;
+        }
+
+        $out = [];
+
+        foreach ($lines as $l) {
+            $sum += $l->points;
+            $sq = strtoupper(substr(trim($l->wwl), 0, 4));
+            if (preg_match('/^[A-R]{2}\d{2}$/', $sq) === 1) {
+                $squares[$sq] = true;
+            }
+
+            $out[] = [
+                't' => $l->timeMinutes,
+                'cas' => sprintf('%02d:%02d', intdiv($l->timeMinutes, 60), $l->timeMinutes % 60),
+                'call' => $l->call,
+                'points' => $l->points,
+                'nasobice' => count($squares),
+                'body' => $sum * count($squares),
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
      * Smí se vrstva „všechny stanice z kola" zveřejnit?
      *
      * Bez kola (`id_kola === null`) jde jen o vlastní deník – žádná cizí data,

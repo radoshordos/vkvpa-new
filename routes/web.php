@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\ZaznamController;
 use App\Http\Controllers\DiskuseController;
 use App\Http\Controllers\EdiController;
 use App\Http\Controllers\EdiInkubatorController;
+use App\Http\Controllers\EdiPorovnaniController;
 use App\Http\Controllers\EdiVizualizaceController;
 use App\Http\Controllers\HlaseniController;
 use App\Http\Controllers\HomeController;
@@ -78,6 +79,10 @@ Route::get('/edi/{head}/vizualizace', [EdiVizualizaceController::class, 'show'])
 // Vizuální inkubátor – experimentální vizualizace deníku (přehrávání na mapě,
 // průběh skóre, nové násobiče, TOP ODX, tempo, celoroční trend …).
 Route::get('/edi/{head}/vizualni-inkubator', [EdiInkubatorController::class, 'show'])->name('edi.inkubator');
+
+// Porovnání dvou deníků (hráč vs. hráč) z téhož kola a téže kategorie –
+// mapa rozdílů v protistanicích + překryvný graf průběhu skóre.
+Route::get('/edi/{head}/porovnani', [EdiPorovnaniController::class, 'show'])->name('edi.porovnani');
 
 // --- Administrace (chráněno middleware z Fáze 4) ---
 Route::middleware('admin')->group(function (): void {

@@ -6,8 +6,9 @@ namespace Tests\Feature;
 
 use App\Http\Controllers\EdiVizualizaceController;
 use App\Models\Edihead;
-use App\Models\Ediline;
 use App\Models\User;
+use App\Models\VkvpaData;
+use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
 use App\Services\Edi\EdiImportService;
 use App\Services\Edi\EdiParser;
@@ -141,73 +142,49 @@ class EdiVizualizaceTest extends TestCase
             ->assertOk();
     }
 
-    public function test_compare_layer_renders_for_selected_rival(): void
+    public function test_compare_moved_to_standalone_page(): void
     {
-        // Vyhodnocené kolo, dva deníky: OK2IMH udělali oba, OK2IWU jen
-        // OK2KJT (sample.edi), OK9ZZZ jen soupeř OK1BBB.
-        [$head, $rival] = $this->seedEvaluatedRoundWithRival();
-
-        $html = $this->actingAs($this->user())
-            ->get(route('edi.vizualizace', ['head' => $head->id, 'porovnat' => $rival->id]))
-            ->assertOk()
-            ->getContent() ?: '';
-
-        $this->assertStringContainsString('Porovnat s', $html);
-        $this->assertStringContainsString('data-map-layer="porovnani"', $html);
-        $this->assertStringContainsString('"rival":"OK1BBB"', $html);
-        $this->assertStringContainsString('"onlyMine"', $html);
-        $this->assertStringContainsString('OK9ZZZ', $html);
-    }
-
-    public function test_compare_select_shown_without_rival_selected(): void
-    {
-        [$head] = $this->seedEvaluatedRoundWithRival();
+        // Porovnání deníků se přesunulo na samostatnou stránku (edi.porovnani);
+        // vizualizace na ni jen odkazuje (když je s kým porovnávat) a sama
+        // porovnání nenabízí.
+        $head = $this->seedEvaluatedRoundWithRivalEntry();
 
         $html = $this->actingAs($this->user())
             ->get(route('edi.vizualizace', $head->id))
             ->assertOk()
             ->getContent() ?: '';
 
-        // Tlačítko porovnání se nabízí; výběr soupeře je ve výchozím stavu
-        // skrytý (ukáže ho až aktivace vrstvy Porovnání ve vizualizace.js)
-        // a bez volby nejsou žádná data porovnání.
-        $this->assertStringContainsString('Porovnat s', $html);
-        $this->assertStringContainsString('compare:null', str_replace(' ', '', $html));
-        $this->assertStringContainsString('data-map-layer="porovnani"', $html);
-        $this->assertStringContainsString('id="porovnat-form" class="ml-auto hidden', $html);
+        $this->assertStringContainsString(route('edi.porovnani', ['head' => $head->id]), $html);
+        $this->assertStringNotContainsString('data-map-layer="porovnani"', $html);
+        $this->assertStringNotContainsString('Porovnat s', $html);
     }
 
-    public function test_compare_hidden_while_round_open(): void
+    public function test_compare_link_hidden_without_rival_in_same_category(): void
     {
-        // Kolo v příjmu hlášení → porovnání by odhalilo soupeřův deník;
-        // query parametr se ignoruje a výběr se nenabízí (ani adminovi).
-        [$head, $rival] = $this->seedEvaluatedRoundWithRival(aktivni: true);
+        // Deník bez kola (a tedy bez soupeře z téže kategorie) → odkaz na
+        // stránku porovnání se nezobrazuje, neměla by co nabídnout.
+        $head = $this->importSample();
 
-        $html = $this->actingAs($this->admin())
-            ->get(route('edi.vizualizace', ['head' => $head->id, 'porovnat' => $rival->id]))
+        $html = $this->actingAs($this->user())
+            ->get(route('edi.vizualizace', $head->id))
             ->assertOk()
             ->getContent() ?: '';
 
-        $this->assertStringContainsString('compare:null', str_replace(' ', '', $html));
-        $this->assertStringNotContainsString('Porovnat s', $html);
-        $this->assertStringNotContainsString('OK9ZZZ', $html);
+        $this->assertStringNotContainsString(route('edi.porovnani', ['head' => $head->id]), $html);
     }
 
     /**
-     * Kolo se dvěma deníky: sample.edi (OK2KJT) + soupeř OK1BBB. Soupeř má
-     * společné QSO s OK2IMH a unikátní OK9ZZZ.
-     *
-     * @return array{Edihead, Edihead}
+     * Vyhodnocené kolo se dvěma deníky (OK2KJT ze sample.edi + soupeř OK1BBB)
+     * a schválenými záznamy listiny v téže kategorii – porovnání je dostupné.
      */
-    private function seedEvaluatedRoundWithRival(bool $aktivni = false): array
+    private function seedEvaluatedRoundWithRivalEntry(): Edihead
     {
         $kolo = VkvpaKola::create([
             'datum_konani' => '2026-03-15',
             'datum_uzaverky' => '2026-03-20 23:59:59',
             'nazev' => '03/2026',
             'poznamka' => '',
-            'aktivni' => $aktivni,
-            'vyhodnoceno' => $aktivni ? null : '2026-03-21 10:00:00',
+            'vyhodnoceno' => '2026-03-21 10:00:00',
         ]);
 
         $head = $this->importSample();
@@ -217,9 +194,20 @@ class EdiVizualizaceTest extends TestCase
             'id_kola' => $kolo->id, 't_date' => '20260315', 'p_call' => 'OK1BBB', 'p_wwlo' => 'JN89',
             'p_band' => '144 MHz', 'r_name' => 'B', 'r_hbbs' => 'b@b.cz', 's_powe' => 100,
         ]);
-        Ediline::create(['edihead_id' => $rival->id, 'date' => '260315', 'time' => '0830', 'call_sign' => 'OK2IMH', 'received_wwl' => 'JN99BP']);
-        Ediline::create(['edihead_id' => $rival->id, 'date' => '260315', 'time' => '0831', 'call_sign' => 'OK9ZZZ', 'received_wwl' => 'JO60AA']);
 
-        return [$head, $rival];
+        $kategorie = VkvpaKategorie::create(['nazev' => '144 MHz', 'popis' => '', 'zkratka' => 'A', 'dxid' => 0]);
+
+        foreach ([[$head, 'OK2KJT'], [$rival, 'OK1BBB']] as [$h, $znacka]) {
+            VkvpaData::create([
+                'id_kola' => $kolo->id, 'id_kategorie' => $kategorie->id,
+                'qrp' => false, 'lp' => false, 'znacka' => $znacka, 'locator' => 'JN99AJ',
+                'pocet' => 2, 'bodu_za_qso' => 7, 'nasobice' => 2, 'body' => 14,
+                'jmeno' => 'Test', 'mail' => 't@t.cz', 'telefon' => '', 'poznamka' => '',
+                'soapbox' => '', 'ip' => '', 'edihead_id' => $h->id,
+                'poradi' => 1, 'schvaleno' => true, 'session_id' => '',
+            ]);
+        }
+
+        return $head;
     }
 }
