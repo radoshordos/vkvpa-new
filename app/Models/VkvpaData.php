@@ -51,6 +51,7 @@ use Override;
  * Projekce z {@see ScoringService::yearlyResults()}:
  * @property-read int $kategorie_id
  * @property-read int|string $celkem
+ * (`jmeno` je v projekci agregované přes MAX, typ sdílí s kmenovým sloupcem)
  */
 #[Fillable([
     'id_kola', 'id_kategorie', 'qrp', 'lp', 'znacka', 'locator',

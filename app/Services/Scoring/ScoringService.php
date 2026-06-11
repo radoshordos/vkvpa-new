@@ -193,7 +193,9 @@ final class ScoringService
             ->where('vkvpa_data.schvaleno', true)
             ->where('vkvpa_data.poradi', '<>', 0)
             ->whereYear('vkvpa_kola.datum_konani', $year)
-            ->selectRaw('vkvpa_data.id_kategorie as kategorie_id, vkvpa_data.znacka')
+            // MAX(jmeno): jméno se může mezi koly lišit, agregace potřebuje
+            // deterministickou volbu přenositelnou na SQLite (testy).
+            ->selectRaw('vkvpa_data.id_kategorie as kategorie_id, vkvpa_data.znacka, MAX(vkvpa_data.jmeno) as jmeno')
             ->selectRaw(
                 'SUM(CASE WHEN vkvpa_data.edihead_id IS NULL AND vkvpa_data.id_kola >= ? THEN 0 ELSE vkvpa_data.body END) as celkem',
                 [VkvpaSettings::nonEdiNullifyFromKolo()],
@@ -218,8 +220,9 @@ final class ScoringService
     /** Klíč cache ročních výsledků pro daný rok a kombinaci výkonových filtrů. */
     private function yearlyCacheKey(int $year, bool $qrpOnly, bool $lpOnly): string
     {
-        // v2: hodnota je pole polí atributů (dřív serializovaná kolekce modelů).
-        return sprintf('vkvpa:yearly:v2:%d:%d:%d', $year, $qrpOnly ? 1 : 0, $lpOnly ? 1 : 0);
+        // v3: řádky nově obsahují i agregované `jmeno` (v2 pole atributů bez něj,
+        // v1 serializovaná kolekce modelů).
+        return sprintf('vkvpa:yearly:v3:%d:%d:%d', $year, $qrpOnly ? 1 : 0, $lpOnly ? 1 : 0);
     }
 
     /** Zahodí cache ročních výsledků daného roku (všechny kombinace výkonových filtrů). */
