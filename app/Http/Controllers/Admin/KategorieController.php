@@ -25,6 +25,13 @@ class KategorieController extends Controller
         ]);
     }
 
+    public function create(): View
+    {
+        return view('pages.admin.kategorie-create', [
+            'active' => 'kategorie.index',
+        ]);
+    }
+
     public function store(KategorieRequest $request): RedirectResponse
     {
         VkvpaKategorie::create($request->toModel());
@@ -36,9 +43,8 @@ class KategorieController extends Controller
 
     public function edit(VkvpaKategorie $kategorie): View
     {
-        return view('pages.admin.kategorie', [
+        return view('pages.admin.kategorie-edit', [
             'active' => 'kategorie.index',
-            'kategorie' => VkvpaKategorie::query()->orderBy('id')->get(),
             'editKategorie' => $kategorie,
         ]);
     }

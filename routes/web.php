@@ -116,6 +116,7 @@ Route::middleware('admin')->group(function (): void {
 
     Route::get('/admin/deniky', [DenikyController::class, 'index'])->name('deniky.index');
     Route::get('/admin/kategorie', [KategorieController::class, 'index'])->name('kategorie.index');
+    Route::get('/admin/kategorie/create', [KategorieController::class, 'create'])->name('kategorie.create');
     Route::post('/admin/kategorie', [KategorieController::class, 'store'])->name('kategorie.store');
     Route::get('/admin/kategorie/{kategorie}/edit', [KategorieController::class, 'edit'])->name('kategorie.edit');
     Route::patch('/admin/kategorie/{kategorie}', [KategorieController::class, 'update'])->name('kategorie.update');
