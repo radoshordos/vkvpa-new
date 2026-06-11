@@ -35,21 +35,9 @@ class SecurityHeaders
         // script-src: místo 'unsafe-inline' per-request nonce – inline skript bez
         // nonce (typický payload XSS) prohlížeč nespustí. Externí skripty kryje
         // host-source (cdn.jsdelivr.net).
-        //
-        // Výjimka Laravel Pulse: bundluje Alpine.js (x-data výrazy přes
-        // new Function() → 'unsafe-eval') a vlastní inline skripty bez možnosti
-        // doplnit náš nonce → pro /pulse/* zůstává 'unsafe-inline' + 'unsafe-eval'
-        // (nonce tam být nesmí – jeho přítomnost 'unsafe-inline' deaktivuje).
-        $pulsePathRaw = config('pulse.path', 'pulse');
-        $pulsePath = is_string($pulsePathRaw) ? $pulsePathRaw : 'pulse';
-        $isPulse = str_starts_with($request->path(), $pulsePath);
-        $scriptSrc = $isPulse
-            ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' cdn.jsdelivr.net"
-            : "script-src 'self' 'nonce-{$nonce}' cdn.jsdelivr.net";
-
         $response->headers->set('Content-Security-Policy', implode('; ', [
             "default-src 'self'",
-            $scriptSrc,
+            "script-src 'self' 'nonce-{$nonce}' cdn.jsdelivr.net",
             "style-src 'self' 'unsafe-inline' cdn.jsdelivr.net",
             "img-src 'self' data: https://tile.openstreetmap.org",
             "font-src 'self' data:",

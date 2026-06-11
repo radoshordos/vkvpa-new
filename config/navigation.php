@@ -33,7 +33,6 @@ return [
         ['key' => 'importy.index',    'trans' => 'admin.nav_imports'],
         ['key' => 'edi.debug.create', 'trans' => 'admin.nav_edi_debug'],
         ['key' => 'kola.admin.index', 'trans' => 'admin.nav_rounds'],
-        ['url' => '/pulse',           'trans' => 'admin.nav_pulse', 'target' => '_blank'],
         ['key' => 'kategorie.index',  'trans' => 'admin.nav_categories'],
         ['key' => 'admin.dashboard',  'trans' => 'admin.nav_dashboard'],
     ],
