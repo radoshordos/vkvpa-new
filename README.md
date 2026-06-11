@@ -519,7 +519,7 @@ VkvpaKola ──► Prispevek[]
 
 | Metoda | URI | Controller | Název |
 |--------|-----|------------|-------|
-| GET | `/admin/dashboard` | `DashboardController@index` | `admin.dashboard` |
+| GET | `/admin/statistiky` | `DashboardController@index` | `admin.dashboard` |
 | GET | `/admin/kola` | `KolaAdminController@index` | `kola.admin.index` |
 | GET | `/admin/kola/create` | `KolaAdminController@create` | `kola.admin.create` |
 | POST | `/admin/kola` | `KolaAdminController@store` | `kola.admin.store` |

@@ -86,7 +86,7 @@ Route::get('/edi/{head}/porovnani', [EdiPorovnaniController::class, 'show'])->na
 
 // --- Administrace (chráněno middleware z Fáze 4) ---
 Route::middleware('admin')->group(function (): void {
-    Route::get('/admin/dashboard', [DashboardController::class, 'index'])
+    Route::get('/admin/statistiky', [DashboardController::class, 'index'])
         ->name('admin.dashboard');
 
     // Přehled a správa kol (admin index).
