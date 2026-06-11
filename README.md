@@ -25,6 +25,8 @@ Webový systém pro správu a vyhodnocování závodů v pásmu VKV (Very High F
 - [Bodování](#bodování)
 - [Mapové pohledy](#mapové-pohledy)
 - [EDI vizualizace](#edi-vizualizace)
+- [Vizuální inkubátor](#vizuální-inkubátor)
+- [Porovnání deníků](#porovnání-deníků)
 - [Diskuse](#diskuse)
 - [REST API](#rest-api)
 - [Emaily](#emaily)
@@ -38,7 +40,7 @@ Webový systém pro správu a vyhodnocování závodů v pásmu VKV (Very High F
 
 | Vrstva | Technologie |
 |--------|-------------|
-| Backend | PHP 8.4, Laravel 13 |
+| Backend | PHP 8.5, Laravel 13 |
 | Frontend | Blade, Tailwind CSS 4.3, Vite 8 |
 | Reaktivní komponenty | Livewire 4 |
 | Mapy | Leaflet 1.9.4 |
@@ -71,10 +73,12 @@ Webový systém pro správu a vyhodnocování závodů v pásmu VKV (Very High F
   - **CRK mapa** – kombinovaný pohled ve stylu vkvzavody.crk.cz
 - **EDI vizualizace** – komplexní analytická stránka na jedné URL (`/edi/{head}/vizualizace`):
   - Statistické karty – počet QSO, unique lokátory, max/průměr vzdálenost
-  - Interaktivní Leaflet mapa s přepínatelnými vrstvami (ježek / špendlíky / lokátory), body rozlišeny barvou dle druhu provozu (**modrá = SSB**, **oranžová = CW**)
+  - Interaktivní Leaflet mapa s přepínatelnými vrstvami (CRK / ježek / špendlíky / lokátory), body rozlišeny barvou dle druhu provozu (**modrá = SSB**, **oranžová = CW**)
   - Azimutová růžice – Chart.js PolarArea chart, 8 světových stran (45° sektory)
   - Časová osa QSO – Chart.js Bar chart, 15minutové intervaly v závodním okně 08:00–11:00 UTC
   - Histogram vzdáleností – Chart.js Bar chart, pásma 0–50 / 50–100 / 100–200 / 200–400 / 400–700 / 700+ km
+- **Vizuální inkubátor** – experimentální vizualizace deníku (`/edi/{head}/vizualni-inkubator`): přehrávání deníku na mapě, průběh skóre, nové násobiče, TOP ODX, tempo závodu, vážená azimutová růžice, body podle čtverců, nezapočítaná QSO, celoroční trend stanice
+- **Porovnání deníků** – samostatná stránka hráč vs. hráč (`/edi/{head}/porovnani`): mapa rozdílů v protistanicích, překryvný graf průběhu skóre, tempo obou stanic a směrová růžice; jen deníky z téhož kola a kategorie, soupeřův deník až po uzávěrce kola
 - **Diskuse** – komentáře k závodním kolům (throttle ochrana, moderace adminem)
 - **Admin dashboard** – statistiky sezóny, trend účasti, distribuce kategorií, top 10 stanic
 - **Admin rozhraní** – CRUD kol a kategorií, uzavření kola, schválení/smazání záznamu, EDI debug, hromadný import
@@ -231,7 +235,8 @@ app/
 ├── Models/                 # Eloquent modely
 ├── Services/
 │   ├── Edi/                # EdiParser, EdiImportService, EdiReducer, CategoryResolver,
-│   │                       # EdiValidator, EdiValidationReport, QsoGeometry, EnrichedQso, BigSquareCount
+│   │                       # EdiValidator, EdiValidationReport, QsoGeometry, PorovnaniRivals,
+│   │                       # EnrichedQso, BigSquareCount
 │   └── Scoring/            # ScoringService, EdiScoreDebugger, value objekty
 ├── Mail/                   # HlaseniPrijato, HlaseniProVyhodnocovatele
 └── Support/                # Maidenhead, ContestWindow, ContestCalendar, VkvpaSettings
@@ -248,8 +253,11 @@ public/
 resources/
 ├── css/app.css             # Tailwind 4 (@import 'tailwindcss', @theme)
 ├── js/
-│   ├── app.js                  # Dark mode, mobilní menu
+│   ├── app.js                  # Dark mode, mobilní menu, delegované handlery (data-autosubmit, data-file-zone)
+│   ├── dashboard.js            # Chart.js grafy admin dashboardu
+│   ├── inkubator.js            # Leaflet + Chart.js – vizuální inkubátor (přehrávání deníku, průběh skóre …)
 │   ├── leaflet-fullscreen.js   # Sdílený Leaflet ovládací prvek: celá obrazovka
+│   ├── porovnani.js            # Leaflet + Chart.js – porovnání dvou deníků (mapa rozdílů, grafy)
 │   └── vizualizace.js          # Leaflet + Chart.js – komplexní EDI vizualizace (mapy + grafy)
 └── views/
     ├── auth/               # Přihlašovací formulář
@@ -257,7 +265,8 @@ resources/
     ├── layouts/app.blade.php
     ├── livewire/
     │   └── edi-upload.blade.php  # Blade šablona Livewire EdiUpload komponenty
-    ├── pages/              # Stránky (home, hlaseni, kola, vysledky, diskuse, vizualizace, edi-upload, admin/*)
+    ├── pages/              # Stránky (home, hlaseni, kola, vysledky, diskuse, vizualizace,
+    │                       #          inkubator, porovnani, edi-upload, admin/*)
     └── partials/           # menu, footer, menu-item, no-active-period
 docs/
 ├── kolo-lifecycle.svg      # Diagram životního cyklu závodního kola (KoloStav)
@@ -265,7 +274,7 @@ docs/
 └── technicky-dluh.md       # Dokumentace technického dluhu
 ```
 
-Vite kompiluje dva oddělené JS entry-pointy (`app.js`, `vizualizace.js`) – každá stránka načítá jen co potřebuje.
+Vite kompiluje pět oddělených JS entry-pointů (`app.js`, `vizualizace.js`, `inkubator.js`, `porovnani.js`, `dashboard.js`) – každá stránka načítá jen co potřebuje.
 
 ---
 
@@ -273,7 +282,7 @@ Vite kompiluje dva oddělené JS entry-pointy (`app.js`, `vizualizace.js`) – k
 
 ### Požadavky
 
-- PHP 8.4 s rozšířeními: `pdo`, `gd`, `mbstring`, `intl`
+- PHP 8.5 s rozšířeními: `pdo`, `gd`, `mbstring`, `intl`
 - Composer
 - Node.js 20+
 - MySQL 8.0
@@ -487,7 +496,7 @@ VkvpaKola ──► Prispevek[]
 | GET | `/` | `HomeController@index` | `home` |
 | GET | `/hlaseni` | `HlaseniController@index` | `hlaseni.index` |
 | POST | `/hlaseni` | `HlaseniController@store` | `hlaseni.store` |
-| GET | `/kola` | `KolaController@index` | `kola.index` |
+| GET | `/kola` | redirect → `/admin/kola` | – |
 | GET | `/vysledky` | `VysledkyController@listina` | `vysledkova_listina` |
 | GET | `/vysledky/pribezne` | `VysledkyController@pribezne` | `pribezne_vysledky` |
 | GET | `/vysledky/rocni` | `VysledkyController@rocni` | `rocni_vysledky` |
@@ -499,6 +508,8 @@ VkvpaKola ──► Prispevek[]
 | GET | `/edi/{head}/soubor` | `EdiController@zobrazit` | `edi.soubor` |
 | GET | `/edi/{head}/soubor-redukovany` | `EdiController@zobrazitRedukovany` | `edi.soubor.redukovany` |
 | GET | `/edi/{head}/vizualizace` | `EdiVizualizaceController@show` | `edi.vizualizace` |
+| GET | `/edi/{head}/vizualni-inkubator` | `EdiInkubatorController@show` | `edi.inkubator` |
+| GET | `/edi/{head}/porovnani` | `EdiPorovnaniController@show` | `edi.porovnani` |
 | GET | `/lang/{locale}` | closure | `lang.switch` |
 | GET | `/login` | `AuthController` | `login` |
 | GET | `/login/token/{kod}` | token login | – |
@@ -509,6 +520,7 @@ VkvpaKola ──► Prispevek[]
 | Metoda | URI | Controller | Název |
 |--------|-----|------------|-------|
 | GET | `/admin/dashboard` | `DashboardController@index` | `admin.dashboard` |
+| GET | `/admin/kola` | `KolaAdminController@index` | `kola.admin.index` |
 | GET | `/admin/kola/create` | `KolaAdminController@create` | `kola.admin.create` |
 | POST | `/admin/kola` | `KolaAdminController@store` | `kola.admin.store` |
 | GET | `/admin/kola/{kolo}/edit` | `KolaAdminController@edit` | `kola.admin.edit` |
@@ -520,6 +532,7 @@ VkvpaKola ──► Prispevek[]
 | DELETE | `/admin/diskuse/{prispevek}` | `DiskuseController@destroy` | `diskuse.destroy` |
 | GET | `/admin/edi-debug` | `EdiDebugController@create` | `edi.debug.create` |
 | POST | `/admin/edi-debug` | `EdiDebugController@analyze` | `edi.debug.store` |
+| GET | `/admin/edi-debug/{head}` | `EdiDebugController@show` | `edi.debug.show` |
 | GET | `/admin/deniky` | `DenikyController@index` | `deniky.index` |
 | GET | `/admin/kategorie` | `KategorieController@index` | `kategorie.index` |
 | POST | `/admin/kategorie` | `KategorieController@store` | `kategorie.store` |
@@ -572,7 +585,8 @@ Nahrání EDI deníku probíhá přes **Livewire komponentu** `EdiUpload` (`app/
 | `EdiImportService` | `app/Services/Edi/EdiImportService.php` | Uložení `EdiLog` → `edihead` + `edilines` v transakci |
 | `EdiReducer` | `app/Services/Edi/EdiReducer.php` | Filtrování EDI na závodní okno (08:00–11:00 UTC) |
 | `CategoryResolver` | `app/Services/Edi/CategoryResolver.php` | Určení kategorie z hlavičky (pásmo + sekce + DX) |
-| `QsoGeometry` | `app/Services/Edi/QsoGeometry.php` | Výpočty souřadnic, vzdáleností a azimutů (sdíleno mapami i vizualizací) |
+| `QsoGeometry` | `app/Services/Edi/QsoGeometry.php` | Výpočty souřadnic, vzdáleností, azimutů, průběhu skóre a porovnání deníků (sdíleno vizualizací, inkubátorem i porovnáním) |
+| `PorovnaniRivals` | `app/Services/Edi/PorovnaniRivals.php` | Výběr soupeřů pro porovnání deníků (totéž kolo + kategorie, až po uzávěrce) |
 | `BigSquareCount` | `app/Services/Edi/BigSquareCount.php` | Agregace QSO do 4-znakových Maidenhead čtverců |
 | `ImportEdiAction` | `app/Actions/ImportEdiAction.php` | Orchestrace celého importu: validace → uložení → scoring → event |
 | `SkokanService` | `app/Services/Scoring/SkokanService.php` | „Skokan" – body-delta závodníka oproti poslednímu startu ve stejné kategorii + největší skokan kola (zobrazeno ve výsledkové listině) |
@@ -659,7 +673,7 @@ Mapa je součástí stránky vizualizace (`/edi/{head}/vizualizace`) jako čtyř
 | Špendlíky | Pin na každé QSO, popup s vzdáleností a azimutem |
 | Lokátory | Velké čtverce s počtem QSO jako popisek |
 
-Geometrie (souřadnice, vzdálenosti, azimuty) je centralizována v `QsoGeometry`. Vrstva „všechny stanice z kola" (`roundStations`) je viditelná až po uzavření/vyhodnocení kola – v průběhu příjmu hlášení by odhalovala deníky soupeřů.
+Geometrie (souřadnice, vzdálenosti, azimuty) je centralizována v `QsoGeometry`. Vrstva „všechny stanice z kola" (`roundStations`) je viditelná až po uzavření/vyhodnocení kola – v průběhu příjmu hlášení by odhalovala deníky soupeřů. Porovnání s deníkem soupeře má vlastní stránku – viz [Porovnání deníků](#porovnání-deníků).
 
 Podpůrná třída `Maidenhead` zajišťuje převod lokátor ↔ lat/lon. Vzdálenosti a azimuty jsou počítány přes knihovnu **mjaschen/phpgeo** (Haversine/Vincenty).
 
@@ -667,7 +681,7 @@ Podpůrná třída `Maidenhead` zajišťuje převod lokátor ↔ lat/lon. Vzdál
 
 ## EDI vizualizace
 
-Trasa `GET /edi/{head}/vizualizace` (`edi.vizualizace`) zobrazí komplexní analytickou stránku pro konkrétní EDI deník – mapu (čtyři přepínatelné vrstvy) i grafy na jedné URL. Toto je jediný mapový pohled; samostatné stránky byly zrušeny.
+Trasa `GET /edi/{head}/vizualizace` (`edi.vizualizace`) zobrazí komplexní analytickou stránku pro konkrétní EDI deník – mapu (čtyři přepínatelné vrstvy) i grafy na jedné URL. Toto je jediný mapový pohled; samostatné stránky byly zrušeny. Stránka je veřejná (zobrazuje jen vlastní deník účastníka) a v hlavičce odkazuje na [vizuální inkubátor](#vizuální-inkubátor) a – existuje-li aspoň jeden soupeř v téže kategorii – na [porovnání deníků](#porovnání-deníků).
 
 ### Komponenty stránky
 
@@ -688,6 +702,7 @@ Jeden mapový widget s přepínatelnými vrstvami bez reload stránky:
 
 | Vrstva | Popis | Barvy |
 |--------|-------|-------|
+| **CRK** (výchozí) | Kombinovaná mapa ve stylu vkvzavody.crk.cz: paprsky, kružnice vzdáleností po 200 km, mřížka velkých čtverců, všechny stanice z kola (≥ 5 QSO, po uzávěrce) | modrá = SSB, oranžová = CW, fialová = stanice z kola |
 | **Ježek** | Čáry z domácí stanice + body protistanic | modrá = SSB, oranžová = CW |
 | **Špendlíky** | Body protistanic s popupem (volací znak, WWL, vzdálenost, azimut) | modrá = SSB, oranžová = CW |
 | **Lokátory** | Velké čtverce s počtem QSO jako popisek | fialová |
@@ -734,12 +749,14 @@ GET /edi/{head}/vizualizace
         ▼
 EdiVizualizaceController::show(Edihead)
         │
-        ├── QsoGeometry::enrich()  ─► EnrichedQso[]
-        ├── squares()              ─► agregace do 4-znakových čtverců
-        ├── timeline()             ─► array<string, int>  (label → počet QSO)
-        ├── azimuthRose()          ─► array{labels, data} (8 sektorů)
-        ├── distHistogram()        ─► array<string, int>  (pásmo → počet QSO)
-        └── stats()                ─► array{pocet, maxDist, avgDist, uniqueSq}
+        ├── QsoGeometry::enrichedQsos()    ─► EnrichedQso[]
+        ├── QsoGeometry::bigSquares()      ─► agregace do 4-znakových čtverců
+        ├── QsoGeometry::roundStations()   ─► stanice z kola (po uzávěrce, TTL cache)
+        ├── PorovnaniRivals::hasRivals()   ─► zobrazit odkaz na porovnání?
+        ├── timeline()                     ─► array<string, int>  (label → počet QSO)
+        ├── azimuthRose()                  ─► array{labels, data} (8 sektorů)
+        ├── distHistogram()                ─► array<string, int>  (pásmo → počet QSO)
+        └── stats()                        ─► array{pocet, maxDist, avgDist, uniqueSq}
                 │
                 ▼
         pages/vizualizace.blade.php
@@ -749,6 +766,77 @@ EdiVizualizaceController::show(Edihead)
                             │
                             ├── Leaflet – mapa s vrstvami + legenda
                             └── Chart.js – 3 grafy
+```
+
+---
+
+## Vizuální inkubátor
+
+Trasa `GET /edi/{head}/vizualni-inkubator` (`edi.inkubator`) je **experimentální vizualizace deníku** nad rámec stránky Vizualizace. Přístup: přihlášení uživatelé; běžným uživatelům je stránka nedostupná, dokud existuje aktivní kolo (admin ji vidí vždy).
+
+### Komponenty stránky
+
+| Komponenta | Popis |
+|------------|-------|
+| **Tempo závodu** | Karty: špička (nejlepší klouzavá hodina), nejdelší pauza mezi QSO, průměrné tempo QSO/hod, počet nezapočítaných QSO |
+| **Souhrn po druzích provozu** | SSB / CW / ostatní: počet QSO, body, průměrná a max vzdálenost |
+| **Přehrávání deníku na mapě** | Leaflet mapa se sliderem 08:00–11:00 a tlačítkem ▶ – QSO se objevují chronologicky (paprsek + špendlík) |
+| **Průběh skóre** | Schodový Chart.js graf: kumulativní body za spojení × průběžný počet násobičů po každém QSO |
+| **Timeline s násobiči** | Skládaný sloupcový graf po 15 minutách: celkový počet QSO + QSO, která přinesla nový násobič |
+| **Vážená azimutová růžice** | PolarArea s přepínáním vážení: počet QSO / součet km / součet bodů v 8 sektorech |
+| **Body podle čtverců** | Vodorovné sloupce: kolik bodů přinesl který velký čtverec |
+| **Celoroční trend** | Body a pořadí stanice ve všech kolech roku (z veřejné výsledkové listiny) |
+| **TOP ODX** | Tabulka 10 nejvzdálenějších spojení (km, azimut, čas, mód, body) |
+| **Nové násobiče** | Chronologický seznam: které QSO přineslo dosud nepracovaný velký čtverec |
+| **Nezapočítaná QSO** | QSO mimo závodní okno / mimo den závodu / označené duplicity (prvních 50 řádků) |
+
+Výpočet průběhu skóre (`QsoGeometry::prubehSkore()`) je sdílený se stránkou porovnání deníků. Porovnání se soupeřem bylo z inkubátoru přesunuto na samostatnou stránku [Porovnání deníků](#porovnání-deníků).
+
+---
+
+## Porovnání deníků
+
+Trasa `GET /edi/{head}/porovnani` (`edi.porovnani`) je samostatná stránka **porovnání dvou hráčů** – tohoto deníku proti vybranému soupeři (query parametr `?porovnat={id}`). Funkce sem byla přesunuta ze stránek Vizualizace (mapová vrstva „Porovnání") a Vizuální inkubátor (overlay průběhu skóre).
+
+### Pravidla výběru soupeře
+
+- Porovnat lze **jen deníky z téhož kola a téže kategorie** – soupeře hledá `PorovnaniRivals` podle schválených záznamů výsledkové listiny (`vkvpa_data`)
+- **Férovost:** soupeřův deník se vydá až po uzávěrce, resp. vyhodnocení kola (`QsoGeometry::roundResultsDisclosable()`); do té doby se nenabízí nic a query parametr se ignoruje
+- Soupeř mimo nabídku (jiná kategorie, jiné kolo) je tiše ignorován
+- Vizualizace i inkubátor odkazují na tuto stránku jen tehdy, když existuje aspoň jeden soupeř (`PorovnaniRivals::hasRivals()`)
+
+### Komponenty stránky (po výběru soupeře)
+
+| Komponenta | Popis |
+|------------|-------|
+| **Souhrnné karty** | Obě stanice vedle sebe: počet QSO, násobiče, body; plus počty rozdílů (jen já / jen soupeř / oba) |
+| **Mapa rozdílů** (Leaflet) | Protistanice po vzoru vushf.dk: **zelená** = udělal jen tento deník, **červená** = jen soupeř, **šedá** = oba; modrý bod = vlastní QTH, oranžový = soupeřovo; vzájemné spojení obou stanic se nepočítá |
+| **Průběh skóre** (Chart.js Line) | Schodové křivky obou stanic přes sebe (modrá = vlastní, červená = soupeř): kumulativní body za spojení × průběžný počet násobičů |
+| **QSO v čase** (Chart.js Bar) | Tempo obou stanic vedle sebe v 15minutových intervalech závodního okna |
+| **Směry QSO** (Chart.js Radar) | Směrová růžice obou stanic přes sebe – počty QSO v 8 světových stranách |
+
+### Architektura porovnání
+
+```
+GET /edi/{head}/porovnani?porovnat={id}
+        │
+        ▼
+EdiPorovnaniController::show(Request, Edihead)
+        │
+        ├── PorovnaniRivals::rivals()      ─► soupeři z téhož kola + kategorie
+        ├── QsoGeometry::compareWith()     ─► {onlyMine, onlyRival, both}
+        ├── QsoGeometry::prubehSkore()     ─► kumulativní skóre obou deníků
+        ├── timelineCounts()               ─► QSO po 15 min (obě stanice)
+        └── azimuthCounts()                ─► 8 směrových sektorů (obě stanice)
+                │
+                ▼
+        pages/porovnani.blade.php
+                │
+                ├── window.__porovnaniConfig = { ...vše jako JSON }
+                └── @vite('resources/js/porovnani.js')
+                            │
+                            ├── Leaflet – mapa rozdílů + legenda
+                            └── Chart.js – 3 grafy (průběh, timeline, radar)
 ```
 
 ---
@@ -837,7 +925,7 @@ GitHub Actions workflow (`.github/workflows/ci.yml`) – job `quality`:
 | Code style | `composer lint` |
 | Frontend build | `npm ci && npm run build` |
 
-Běží na `ubuntu-latest`, PHP 8.4, Node 22. Timeout 15 minut.
+Běží na `ubuntu-latest`, PHP 8.5, Node 22. Timeout 15 minut.
 
 ---
 
