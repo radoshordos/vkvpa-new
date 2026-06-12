@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Enums\QsoMode;
 use App\Models\Edihead;
 use App\Services\Edi\DenikStatistiky;
 use App\Services\Edi\EnrichedQso;
@@ -63,6 +64,7 @@ class EdiVizualizaceController extends Controller
                 'mode' => $q->mode->value,
                 'time' => $q->timeMinutes,
             ]),
+            'nasobice' => $nasobice,
             'squares' => $this->geometry->bigSquares($head),
             'roundStations' => $this->geometry->roundStations($head),
             'roundDataPending' => ! $this->geometry->roundResultsDisclosable($head),
@@ -82,14 +84,18 @@ class EdiVizualizaceController extends Controller
     }
 
     /**
-     * Histogram vzdáleností v km → počty QSO.
+     * Histogram vzdáleností v km → počty QSO, rozdělený podle druhu provozu
+     * (skládaný sloupcový graf: SSB / CW / ostatní).
      *
      * @param  Collection<int, EnrichedQso>  $lines
-     * @return array<string, int>
+     * @return array{labels: list<string>, ssb: list<int>, cw: list<int>, ostatni: list<int>}
      */
     private function distHistogram(Collection $lines): array
     {
-        $buckets = ['0–50' => 0, '50–100' => 0, '100–200' => 0, '200–400' => 0, '400–700' => 0, '700+' => 0];
+        $labels = ['0–50', '50–100', '100–200', '200–400', '400–700', '700+'];
+        $ssb = array_fill(0, 6, 0);
+        $cw = array_fill(0, 6, 0);
+        $ostatni = array_fill(0, 6, 0);
 
         foreach ($lines as $l) {
             if ($l->dist === null) {
@@ -97,18 +103,23 @@ class EdiVizualizaceController extends Controller
             }
 
             $d = $l->dist;
-            $key = match (true) {
-                $d < 50 => '0–50',
-                $d < 100 => '50–100',
-                $d < 200 => '100–200',
-                $d < 400 => '200–400',
-                $d < 700 => '400–700',
-                default => '700+',
+            $i = match (true) {
+                $d < 50 => 0,
+                $d < 100 => 1,
+                $d < 200 => 2,
+                $d < 400 => 3,
+                $d < 700 => 4,
+                default => 5,
             };
-            $buckets[$key]++;
+
+            match ($l->mode) {
+                QsoMode::Ssb => $ssb[$i]++,
+                QsoMode::Cw => $cw[$i]++,
+                QsoMode::Other => $ostatni[$i]++,
+            };
         }
 
-        return $buckets;
+        return ['labels' => $labels, 'ssb' => $ssb, 'cw' => $cw, 'ostatni' => $ostatni];
     }
 
     /**

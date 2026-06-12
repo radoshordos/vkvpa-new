@@ -766,14 +766,14 @@ EdiVizualizaceController::show(Edihead)
         ├── QsoGeometry::roundStations()      ─► stanice z kola (po uzávěrce, TTL cache)
         ├── QsoGeometry::prubehSkore()        ─► kumulativní skóre po QSO
         ├── PorovnaniRivals::hasRivals()      ─► zobrazit odkaz na porovnání?
-        ├── DenikStatistiky::noveNasobice()   ─► chronologie nových čtverců
+        ├── DenikStatistiky::noveNasobice()   ─► chronologie nových čtverců (s idx QSO)
         ├── DenikStatistiky::timeline()       ─► {labels, celkem, nove} (15min intervaly)
-        ├── DenikStatistiky::azimuthRose()    ─► {labels, pocet, km, body} (8 sektorů)
+        ├── DenikStatistiky::azimuthRose()    ─► {labels, pocet, km, body} (16 sektorů)
         ├── DenikStatistiky::bodyPodleCtvercu() ─► body po velkých čtvercích
         ├── DenikStatistiky::sezona()         ─► celoroční trend stanice
         ├── DenikStatistiky::tempo()          ─► špička / pauza / průměr
         ├── DenikStatistiky::modeStats()      ─► souhrn po druzích provozu
-        ├── distHistogram()                   ─► array<string, int>  (pásmo → počet QSO)
+        ├── distHistogram()                   ─► {labels, ssb, cw, ostatni} (pásma × druh provozu)
         └── stats()                           ─► array{pocet, maxDist, avgDist, uniqueSq}
                 │
                 ▼

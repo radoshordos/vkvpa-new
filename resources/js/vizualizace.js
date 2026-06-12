@@ -52,60 +52,87 @@ function modeLabel(mode) {
     return '?';
 }
 
+// ── Filtr druhu provozu (SSB / CW / ostatní) napříč vrstvami ───────────────
+// Klíč skupiny: 1=SSB, 2=CW, 0=vše ostatní (shodně s tlačítky data-mode-filter).
+
+const modeGroup = (m) => (m === 1 || m === 2 ? m : 0);
+const modeFilter = { 0: true, 1: true, 2: true };
+
+// Per-QSO prvky vrstev (mimo přehrávání – to filtruje applyTime): při změně
+// filtru se přidávají/odebírají z mateřské skupiny.
+const modeEntries = [];
+function addModeEntry(group, mode, members) {
+    members.forEach((m) => m.addTo(group));
+    modeEntries.push({ mode: modeGroup(mode), members, group });
+}
+
+function applyModeFilter() {
+    modeEntries.forEach(function (e) {
+        e.members.forEach(function (m) {
+            if (modeFilter[e.mode]) {
+                if (!e.group.hasLayer(m)) e.group.addLayer(m);
+            } else {
+                e.group.removeLayer(m);
+            }
+        });
+    });
+    // Přehrávání respektuje filtr přes applyTime (viditelnost = čas × provoz).
+    applyTime(Number(slider.value));
+}
+
+// QSO, která přinesla nový násobič – zvýraznění při přehrávání (idx = pořadí
+// QSO v cfg.points).
+const nasobicByIdx = new Map((cfg.nasobice || []).map((n) => [n.idx, n]));
+
 // Položky přehrávání: každé QSO = paprsek + špendlík, řízené časem.
 const playbackItems = [];
+// Špendlíky podle pořadí QSO – klik na řádek TOP ODX je otevírá na mapě.
+const spendlikMarkers = [];
 
-cfg.points.forEach(function (p) {
+cfg.points.forEach(function (p, idx) {
     bounds.push([p.lat, p.lon]);
     const mc = modeColor(p.mode);
 
     // ježek: čára + barevný bod dle modu
+    const jezekMembers = [];
     if (cfg.home) {
-        L.polyline([[cfg.home.lat, cfg.home.lon], [p.lat, p.lon]], {
+        jezekMembers.push(L.polyline([[cfg.home.lat, cfg.home.lon], [p.lat, p.lon]], {
             color: mc.fill, weight: 1.2, opacity: 0.55,
-        }).addTo(jezekLayer);
+        }));
     }
-    L.circleMarker([p.lat, p.lon], {
+    jezekMembers.push(L.circleMarker([p.lat, p.lon], {
         radius: 5, color: mc.stroke, fillColor: mc.fill, fillOpacity: 0.9, weight: 1.5,
-    }).addTo(jezekLayer)
-        .bindPopup(`<strong>${p.call}</strong> <span style="font-size:.8em;opacity:.7">${modeLabel(p.mode)}</span><br>${p.wwl}<br>${p.points} b.`);
+    }).bindPopup(`<strong>${p.call}</strong> <span style="font-size:.8em;opacity:.7">${modeLabel(p.mode)}</span><br>${p.wwl}<br>${p.points} b.`));
+    addModeEntry(jezekLayer, p.mode, jezekMembers);
 
     // špendlíky – taktéž rozlišené barevně
     const popupSpend = `<strong>${p.call}</strong> <span style="font-size:.8em;opacity:.7">${modeLabel(p.mode)}</span><br>${p.wwl}`
         + (p.dist !== null ? `<br>${p.dist} km` : '')
         + (p.azimut !== null ? `<br>azimut ${p.azimut}°` : '');
-    L.circleMarker([p.lat, p.lon], {
+    const spendlik = L.circleMarker([p.lat, p.lon], {
         radius: 5, color: mc.stroke, fillColor: mc.fill, fillOpacity: 0.9, weight: 1.5,
-    }).addTo(spendlikyLayer)
-        .bindPopup(popupSpend);
+    }).bindPopup(popupSpend);
+    spendlikMarkers.push(spendlik);
+    addModeEntry(spendlikyLayer, p.mode, [spendlik]);
 
-    // přehrávání: paprsek + špendlík s časem QSO
+    // přehrávání: paprsek + špendlík s časem QSO; nový násobič fialově a větší
+    const nn = nasobicByIdx.get(idx);
     const group = [];
     if (cfg.home) {
         group.push(L.polyline([[cfg.home.lat, cfg.home.lon], [p.lat, p.lon]], {
             color: mc.fill, weight: 1.2, opacity: 0.55,
         }));
     }
-    group.push(L.circleMarker([p.lat, p.lon], {
-        radius: 5, color: mc.stroke, fillColor: mc.fill, fillOpacity: 0.9, weight: 1.5,
-    }).bindPopup(`<strong>${p.call}</strong> <span style="font-size:.8em;opacity:.7">${modeLabel(p.mode)}</span><br>${p.wwl}<br>${hhmm(p.time)} UTC`
+    group.push(L.circleMarker([p.lat, p.lon], nn
+        ? { radius: 7, color: '#7c3aed', fillColor: '#a855f7', fillOpacity: 0.9, weight: 2 }
+        : { radius: 5, color: mc.stroke, fillColor: mc.fill, fillOpacity: 0.9, weight: 1.5 },
+    ).bindPopup(`<strong>${p.call}</strong> <span style="font-size:.8em;opacity:.7">${modeLabel(p.mode)}</span><br>${p.wwl}<br>${hhmm(p.time)} UTC`
         + (p.dist !== null ? `<br>${p.dist} km` : '')
         + (p.azimut !== null ? `<br>azimut ${p.azimut}°` : '')
-        + `<br>${p.points} b.`));
-    playbackItems.push({ t: p.time, group, shown: false });
+        + `<br>${p.points} b.`
+        + (nn ? `<br>🆕 nový násobič ${nn.square} (${nn.poradi}.)` : '')));
+    playbackItems.push({ t: p.time, mode: modeGroup(p.mode), group, shown: false });
 });
-
-// Legenda módů v ježek/špendlíky vrstvě
-const modeLegend = L.control({ position: 'bottomright' });
-modeLegend.onAdd = function () {
-    const div = L.DomUtil.create('div');
-    div.style.cssText = 'background:rgba(255,255,255,.9);padding:6px 10px;border-radius:6px;font-size:12px;line-height:1.7;box-shadow:0 1px 4px rgba(0,0,0,.2)';
-    div.innerHTML = '<strong style="display:block;margin-bottom:2px">Druh provozu</strong>'
-        + '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#60a5fa;margin-right:5px;vertical-align:middle"></span>SSB<br>'
-        + '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#fbbf24;margin-right:5px;vertical-align:middle"></span>CW';
-    return div;
-};
-modeLegend.addTo(map);
 
 cfg.squares.forEach(function (s) {
     bounds.push([s.lat, s.lon]);
@@ -115,6 +142,31 @@ cfg.squares.forEach(function (s) {
         .bindTooltip(String(s.count), { permanent: true, direction: 'center', className: 'sq-label' })
         .bindPopup(`<strong>${s.square}</strong><br>${s.count} protistanic`);
 });
+
+// ── Legenda – obsah podle aktivní vrstvy ───────────────────────────────────
+
+const hasOtherMode = cfg.points.some((p) => modeGroup(p.mode) === 0);
+let legendCtl = null;
+
+function updateLegend(key) {
+    if (legendCtl) { map.removeControl(legendCtl); legendCtl = null; }
+    if (key === 'lokatory') return; // vrstva nemá barvy podle provozu
+
+    const rows = [['#60a5fa', 'SSB'], ['#fbbf24', 'CW']];
+    if (hasOtherMode) rows.push(['#9ca3af', 'Ostatní']);
+    if (key === 'playback') rows.push(['#a855f7', 'Nový násobič']);
+    if (key === 'crk' && (cfg.roundStations || []).length > 0) rows.push(['#cc66ff', 'Stanice z kola']);
+
+    legendCtl = L.control({ position: 'bottomright' });
+    legendCtl.onAdd = function () {
+        const div = L.DomUtil.create('div');
+        div.style.cssText = 'background:rgba(255,255,255,.9);padding:6px 10px;border-radius:6px;font-size:12px;line-height:1.7;box-shadow:0 1px 4px rgba(0,0,0,.2);color:#333';
+        div.innerHTML = '<strong style="display:block;margin-bottom:2px">Legenda</strong>'
+            + rows.map(([c, l]) => `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${c};margin-right:5px;vertical-align:middle"></span>${l}`).join('<br>');
+        return div;
+    };
+    legendCtl.addTo(map);
+}
 
 // ── Vrstva CRK: kombinovaná mapa ve stylu vkvzavody.crk.cz ─────────────────
 
@@ -135,17 +187,19 @@ if (cfg.home) {
 // Paprsky z QTH do protistanic + špendlíky barevně dle druhu provozu.
 cfg.points.forEach(function (p) {
     const mc = modeColor(p.mode);
+    const members = [];
     if (cfg.home) {
-        L.polyline([[cfg.home.lat, cfg.home.lon], [p.lat, p.lon]], {
+        members.push(L.polyline([[cfg.home.lat, cfg.home.lon], [p.lat, p.lon]], {
             color: '#cc0000', weight: 1, opacity: 0.35,
-        }).addTo(crkLayer);
+        }));
     }
     const popup = `<strong>${p.call}</strong> <span style="font-size:.8em;opacity:.7">${modeLabel(p.mode)}</span><br>${p.wwl}`
         + (p.dist !== null ? `<br>${p.dist} km` : '')
         + (p.azimut !== null ? `<br>azimut ${p.azimut}°` : '');
-    L.circleMarker([p.lat, p.lon], {
+    members.push(L.circleMarker([p.lat, p.lon], {
         radius: 4, color: mc.stroke, fillColor: mc.fill, fillOpacity: 0.85, weight: 1.5,
-    }).addTo(crkLayer).bindPopup(popup);
+    }).bindPopup(popup));
+    addModeEntry(crkLayer, p.mode, members);
 });
 
 // Všechny stanice z kola s ≥ 5 QSO.
@@ -203,24 +257,42 @@ const playbackControls = document.getElementById('viz-playback-controls');
 const slider = document.getElementById('viz-cas');
 const casLabel = document.getElementById('viz-cas-label');
 const qsoCount = document.getElementById('viz-qso-count');
+const skoreLabel = document.getElementById('viz-skore');
 const playBtn = document.getElementById('viz-play');
 
 function applyTime(t) {
     let shown = 0;
     playbackItems.forEach(function (it) {
-        const show = it.t <= t;
+        const show = it.t <= t && modeFilter[it.mode];
         if (show) shown++;
         if (show && !it.shown) { it.group.forEach((g) => g.addTo(playbackLayer)); it.shown = true; }
         if (!show && it.shown) { it.group.forEach((g) => playbackLayer.removeLayer(g)); it.shown = false; }
     });
     casLabel.textContent = hhmm(t);
     qsoCount.textContent = String(shown);
+
+    // Průběžné skóre k času t (poslední záznam cfg.cumulative; je řazeno časem).
+    let last = null;
+    for (const c of cfg.cumulative) {
+        if (c.t > t) break;
+        last = c;
+    }
+    skoreLabel.textContent = last ? `${last.body} b. · ${last.nasobice} nás.` : '0 b.';
 }
 
 let timer = null;
+let speedMs = 50; // ms na minutu závodu (1× = 50 ms, viz tlačítka data-speed)
+
 function stopReplay() {
     if (timer !== null) { clearInterval(timer); timer = null; }
     playBtn.textContent = '▶ Přehrát';
+}
+
+function tick() {
+    const t = Number(slider.value) + 1;
+    slider.value = String(t);
+    applyTime(t);
+    if (t >= cfg.window.to) stopReplay();
 }
 
 slider.addEventListener('input', function () {
@@ -235,12 +307,43 @@ playBtn.addEventListener('click', function () {
     playBtn.textContent = '⏸ Pauza';
     slider.value = String(t);
     applyTime(t);
-    timer = setInterval(function () {
-        t++;
-        slider.value = String(t);
-        applyTime(t);
-        if (t >= cfg.window.to) stopReplay();
-    }, 50);
+    timer = setInterval(tick, speedMs);
+});
+
+// Rychlost přehrávání (½× / 1× / 2×) – za běhu se interval přeplánuje.
+document.querySelectorAll('[data-speed]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+        speedMs = Number(btn.dataset.speed);
+        document.querySelectorAll('[data-speed]').forEach((b) => b.classList.toggle('active', b === btn));
+        if (timer !== null) {
+            clearInterval(timer);
+            timer = setInterval(tick, speedMs);
+        }
+    });
+});
+
+// Krokování po QSO: skok na čas předchozího/dalšího spojení.
+const qsoTimes = [...new Set(playbackItems.map((it) => it.t))].sort((a, b) => a - b);
+
+document.getElementById('viz-krok-vpred').addEventListener('click', function () {
+    stopReplay();
+    const cur = Number(slider.value);
+    const next = qsoTimes.find((t) => t > cur);
+    const t = next !== undefined ? next : cfg.window.to;
+    slider.value = String(t);
+    applyTime(t);
+});
+
+document.getElementById('viz-krok-zpet').addEventListener('click', function () {
+    stopReplay();
+    const cur = Number(slider.value);
+    let prev;
+    for (const t of qsoTimes) {
+        if (t < cur) prev = t; else break;
+    }
+    const t = prev !== undefined ? prev : cfg.window.from;
+    slider.value = String(t);
+    applyTime(t);
 });
 
 // Výřez nastavíme dřív, než zapneme vrstvu – mřížka CRK čte map.getBounds().
@@ -267,16 +370,54 @@ function showLayer(key) {
     }
     playbackControls.classList.toggle('hidden', key !== 'playback');
     playbackControls.classList.toggle('flex', key === 'playback');
+    // Filtr provozu nedává smysl na vrstvě Lokátory (agreguje čtverce).
+    document.getElementById('viz-mode-filter').classList.toggle('hidden', key === 'lokatory');
+    updateLegend(key);
     if (homeMarker) homeMarker.addTo(map);
     document.querySelectorAll('[data-map-layer]').forEach((b) => b.classList.toggle('active', b.dataset.mapLayer === key));
+    // Vrstva do URL (#mapa-…) – odkaz na konkrétní vrstvu jde sdílet.
+    history.replaceState(null, '', '#mapa-' + key);
 }
 
 document.querySelectorAll('[data-map-layer]').forEach(function (btn) {
     btn.addEventListener('click', () => showLayer(btn.dataset.mapLayer));
 });
 
-// Výchozí vrstva: přehrávání deníku (slider na konci okna = celý deník).
-showLayer('playback');
+// Filtr druhu provozu – přepínací tlačítka SSB / CW / Ostatní.
+document.querySelectorAll('[data-mode-filter]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+        const m = Number(btn.dataset.modeFilter);
+        modeFilter[m] = !modeFilter[m];
+        btn.classList.toggle('active', modeFilter[m]);
+        applyModeFilter();
+    });
+});
+
+// Klik na řádek TOP ODX → špendlík daného QSO na mapě.
+document.querySelectorAll('[data-odx-idx]').forEach(function (row) {
+    row.addEventListener('click', function () {
+        const idx = Number(row.dataset.odxIdx);
+        const marker = spendlikMarkers[idx];
+        if (!marker) return;
+        // Kdyby byl provoz QSO odfiltrovaný, špendlík by na mapě nebyl – zapni ho.
+        const m = modeGroup(cfg.points[idx].mode);
+        if (!modeFilter[m]) {
+            modeFilter[m] = true;
+            document.querySelectorAll('[data-mode-filter]').forEach(function (b) {
+                if (Number(b.dataset.modeFilter) === m) b.classList.add('active');
+            });
+            applyModeFilter();
+        }
+        showLayer('spendliky');
+        document.getElementById('viz-mapa').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        map.setView(marker.getLatLng(), Math.max(map.getZoom(), 8));
+        marker.openPopup();
+    });
+});
+
+// Výchozí vrstva: z URL hashe (#mapa-…), jinak přehrávání deníku.
+const hashLayer = (location.hash.match(/^#mapa-([a-z]+)$/) || [])[1];
+showLayer(Object.hasOwn(layers, hashLayer) ? hashLayer : 'playback');
 
 // ── Chart.js: barvy podle motivu (denní/noční) ─────────────────────────────
 // Text i mřížku grafů bereme z CSS proměnných motivu (--muted, --line), takže
@@ -291,10 +432,35 @@ applyChartTheme();
 
 const charts = [];
 
+// ── Synchronizovaný hover: průběh skóre ↔ timeline (sdílená časová osa) ────
+// Najetí na jeden graf kreslí svislou linku v odpovídajícím čase na obou.
+
+const hoverSync = { t: null }; // minuty od půlnoci, null = nic
+
+const syncPlugin = {
+    id: 'vizHoverSync',
+    afterDraw(chart) {
+        const toX = chart.$vizSyncToX;
+        if (hoverSync.t === null || !toX) return;
+        const x = toX(hoverSync.t);
+        if (x === null || x < chart.chartArea.left || x > chart.chartArea.right) return;
+        const ctx = chart.ctx;
+        ctx.save();
+        ctx.strokeStyle = 'rgba(148,163,184,.9)';
+        ctx.setLineDash([4, 3]);
+        ctx.beginPath();
+        ctx.moveTo(x, chart.chartArea.top);
+        ctx.lineTo(x, chart.chartArea.bottom);
+        ctx.stroke();
+        ctx.restore();
+    },
+};
+
 // ── Chart.js: Průběh skóre (schodová čára) ─────────────────────────────────
 
-charts.push(new Chart(document.getElementById('chartPrubeh'), {
+const prubehChart = new Chart(document.getElementById('chartPrubeh'), {
     type: 'line',
+    plugins: [syncPlugin],
     data: {
         datasets: [{
             label: cfg.pcall,
@@ -324,12 +490,14 @@ charts.push(new Chart(document.getElementById('chartPrubeh'), {
             y: { beginAtZero: true },
         },
     },
-}));
+});
+charts.push(prubehChart);
 
 // ── Chart.js: Timeline – QSO po 15 minutách, zvýrazněná QSO s novým násobičem
 
-charts.push(new Chart(document.getElementById('chartTimeline'), {
+const timelineChart = new Chart(document.getElementById('chartTimeline'), {
     type: 'bar',
+    plugins: [syncPlugin],
     data: {
         labels: cfg.timeline.labels,
         datasets: [
@@ -363,14 +531,36 @@ charts.push(new Chart(document.getElementById('chartTimeline'), {
             x: { stacked: true, grid: { display: false } },
         },
     },
-}));
+});
+charts.push(timelineChart);
+
+// Mapování čas (minuty) ↔ pixel: průběh má lineární osu, timeline kategorie
+// po 15 minutách (index i pokrývá interval od from+15·i, střed na from+15·i+7,5).
+prubehChart.$vizSyncToX = (t) => prubehChart.scales.x.getPixelForValue(t);
+timelineChart.$vizSyncToX = (t) => timelineChart.scales.x.getPixelForValue((t - cfg.window.from) / 15 - 0.5);
+
+function syncHover(chart, pixelToMinutes) {
+    chart.options.onHover = function (evt) {
+        const { left, right } = chart.chartArea;
+        hoverSync.t = (evt.x !== null && evt.x >= left && evt.x <= right) ? pixelToMinutes(evt.x) : null;
+        prubehChart.draw();
+        timelineChart.draw();
+    };
+    chart.canvas.addEventListener('mouseleave', function () {
+        hoverSync.t = null;
+        prubehChart.draw();
+        timelineChart.draw();
+    });
+}
+
+syncHover(prubehChart, (px) => prubehChart.scales.x.getValueForPixel(px));
+// Kategorie → index intervalu (getValueForPixel zaokrouhluje na nejbližší) → střed intervalu.
+syncHover(timelineChart, (px) => cfg.window.from + (timelineChart.scales.x.getValueForPixel(px) + 0.5) * 15);
 
 // ── Chart.js: Azimutová růžice s přepínáním vážení (počet / km / body) ─────
+// 16 sektorů po 22,5°; popisky směrů přímo u výsečí (legenda by byla nečitelná).
 
-const azColors = [
-    'rgba(239,68,68,.75)', 'rgba(251,146,60,.75)', 'rgba(250,204,21,.75)', 'rgba(74,222,128,.75)',
-    'rgba(34,211,238,.75)', 'rgba(96,165,250,.75)', 'rgba(167,139,250,.75)', 'rgba(236,72,153,.75)',
-];
+const azColors = Array.from({ length: 16 }, (_, i) => `hsla(${Math.round(i * 22.5)}, 72%, 55%, .75)`);
 const azTitles = { pocet: 'Směry QSO (počet)', km: 'Směry QSO (součet km)', body: 'Směry QSO (součet bodů)' };
 
 const azChart = new Chart(document.getElementById('chartAzimuth'), {
@@ -388,7 +578,7 @@ const azChart = new Chart(document.getElementById('chartAzimuth'), {
         responsive: true,
         maintainAspectRatio: true,
         plugins: {
-            legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11 } } },
+            legend: { display: false },
             title: { display: true, text: azTitles.pocet, font: { size: 13 } },
         },
         scales: {
@@ -396,9 +586,11 @@ const azChart = new Chart(document.getElementById('chartAzimuth'), {
                 beginAtZero: true,
                 // Průhledné pozadí popisků os – bílý backdrop by v nočním režimu rušil.
                 ticks: { font: { size: 10 }, backdropColor: 'transparent' },
+                pointLabels: { display: true, centerPointLabels: true, font: { size: 10 } },
             },
         },
-        startAngle: -Math.PI / 8,
+        // Posun o půl sektoru, aby S mířil přesně na sever (hodnota ve stupních).
+        startAngle: -11.25,
     },
 });
 charts.push(azChart);
@@ -489,34 +681,77 @@ if (cfg.sezona) {
     }));
 }
 
-// ── Chart.js: Histogram vzdáleností (bar) ─────────────────────────────────
+// ── Chart.js: Histogram vzdáleností skládaný podle druhu provozu ───────────
+
+const distDatasets = [
+    {
+        label: 'SSB',
+        data: cfg.distHistogram.ssb,
+        backgroundColor: 'rgba(96, 165, 250, 0.75)',
+        borderColor: 'rgba(29, 78, 216, 1)',
+        borderWidth: 1,
+        borderRadius: 3,
+    },
+    {
+        label: 'CW',
+        data: cfg.distHistogram.cw,
+        backgroundColor: 'rgba(251, 191, 36, 0.75)',
+        borderColor: 'rgba(180, 83, 9, 1)',
+        borderWidth: 1,
+        borderRadius: 3,
+    },
+];
+if (cfg.distHistogram.ostatni.some((v) => v > 0)) {
+    distDatasets.push({
+        label: 'Ostatní',
+        data: cfg.distHistogram.ostatni,
+        backgroundColor: 'rgba(156, 163, 175, 0.75)',
+        borderColor: 'rgba(75, 85, 99, 1)',
+        borderWidth: 1,
+        borderRadius: 3,
+    });
+}
 
 charts.push(new Chart(document.getElementById('chartDist'), {
     type: 'bar',
     data: {
-        labels: Object.keys(cfg.distHistogram).map((k) => k + ' km'),
-        datasets: [{
-            label: 'QSO',
-            data: Object.values(cfg.distHistogram),
-            backgroundColor: 'rgba(16, 185, 129, 0.75)',
-            borderColor: 'rgba(16, 185, 129, 1)',
-            borderWidth: 1,
-            borderRadius: 3,
-        }],
+        labels: cfg.distHistogram.labels.map((k) => k + ' km'),
+        datasets: distDatasets,
     },
     options: {
         responsive: true,
         maintainAspectRatio: true,
         plugins: {
-            legend: { display: false },
-            title: { display: true, text: 'Rozložení vzdáleností QSO', font: { size: 13 } },
+            legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } },
+            title: { display: true, text: 'Rozložení vzdáleností QSO podle druhu provozu', font: { size: 13 } },
         },
         scales: {
-            y: { beginAtZero: true, ticks: { stepSize: 1 } },
-            x: { grid: { display: false } },
+            y: { stacked: true, beginAtZero: true, ticks: { stepSize: 1 } },
+            x: { stacked: true, grid: { display: false } },
         },
     },
 }));
+
+// ── Export grafu do PNG (tlačítka ⤓ na kartách grafů) ──────────────────────
+
+document.querySelectorAll('[data-chart-png]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+        const canvas = document.getElementById(btn.dataset.chartPng);
+        if (!canvas) return;
+        // Podklad barvou povrchu – průhledné PNG by mimo stránku nebylo čitelné.
+        const out = document.createElement('canvas');
+        out.width = canvas.width;
+        out.height = canvas.height;
+        const ctx = out.getContext('2d');
+        ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--surface').trim() || '#fff';
+        ctx.fillRect(0, 0, out.width, out.height);
+        ctx.drawImage(canvas, 0, 0);
+        const a = document.createElement('a');
+        a.href = out.toDataURL('image/png');
+        a.download = `${btn.dataset.nazev}-${cfg.pcall.replace(/[^\w-]+/g, '-')}.png`;
+        a.click();
+    });
+});
 
 // Živé přebarvení grafů při přepnutí denního/nočního režimu (třída .dark na <html>).
 new MutationObserver(() => {

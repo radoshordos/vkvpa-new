@@ -22,9 +22,10 @@ class DenikStatistiky
      * Nové násobiče v chronologickém pořadí: které QSO přineslo dosud
      * nepracovaný velký čtverec. Vlastní čtverec se jako násobič počítá
      * automaticky od začátku, proto v seznamu „nových" nefiguruje.
+     * `idx` je pozice QSO v $lines – mapa podle ní zvýrazňuje špendlíky.
      *
      * @param  Collection<int, EnrichedQso>  $lines
-     * @return list<array{square: string, call: string, cas: string, t: int, poradi: int}>
+     * @return list<array{square: string, call: string, cas: string, t: int, poradi: int, idx: int}>
      */
     public function noveNasobice(Collection $lines, string $homeSq): array
     {
@@ -38,7 +39,7 @@ class DenikStatistiky
 
         $out = [];
 
-        foreach ($lines as $l) {
+        foreach ($lines as $idx => $l) {
             $sq = strtoupper(substr(trim($l->wwl), 0, 4));
             if (preg_match('/^[A-R]{2}\d{2}$/', $sq) !== 1 || isset($seen[$sq])) {
                 continue;
@@ -52,6 +53,7 @@ class DenikStatistiky
                 'cas' => self::hhmm($l->timeMinutes),
                 't' => $l->timeMinutes,
                 'poradi' => $poradi,
+                'idx' => $idx,
             ];
         }
 
@@ -63,7 +65,7 @@ class DenikStatistiky
      * která přinesla nový násobič (pro skládaný sloupcový graf).
      *
      * @param  Collection<int, EnrichedQso>  $lines
-     * @param  list<array{square: string, call: string, cas: string, t: int, poradi: int}>  $nasobice
+     * @param  list<array{square: string, call: string, cas: string, t: int, poradi: int, idx: int}>  $nasobice
      * @return array{labels: list<string>, celkem: list<int>, nove: list<int>}
      */
     public function timeline(Collection $lines, array $nasobice, int $fromMin, int $toMin): array
@@ -104,29 +106,29 @@ class DenikStatistiky
 
     /**
      * Azimutová růžice s trojím vážením: počet QSO, součet kilometrů a součet
-     * bodů v každém ze 8 sektorů (45°) po směru hodinových ručiček od severu.
+     * bodů v každém ze 16 sektorů (22,5°) po směru hodinových ručiček od severu.
      *
      * @param  Collection<int, EnrichedQso>  $lines
      * @return array{labels: list<string>, pocet: list<int>, km: list<int>, body: list<int>}
      */
     public function azimuthRose(Collection $lines): array
     {
-        $pocet = array_fill(0, 8, 0);
-        $km = array_fill(0, 8, 0);
-        $body = array_fill(0, 8, 0);
+        $pocet = array_fill(0, 16, 0);
+        $km = array_fill(0, 16, 0);
+        $body = array_fill(0, 16, 0);
 
         foreach ($lines as $l) {
             if ($l->azimut === null) {
                 continue;
             }
-            $s = (int) (($l->azimut + 22.5) / 45) % 8;
+            $s = (int) (($l->azimut + 11.25) / 22.5) % 16;
             $pocet[$s]++;
             $km[$s] += $l->dist ?? 0;
             $body[$s] += $l->points;
         }
 
         return [
-            'labels' => ['S', 'SV', 'V', 'JV', 'J', 'JZ', 'Z', 'SZ'],
+            'labels' => ['S', 'SSV', 'SV', 'VSV', 'V', 'VJV', 'JV', 'JJV', 'J', 'JJZ', 'JZ', 'ZJZ', 'Z', 'ZSZ', 'SZ', 'SSZ'],
             'pocet' => array_values($pocet),
             'km' => array_values($km),
             'body' => array_values($body),
@@ -161,10 +163,11 @@ class DenikStatistiky
     }
 
     /**
-     * TOP nejvzdálenější spojení (ODX).
+     * TOP nejvzdálenější spojení (ODX). `idx` je pozice QSO v $lines –
+     * klik na řádek tabulky podle ní najde špendlík na mapě.
      *
      * @param  Collection<int, EnrichedQso>  $lines
-     * @return list<array{call: string, wwl: string, dist: int, azimut: int|null, cas: string, mode: string, points: int}>
+     * @return list<array{call: string, wwl: string, dist: int, azimut: int|null, cas: string, mode: string, points: int, idx: int}>
      */
     public function topOdx(Collection $lines, int $limit = 10): array
     {
@@ -172,7 +175,7 @@ class DenikStatistiky
             ->filter(fn (EnrichedQso $l): bool => $l->dist !== null)
             ->sortByDesc(fn (EnrichedQso $l): int => (int) $l->dist)
             ->take($limit)
-            ->map(fn (EnrichedQso $l): array => [
+            ->map(fn (EnrichedQso $l, int $idx): array => [
                 'call' => $l->call,
                 'wwl' => $l->wwl,
                 'dist' => (int) $l->dist,
@@ -180,6 +183,7 @@ class DenikStatistiky
                 'cas' => self::hhmm($l->timeMinutes),
                 'mode' => $l->mode->label(),
                 'points' => $l->points,
+                'idx' => $idx,
             ])
             ->all());
     }
