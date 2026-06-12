@@ -9,7 +9,6 @@ use App\Models\Edihead;
 use App\Models\User;
 use App\Models\VkvpaData;
 use App\Models\VkvpaKola;
-use App\Support\VkvpaSettings;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
@@ -52,13 +51,13 @@ class EdiZobrazeniTest extends TestCase
         return User::create(['name' => 'user', 'password' => Hash::make('x'), 'is_admin' => false]);
     }
 
+    /** Kolo s otevřeným upload oknem (závod proběhl, uzávěrka v budoucnu). */
     private function activeRound(): VkvpaKola
     {
         return VkvpaKola::create([
             'nazev' => 'Test kolo',
             'datum_konani' => now()->subDay(),
             'datum_uzaverky' => now()->addDay(),
-            'aktivni' => true,
             'poznamka' => '',
         ]);
     }
@@ -178,28 +177,12 @@ class EdiZobrazeniTest extends TestCase
             ->assertSee('OK1A');
     }
 
-    // ─── Čerstvost neschválených záznamů (vkvpa.fresh_unapproved_days) ────────
+    // ─── Po uzávěrce je EDI veřejné (okno je čistá funkce času) ───────────────
 
-    /** Neschválený záznam v neaktivním kole drží blokaci jen po dobu čerstvosti. */
-    public function test_fresh_unapproved_record_keeps_edi_blocked(): void
+    public function test_unapproved_record_in_closed_round_does_not_block_edi_view(): void
     {
         $kolo = $this->closedRound();
-        $this->unapprovedEntry($kolo->id); // timestamp = teď (DB default)
-        $head = $this->denik();
-
-        $this->actingAs($this->regularUser())
-            ->get(route('edi.soubor', ['head' => $head->id]))
-            ->assertForbidden();
-    }
-
-    public function test_stale_unapproved_record_no_longer_blocks_edi_view(): void
-    {
-        $kolo = $this->closedRound();
-        $entry = $this->unapprovedEntry($kolo->id);
-        $entry->forceFill([
-            'timestamp' => now()->subDays(VkvpaSettings::freshUnapprovedDays() + 1),
-        ])->save();
-
+        $this->unapprovedEntry($kolo->id);
         $head = $this->denik();
 
         $this->actingAs($this->regularUser())
@@ -214,7 +197,6 @@ class EdiZobrazeniTest extends TestCase
             'nazev' => 'Staré kolo',
             'datum_konani' => now()->subDays(60),
             'datum_uzaverky' => now()->subDays(50),
-            'aktivni' => false,
             'poznamka' => '',
         ]);
     }

@@ -29,11 +29,10 @@ class KolaAdminControllerTest extends TestCase
     private function makeKolo(array $overrides = []): VkvpaKola
     {
         return VkvpaKola::create(array_merge([
-            'datum_konani' => '2026-01-17',
+            'datum_konani' => '2026-01-17 08:00:00',
             'datum_uzaverky' => '2026-02-01 23:59:00',
             'nazev' => 'Testovací kolo',
             'poznamka' => '',
-            'aktivni' => false,
         ], $overrides));
     }
 
@@ -62,9 +61,8 @@ class KolaAdminControllerTest extends TestCase
         $this->actingAs($this->admin())
             ->post(route('kola.admin.store'), [
                 'nazev' => 'Nové kolo 2026',
-                'datum_konani' => '2026-04-19',
+                'datum_konani' => '2026-04-19T08:00',
                 'datum_uzaverky' => '2026-05-03T23:59',
-                'aktivni' => '1',
                 'poznamka' => '',
             ])
             ->assertRedirect(route('kola.admin.index'))
@@ -72,15 +70,19 @@ class KolaAdminControllerTest extends TestCase
 
         $this->assertDatabaseHas('vkvpa_kola', [
             'nazev' => 'Nové kolo 2026',
-            'aktivni' => true,
         ]);
+        // Čas z datetime-local pole se uloží jako start závodu.
+        $this->assertSame(
+            '2026-04-19 08:00:00',
+            VkvpaKola::where('nazev', 'Nové kolo 2026')->firstOrFail()->datum_konani->toDateTimeString(),
+        );
     }
 
     public function test_store_requires_admin(): void
     {
         $this->post(route('kola.admin.store'), [
             'nazev' => 'Neautorizované kolo',
-            'datum_konani' => '2026-04-19',
+            'datum_konani' => '2026-04-19T08:00',
             'datum_uzaverky' => '2026-05-03T23:59',
         ])->assertRedirect(route('login'));
 
@@ -120,14 +122,13 @@ class KolaAdminControllerTest extends TestCase
 
     public function test_update_saves_changes(): void
     {
-        $kolo = $this->makeKolo(['nazev' => 'Původní název', 'aktivni' => false]);
+        $kolo = $this->makeKolo(['nazev' => 'Původní název']);
 
         $this->actingAs($this->admin())
             ->patch(route('kola.admin.update', $kolo->id), [
                 'nazev' => 'Nový název kola',
-                'datum_konani' => '2026-04-19',
+                'datum_konani' => '2026-04-19T08:00',
                 'datum_uzaverky' => '2026-05-03T23:59',
-                'aktivni' => '1',
                 'poznamka' => 'Poznámka',
             ])
             ->assertRedirect(route('kola.admin.index'))
@@ -136,24 +137,7 @@ class KolaAdminControllerTest extends TestCase
         $this->assertDatabaseHas('vkvpa_kola', [
             'id' => $kolo->id,
             'nazev' => 'Nový název kola',
-            'aktivni' => true,
         ]);
-    }
-
-    public function test_update_can_deactivate_kolo(): void
-    {
-        $kolo = $this->makeKolo(['aktivni' => true]);
-
-        $this->actingAs($this->admin())
-            ->patch(route('kola.admin.update', $kolo->id), [
-                'nazev' => $kolo->nazev,
-                'datum_konani' => '2026-01-17',
-                'datum_uzaverky' => '2026-02-01T23:59',
-                'poznamka' => '',
-            ])
-            ->assertRedirect(route('kola.admin.index'));
-
-        $this->assertDatabaseHas('vkvpa_kola', ['id' => $kolo->id, 'aktivni' => false]);
     }
 
     public function test_update_requires_admin(): void
@@ -162,7 +146,7 @@ class KolaAdminControllerTest extends TestCase
 
         $this->patch(route('kola.admin.update', $kolo->id), [
             'nazev' => 'Neoprávněná změna',
-            'datum_konani' => '2026-04-19',
+            'datum_konani' => '2026-04-19T08:00',
             'datum_uzaverky' => '2026-05-03T23:59',
         ])->assertRedirect(route('login'));
 

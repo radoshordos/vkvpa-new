@@ -22,9 +22,8 @@ class ApiVysledkyTest extends TestCase
     {
         return VkvpaKola::create([
             'nazev' => '2024 duben',
-            'datum_konani' => '2024-04-20',
+            'datum_konani' => '2024-04-20 08:00:00',
             'datum_uzaverky' => '2024-04-28 23:59:00',
-            'aktivni' => false,
             'poznamka' => '',
         ]);
     }
@@ -47,7 +46,7 @@ class ApiVysledkyTest extends TestCase
 
         $this->getJson('/api/kola')
             ->assertOk()
-            ->assertJsonStructure(['data' => [['id', 'nazev', 'datum_konani', 'aktivni']]]);
+            ->assertJsonStructure(['data' => [['id', 'nazev', 'datum_konani', 'stav']]]);
     }
 
     public function test_kola_returns_empty_list_when_no_rounds(): void

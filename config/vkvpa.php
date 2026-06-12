@@ -36,11 +36,6 @@ return [
     // Od tohoto kola se hlášení bez EDI do ročního součtu nezapočítávají.
     'non_edi_nullify_from_kolo' => 91,
 
-    // Neschválený záznam se počítá jako „čerstvý" (drží kolo v aktivním stavu
-    // a blokuje veřejný přístup k EDI souborům) jen po tuto dobu od podání.
-    // Starší zapomenuté záznamy už aktivitu nedrží.
-    'fresh_unapproved_days' => 28,
-
     // Cache ročních výsledků (Cache::flexible): doba „čerstvosti" a krajní doba
     // platnosti staré hodnoty (stale-while-revalidate), v sekundách.
     'yearly_cache_fresh' => (int) env('YEARLY_CACHE_FRESH', 300),

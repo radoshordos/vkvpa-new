@@ -37,9 +37,8 @@ class ContestRoundCommandsTest extends TestCase
         $start = ContestCalendar::roundStart($year, $month);
         VkvpaKola::create([
             'nazev' => 'Existující',
-            'datum_konani' => $start->toDateString(),
+            'datum_konani' => $start->toDateTimeString(),
             'datum_uzaverky' => ContestCalendar::uploadDeadline($start)->toDateTimeString(),
-            'aktivni' => false,
             'poznamka' => '',
         ]);
 
@@ -69,95 +68,18 @@ class ContestRoundCommandsTest extends TestCase
         $this->assertSame('23:59:59', $kolo->datum_uzaverky->format('H:i:s'));
     }
 
-    public function test_ensure_upcoming_creates_inactive_rounds(): void
+    public function test_ensure_upcoming_sets_contest_start_time(): void
     {
         Artisan::call('kola:ensure-upcoming', ['months' => 1]);
 
         $kolo = VkvpaKola::first();
         $this->assertNotNull($kolo);
-        $this->assertFalse($kolo->aktivni);
-    }
-
-    // ─── ActivateDueRoundsCommand ──────────────────────────────────────────────
-
-    public function test_activate_due_activates_past_round_with_future_deadline(): void
-    {
-        // Datum závodu v minulosti (= 08:00 UTC v ten den je jistě za námi),
-        // uzávěrka v budoucnosti.
-        $kolo = VkvpaKola::create([
-            'nazev' => 'VKV PA minulost',
-            'datum_konani' => now()->subDays(3)->toDateString(),
-            'datum_uzaverky' => now()->addDays(3)->toDateTimeString(),
-            'aktivni' => false,
-            'poznamka' => '',
-        ]);
-
-        Artisan::call('kola:activate-due');
-
-        $this->assertTrue($kolo->refresh()->aktivni);
-    }
-
-    public function test_activate_due_does_not_activate_future_round(): void
-    {
-        // Datum závodu v budoucnosti – ještě nenastal.
-        $kolo = VkvpaKola::create([
-            'nazev' => 'VKV PA budoucnost',
-            'datum_konani' => now()->addDays(7)->toDateString(),
-            'datum_uzaverky' => now()->addDays(12)->toDateTimeString(),
-            'aktivni' => false,
-            'poznamka' => '',
-        ]);
-
-        Artisan::call('kola:activate-due');
-
-        $this->assertFalse($kolo->refresh()->aktivni);
-    }
-
-    public function test_activate_due_ignores_already_expired_rounds(): void
-    {
-        // Datum závodu v minulosti, ale uzávěrka také v minulosti.
-        $kolo = VkvpaKola::create([
-            'nazev' => 'VKV PA minulé kolo',
-            'datum_konani' => now()->subDays(10)->toDateString(),
-            'datum_uzaverky' => now()->subDays(5)->toDateTimeString(),
-            'aktivni' => false,
-            'poznamka' => '',
-        ]);
-
-        Artisan::call('kola:activate-due');
-
-        $this->assertFalse($kolo->refresh()->aktivni);
-    }
-
-    public function test_activate_due_ignores_already_active_rounds(): void
-    {
-        $kolo = VkvpaKola::create([
-            'nazev' => 'VKV PA aktivní',
-            'datum_konani' => now()->subDays(3)->toDateString(),
-            'datum_uzaverky' => now()->addDays(3)->toDateTimeString(),
-            'aktivni' => true,
-            'poznamka' => '',
-        ]);
-
-        Artisan::call('kola:activate-due');
-
-        // Aktivni zůstane true (nezmění se).
-        $this->assertTrue($kolo->refresh()->aktivni);
+        // Start závodu = třetí neděle 08:00 UTC, uložený přímo v datum_konani.
+        $this->assertSame(0, $kolo->datum_konani->dayOfWeek);
+        $this->assertSame('08:00:00', $kolo->datum_konani->format('H:i:s'));
     }
 
     // ─── Scheduler registrace ─────────────────────────────────────────────────
-
-    public function test_activate_due_is_scheduled(): void
-    {
-        $events = Collection::make(app(Schedule::class)->events());
-
-        $this->assertTrue(
-            $events->contains(
-                fn ($e): bool => str_contains((string) ($e->command ?? ''), 'kola:activate-due'),
-            ),
-            'Naplánovaná úloha kola:activate-due není registrovaná.',
-        );
-    }
 
     public function test_ensure_upcoming_is_scheduled(): void
     {

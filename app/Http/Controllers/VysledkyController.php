@@ -76,14 +76,14 @@ class VysledkyController extends Controller
             'skokani' => $skokani,
             'hledat' => $hledat,
             'limitReached' => $radky->count() >= $maxRows,
-            'uploadWindowOpen' => VkvpaKola::existujeAktivni(),
+            'uploadWindowOpen' => VkvpaKola::existujeUploadOkno(),
         ]);
     }
 
     public function pribezne(Request $request): View
     {
         // Průběžné výsledky se zobrazují vždy jen pro jedno kolo – nejstarší
-        // aktivní, které ještě nebylo vyhodnocené. Výběr kola se nenabízí.
+        // nevyhodnocené s otevřeným upload oknem. Výběr kola se nenabízí.
         $kolo = VkvpaKola::aktualniProPrubezne();
 
         $katId = $request->integer('kategorie');

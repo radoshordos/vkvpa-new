@@ -8,14 +8,11 @@ use App\Models\VkvpaData;
 use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
 use App\Services\Scoring\ScoringService;
-use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Collection;
 use Tests\TestCase;
 
 /**
- * Nové provozní funkce: automatická deaktivace prošlých kol (scheduler)
- * a cache ročních výsledků (Cache::flexible) s invalidací při přepočtu pořadí.
+ * Cache ročních výsledků (Cache::flexible) s invalidací při přepočtu pořadí.
  */
 class SchedulingAndCacheTest extends TestCase
 {
@@ -24,41 +21,14 @@ class SchedulingAndCacheTest extends TestCase
     /** Pořadí vytvořeného kola v rámci testu – datum_konani je v DB unikátní. */
     private int $koloSeq = 0;
 
-    private function kolo(string $nazev, string $uzaverka, bool $aktivni = true): VkvpaKola
+    private function kolo(string $nazev, string $uzaverka): VkvpaKola
     {
         return VkvpaKola::create([
-            'datum_konani' => now()->subMonth()->subDays($this->koloSeq++)->toDateString(),
+            'datum_konani' => now()->subMonth()->subDays($this->koloSeq++)->toDateTimeString(),
             'datum_uzaverky' => $uzaverka,
             'nazev' => $nazev,
             'poznamka' => '',
-            'aktivni' => $aktivni,
         ]);
-    }
-
-    public function test_deactivate_expired_rounds_deactivates_only_past_active_rounds(): void
-    {
-        $proslé = $this->kolo('1. kolo 2026', now()->subDay()->toDateTimeString());
-        $budoucí = $this->kolo('2. kolo 2026', now()->addDay()->toDateTimeString());
-        $jižNeaktivní = $this->kolo('3. kolo 2026', now()->subDay()->toDateTimeString(), aktivni: false);
-
-        $pocet = app(ScoringService::class)->deactivateExpiredRounds();
-
-        $this->assertSame(1, $pocet);
-        $this->assertFalse($proslé->refresh()->aktivni);
-        $this->assertTrue($budoucí->refresh()->aktivni);
-        $this->assertFalse($jižNeaktivní->refresh()->aktivni);
-    }
-
-    public function test_scheduled_task_is_registered(): void
-    {
-        $events = Collection::make(app(Schedule::class)->events());
-
-        $this->assertTrue(
-            $events->contains(
-                fn ($event): bool => str_contains((string) ($event->command ?? ''), 'kola:deactivate-expired'),
-            ),
-            'Naplánovaná úloha kola:deactivate-expired není registrovaná.',
-        );
     }
 
     public function test_yearly_results_are_cached_until_rank_round_invalidates(): void

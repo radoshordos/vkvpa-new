@@ -130,7 +130,7 @@ class EdiPorovnaniTest extends TestCase
     {
         // Kolo v příjmu hlášení → porovnání by odhalilo soupeřův deník;
         // query parametr se ignoruje a výběr se nenabízí (ani adminovi).
-        [$head, $rival] = $this->seedRound(aktivni: true);
+        [$head, $rival] = $this->seedRound(otevrene: true);
 
         $html = $this->actingAs($this->admin())
             ->get(route('edi.porovnani', ['head' => $head->id, 'porovnat' => $rival->id]))
@@ -149,15 +149,15 @@ class EdiPorovnaniTest extends TestCase
      *
      * @return array{Edihead, Edihead, Edihead}
      */
-    private function seedRound(bool $aktivni = false): array
+    private function seedRound(bool $otevrene = false): array
     {
         $kolo = VkvpaKola::create([
-            'datum_konani' => '2026-03-15',
-            'datum_uzaverky' => '2026-03-20 23:59:59',
+            'datum_konani' => '2026-03-15 08:00:00',
+            // Otevřené kolo = uzávěrka v budoucnu (stav Příjem), jinak vyhodnocené.
+            'datum_uzaverky' => $otevrene ? now()->addDay()->toDateTimeString() : '2026-03-20 23:59:59',
             'nazev' => '03/2026',
             'poznamka' => '',
-            'aktivni' => $aktivni,
-            'vyhodnoceno' => $aktivni ? null : '2026-03-21 10:00:00',
+            'vyhodnoceno' => $otevrene ? null : '2026-03-21 10:00:00',
         ]);
 
         $katA = VkvpaKategorie::create(['nazev' => '144 MHz', 'popis' => '', 'zkratka' => 'A', 'dxid' => 0]);

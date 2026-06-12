@@ -25,7 +25,6 @@ class SecurityTest extends TestCase
             'datum_konani' => now()->subDay(),
             'datum_uzaverky' => now()->addDays(5),
             'nazev' => 'Testovací kolo',
-            'aktivni' => true,
             'poznamka' => '',
         ]);
     }

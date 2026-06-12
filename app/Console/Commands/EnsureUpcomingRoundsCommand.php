@@ -40,16 +40,15 @@ final class EnsureUpcomingRoundsCommand extends Command
 
             VkvpaKola::create([
                 'nazev' => ContestCalendar::roundName($year, $month),
-                'datum_konani' => $start->toDateString(),
+                'datum_konani' => $start->toDateTimeString(),
                 'datum_uzaverky' => $deadline->toDateTimeString(),
-                'aktivni' => false,
                 'poznamka' => '',
             ]);
 
             $this->info(sprintf(
-                'Vytvořeno: %s (%s – uzávěrka %s)',
+                'Vytvořeno: %s (start %s – uzávěrka %s)',
                 ContestCalendar::roundName($year, $month),
-                $start->toDateString(),
+                $start->toDateTimeString(),
                 $deadline->toDateString(),
             ));
 

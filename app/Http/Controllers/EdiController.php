@@ -108,7 +108,7 @@ class EdiController extends Controller
      */
     private function assertEdiAccess(): void
     {
-        if (! auth()->user()?->is_admin && VkvpaKola::existujeAktivni()) {
+        if (! auth()->user()?->is_admin && VkvpaKola::existujeUploadOkno()) {
             abort(403);
         }
     }

@@ -7,8 +7,6 @@
 
 @php
     $isAdmin = $isAdmin ?? (bool) (auth()->user()?->is_admin);
-    // Start závodu z konfigurace závodního okna ('0800' → '08:00')
-    $startZavodu = preg_replace('/^(\d{2})(\d{2})$/', '$1:$2', \App\Support\ContestWindow::from());
 @endphp
 
 <div class="mb-4 flex flex-wrap gap-2">
@@ -26,7 +24,6 @@
         <th>{{ __('pages.kola.col_name') }}</th>
         <th class="text-right"><abbr title="{{ __('pages.kola.col_count') }}">Σ</abbr></th>
         <th>{{ __('pages.kola.col_state') }}</th>
-        @if ($isAdmin)<th class="text-center">{{ __('pages.kola.col_active') }}</th>@endif
         <th>{{ __('pages.kola.col_evaluated') }}</th>
         @if ($isAdmin)<th>{{ __('pages.kola.col_actions') }}</th>@endif
       </tr>
@@ -35,7 +32,7 @@
       @foreach ($kola as $k)
         @php $stav = $k->stav(); @endphp
         <tr>
-          <td class="whitespace-nowrap">{{ $k->datum_konani ? $k->datum_konani->locale(app()->getLocale())->isoFormat('dddd D. M. YYYY').' '.$startZavodu.' UTC' : '' }}</td>
+          <td class="whitespace-nowrap">{{ $k->datum_konani ? $k->datum_konani->locale(app()->getLocale())->isoFormat('dddd D. M. YYYY HH:mm').' UTC' : '' }}</td>
           {{-- isoFormat dddd = název dne v aktuálním jazyce (pátek / Friday) --}}
           <td class="whitespace-nowrap">{{ $k->datum_uzaverky ? $k->datum_uzaverky->locale(app()->getLocale())->isoFormat('dddd D. M. YYYY HH:mm').' UTC' : '' }}</td>
           <td>{{ $k->nazev }}</td>
@@ -43,10 +40,6 @@
           <td>
             <span class="badge {{ $stav->badgeClass() }}">{{ $stav->label() }}</span>
           </td>
-          @if ($isAdmin)
-            {{-- Příznak „aktivni“ = příjem hlášení je otevřen (interní, jen pro adminy) --}}
-            <td class="text-center">{{ $k->aktivni ? '✓' : '—' }}</td>
-          @endif
           <td class="whitespace-nowrap">{{ $k->vyhodnoceno?->format('j. n. Y H:i') ?? '—' }}</td>
           @if ($isAdmin)
             <td>

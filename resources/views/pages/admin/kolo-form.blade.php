@@ -6,10 +6,9 @@
     $sug = $suggested ?? [];
     // Předvyplnění: při vytváření z ContestCalendar, při editaci z modelu.
     $defNazev      = old('nazev',          $kolo?->nazev          ?? ($sug['nazev'] ?? ''));
-    $defKonani     = old('datum_konani',   $kolo?->datum_konani?->format('Y-m-d') ?? ($sug['datum_konani'] ?? ''));
+    $defKonani     = old('datum_konani',   $kolo?->datum_konani?->format('Y-m-d\TH:i') ?? ($sug['datum_konani'] ?? ''));
     $defUzaverky   = old('datum_uzaverky', $kolo?->datum_uzaverky?->format('Y-m-d\TH:i') ?? ($sug['datum_uzaverky'] ?? ''));
     $defPoznamka   = old('poznamka',       $kolo?->poznamka       ?? '');
-    $defAktivni    = old('aktivni',        $kolo?->aktivni        ?? false);
 @endphp
 
 <h1>{{ $kolo ? __('admin.kolo_edit_heading') : __('admin.kolo_create_heading') }}</h1>
@@ -29,7 +28,7 @@
                  :value="$defNazev" maxlength="250" />
 
         <div class="grid gap-x-5 sm:grid-cols-2">
-            <x-field name="datum_konani" id="datum_konani" type="date" required
+            <x-field name="datum_konani" id="datum_konani" type="datetime-local" required
                      :label="__('admin.kolo_field_date')" :value="$defKonani" :hint="$kolo ? null : __('admin.kolo_hint_date')"
                      :readonly="$kolo !== null" />
 
@@ -39,13 +38,6 @@
 
         <x-field name="poznamka" id="poznamka" :label="__('admin.kolo_field_note')"
                  :value="$defPoznamka" maxlength="250" />
-
-        <label class="flex items-center gap-2 text-sm">
-            <input type="hidden" name="aktivni" value="0">
-            <input id="aktivni" name="aktivni" type="checkbox" value="1"
-                   @checked($defAktivni)>
-            {{ __('admin.kolo_field_active') }}
-        </label>
 
         <div class="flex justify-end gap-3 pt-2">
             <a href="{{ route('kola.admin.index') }}" class="btn btn-ghost">{{ __('admin.btn_cancel') }}</a>
@@ -66,7 +58,7 @@
     if (! datumKonani) { return; }
 
     datumKonani.addEventListener('change', function () {
-        var val = this.value; // YYYY-MM-DD
+        var val = (this.value || '').split('T')[0]; // YYYY-MM-DDTHH:MM → YYYY-MM-DD
         if (! val) { return; }
 
         var parts = val.split('-');

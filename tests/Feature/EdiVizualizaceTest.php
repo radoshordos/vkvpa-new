@@ -87,7 +87,6 @@ class EdiVizualizaceTest extends TestCase
             'datum_uzaverky' => now()->addDays(7)->toDateTimeString(),
             'nazev' => '03/2026',
             'poznamka' => '',
-            'aktivni' => true,
         ]);
 
         $head = $this->importSample();
@@ -106,7 +105,6 @@ class EdiVizualizaceTest extends TestCase
             'datum_uzaverky' => now()->addDays(7)->toDateTimeString(),
             'nazev' => '03/2026',
             'poznamka' => '',
-            'aktivni' => true,
         ]);
 
         $edi = (string) file_get_contents(__DIR__.'/../fixtures/sample.edi');

@@ -51,11 +51,6 @@ final class VkvpaSettings
         return Config::integer('vkvpa.non_edi_nullify_from_kolo', 91);
     }
 
-    public static function freshUnapprovedDays(): int
-    {
-        return Config::integer('vkvpa.fresh_unapproved_days', 28);
-    }
-
     public static function yearlyCacheFresh(): int
     {
         return Config::integer('vkvpa.yearly_cache_fresh', 300);

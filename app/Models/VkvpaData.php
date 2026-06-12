@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Services\Scoring\ScoringService;
-use App\Support\VkvpaSettings;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Attributes\Table;
@@ -103,24 +102,6 @@ class VkvpaData extends Model
     protected function hasEdi(Builder $query): Builder
     {
         return $query->whereNotNull('edihead_id');
-    }
-
-    /**
-     * Scope: čerstvé neschválené záznamy – drží kolo v „aktivním" stavu
-     * ({@see VkvpaKola::isActive()}, {@see VkvpaKola::existujeAktivni()}).
-     * Záznamy starší než `vkvpa.fresh_unapproved_days` (i ty bez timestampu)
-     * aktivitu nedrží – jediný zapomenutý neschválený řádek by jinak navždy
-     * blokoval veřejný přístup k EDI souborům a vizualizacím.
-     *
-     * @param  Builder<VkvpaData>  $query
-     * @return Builder<VkvpaData>
-     */
-    #[Scope]
-    protected function freshUnapproved(Builder $query): Builder
-    {
-        return $query
-            ->where('schvaleno', false)
-            ->where('timestamp', '>=', Carbon::now()->subDays(VkvpaSettings::freshUnapprovedDays()));
     }
 
     /**

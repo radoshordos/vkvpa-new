@@ -25,7 +25,6 @@ class HlaseniTest extends TestCase
             'datum_konani' => now()->subDay(),
             'datum_uzaverky' => now()->addDays(5),
             'nazev' => 'Testovací kolo',
-            'aktivni' => true,
             'poznamka' => '',
         ]);
         $kat = VkvpaKategorie::create(['nazev' => '144 MHz', 'popis' => '', 'zkratka' => 'A', 'dxid' => 0]);
@@ -37,10 +36,10 @@ class HlaseniTest extends TestCase
     private function koloProDatum(string $datum): void
     {
         VkvpaKola::create([
-            'datum_konani' => $datum,
-            'datum_uzaverky' => $datum.' 23:59:59',
+            'datum_konani' => $datum.' 08:00:00',
+            // Uzávěrka v budoucnu → upload okno (stav Příjem) je otevřené.
+            'datum_uzaverky' => now()->addDay(),
             'nazev' => 'Kolo '.$datum,
-            'aktivni' => true,
             'poznamka' => '',
         ]);
     }
@@ -93,7 +92,7 @@ class HlaseniTest extends TestCase
     public function test_hlaseni_page_hides_forms_outside_upload_window(): void
     {
         [$kolo] = $this->prepare();
-        $kolo->update(['aktivni' => false, 'datum_uzaverky' => now()->subDay()]);
+        $kolo->update(['datum_uzaverky' => now()->subDay()]);
 
         // Mimo upload okno se EDI panel ani ruční formulář nenabízejí.
         $this->get('/hlaseni?showfrm=1')
@@ -105,8 +104,8 @@ class HlaseniTest extends TestCase
     public function test_hlaseni_page_shows_forms_in_prijem_state(): void
     {
         [$kolo] = $this->prepare();
-        // Den závodu proběhl, kolo neaktivní, uzávěrka v budoucnu → stav Příjem.
-        $kolo->update(['aktivni' => false, 'datum_uzaverky' => now()->addDay()]);
+        // Den závodu proběhl, uzávěrka v budoucnu → stav Příjem.
+        $kolo->update(['datum_uzaverky' => now()->addDay()]);
 
         $this->get('/hlaseni')
             ->assertOk()
@@ -116,8 +115,8 @@ class HlaseniTest extends TestCase
     public function test_manual_report_rejected_outside_upload_window(): void
     {
         [$kolo, $kat] = $this->prepare();
-        // Uzávěrka uplynula, kolo neaktivní → stav Uzavřené, okno zavřené.
-        $kolo->update(['aktivni' => false, 'datum_uzaverky' => now()->subDay()]);
+        // Uzávěrka uplynula → stav Uzavřené, okno zavřené.
+        $kolo->update(['datum_uzaverky' => now()->subDay()]);
 
         $this->post('/hlaseni', $this->payload($kolo->id, $kat->id))
             ->assertSessionHasErrors('kolo');
@@ -127,7 +126,7 @@ class HlaseniTest extends TestCase
     public function test_admin_can_store_report_outside_upload_window(): void
     {
         [$kolo, $kat] = $this->prepare();
-        $kolo->update(['aktivni' => false, 'datum_uzaverky' => now()->subDay()]);
+        $kolo->update(['datum_uzaverky' => now()->subDay()]);
         $admin = User::create(['name' => 'Admin', 'password' => Hash::make('x'), 'is_admin' => true]);
 
         $this->actingAs($admin)
@@ -306,13 +305,13 @@ class HlaseniTest extends TestCase
         $this->assertSame(1, VkvpaData::count());
     }
 
-    public function test_submission_to_inactive_round_is_blocked(): void
+    public function test_submission_to_upcoming_round_is_blocked(): void
     {
+        // Závod ještě nezačal (stav Nadcházející) → hlášení se nepřijímají.
         $kolo = VkvpaKola::create([
-            'datum_konani' => now()->subDay(),
-            'datum_uzaverky' => now()->addDays(5),
-            'nazev' => 'Neaktivní kolo',
-            'aktivni' => false,
+            'datum_konani' => now()->addDays(5),
+            'datum_uzaverky' => now()->addDays(10),
+            'nazev' => 'Nadcházející kolo',
             'poznamka' => '',
         ]);
         $kat = VkvpaKategorie::create(['nazev' => 'A', 'popis' => '', 'zkratka' => 'A', 'dxid' => 0]);

@@ -36,7 +36,6 @@ class SendEdiMailsListenerTest extends TestCase
             'datum_konani' => now()->subDay(),
             'datum_uzaverky' => now()->addDays(5),
             'nazev' => 'Testovací kolo',
-            'aktivni' => true,
             'poznamka' => '',
         ]);
         $kat = VkvpaKategorie::create(['nazev' => '144 MHz', 'popis' => '', 'zkratka' => 'A', 'dxid' => 0]);

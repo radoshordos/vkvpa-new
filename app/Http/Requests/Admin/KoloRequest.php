@@ -26,14 +26,13 @@ class KoloRequest extends FormRequest
     {
         return [
             'nazev' => ['required', 'string', 'max:250'],
-            // Kolo se koná třetí neděli v měsíci → jeden den = nejvýš jedno kolo
-            // (DB to jistí unikátním indexem, tady chceme hezkou hlášku).
+            // Kolo se koná třetí neděli v měsíci → jeden termín = nejvýš jedno
+            // kolo (DB to jistí unikátním indexem, tady chceme hezkou hlášku).
             'datum_konani' => [
                 'required', 'date',
                 Rule::unique('vkvpa_kola', 'datum_konani')->ignore($this->route('kolo')),
             ],
             'datum_uzaverky' => ['required', 'date'],
-            'aktivni' => ['boolean'],
             'poznamka' => ['nullable', 'string', 'max:250'],
         ];
     }
@@ -62,7 +61,6 @@ class KoloRequest extends FormRequest
             'nazev' => $this->string('nazev')->value(),
             'datum_konani' => $this->string('datum_konani')->value(),
             'datum_uzaverky' => $this->string('datum_uzaverky')->value(),
-            'aktivni' => $this->boolean('aktivni'),
             // poznamka je v DB NOT NULL – string() vrátí prázdný řetězec místo null.
             'poznamka' => $this->string('poznamka')->value(),
         ];

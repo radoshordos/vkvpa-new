@@ -111,11 +111,11 @@ class QsoGeometryTest extends TestCase
 
     public function test_round_stations_hidden_while_round_still_open(): void
     {
-        // Kolo v příjmu hlášení (aktivní, nevyhodnocené) → cizí stanice se
-        // nesmí odhalit, i když by jinak prahem prošly.
+        // Kolo v příjmu hlášení (uzávěrka v budoucnu, nevyhodnocené) → cizí
+        // stanice se nesmí odhalit, i když by jinak prahem prošly.
         $kolo = VkvpaKola::create([
-            'datum_konani' => '2026-03-15', 'datum_uzaverky' => '2026-03-20 23:59:59',
-            'nazev' => '03/2026', 'poznamka' => '', 'aktivni' => true,
+            'datum_konani' => '2026-03-15 08:00:00', 'datum_uzaverky' => now()->addDay(),
+            'nazev' => '03/2026', 'poznamka' => '',
         ]);
         $headA = $this->seedRoundLogs($kolo->id);
 
@@ -171,8 +171,8 @@ class QsoGeometryTest extends TestCase
     {
         // Kolo v příjmu hlášení → porovnání by odhalilo soupeřův deník, vrací null.
         $kolo = VkvpaKola::create([
-            'datum_konani' => '2026-03-15', 'datum_uzaverky' => '2026-03-20 23:59:59',
-            'nazev' => '03/2026', 'poznamka' => '', 'aktivni' => true,
+            'datum_konani' => '2026-03-15 08:00:00', 'datum_uzaverky' => now()->addDay(),
+            'nazev' => '03/2026', 'poznamka' => '',
         ]);
         [$headA, $headB] = $this->seedCompareLogs($kolo->id);
 

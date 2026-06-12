@@ -5,11 +5,10 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\KoloStav;
+use App\Support\ContestWindow;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -20,16 +19,15 @@ use Override;
  * Kolo závodu (contest period).
  *
  * @property int $id
- * @property Carbon $datum_konani
+ * @property Carbon $datum_konani start závodu (datetime, standardně 3. neděle 08:00 UTC)
  * @property Carbon|null $datum_uzaverky
- * @property bool $aktivni
  * @property string $nazev
  * @property Carbon|null $vyhodnoceno
  * @property string $poznamka
  * @property-read Collection<int, VkvpaData> $hlaseni
  * @property-read Collection<int, Prispevek> $diskuse
  */
-#[Fillable(['datum_konani', 'datum_uzaverky', 'nazev', 'poznamka', 'vyhodnoceno', 'aktivni'])]
+#[Fillable(['datum_konani', 'datum_uzaverky', 'nazev', 'poznamka', 'vyhodnoceno'])]
 #[Table(name: 'vkvpa_kola', key: 'id')]
 #[WithoutTimestamps]
 class VkvpaKola extends Model
@@ -47,14 +45,12 @@ class VkvpaKola extends Model
     }
 
     /**
-     * Fáze životního cyklu kola odvozená ze sloupců.
-     *
-     * Pořadí podmínek je dané prioritou:
+     * Fáze životního cyklu kola – čistá funkce času, žádný stavový příznak:
      *  1) vyhodnocené kolo je terminální stav (`vyhodnoceno`),
-     *  2) jinak rozhoduje příznak `aktivni` (probíhá příjem),
-     *  3) den závodu ještě nenastal → nadcházející,
-     *  4) den závodu proběhl, ale uzávěrka ne → stále se přijímají hlášení,
-     *  5) uzávěrka uplynula a kolo není vyhodnocené → zpracování výsledků.
+     *  2) start závodu (`datum_konani`) ještě nenastal → nadcházející,
+     *  3) uzávěrka uplynula a kolo není vyhodnocené → zpracování výsledků,
+     *  4) závodní okno právě běží → probíhá,
+     *  5) jinak (po závodě, před uzávěrkou) → příjem hlášení.
      */
     public function stav(): KoloStav
     {
@@ -62,56 +58,49 @@ class VkvpaKola extends Model
             return KoloStav::Vyhodnocene;
         }
 
-        if ($this->aktivni) {
-            return KoloStav::Aktivni;
-        }
+        $now = Carbon::now();
 
-        if ($this->datum_konani->isAfter(Carbon::now()->endOfDay())) {
+        if ($now->lt($this->datum_konani)) {
             return KoloStav::Nadchazejici;
         }
 
-        if ($this->datum_uzaverky !== null && $this->datum_uzaverky->isFuture()) {
-            return KoloStav::Prijem;
+        if ($this->datum_uzaverky === null || $now->gt($this->datum_uzaverky)) {
+            return KoloStav::Uzavrene;
         }
 
-        return KoloStav::Uzavrene;
+        if ($now->lt($this->konecZavodu())) {
+            return KoloStav::Aktivni;
+        }
+
+        return KoloStav::Prijem;
     }
 
     /**
-     * Je kolo v aktivní fázi pro příjem hlášení?
-     *  1) stav kola je {@see KoloStav::Aktivni}, nebo
-     *  2) záložní pojistka – v kole jsou čerstvá neschválená data
-     *     (účastník právě odeslal hlášení a kolo se mezitím automaticky
-     *     deaktivovalo; ať pořád vidí a může upravit svůj rozpracovaný záznam).
+     * Konec závodního okna: start (`datum_konani`) + délka závodu odvozená
+     * z konfigurace {@see ContestWindow} (standardně 0800–1100 = 3 hodiny).
+     * Délka se přičítá ke skutečnému startu, takže posunutý start zachová
+     * trvání závodu.
      */
-    public function isActive(): bool
+    public function konecZavodu(): Carbon
     {
-        if ($this->stav() === KoloStav::Aktivni) {
-            return true;
-        }
-
-        return VkvpaData::query()
-            ->where('id_kola', $this->id)
-            ->freshUnapproved()
-            ->exists();
+        return $this->datum_konani->copy()->addMinutes(self::delkaZavoduMinuty());
     }
 
     /**
-     * Statická varianta isActive() pro dané kolo dle ID.
+     * Délka závodního okna v minutách dle ContestWindow ('HHMM' hranice).
      */
-    public static function jeAktivni(int $idKola): bool
+    private static function delkaZavoduMinuty(): int
     {
-        if ($idKola <= 0) {
-            return false;
-        }
+        $minutes = static fn (string $hhmm): int => 60 * (int) substr($hhmm, 0, 2) + (int) substr($hhmm, 2, 2);
 
-        return static::query()->whereKey($idKola)->first()?->isActive() ?? false;
+        return max(0, $minutes(ContestWindow::to()) - $minutes(ContestWindow::from()));
     }
 
     /**
-     * Je otevřené upload okno kola? Hlášení (EDI i manuální) se přijímají
-     * jen ve stavech Aktivní a Příjem hlášení – od dne závodu 08:00 UTC
-     * do uzávěrky.
+     * Je otevřené upload okno kola? Hlášení (EDI i manuální) se od běžných
+     * závodníků přijímají jen ve stavech Probíhá a Příjem hlášení – od startu
+     * závodu (`datum_konani`) do uzávěrky. Admin smí nahrávat kdykoliv
+     * (výjimku řeší volající, ne tato metoda).
      */
     public function prijimaHlaseni(): bool
     {
@@ -119,18 +108,18 @@ class VkvpaKola extends Model
     }
 
     /**
-     * Kolo, pro které se zobrazují průběžné výsledky: nejstarší aktivní,
-     * které ještě nebylo vyhodnocené. Když žádné není, průběžné výsledky
-     * se neukazují (stránka hlásí „vyhodnocování neprobíhá", položka menu
+     * Kolo, pro které se zobrazují průběžné výsledky: nejstarší nevyhodnocené
+     * s otevřeným upload oknem. Když žádné není, průběžné výsledky se
+     * neukazují (stránka hlásí „vyhodnocování neprobíhá", položka menu
      * je skrytá).
      */
     public static function aktualniProPrubezne(): ?self
     {
         return static::query()
-            ->active()
             ->whereNull('vyhodnoceno')
             ->orderBy('datum_konani')
-            ->first();
+            ->get()
+            ->first(fn (self $kolo): bool => $kolo->prijimaHlaseni());
     }
 
     /**
@@ -146,36 +135,11 @@ class VkvpaKola extends Model
             ->contains(fn (self $kolo): bool => $kolo->prijimaHlaseni());
     }
 
-    /**
-     * Existuje vůbec nějaké aktivní kolo (pro zobrazení formuláře)?
-     */
-    public static function existujeAktivni(): bool
-    {
-        if (static::query()->where('aktivni', true)->exists()) {
-            return true;
-        }
-
-        return VkvpaData::query()->freshUnapproved()->exists();
-    }
-
-    /**
-     * Scope: jen kola označená jako aktivní.
-     *
-     * @param  Builder<VkvpaKola>  $query
-     * @return Builder<VkvpaKola>
-     */
-    #[Scope]
-    protected function active(Builder $query): Builder
-    {
-        return $query->where('aktivni', true);
-    }
-
     #[Override]
     protected function casts(): array
     {
         return [
-            'aktivni' => 'boolean',
-            'datum_konani' => 'date',
+            'datum_konani' => 'datetime',
             'datum_uzaverky' => 'datetime',
             'vyhodnoceno' => 'datetime',
         ];

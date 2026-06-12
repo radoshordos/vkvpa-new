@@ -35,9 +35,16 @@ class StoreHlaseniRequest extends FormRequest
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $v): void {
+            // Editace vlastního rezervovaného řádku (EDI nahraný na poslední
+            // chvíli) smí doběhnout i po uzávěrce – vlastnictví hlídá authorize().
+            if ($this->integer('id_zaznamu') > 0) {
+                return;
+            }
+
             $koloId = $this->integer('kolo');
-            if ($koloId > 0 && ! $this->user()?->is_admin && ! VkvpaKola::jeAktivni($koloId)) {
-                $v->errors()->add('kolo', 'Do tohoto kola nelze odeslat hlášení – není aktivní. / Period is not active.');
+            if ($koloId > 0 && ! $this->user()?->is_admin
+                && VkvpaKola::query()->find($koloId)?->prijimaHlaseni() !== true) {
+                $v->errors()->add('kolo', 'Do tohoto kola nelze odeslat hlášení – nepřijímá hlášení. / Period is not accepting entries.');
             }
         });
     }

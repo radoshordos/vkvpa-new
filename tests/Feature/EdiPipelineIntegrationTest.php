@@ -48,10 +48,10 @@ class EdiPipelineIntegrationTest extends TestCase
     private function koloProBrezen2026(): VkvpaKola
     {
         return VkvpaKola::create([
-            'datum_konani' => '2026-03-15',
-            'datum_uzaverky' => '2026-04-01',
+            'datum_konani' => '2026-03-15 08:00:00',
+            // Uzávěrka v budoucnu → upload okno (stav Příjem) je otevřené.
+            'datum_uzaverky' => now()->addDay(),
             'nazev' => '1. kolo 2026',
-            'aktivni' => true,
             'poznamka' => '',
         ]);
     }
@@ -74,8 +74,8 @@ class EdiPipelineIntegrationTest extends TestCase
 
     public function test_upload_rejected_when_round_is_closed(): void
     {
-        // Uzávěrka v minulosti, kolo neaktivní → stav Uzavřené, okno zavřené.
-        $this->koloProBrezen2026()->update(['aktivni' => false]);
+        // Uzávěrka v minulosti → stav Uzavřené, okno zavřené.
+        $this->koloProBrezen2026()->update(['datum_uzaverky' => now()->subDay()]);
 
         $this->upload()->assertSessionHasErrors('upload');
         $this->assertSame(0, VkvpaData::count(), 'Mimo upload okno nesmí vzniknout záznam');
@@ -83,7 +83,7 @@ class EdiPipelineIntegrationTest extends TestCase
 
     public function test_upload_rejected_when_round_is_evaluated(): void
     {
-        $this->koloProBrezen2026()->update(['aktivni' => false, 'vyhodnoceno' => now()]);
+        $this->koloProBrezen2026()->update(['vyhodnoceno' => now()]);
 
         $this->upload()->assertSessionHasErrors('upload');
         $this->assertSame(0, VkvpaData::count(), 'Do vyhodnoceného kola nesmí vzniknout záznam');
@@ -91,8 +91,8 @@ class EdiPipelineIntegrationTest extends TestCase
 
     public function test_upload_allowed_when_round_in_prijem_state(): void
     {
-        // Den závodu proběhl, kolo neaktivní, uzávěrka v budoucnu → stav Příjem.
-        $this->koloProBrezen2026()->update(['aktivni' => false, 'datum_uzaverky' => now()->addDay()]);
+        // Den závodu proběhl, uzávěrka v budoucnu → stav Příjem.
+        $this->koloProBrezen2026();
 
         $this->upload()->assertSessionDoesntHaveErrors('upload');
         $this->assertSame(1, VkvpaData::count(), 'Ve stavu Příjem se deník přijme');

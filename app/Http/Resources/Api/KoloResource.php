@@ -17,10 +17,10 @@ final class KoloResource extends JsonResource
         return [
             'id' => $this->id,
             'nazev' => $this->nazev,
-            'datum_konani' => $this->datum_konani->format('Y-m-d'),
+            'datum_konani' => $this->datum_konani->toIso8601String(),
             'datum_uzaverky' => $this->datum_uzaverky?->toIso8601String(),
             'vyhodnoceno' => $this->vyhodnoceno?->toIso8601String(),
-            'aktivni' => $this->aktivni,
+            'stav' => $this->stav()->value,
         ];
     }
 }

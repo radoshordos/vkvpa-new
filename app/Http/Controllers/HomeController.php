@@ -9,7 +9,6 @@ use App\Models\Prispevek;
 use App\Models\VkvpaData;
 use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
-use App\Support\ContestWindow;
 use Illuminate\Support\Carbon;
 use Illuminate\View\View;
 
@@ -19,22 +18,20 @@ class HomeController extends Controller
     {
         $now = Carbon::now();
 
-        // Priority: active → next upcoming → most recent
-        $kolo = VkvpaKola::query()->where('aktivni', true)->orderByDesc('datum_konani')->first()
-            ?? VkvpaKola::query()->where('datum_konani', '>', $now->toDateString())->orderBy('datum_konani')->first()
+        // Priority: kolo s otevřeným upload oknem → nejbližší nadcházející → poslední
+        $kolo = VkvpaKola::query()
+            ->whereNull('vyhodnoceno')
+            ->where('datum_konani', '<=', $now)
+            ->where('datum_uzaverky', '>=', $now)
+            ->orderBy('datum_konani')
+            ->first()
+            ?? VkvpaKola::query()->where('datum_konani', '>', $now)->orderBy('datum_konani')->first()
             ?? VkvpaKola::query()->orderByDesc('datum_konani')->first();
 
         $state = $kolo ? $this->stateKey($kolo->stav()) : null;
 
-        // Prezentační podstav „závod právě probíhá" (08:00–11:00 UTC v den
-        // závodu) – KoloStav zůstává zdrojem pravdy, jen úvodka během
-        // závodního okna odpočítává do konce závodu místo do uzávěrky.
-        if ($kolo && in_array($state, ['active', 'deadline'], true) && $this->isContestRunning($kolo, $now)) {
-            $state = 'running';
-        }
-
         $countdownTarget = ($kolo && $state) ? $this->resolveCountdownTarget($kolo, $state) : null;
-        $liveMode = in_array($state, ['running', 'active', 'deadline', 'evaluating'], true);
+        $liveMode = in_array($state, ['running', 'deadline', 'evaluating'], true);
 
         $kategorie = VkvpaKategorie::query()->orderBy('id')->get()->keyBy('id');
         $vysledky = ($kolo && $liveMode)
@@ -61,7 +58,7 @@ class HomeController extends Controller
         // Next upcoming rounds (for mini-calendar), excluding the round already shown.
         $excludeId = $kolo?->id;
         $upcomingRounds = VkvpaKola::query()
-            ->where('datum_konani', '>', $now->toDateString())
+            ->where('datum_konani', '>', $now)
             ->when($excludeId !== null, fn ($q) => $q->where('id', '!=', $excludeId))
             ->orderBy('datum_konani')
             ->limit(3)
@@ -83,7 +80,7 @@ class HomeController extends Controller
     {
         return match ($stav) {
             KoloStav::Nadchazejici => 'upcoming',
-            KoloStav::Aktivni => 'active',
+            KoloStav::Aktivni => 'running',
             KoloStav::Prijem => 'deadline',
             KoloStav::Uzavrene => 'evaluating',
             KoloStav::Vyhodnocene => 'evaluated',
@@ -91,39 +88,17 @@ class HomeController extends Controller
     }
 
     /**
-     * Probíhá právě závodní okno kola (den `datum_konani`,
-     * {@see ContestWindow::from()}–{@see ContestWindow::to()} UTC)?
-     */
-    private function isContestRunning(VkvpaKola $kolo, Carbon $now): bool
-    {
-        return $now->between(
-            $this->contestWindowTime($kolo, ContestWindow::from()),
-            $this->contestWindowTime($kolo, ContestWindow::to()),
-        );
-    }
-
-    /**
-     * Okraj závodního okna jako Carbon: den závodu + čas 'HHMM' v UTC.
-     */
-    private function contestWindowTime(VkvpaKola $kolo, string $hhmm): Carbon
-    {
-        return $kolo->datum_konani->copy()
-            ->setTime((int) substr($hhmm, 0, 2), (int) substr($hhmm, 2, 2))
-            ->setTimezone('UTC');
-    }
-
-    /**
      * Returns the Carbon datetime the JS countdown should count down to.
-     * upcoming → contest day at 08:00 UTC (start of contest window)
-     * running → end of the contest window (11:00 UTC)
-     * active / deadline → submission deadline
+     * upcoming → start of the contest window (datum_konani)
+     * running → end of the contest window
+     * deadline → submission deadline
      */
     private function resolveCountdownTarget(VkvpaKola $kolo, string $state): ?Carbon
     {
         return match ($state) {
-            'upcoming' => $kolo->datum_konani->copy()->setTime(8, 0, 0)->setTimezone('UTC'),
-            'running' => $this->contestWindowTime($kolo, ContestWindow::to()),
-            'active', 'deadline' => $kolo->datum_uzaverky,
+            'upcoming' => $kolo->datum_konani,
+            'running' => $kolo->konecZavodu(),
+            'deadline' => $kolo->datum_uzaverky,
             default => null,
         };
     }

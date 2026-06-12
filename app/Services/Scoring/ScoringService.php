@@ -15,7 +15,6 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schedule;
 
 /**
  * Vyhodnocení a skóre dle pravidel VKV PA.
@@ -70,25 +69,6 @@ final class ScoringService
     public function closeRound(int $koloId): void
     {
         VkvpaKola::query()->whereKey($koloId)->update(['vyhodnoceno' => Carbon::now()]);
-    }
-
-    /**
-     * Deaktivuje kola, jimž už uplynula uzávěrka (`datum_uzaverky` < teď).
-     *
-     * Slouží naplánované úloze ({@see Schedule} v
-     * routes/console.php) – po uzávěrce se kolo přestane nabízet pro příjem
-     * hlášení. Záložní logika {@see VkvpaKola::isActive()} (čerstvá neschválená
-     * data) zůstává nedotčena, takže rozpracované deníky se neztratí.
-     *
-     * @return int počet deaktivovaných kol
-     */
-    public function deactivateExpiredRounds(): int
-    {
-        return VkvpaKola::query()
-            ->where('aktivni', true)
-            ->whereNotNull('datum_uzaverky')
-            ->where('datum_uzaverky', '<', Carbon::now())
-            ->update(['aktivni' => false]);
     }
 
     /**

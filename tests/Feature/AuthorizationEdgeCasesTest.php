@@ -34,7 +34,6 @@ class AuthorizationEdgeCasesTest extends TestCase
             'datum_konani' => now()->subDay(),
             'datum_uzaverky' => now()->addDays(5),
             'nazev' => 'Testovací kolo',
-            'aktivni' => true,
             'poznamka' => '',
         ]);
         $kat = VkvpaKategorie::create(['nazev' => '144 MHz SO', 'popis' => '', 'zkratka' => 'A', 'dxid' => 0]);
@@ -167,7 +166,6 @@ class AuthorizationEdgeCasesTest extends TestCase
             'datum_konani' => now()->subDay(),
             'datum_uzaverky' => now()->addDays(5),
             'nazev' => 'Aktivní kolo',
-            'aktivni' => true,
             'poznamka' => '',
         ]);
         $kat = VkvpaKategorie::create(['nazev' => 'A', 'popis' => '', 'zkratka' => 'A', 'dxid' => 0]);

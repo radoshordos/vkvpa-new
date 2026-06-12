@@ -62,7 +62,7 @@ class KolaAdminController extends Controller
 
                 return [
                     'nazev' => ContestCalendar::roundName($year, $month),
-                    'datum_konani' => $start->toDateString(),
+                    'datum_konani' => $start->format('Y-m-d\TH:i'),
                     'datum_uzaverky' => ContestCalendar::uploadDeadline($start)->format('Y-m-d\TH:i'),
                 ];
             }
@@ -76,7 +76,7 @@ class KolaAdminController extends Controller
 
         return [
             'nazev' => ContestCalendar::roundName($year, $month),
-            'datum_konani' => $start->toDateString(),
+            'datum_konani' => $start->format('Y-m-d\TH:i'),
             'datum_uzaverky' => ContestCalendar::uploadDeadline($start)->format('Y-m-d\TH:i'),
         ];
     }

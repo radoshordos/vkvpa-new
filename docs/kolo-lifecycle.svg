@@ -25,7 +25,7 @@
   <!-- ── Title ── -->
   <text x="530" y="28" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a"
         letter-spacing="0.2">Životní cyklus závodního kola</text>
-  <text x="530" y="44" text-anchor="middle" font-size="11" fill="#64748b">KoloStav · odvozeno ze sloupců VkvpaKola</text>
+  <text x="530" y="44" text-anchor="middle" font-size="11" fill="#64748b">KoloStav · čistá funkce času ze sloupců VkvpaKola</text>
 
   <!-- ════════════════════════════════════════════════════════════════
        STATE BOXES  (top=68, height=76, center_y=106)
@@ -36,21 +36,21 @@
   <rect x="20" y="68" width="130" height="76" rx="10" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5" filter="url(#shadow)"/>
   <text x="85" y="98" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">Nadcházející</text>
   <line x1="35" y1="106" x2="135" y2="106" stroke="#e2e8f0" stroke-width="1"/>
-  <text x="85" y="120" text-anchor="middle" font-size="9.5" fill="#94a3b8">aktivni = false</text>
-  <text x="85" y="133" text-anchor="middle" font-size="9.5" fill="#94a3b8">datum_konani &gt; dnes</text>
+  <text x="85" y="120" text-anchor="middle" font-size="9.5" fill="#94a3b8">start závodu</text>
+  <text x="85" y="133" text-anchor="middle" font-size="9.5" fill="#94a3b8">datum_konani &gt; nyní</text>
 
   <!-- ② Probíhá (badge-ok: bg #f0fdf4, border #86efac) -->
   <rect x="202" y="68" width="100" height="76" rx="10" fill="#f0fdf4" stroke="#86efac" stroke-width="1.5" filter="url(#shadow)"/>
   <text x="252" y="98" text-anchor="middle" font-size="13" font-weight="700" fill="#15803d">Probíhá</text>
   <line x1="217" y1="106" x2="287" y2="106" stroke="#bbf7d0" stroke-width="1"/>
-  <text x="252" y="120" text-anchor="middle" font-size="9.5" fill="#16a34a">aktivni = true</text>
+  <text x="252" y="120" text-anchor="middle" font-size="9.5" fill="#16a34a">závodní okno běží</text>
   <text x="252" y="133" text-anchor="middle" font-size="9.5" fill="#16a34a">08:00–11:00 UTC</text>
 
   <!-- ③ Příjem hlášení (badge-warn: bg #fffbeb, border #fde68a) -->
   <rect x="358" y="68" width="154" height="76" rx="10" fill="#fffbeb" stroke="#fde68a" stroke-width="1.5" filter="url(#shadow)"/>
   <text x="435" y="98" text-anchor="middle" font-size="13" font-weight="700" fill="#b45309">Příjem hlášení</text>
   <line x1="373" y1="106" x2="497" y2="106" stroke="#fde68a" stroke-width="1"/>
-  <text x="435" y="120" text-anchor="middle" font-size="9.5" fill="#d97706">aktivni = false</text>
+  <text x="435" y="120" text-anchor="middle" font-size="9.5" fill="#d97706">závod skončil</text>
   <text x="435" y="133" text-anchor="middle" font-size="9.5" fill="#d97706">datum_uzaverky &gt; nyní</text>
 
   <!-- ④ Zpracování výsledků (badge-brand: bg #eef2ff, border #a5b4fc) -->
@@ -91,12 +91,12 @@
        ════════════════════════════════════════════════════════════════ -->
 
   <!-- ①→② label -->
-  <text x="174" y="59" text-anchor="middle" font-size="8.5" fill="#4338ca" font-weight="600">kola:activate-due</text>
-  <text x="174" y="70" text-anchor="middle" font-size="8" fill="#6366f1">cron · 08:00 UTC</text>
+  <text x="174" y="59" text-anchor="middle" font-size="8.5" fill="#4338ca" font-weight="600">start závodu</text>
+  <text x="174" y="70" text-anchor="middle" font-size="8" fill="#6366f1">datum_konani · 08:00 UTC</text>
 
   <!-- ②→③ label -->
-  <text x="328" y="59" text-anchor="middle" font-size="8.5" fill="#4338ca" font-weight="600">kola:deactivate-expired</text>
-  <text x="328" y="70" text-anchor="middle" font-size="8" fill="#6366f1">cron · každou hodinu</text>
+  <text x="328" y="59" text-anchor="middle" font-size="8.5" fill="#4338ca" font-weight="600">konec závodu</text>
+  <text x="328" y="70" text-anchor="middle" font-size="8" fill="#6366f1">start + 3 h · 11:00 UTC</text>
 
   <!-- ③→④ label -->
   <text x="538" y="59" text-anchor="middle" font-size="8.5" fill="#4338ca" font-weight="600">uzávěrka uplynula</text>
@@ -113,7 +113,7 @@
 
   <!-- Legend: automatic transition -->
   <line x1="30" y1="178" x2="65" y2="178" stroke="#4338ca" stroke-width="2" marker-end="url(#arr-auto)"/>
-  <text x="72" y="182" font-size="10" fill="#475569">automatická přechodní podmínka (cron / deadline)</text>
+  <text x="72" y="182" font-size="10" fill="#475569">automatický přechod uplynutím času (žádný cron)</text>
 
   <!-- Legend: manual transition -->
   <line x1="370" y1="178" x2="405" y2="178" stroke="#15803d" stroke-width="2" marker-end="url(#arr-manual)"/>
@@ -127,10 +127,8 @@
   <!-- Legend: DB columns -->
   <text x="30" y="207" font-size="9.5" fill="#94a3b8">
     DB sloupce VkvpaKola:
-    <tspan font-weight="600" fill="#475569">aktivni</tspan>
-    (bool) ·
     <tspan font-weight="600" fill="#475569">datum_konani</tspan>
-    (date) ·
+    (datetime · start závodu) ·
     <tspan font-weight="600" fill="#475569">datum_uzaverky</tspan>
     (datetime) ·
     <tspan font-weight="600" fill="#475569">vyhodnoceno</tspan>

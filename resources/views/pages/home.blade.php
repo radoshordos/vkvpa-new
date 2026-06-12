@@ -4,16 +4,6 @@
 
 @section('content')
 
-@php
-    // Start závodu z konfigurace závodního okna ('0800' → '08:00')
-    $oknoOd = \App\Support\ContestWindow::from();
-    $startZavodu = preg_replace('/^(\d{2})(\d{2})$/', '$1:$2', $oknoOd);
-    // Unix timestamp startu závodu pro přepočet na místní čas prohlížeče.
-    $startTs = fn (\App\Models\VkvpaKola $k): int => $k->datum_konani->copy()
-        ->setTime((int) substr($oknoOd, 0, 2), (int) substr($oknoOd, 2, 2))
-        ->getTimestamp();
-@endphp
-
 {{-- ── Aktuální / nadcházející kolo ──────────────────────────────── --}}
 @if ($kolo)
 <div class="card mb-6 p-5">
@@ -24,7 +14,6 @@
             <div class="mb-1 text-xs font-semibold uppercase tracking-wide text-muted">
                 @if ($state === 'upcoming')  {{ __('pages.home.state_upcoming') }}
                 @elseif ($state === 'running') {{ __('pages.home.state_running') }}
-                @elseif ($state === 'active') {{ __('pages.home.state_active') }}
                 @elseif ($state === 'deadline') {{ __('pages.home.state_deadline') }}
                 @elseif ($state === 'evaluating') {{ __('pages.home.state_evaluating') }}
                 @else {{ __('pages.home.state_evaluated') }}
@@ -35,8 +24,8 @@
             <dl class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-sm">
                 <dt class="text-muted">{{ __('pages.home.contest_date') }}</dt>
                 <dd class="font-medium">
-                    {{ $kolo->datum_konani->locale(app()->getLocale())->isoFormat('dddd D. M. YYYY').' '.$startZavodu.' UTC' }}
-                    <span class="font-normal text-muted" data-local-time="{{ $startTs($kolo) }}" data-local-suffix="{{ __('pages.home.local_time_suffix') }}"></span>
+                    {{ $kolo->datum_konani->locale(app()->getLocale())->isoFormat('dddd D. M. YYYY HH:mm').' UTC' }}
+                    <span class="font-normal text-muted" data-local-time="{{ $kolo->datum_konani->getTimestamp() }}" data-local-suffix="{{ __('pages.home.local_time_suffix') }}"></span>
                 </dd>
 
                 @if ($kolo->datum_uzaverky)
@@ -85,7 +74,7 @@
         <span>
             @if ($state === 'upcoming')
                 {{ __('pages.home.upload_window_upcoming', ['date' => $uploadDate, 'deadline' => $uploadDeadline]) }}
-            @elseif (in_array($state, ['running', 'active', 'deadline']))
+            @elseif (in_array($state, ['running', 'deadline']))
                 <span class="font-medium text-green-600 dark:text-green-400">
                     {{ __('pages.home.upload_window_open', ['deadline' => $uploadDeadline]) }}
                 </span>
@@ -98,7 +87,7 @@
     </div>
 
     {{-- Počet zatím přijatých hlášení (během příjmu) --}}
-    @if (in_array($state, ['running', 'active', 'deadline']))
+    @if (in_array($state, ['running', 'deadline']))
     <p class="mt-3 text-sm text-muted">
         {{ trans_choice('pages.home.received_count', $vysledky->count(), ['count' => $vysledky->count()]) }}
     </p>
@@ -106,10 +95,10 @@
 
     {{-- CTA tlačítka --}}
     <div class="mt-4 flex flex-wrap gap-3">
-        @if (in_array($state, ['running', 'active', 'deadline']))
+        @if (in_array($state, ['running', 'deadline']))
             <a href="{{ route('hlaseni.index') }}" class="btn btn-primary">{{ __('pages.home.btn_submit') }}</a>
         @endif
-        @if (in_array($state, ['evaluating', 'evaluated', 'running', 'active', 'deadline']))
+        @if (in_array($state, ['evaluating', 'evaluated', 'running', 'deadline']))
             <a href="{{ route('pribezne_vysledky', ['kolo' => $kolo->id]) }}" class="btn">{{ __('pages.home.btn_interim') }}</a>
         @endif
         @if ($state === 'evaluated')
@@ -268,8 +257,8 @@
                     <td class="font-medium">{{ $r->nazev }}</td>
                     {{-- Stejný formát jako na stránce kol: den + datum + čas UTC --}}
                     <td class="whitespace-nowrap">
-                        {{ $r->datum_konani->locale(app()->getLocale())->isoFormat('dddd D. M. YYYY').' '.$startZavodu.' UTC' }}
-                        <span class="text-muted" data-local-time="{{ $startTs($r) }}" data-local-suffix="{{ __('pages.home.local_time_suffix') }}"></span>
+                        {{ $r->datum_konani->locale(app()->getLocale())->isoFormat('dddd D. M. YYYY HH:mm').' UTC' }}
+                        <span class="text-muted" data-local-time="{{ $r->datum_konani->getTimestamp() }}" data-local-suffix="{{ __('pages.home.local_time_suffix') }}"></span>
                     </td>
                     <td class="whitespace-nowrap text-muted">
                         {{ $r->datum_uzaverky ? $r->datum_uzaverky->locale(app()->getLocale())->isoFormat('dddd D. M. YYYY HH:mm').' UTC' : '—' }}

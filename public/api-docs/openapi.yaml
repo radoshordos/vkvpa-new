@@ -45,10 +45,10 @@ paths:
                 data:
                   - id: 5
                     nazev: "2024 duben"
-                    datum_konani: "2024-04-20"
+                    datum_konani: "2024-04-20T08:00:00+00:00"
                     datum_uzaverky: "2024-04-28T23:59:00+00:00"
                     vyhodnoceno: "2024-05-01T10:00:00+00:00"
-                    aktivni: false
+                    stav: "vyhodnocene"
 
   /vysledky/{kolo}:
     get:
@@ -135,9 +135,9 @@ components:
           example: "2024 duben"
         datum_konani:
           type: string
-          format: date
-          description: Datum konání závodu
-          example: "2024-04-20"
+          format: date-time
+          description: Start závodu (standardně třetí neděle v měsíci 08:00 UTC)
+          example: "2024-04-20T08:00:00+00:00"
         datum_uzaverky:
           type: string
           format: date-time
@@ -150,9 +150,14 @@ components:
           nullable: true
           description: Datum vyhodnocení kola (null = neuzavřeno)
           example: "2024-05-01T10:00:00+00:00"
-        aktivni:
-          type: boolean
-          description: Kolo je otevřeno pro příjem hlášení
+        stav:
+          type: string
+          enum: [nadchazejici, aktivni, prijem, uzavrene, vyhodnocene]
+          description: >-
+            Fáze životního cyklu kola odvozená z času: nadchazejici (před
+            startem), aktivni (závod právě běží), prijem (po závodě do
+            uzávěrky), uzavrene (po uzávěrce, zpracování výsledků),
+            vyhodnocene (terminální stav)
 
     Vysledka:
       type: object

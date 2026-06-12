@@ -13,7 +13,7 @@ use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 /**
- * Úvodní stránka reaguje na životní cyklus kola: podstav „závod právě
+ * Úvodní stránka reaguje na životní cyklus kola: stav „závod právě
  * probíhá", počítadlo přijatých hlášení, karta posledního vyhodnoceného
  * kola a sekce „Z diskuse".
  */
@@ -33,9 +33,8 @@ class HomePageTest extends TestCase
         return VkvpaKola::create(array_merge([
             'nazev' => '06/2026',
             'poznamka' => '',
-            'aktivni' => false,
             'vyhodnoceno' => null,
-            'datum_konani' => '2026-06-21',
+            'datum_konani' => '2026-06-21 08:00:00',
             'datum_uzaverky' => '2026-06-26 23:59:59',
         ], $attrs));
     }
@@ -54,12 +53,12 @@ class HomePageTest extends TestCase
     }
 
     // ------------------------------------------------------------------
-    // Podstav „závod právě probíhá" (08:00–11:00 UTC v den závodu)
+    // Stav „závod právě probíhá" (08:00–11:00 UTC v den závodu)
 
-    public function test_running_substate_inside_contest_window(): void
+    public function test_running_state_inside_contest_window(): void
     {
         Carbon::setTestNow('2026-06-21 09:00:00');
-        $this->kolo(['aktivni' => true]);
+        $this->kolo();
 
         $this->get(route('home'))
             ->assertOk()
@@ -67,28 +66,16 @@ class HomePageTest extends TestCase
             ->assertSee('do konce závodu');
     }
 
-    public function test_active_state_after_contest_window(): void
+    public function test_deadline_state_after_contest_window(): void
     {
         Carbon::setTestNow('2026-06-21 12:00:00');
-        $this->kolo(['aktivni' => true]);
+        $this->kolo();
 
         $this->get(route('home'))
             ->assertOk()
-            ->assertSee('Aktuální kolo – přijímáme hlášení')
+            ->assertSee('Probíhá příjem hlášení')
             ->assertSee('do uzávěrky hlášení')
             ->assertDontSee('Závod právě probíhá');
-    }
-
-    public function test_running_substate_even_when_not_yet_activated(): void
-    {
-        // Admin/cron kolo ještě neaktivoval, ale závodní okno běží
-        // (stav Prijem) – úvodka přesto ukáže „závod právě probíhá".
-        Carbon::setTestNow('2026-06-21 09:00:00');
-        $this->kolo(['aktivni' => false]);
-
-        $this->get(route('home'))
-            ->assertOk()
-            ->assertSee('Závod právě probíhá');
     }
 
     // ------------------------------------------------------------------
@@ -97,7 +84,7 @@ class HomePageTest extends TestCase
     public function test_received_counter_with_entries(): void
     {
         Carbon::setTestNow('2026-06-22 12:00:00');
-        $kolo = $this->kolo(['aktivni' => true]);
+        $kolo = $this->kolo();
         $this->zaznam($kolo, 'OK1AAA');
         $this->zaznam($kolo, 'OK1BBB');
 
@@ -109,7 +96,7 @@ class HomePageTest extends TestCase
     public function test_received_counter_without_entries(): void
     {
         Carbon::setTestNow('2026-06-22 12:00:00');
-        $this->kolo(['aktivni' => true]);
+        $this->kolo();
 
         $this->get(route('home'))
             ->assertOk()
@@ -122,7 +109,7 @@ class HomePageTest extends TestCase
     public function test_last_evaluated_card_shown_with_upcoming_round(): void
     {
         Carbon::setTestNow('2026-06-01 12:00:00');
-        $this->kolo(['nazev' => '05/2026', 'datum_konani' => '2026-05-17', 'datum_uzaverky' => '2026-05-22 23:59:59', 'vyhodnoceno' => '2026-05-25 10:00:00']);
+        $this->kolo(['nazev' => '05/2026', 'datum_konani' => '2026-05-17 08:00:00', 'datum_uzaverky' => '2026-05-22 23:59:59', 'vyhodnoceno' => '2026-05-25 10:00:00']);
         $this->kolo(['nazev' => '06/2026']);
 
         $this->get(route('home'))
@@ -135,8 +122,8 @@ class HomePageTest extends TestCase
     public function test_last_evaluated_card_hidden_when_hero_not_upcoming(): void
     {
         Carbon::setTestNow('2026-06-22 12:00:00');
-        $this->kolo(['nazev' => '05/2026', 'datum_konani' => '2026-05-17', 'datum_uzaverky' => '2026-05-22 23:59:59', 'vyhodnoceno' => '2026-05-25 10:00:00']);
-        $this->kolo(['aktivni' => true]);
+        $this->kolo(['nazev' => '05/2026', 'datum_konani' => '2026-05-17 08:00:00', 'datum_uzaverky' => '2026-05-22 23:59:59', 'vyhodnoceno' => '2026-05-25 10:00:00']);
+        $this->kolo();
 
         $this->get(route('home'))
             ->assertOk()
@@ -149,7 +136,7 @@ class HomePageTest extends TestCase
     public function test_hero_links_to_round_discussion(): void
     {
         Carbon::setTestNow('2026-06-22 12:00:00');
-        $kolo = $this->kolo(['aktivni' => true]);
+        $kolo = $this->kolo();
 
         $this->get(route('home'))
             ->assertOk()
@@ -159,7 +146,7 @@ class HomePageTest extends TestCase
     public function test_discussion_section_shows_latest_posts(): void
     {
         Carbon::setTestNow('2026-06-22 12:00:00');
-        $kolo = $this->kolo(['aktivni' => true]);
+        $kolo = $this->kolo();
         Prispevek::create(['kolo_id' => $kolo->id, 'znacka' => 'OK1XYZ', 'text' => 'Pěkné podmínky dnes ráno!', 'ip' => '127.0.0.1']);
 
         $this->get(route('home'))
@@ -172,7 +159,7 @@ class HomePageTest extends TestCase
     public function test_discussion_section_hidden_without_posts(): void
     {
         Carbon::setTestNow('2026-06-22 12:00:00');
-        $this->kolo(['aktivni' => true]);
+        $this->kolo();
 
         $this->get(route('home'))
             ->assertOk()

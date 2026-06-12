@@ -9,18 +9,19 @@ use App\Models\VkvpaKola;
 /**
  * Fáze životního cyklu závodního kola.
  *
- * Stav se odvozuje ze sloupců {@see VkvpaKola}: `aktivni`, `vyhodnoceno`,
- * `datum_konani` a `datum_uzaverky` (viz {@see VkvpaKola::stav()}).
- * Posloupnost odpovídá tomu, jak kolem prochází naplánované úlohy a admin:
+ * Stav je čistá funkce času – odvozuje se ze sloupců {@see VkvpaKola}:
+ * `vyhodnoceno`, `datum_konani` (start závodu, standardně 08:00 UTC)
+ * a `datum_uzaverky` (viz {@see VkvpaKola::stav()}):
  *
- *  1) {@see self::Nadchazejici} – kolo je založené, ale den závodu (08:00 UTC)
- *     ještě nenastal (`kola:ensure-upcoming` zakládá kola s `aktivni = false`).
- *  2) {@see self::Aktivni} – probíhá příjem hlášení (`aktivni = true`); kolo
- *     aktivuje `kola:activate-due` v 08:00 UTC v den závodu.
- *  3) {@see self::Prijem} – den závodu už proběhl, kolo není označené jako
- *     aktivní, ale uzávěrka ještě neuplynula → hlášení se stále přijímají.
- *  4) {@see self::Uzavrene} – uzávěrka uplynula, kolo už nepřijímá hlášení
- *     a probíhá zpracování výsledků (ještě není `vyhodnoceno`). Fáze je krátká.
+ *  1) {@see self::Nadchazejici} – kolo je založené, ale start závodu
+ *     (`datum_konani`) ještě nenastal.
+ *  2) {@see self::Aktivni} – závod právě běží (od `datum_konani` do konce
+ *     závodního okna, {@see VkvpaKola::konecZavodu()}); hlášení se přijímají.
+ *  3) {@see self::Prijem} – závod skončil, ale uzávěrka ještě neuplynula
+ *     → hlášení se stále přijímají.
+ *  4) {@see self::Uzavrene} – uzávěrka uplynula, kolo už od běžných závodníků
+ *     nepřijímá hlášení a probíhá zpracování výsledků (ještě není
+ *     `vyhodnoceno`). Fáze je krátká.
  *  5) {@see self::Vyhodnocene} – kolo je vyhodnocené a obodované
  *     (`vyhodnoceno` je vyplněné).
  */
