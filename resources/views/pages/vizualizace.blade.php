@@ -54,9 +54,8 @@ window.__vizConfig = {
        a kategorie (a kolo už je uzavřené/vyhodnocené) – jinak by stránka
        porovnání neměla co nabídnout. --}}
   @if ($porovnaniDostupne)
-    <a href="{{ route('edi.porovnani', ['head' => $head]) }}" class="underline hover:text-heading">⚔️ Porovnání deníků</a> ·
+    <a href="{{ route('edi.porovnani', ['head' => $head]) }}" class="underline hover:text-heading">⚔️ Porovnání deníků</a>
   @endif
-  <a href="{{ route('edi.inkubator', ['head' => $head]) }}" class="underline hover:text-heading">🧪 Vizuální inkubátor</a>
 </p>
 @if ($roundDataPending)
   <p class="text-sm text-muted mb-4 -mt-3">ℹ️ Po vyhodnocení kola budou mapy obsahovat více dat – do vrstvy CRK přibudou všechny stanice z kola a na stránce Porovnání deníků půjde srovnat deníky účastníků.</p>

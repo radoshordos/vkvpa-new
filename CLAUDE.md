@@ -74,7 +74,7 @@ The map lives on the visualization page (`/edi/{head}/vizualizace`, `EdiVizualiz
 - `spendliky` – pins per QSO with distance/bearing popup
 - `lokatory` – big squares (4-char Maidenhead) with QSO counts
 
-Chart aggregations (timeline with multipliers, weighted azimuth rose, points per square, season trend, tempo, mode stats, uncounted QSOs) live in the shared `DenikStatistiky` service; the visualization page renders the charts and the TOP ODX table, while "Vizuální inkubátor" (`/edi/{head}/vizualni-inkubator`) keeps only supplementary tables (new multipliers, uncounted QSOs) and has no JS entry point.
+Chart aggregations (timeline with multipliers, weighted azimuth rose, points per square, season trend, tempo, mode stats, uncounted QSOs, TOP ODX) live in the `DenikStatistiky` service; the visualization page renders all of them. The former "Vizuální inkubátor" page was removed — everything graphical lives on the visualization page.
 
 The `crk` "all round stations" layer (`QsoGeometry::roundStations()`) is withheld until the round is closed/evaluated (`KoloStav`) to avoid leaking competitors' logs during reception. Each Leaflet map also has a fullscreen toggle (`resources/js/leaflet-fullscreen.js`).
 

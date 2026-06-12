@@ -11,12 +11,10 @@ use App\Support\ContestWindow;
 use Illuminate\Support\Collection;
 
 /**
- * Statistiky a agregace deníku pro vizualizace: nové násobiče, timeline,
- * vážená azimutová růžice, body podle čtverců, TOP ODX, souhrn po druzích
- * provozu, tempo závodu, nezapočítaná QSO a celoroční trend stanice.
- *
- * Sdílí ji stránka Vizualizace (grafy) a Vizuální inkubátor (tabulky);
- * geometrii spojení dodává {@see QsoGeometry}.
+ * Statistiky a agregace deníku pro stránku Vizualizace: nové násobiče,
+ * timeline, vážená azimutová růžice, body podle čtverců, TOP ODX, souhrn
+ * po druzích provozu, tempo závodu, nezapočítaná QSO a celoroční trend
+ * stanice. Geometrii spojení dodává {@see QsoGeometry}.
  */
 class DenikStatistiky
 {

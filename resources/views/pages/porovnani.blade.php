@@ -37,8 +37,7 @@ window.__porovnaniConfig = {
 <h1 class="text-xl font-bold text-heading">⚔️ Porovnání deníků – {{ $pcall }}</h1>
 <p class="text-sm text-muted mb-4">
   {{ $homeLoc }} · porovnání s deníkem soupeře z téhož kola a kategorie ·
-  <a href="{{ route('edi.vizualizace', ['head' => $head]) }}" class="underline hover:text-heading">vizualizace</a> ·
-  <a href="{{ route('edi.inkubator', ['head' => $head]) }}" class="underline hover:text-heading">🧪 vizuální inkubátor</a>
+  <a href="{{ route('edi.vizualizace', ['head' => $head]) }}" class="underline hover:text-heading">vizualizace</a>
 </p>
 
 @if ($roundDataPending)

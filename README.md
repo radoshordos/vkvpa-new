@@ -25,7 +25,6 @@ Webový systém pro správu a vyhodnocování závodů v pásmu VKV (Very High F
 - [Bodování](#bodování)
 - [Mapové pohledy](#mapové-pohledy)
 - [EDI vizualizace](#edi-vizualizace)
-- [Vizuální inkubátor](#vizuální-inkubátor)
 - [Porovnání deníků](#porovnání-deníků)
 - [Diskuse](#diskuse)
 - [REST API](#rest-api)
@@ -82,7 +81,6 @@ Webový systém pro správu a vyhodnocování závodů v pásmu VKV (Very High F
   - Celoroční trend – body a pořadí stanice ve všech kolech roku
   - Histogram vzdáleností – Chart.js Bar chart, pásma 0–50 / 50–100 / 100–200 / 200–400 / 400–700 / 700+ km
   - TOP ODX – tabulka 10 nejvzdálenějších spojení (km, azimut, čas, mód, body)
-- **Vizuální inkubátor** – doplňkové tabulky deníku (`/edi/{head}/vizualni-inkubator`): nové násobiče, nezapočítaná QSO
 - **Porovnání deníků** – samostatná stránka hráč vs. hráč (`/edi/{head}/porovnani`): mapa rozdílů v protistanicích, překryvný graf průběhu skóre, tempo obou stanic a směrová růžice; jen deníky z téhož kola a kategorie, soupeřův deník až po uzávěrce kola
 - **Diskuse** – komentáře k závodním kolům (throttle ochrana, moderace adminem)
 - **Admin dashboard** – statistiky sezóny, trend účasti, distribuce kategorií, top 10 stanic
@@ -270,7 +268,7 @@ resources/
     ├── livewire/
     │   └── edi-upload.blade.php  # Blade šablona Livewire EdiUpload komponenty
     ├── pages/              # Stránky (home, hlaseni, kola, vysledky, diskuse, vizualizace,
-    │                       #          inkubator, porovnani, edi-upload, admin/*)
+    │                       #          porovnani, edi-upload, admin/*)
     └── partials/           # menu, footer, menu-item, no-active-period
 docs/
 ├── kolo-lifecycle.svg      # Diagram životního cyklu závodního kola (KoloStav)
@@ -278,7 +276,7 @@ docs/
 └── technicky-dluh.md       # Dokumentace technického dluhu
 ```
 
-Vite kompiluje čtyři oddělené JS entry-pointy (`app.js`, `vizualizace.js`, `porovnani.js`, `dashboard.js`) – každá stránka načítá jen co potřebuje. Vizuální inkubátor je čistě serverová stránka bez vlastního JS.
+Vite kompiluje čtyři oddělené JS entry-pointy (`app.js`, `vizualizace.js`, `porovnani.js`, `dashboard.js`) – každá stránka načítá jen co potřebuje.
 
 ---
 
@@ -512,7 +510,6 @@ VkvpaKola ──► Prispevek[]
 | GET | `/edi/{head}/soubor` | `EdiController@zobrazit` | `edi.soubor` |
 | GET | `/edi/{head}/soubor-redukovany` | `EdiController@zobrazitRedukovany` | `edi.soubor.redukovany` |
 | GET | `/edi/{head}/vizualizace` | `EdiVizualizaceController@show` | `edi.vizualizace` |
-| GET | `/edi/{head}/vizualni-inkubator` | `EdiInkubatorController@show` | `edi.inkubator` |
 | GET | `/edi/{head}/porovnani` | `EdiPorovnaniController@show` | `edi.porovnani` |
 | GET | `/lang/{locale}` | closure | `lang.switch` |
 | GET | `/login` | `AuthController` | `login` |
@@ -589,7 +586,7 @@ Nahrání EDI deníku probíhá přes **Livewire komponentu** `EdiUpload` (`app/
 | `EdiImportService` | `app/Services/Edi/EdiImportService.php` | Uložení `EdiLog` → `edihead` + `edilines` v transakci |
 | `EdiReducer` | `app/Services/Edi/EdiReducer.php` | Filtrování EDI na závodní okno (08:00–11:00 UTC) |
 | `CategoryResolver` | `app/Services/Edi/CategoryResolver.php` | Určení kategorie z hlavičky (pásmo + sekce + DX) |
-| `QsoGeometry` | `app/Services/Edi/QsoGeometry.php` | Výpočty souřadnic, vzdáleností, azimutů, průběhu skóre a porovnání deníků (sdíleno vizualizací, inkubátorem i porovnáním) |
+| `QsoGeometry` | `app/Services/Edi/QsoGeometry.php` | Výpočty souřadnic, vzdáleností, azimutů, průběhu skóre a porovnání deníků (sdíleno vizualizací i porovnáním) |
 | `PorovnaniRivals` | `app/Services/Edi/PorovnaniRivals.php` | Výběr soupeřů pro porovnání deníků (totéž kolo + kategorie, až po uzávěrce) |
 | `BigSquareCount` | `app/Services/Edi/BigSquareCount.php` | Agregace QSO do 4-znakových Maidenhead čtverců |
 | `ImportEdiAction` | `app/Actions/ImportEdiAction.php` | Orchestrace celého importu: validace → uložení → scoring → event |
@@ -685,7 +682,7 @@ Podpůrná třída `Maidenhead` zajišťuje převod lokátor ↔ lat/lon. Vzdál
 
 ## EDI vizualizace
 
-Trasa `GET /edi/{head}/vizualizace` (`edi.vizualizace`) zobrazí komplexní analytickou stránku pro konkrétní EDI deník – mapu (pět přepínatelných vrstev vč. přehrávání deníku) i grafy na jedné URL. Toto je jediný mapový pohled; samostatné stránky byly zrušeny. Stránka je veřejná (zobrazuje jen vlastní deník účastníka) a v hlavičce odkazuje na [vizuální inkubátor](#vizuální-inkubátor) a – existuje-li aspoň jeden soupeř v téže kategorii – na [porovnání deníků](#porovnání-deníků).
+Trasa `GET /edi/{head}/vizualizace` (`edi.vizualizace`) zobrazí komplexní analytickou stránku pro konkrétní EDI deník – mapu (pět přepínatelných vrstev vč. přehrávání deníku) i grafy na jedné URL. Toto je jediný mapový pohled; samostatné stránky byly zrušeny. Stránka je veřejná (zobrazuje jen vlastní deník účastníka) a v hlavičce – existuje-li aspoň jeden soupeř v téže kategorii – odkazuje na [porovnání deníků](#porovnání-deníků).
 
 ### Komponenty stránky
 
@@ -791,31 +788,16 @@ EdiVizualizaceController::show(Edihead)
 
 ---
 
-## Vizuální inkubátor
-
-Trasa `GET /edi/{head}/vizualni-inkubator` (`edi.inkubator`) obsahuje **doplňkové tabulky deníku** nad rámec stránky Vizualizace. Přístup: přihlášení uživatelé; běžným uživatelům je stránka nedostupná, dokud existuje aktivní kolo (admin ji vidí vždy). Stránka je čistě serverová (bez JS).
-
-### Komponenty stránky
-
-| Komponenta | Popis |
-|------------|-------|
-| **Nové násobiče** | Chronologický seznam: které QSO přineslo dosud nepracovaný velký čtverec |
-| **Nezapočítaná QSO** | QSO mimo závodní okno / mimo den závodu / označené duplicity (prvních 50 řádků) |
-
-Grafy, mapa s přehráváním deníku i tabulka TOP ODX byly z inkubátoru přesunuty na stránku [EDI vizualizace](#edi-vizualizace); porovnání se soupeřem na samostatnou stránku [Porovnání deníků](#porovnání-deníků). Agregace počítá sdílená služba `DenikStatistiky` (`app/Services/Edi/DenikStatistiky.php`).
-
----
-
 ## Porovnání deníků
 
-Trasa `GET /edi/{head}/porovnani` (`edi.porovnani`) je samostatná stránka **porovnání dvou hráčů** – tohoto deníku proti vybranému soupeři (query parametr `?porovnat={id}`). Funkce sem byla přesunuta ze stránek Vizualizace (mapová vrstva „Porovnání") a Vizuální inkubátor (overlay průběhu skóre).
+Trasa `GET /edi/{head}/porovnani` (`edi.porovnani`) je samostatná stránka **porovnání dvou hráčů** – tohoto deníku proti vybranému soupeři (query parametr `?porovnat={id}`). Funkce sem byla přesunuta ze stránky Vizualizace (mapová vrstva „Porovnání" a overlay průběhu skóre).
 
 ### Pravidla výběru soupeře
 
 - Porovnat lze **jen deníky z téhož kola a téže kategorie** – soupeře hledá `PorovnaniRivals` podle schválených záznamů výsledkové listiny (`vkvpa_data`)
 - **Férovost:** soupeřův deník se vydá až po uzávěrce, resp. vyhodnocení kola (`QsoGeometry::roundResultsDisclosable()`); do té doby se nenabízí nic a query parametr se ignoruje
 - Soupeř mimo nabídku (jiná kategorie, jiné kolo) je tiše ignorován
-- Vizualizace i inkubátor odkazují na tuto stránku jen tehdy, když existuje aspoň jeden soupeř (`PorovnaniRivals::hasRivals()`)
+- Vizualizace odkazuje na tuto stránku jen tehdy, když existuje aspoň jeden soupeř (`PorovnaniRivals::hasRivals()`)
 
 ### Komponenty stránky (po výběru soupeře)
 

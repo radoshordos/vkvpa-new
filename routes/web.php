@@ -12,7 +12,6 @@ use App\Http\Controllers\Admin\VyhodnoceniController;
 use App\Http\Controllers\Admin\ZaznamController;
 use App\Http\Controllers\DiskuseController;
 use App\Http\Controllers\EdiController;
-use App\Http\Controllers\EdiInkubatorController;
 use App\Http\Controllers\EdiPorovnaniController;
 use App\Http\Controllers\EdiVizualizaceController;
 use App\Http\Controllers\HlaseniController;
@@ -71,14 +70,11 @@ Route::post('/edi', [EdiController::class, 'store'])->middleware('throttle:edi-u
 Route::get('/edi/{head}/soubor', [EdiController::class, 'zobrazit'])->name('edi.soubor');
 Route::get('/edi/{head}/soubor-redukovany', [EdiController::class, 'zobrazitRedukovany'])->name('edi.soubor.redukovany');
 
-// Komplexní vizualizace deníku: mapy (4 přepínatelné vrstvy: CRK, ježek,
-// špendlíky, lokátory) + grafy na jedné stránce (Leaflet + Chart.js).
-// Nahrazuje dřívější samostatné mapové pohledy /edi/{head}/mapa/* (M/N/S/C).
+// Komplexní vizualizace deníku: mapy (5 přepínatelných vrstev: přehrávání,
+// CRK, ježek, špendlíky, lokátory) + grafy a TOP ODX na jedné stránce
+// (Leaflet + Chart.js). Nahrazuje dřívější samostatné mapové pohledy
+// /edi/{head}/mapa/* (M/N/S/C) i zrušený Vizuální inkubátor.
 Route::get('/edi/{head}/vizualizace', [EdiVizualizaceController::class, 'show'])->name('edi.vizualizace');
-
-// Vizuální inkubátor – experimentální vizualizace deníku (přehrávání na mapě,
-// průběh skóre, nové násobiče, TOP ODX, tempo, celoroční trend …).
-Route::get('/edi/{head}/vizualni-inkubator', [EdiInkubatorController::class, 'show'])->name('edi.inkubator');
 
 // Porovnání dvou deníků (hráč vs. hráč) z téhož kola a téže kategorie –
 // mapa rozdílů v protistanicích + překryvný graf průběhu skóre.

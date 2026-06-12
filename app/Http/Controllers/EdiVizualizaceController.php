@@ -15,12 +15,11 @@ use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
 /**
- * Komplexní vizualizace deníku: mapa (vč. přehrávání deníku) + grafy na jedné
- * stránce. Geometrii spojení (souřadnice, vzdálenost, azimut, body, čtverce)
- * počítá sdílená {@see QsoGeometry}, agregace pro grafy {@see DenikStatistiky}.
- * Doplňkové tabulky (TOP ODX, násobiče, nezapočítaná QSO) jsou na stránce
- * Vizuální inkubátor; porovnání s deníkem soupeře na stránce Porovnání deníků
- * ({@see EdiPorovnaniController}).
+ * Komplexní vizualizace deníku: mapa (vč. přehrávání deníku), grafy a TOP ODX
+ * na jedné stránce. Geometrii spojení (souřadnice, vzdálenost, azimut, body,
+ * čtverce) počítá sdílená {@see QsoGeometry}, agregace pro grafy
+ * {@see DenikStatistiky}. Porovnání s deníkem soupeře je na stránce
+ * Porovnání deníků ({@see EdiPorovnaniController}).
  */
 class EdiVizualizaceController extends Controller
 {
