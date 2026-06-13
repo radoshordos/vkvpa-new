@@ -64,8 +64,6 @@ return [
         'col_actions' => 'Akce',
         'btn_create' => '+ Přidat kolo',
         'btn_edit' => 'upravit',
-        'btn_evaluate' => 'vyhodnotit',
-        'btn_close' => 'uzavřít',
     ],
 
     'hlaseni' => [

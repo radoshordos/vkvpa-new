@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Jobs\RankRoundJob;
 use App\Models\VkvpaData;
+use App\Services\Scoring\ScoringService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -30,6 +31,8 @@ use Illuminate\Support\Facades\Log;
  */
 class ZaznamController extends Controller
 {
+    public function __construct(private readonly ScoringService $scoring) {}
+
     /**
      * Přepne převzetí záznamu – tlačítko „P" ve výsledkové listině (toggle).
      *
@@ -38,30 +41,54 @@ class ZaznamController extends Controller
      * Oprávnění: jen administrátor (middleware `admin`)
      * Efekt:    překlopí `schvaleno` (nepřevzatý ↔ převzatý) a přepočítá pořadí
      *           v kole, aby se změna promítla do žebříčku (do pořadí se počítají
-     *           jen převzaté záznamy).
+     *           jen převzaté záznamy). Dvě omezení životního cyklu kola:
+     *             - odebrat převzetí (převzatý → nepřevzatý) lze jen mezi startem
+     *               závodu a uzávěrkou (stavy Probíhá/Příjem); po uzávěrce už
+     *               záznam nelze vrátit, jen upravit,
+     *             - převzetí posledního dosud nepřevzatého záznamu po uzávěrce
+     *               kolo rovnou vyhodnotí (nastaví `vyhodnoceno`).
      * Návrat:   redirect zpět na výsledkovou listinu kola záznamu + hláška.
      */
     public function update(VkvpaData $zaznam): RedirectResponse
     {
+        $kolo = $zaznam->kolo;
         $idKola = $zaznam->id_kola;
         $znacka = $zaznam->znacka;
-
         $prevzato = ! $zaznam->schvaleno;
+
+        // Vrátit převzetí lze jen mezi datum_konani a datum_uzaverky.
+        if (! $prevzato && ! ($kolo?->prijimaHlaseni() ?? false)) {
+            return redirect()
+                ->route('vysledkova_listina', ['kolo' => $idKola])
+                ->with('announcement', 'Po uzávěrce už nelze vrátit převzetí záznamu „'.$znacka.'" – lze ho pouze upravit.');
+        }
+
         $zaznam->update(['schvaleno' => $prevzato]);
-        RankRoundJob::dispatchSync($idKola);
+
+        // Převzetí posledního záznamu po uzávěrce kolo rovnou vyhodnotí (přepočítá
+        // pořadí + nastaví vyhodnoceno); jinak stačí přepočet pořadí.
+        $vyhodnoceno = $prevzato && $kolo !== null && $this->scoring->finalizeIfDue($kolo);
+        if (! $vyhodnoceno) {
+            RankRoundJob::dispatchSync($idKola);
+        }
 
         Log::info($prevzato ? 'admin.zaznam.prevzit' : 'admin.zaznam.odebrat-prevzeti', [
             'zaznam_id' => $zaznam->id,
             'znacka' => $znacka,
             'kolo_id' => $idKola,
+            'vyhodnoceno' => $vyhodnoceno,
             'admin' => Auth::user()?->name,
         ]);
 
+        $zprava = match (true) {
+            $vyhodnoceno => 'Záznam „'.$znacka.'" převzat – všechny záznamy převzaty, kolo bylo vyhodnoceno.',
+            $prevzato => 'Záznam „'.$znacka.'" byl převzat.',
+            default => 'Záznam „'.$znacka.'" byl vrácen mezi nepřevzaté.',
+        };
+
         return redirect()
             ->route('vysledkova_listina', ['kolo' => $idKola])
-            ->with('announcement', $prevzato
-                ? 'Záznam „'.$znacka.'" byl převzat.'
-                : 'Záznam „'.$znacka.'" byl vrácen mezi nepřevzaté.');
+            ->with('announcement', $zprava);
     }
 
     /**

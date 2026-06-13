@@ -92,4 +92,16 @@ class ContestRoundCommandsTest extends TestCase
             'Naplánovaná úloha kola:ensure-upcoming není registrovaná.',
         );
     }
+
+    public function test_finalize_evaluated_is_scheduled(): void
+    {
+        $events = Collection::make(app(Schedule::class)->events());
+
+        $this->assertTrue(
+            $events->contains(
+                fn ($e): bool => str_contains((string) ($e->command ?? ''), 'kola:finalize-evaluated'),
+            ),
+            'Naplánovaná úloha kola:finalize-evaluated není registrovaná.',
+        );
+    }
 }

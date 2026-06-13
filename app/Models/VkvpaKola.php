@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\KoloStav;
+use App\Services\Scoring\ScoringService;
 use App\Support\ContestWindow;
+use App\Support\VkvpaSettings;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
@@ -101,10 +103,50 @@ class VkvpaKola extends Model
      * závodníků přijímají jen ve stavech Probíhá a Příjem hlášení – od startu
      * závodu (`datum_konani`) do uzávěrky. Admin smí nahrávat kdykoliv
      * (výjimku řeší volající, ne tato metoda).
+     *
+     * Toto okno zároveň vymezuje dobu, kdy lze odebrat převzetí záznamu
+     * („zrušit převzetí" smí admin jen mezi `datum_konani` a `datum_uzaverky`).
      */
     public function prijimaHlaseni(): bool
     {
         return in_array($this->stav(), [KoloStav::Aktivni, KoloStav::Prijem], true);
+    }
+
+    /**
+     * Jsou všechny záznamy kola převzaté (`schvaleno = true`)? Prázdné kolo
+     * (bez záznamů) je vakuózně „celé převzaté". Čte se vždy čerstvě z DB.
+     */
+    public function vsechnyZaznamyPrevzaty(): bool
+    {
+        return ! $this->hlaseni()->where('schvaleno', false)->exists();
+    }
+
+    /**
+     * Uplynula záchranná lhůta automatického vyhodnocení (standardně 20 dní
+     * od `datum_uzaverky`, viz {@see VkvpaSettings::finalizeFallbackDays()})?
+     * Bez uzávěrky lhůtu nelze odvodit → false.
+     */
+    public function lhutaVyhodnoceniVyprsela(): bool
+    {
+        if ($this->datum_uzaverky === null) {
+            return false;
+        }
+
+        return Carbon::now()->gte(
+            $this->datum_uzaverky->copy()->addDays(VkvpaSettings::finalizeFallbackDays())
+        );
+    }
+
+    /**
+     * Má se kolo automaticky vyhodnotit? Až po skončení příjmu hlášení
+     * (stav {@see KoloStav::Uzavrene}) a zároveň když administrátor převzal
+     * všechny záznamy, nebo uplynula 20denní záchranná lhůta od uzávěrky.
+     * Vlastní nastavení `vyhodnoceno` provádí {@see ScoringService::finalizeIfDue()}.
+     */
+    public function maBytVyhodnoceno(): bool
+    {
+        return $this->stav() === KoloStav::Uzavrene
+            && ($this->vsechnyZaznamyPrevzaty() || $this->lhutaVyhodnoceniVyprsela());
     }
 
     /**

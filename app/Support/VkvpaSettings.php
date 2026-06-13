@@ -51,6 +51,11 @@ final class VkvpaSettings
         return Config::integer('vkvpa.non_edi_nullify_from_kolo', 91);
     }
 
+    public static function finalizeFallbackDays(): int
+    {
+        return Config::integer('vkvpa.finalize_fallback_days', 20);
+    }
+
     public static function yearlyCacheFresh(): int
     {
         return Config::integer('vkvpa.yearly_cache_fresh', 300);

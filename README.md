@@ -84,7 +84,7 @@ Webový systém pro správu a vyhodnocování závodů v pásmu VKV (Very High F
 - **Porovnání deníků** – samostatná stránka hráč vs. hráč (`/edi/{head}/porovnani`): mapa rozdílů v protistanicích, překryvný graf průběhu skóre, tempo obou stanic a směrová růžice; jen deníky z téhož kola a kategorie, soupeřův deník až po uzávěrce kola
 - **Diskuse** – komentáře k závodním kolům (throttle ochrana, moderace adminem)
 - **Admin dashboard** – statistiky sezóny, trend účasti, distribuce kategorií, top 10 stanic
-- **Admin rozhraní** – CRUD kol a kategorií, uzavření kola, schválení/smazání záznamu, EDI debug, hromadný import
+- **Admin rozhraní** – CRUD kol a kategorií, převzetí (schválení)/smazání záznamu (vyhodnocení kola probíhá automaticky), EDI debug, hromadný import
 - **EDI debug** – analýza bodování bez uložení (pro adminy)
 - **REST API** – veřejné JSON API s výsledky a OpenAPI/Swagger dokumentací
 - **Přepínání jazyka** – čeština / angličtina (ukládáno do session)
@@ -187,9 +187,11 @@ Diagram stavu je v [`docs/kolo-lifecycle.svg`](docs/kolo-lifecycle.svg). Stav je
 | `Aktivni` | Probíhá | závodní okno právě běží (`datum_konani` až `konecZavodu()`, standardně +3 h) |
 | `Prijem` | Příjem hlášení | závod skončil, uzávěrka ještě neuplynula |
 | `Uzavrene` | Zpracování výsledků | uzávěrka uplynula, `vyhodnoceno = null` |
-| `Vyhodnocene` | Vyhodnocené | `vyhodnoceno ≠ null` (nastaví admin) |
+| `Vyhodnocene` | Vyhodnocené | `vyhodnoceno ≠ null` (nastaví automatika) |
 
 Hlášení se od běžných závodníků přijímají ve stavech `Aktivni` a `Prijem` (od startu závodu do uzávěrky); admin smí nahrávat a opravovat kdykoliv.
+
+**Přechod do `Vyhodnocené`** je automatický: po uzávěrce (stav `Uzavrene`) kolo vyhodnotí buď převzetí posledního dosud nepřevzatého záznamu (admin záznamy přebírá tlačítkem „P" už během příjmu), nebo denní příkaz `kola:finalize-evaluated` jakmile jsou všechny záznamy převzaty, případně po 20 dnech od uzávěrky (`vkvpa.finalize_fallback_days`). Odebrat převzetí (`zaznam.update`) smí admin jen mezi `datum_konani` a `datum_uzaverky`; po uzávěrce už lze záznam jen editovat (body se přepočítají).
 
 ### Dvě databázové schémata
 
@@ -527,8 +529,6 @@ VkvpaKola ──► Prispevek[]
 | POST | `/admin/kola` | `KolaAdminController@store` | `kola.admin.store` |
 | GET | `/admin/kola/{kolo}/edit` | `KolaAdminController@edit` | `kola.admin.edit` |
 | PATCH | `/admin/kola/{kolo}` | `KolaAdminController@update` | `kola.admin.update` |
-| POST | `/admin/kola/{kolo}/vyhodnotit` | `VyhodnoceniController@vyhodnotit` | `kola.vyhodnotit` |
-| POST | `/admin/kola/{kolo}/uzavrit` | `VyhodnoceniController@uzavrit` | `kola.uzavrit` |
 | PATCH | `/admin/zaznamy/{zaznam}` | `ZaznamController@update` | `zaznam.update` |
 | DELETE | `/admin/zaznamy/{zaznam}` | `ZaznamController@destroy` | `zaznam.destroy` |
 | DELETE | `/admin/diskuse/{prispevek}` | `DiskuseController@destroy` | `diskuse.destroy` |
@@ -609,7 +609,7 @@ Všechny enumy jsou v `app/Enums/`. Backed enumy nesou hodnotu (`value`), která
 | Enum | Typ | Hodnoty | Použití |
 |------|-----|---------|---------|
 | `QsoMode` | `int` | `Ssb(1)`, `Cw(2)`, `Other(0)` | Druh provozu z EDI `Mode-code`; řídí barvy v mapách a vizualizaci. `fromCode()` mapuje neznámý kód na `Other`, `label()` vrací `SSB`/`CW`/`?` |
-| `KoloStav` | `string` | `Nadchazejici`, `Aktivni`, `Prijem`, `Uzavrene`, `Vyhodnocene` | Fáze životního cyklu kola, odvozená čistě z času: `vyhodnoceno`, `datum_konani` (start závodu) a `datum_uzaverky` (viz `VkvpaKola::stav()`). Diagram: [`docs/kolo-lifecycle.svg`](docs/kolo-lifecycle.svg). `label()` vrací `Nadcházející`/`Probíhá`/`Příjem hlášení`/`Zpracování výsledků`/`Vyhodnocené`; `badgeClass()` barvu badge. |
+| `KoloStav` | `string` | `Nadchazejici`, `Aktivni`, `Prijem`, `Uzavrene`, `Vyhodnocene` | Fáze životního cyklu kola, odvozená z času (`datum_konani` = start závodu, `datum_uzaverky`) a sloupce `vyhodnoceno`; do `Vyhodnocené` se kolo dostane automaticky po uzávěrce (vše převzato / +20 dní, viz `VkvpaKola::maBytVyhodnoceno()` a `kola:finalize-evaluated`). Logika v `VkvpaKola::stav()`, diagram: [`docs/kolo-lifecycle.svg`](docs/kolo-lifecycle.svg). `label()` vrací `Nadcházející`/`Probíhá`/`Příjem hlášení`/`Zpracování výsledků`/`Vyhodnocené`; `badgeClass()` barvu badge. |
 
 ### Rozlišení kategorií
 
@@ -884,11 +884,12 @@ Konfigurace odesílatele: `MAIL_FROM_ADDRESS` a `CONTACT_MAIL` v `.env`.
 
 ## Plánované příkazy
 
-Laravel Scheduler spouští jediný Artisan příkaz – stav kola se odvozuje čistě z času, takže žádná plánovaná aktivace/deaktivace kol není potřeba:
+Laravel Scheduler spouští dva Artisan příkazy – stavy nadcházející/probíhá/příjem/zpracování se odvozují čistě z času (žádná plánovaná aktivace/deaktivace), automatizovat je potřeba jen přechod do `Vyhodnocené`:
 
 | Příkaz | Frekvence | Účel |
 |--------|-----------|------|
 | `kola:ensure-upcoming` | každý den | Zakládá chybějící kola na N měsíců dopředu dle `ContestCalendar` |
+| `kola:finalize-evaluated` | každý den | Vyhodnotí kola po uzávěrce (všechny záznamy převzaty nebo +20 dní od uzávěrky); přepočítá pořadí a nastaví `vyhodnoceno` |
 
 `ContestCalendar` automaticky vypočítává termíny závodů: třetí neděle v měsíci 08:00–11:00 UTC, uzávěrka v pátek téhož týdne 23:59 UTC.
 

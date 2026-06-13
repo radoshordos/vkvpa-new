@@ -117,7 +117,7 @@
                             @endif
                         </td>
                         @if ($isAdmin)
-                            <td>@include('partials.zaznam-akce', ['r' => $r, 'bezEdi' => true])</td>
+                            <td>@include('partials.zaznam-akce', ['r' => $r, 'bezEdi' => true, 'prijemOtevren' => $kolo->prijimaHlaseni()])</td>
                         @endif
                     </tr>
                 @endforeach

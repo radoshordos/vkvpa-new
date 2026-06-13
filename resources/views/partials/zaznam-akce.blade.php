@@ -5,13 +5,19 @@
     2. řádek: EDI · EDIR · statistiky, má-li záznam nahraný deník;
     $bezEdi = true ho vynechá (stránka má pro EDI a statistiky vlastní sloupce).
 --}}
-@php $bezEdi = $bezEdi ?? false; @endphp
+@php
+    $bezEdi = $bezEdi ?? false;
+    // Vrátit převzetí (převzatý → nepřevzatý) lze jen do uzávěrky; po ní už jen upravit.
+    $prijemOtevren = $prijemOtevren ?? true;
+    $vratitBlokovano = $r->schvaleno && ! $prijemOtevren;
+@endphp
 <div class="mb-1 flex items-center gap-1">
     <form method="post" action="{{ route('zaznam.update', ['zaznam' => $r->id]) }}">
         @csrf
         @method('PATCH')
-        <button type="submit" @class(['icon-btn', 'icon-btn-p', 'icon-btn-p-off' => ! $r->schvaleno])
-                title="{{ $r->schvaleno ? 'Vrátit mezi nepřevzaté (odebrat převzetí)' : 'Převzít záznam (vyhodnocovatel viděl)' }}">
+        <button type="submit" @disabled($vratitBlokovano)
+                @class(['icon-btn', 'icon-btn-p', 'icon-btn-p-off' => ! $r->schvaleno, 'opacity-50 cursor-not-allowed' => $vratitBlokovano])
+                title="{{ $vratitBlokovano ? 'Po uzávěrce nelze vrátit převzetí – záznam lze jen upravit' : ($r->schvaleno ? 'Vrátit mezi nepřevzaté (odebrat převzetí)' : 'Převzít záznam (vyhodnocovatel viděl)') }}">
             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="2 8.5 6 12.5 14 3.5"/></svg>
         </button>
     </form>
