@@ -34,4 +34,3 @@ Thumbs.db
 /.phpunit.result.cache
 /storage/logs/*.log
 /bootstrap/cache/*.php
-/database/source_sql_full

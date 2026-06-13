@@ -12,6 +12,3 @@ parameters:
         - database/migrations
         - database/seeders
         - tests
-
-    excludePaths:
-        - database/source_sql/*
