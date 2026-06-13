@@ -27,11 +27,12 @@ class ZaznamAdminTest extends TestCase
         return User::create(['name' => 'Admin', 'password' => Hash::make('x'), 'is_admin' => true]);
     }
 
+    /** Záznam v kole s otevřeným příjmem (stav Příjem) – převzetí lze i vracet. */
     private function zaznam(bool $schvaleno = false): VkvpaData
     {
         $kolo = VkvpaKola::create([
-            'datum_konani' => now()->subDays(5),
-            'datum_uzaverky' => now()->subDay(),
+            'datum_konani' => now()->subDays(2),
+            'datum_uzaverky' => now()->addDays(3),
             'nazev' => '05/2026',
             'poznamka' => '',
         ]);
@@ -106,7 +107,7 @@ class ZaznamAdminTest extends TestCase
 
     public function test_unapprove_resets_ranking_for_round(): void
     {
-        $kolo = VkvpaKola::create(['datum_konani' => now()->subDays(5), 'datum_uzaverky' => now()->subDay(), 'nazev' => '05/2026', 'poznamka' => '']);
+        $kolo = VkvpaKola::create(['datum_konani' => now()->subDays(2), 'datum_uzaverky' => now()->addDays(3), 'nazev' => '05/2026', 'poznamka' => '']);
         $kat = VkvpaKategorie::create(['nazev' => '144 MHz single op', 'popis' => '', 'zkratka' => 'A', 'dxid' => 0]);
 
         $a = VkvpaData::create(['id_kola' => $kolo->id, 'id_kategorie' => $kat->id, 'znacka' => 'OK1A', 'locator' => 'JN99AJ', 'pocet' => 10, 'nasobice' => 5, 'body' => 100, 'bodu_za_qso' => 0, 'schvaleno' => true, 'odeslano' => false, 'poradi' => 1]);
@@ -124,7 +125,7 @@ class ZaznamAdminTest extends TestCase
 
     public function test_prevzit_recalculates_ranking_for_round(): void
     {
-        $kolo = VkvpaKola::create(['datum_konani' => now()->subDays(5), 'datum_uzaverky' => now()->subDay(), 'nazev' => '05/2026', 'poznamka' => '']);
+        $kolo = VkvpaKola::create(['datum_konani' => now()->subDays(2), 'datum_uzaverky' => now()->addDays(3), 'nazev' => '05/2026', 'poznamka' => '']);
         $kat = VkvpaKategorie::create(['nazev' => '144 MHz single op', 'popis' => '', 'zkratka' => 'A', 'dxid' => 0]);
 
         $a = VkvpaData::create(['id_kola' => $kolo->id, 'id_kategorie' => $kat->id, 'znacka' => 'OK1A', 'locator' => 'JN99AJ', 'pocet' => 10, 'nasobice' => 5, 'body' => 100, 'bodu_za_qso' => 0, 'schvaleno' => true, 'odeslano' => false, 'poradi' => 0]);
@@ -141,7 +142,7 @@ class ZaznamAdminTest extends TestCase
 
     public function test_smazat_recalculates_ranking_after_deletion(): void
     {
-        $kolo = VkvpaKola::create(['datum_konani' => now()->subDays(5), 'datum_uzaverky' => now()->subDay(), 'nazev' => '05/2026', 'poznamka' => '']);
+        $kolo = VkvpaKola::create(['datum_konani' => now()->subDays(2), 'datum_uzaverky' => now()->addDays(3), 'nazev' => '05/2026', 'poznamka' => '']);
         $kat = VkvpaKategorie::create(['nazev' => '144 MHz single op', 'popis' => '', 'zkratka' => 'A', 'dxid' => 0]);
 
         $a = VkvpaData::create(['id_kola' => $kolo->id, 'id_kategorie' => $kat->id, 'znacka' => 'OK1A', 'locator' => 'JN99AJ', 'pocet' => 10, 'nasobice' => 5, 'body' => 100, 'bodu_za_qso' => 0, 'schvaleno' => true, 'odeslano' => false, 'poradi' => 2]);
@@ -154,5 +155,45 @@ class ZaznamAdminTest extends TestCase
         // Po smazání 1. místa musí OK1A přeskočit na 1. místo.
         $this->assertSame(1, $a->refresh()->poradi);
         $this->assertDatabaseMissing('vkvpa_data', ['id' => $b->id]);
+    }
+
+    public function test_cannot_unapprove_after_deadline(): void
+    {
+        // Kolo po uzávěrce (stav Zpracování) – převzetí už nelze vrátit.
+        $kolo = VkvpaKola::create(['datum_konani' => now()->subDays(7), 'datum_uzaverky' => now()->subDay(), 'nazev' => '05/2026', 'poznamka' => '']);
+        $kat = VkvpaKategorie::create(['nazev' => '144 MHz single op', 'popis' => '', 'zkratka' => 'A', 'dxid' => 0]);
+        $zaznam = VkvpaData::create([
+            'id_kola' => $kolo->id, 'id_kategorie' => $kat->id, 'znacka' => 'OK1A', 'locator' => 'JN99AJ',
+            'pocet' => 10, 'nasobice' => 5, 'body' => 50, 'bodu_za_qso' => 0, 'schvaleno' => true, 'odeslano' => false,
+        ]);
+
+        $this->actingAs($this->admin())
+            ->patch(route('zaznam.update', ['zaznam' => $zaznam->id]))
+            ->assertRedirect(route('vysledkova_listina', ['kolo' => $kolo->id]))
+            ->assertSessionHas('announcement');
+
+        // Záznam zůstává převzatý – odebrání po uzávěrce je zakázáno.
+        $this->assertTrue($zaznam->refresh()->schvaleno);
+    }
+
+    public function test_taking_over_last_record_after_deadline_evaluates_round(): void
+    {
+        // Kolo po uzávěrce s jediným dosud nepřevzatým záznamem.
+        $kolo = VkvpaKola::create(['datum_konani' => now()->subDays(7), 'datum_uzaverky' => now()->subDay(), 'nazev' => '05/2026', 'poznamka' => '']);
+        $kat = VkvpaKategorie::create(['nazev' => '144 MHz single op', 'popis' => '', 'zkratka' => 'A', 'dxid' => 0]);
+        $zaznam = VkvpaData::create([
+            'id_kola' => $kolo->id, 'id_kategorie' => $kat->id, 'znacka' => 'OK1A', 'locator' => 'JN99AJ',
+            'pocet' => 10, 'nasobice' => 5, 'body' => 50, 'bodu_za_qso' => 0, 'schvaleno' => false, 'odeslano' => false,
+        ]);
+        $this->assertNull($kolo->vyhodnoceno);
+
+        $this->actingAs($this->admin())
+            ->patch(route('zaznam.update', ['zaznam' => $zaznam->id]))
+            ->assertRedirect()
+            ->assertSessionHas('announcement');
+
+        // Převzetí posledního záznamu po uzávěrce kolo rovnou vyhodnotí.
+        $this->assertTrue($zaznam->refresh()->schvaleno);
+        $this->assertNotNull($kolo->refresh()->vyhodnoceno);
     }
 }

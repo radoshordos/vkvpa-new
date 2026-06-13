@@ -64,8 +64,6 @@ return [
         'col_actions' => 'Actions',
         'btn_create' => '+ Add round',
         'btn_edit' => 'edit',
-        'btn_evaluate' => 'evaluate',
-        'btn_close' => 'close',
     ],
 
     'hlaseni' => [

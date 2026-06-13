@@ -36,6 +36,11 @@ return [
     // Od tohoto kola se hlášení bez EDI do ročního součtu nezapočítávají.
     'non_edi_nullify_from_kolo' => 91,
 
+    // Záchranná lhůta automatického vyhodnocení kola: pokud administrátor
+    // nepřevezme všechny záznamy, kolo se vyhodnotí (nastaví `vyhodnoceno`)
+    // automaticky po tomto počtu dní od uzávěrky příjmu (`datum_uzaverky`).
+    'finalize_fallback_days' => (int) env('FINALIZE_FALLBACK_DAYS', 20),
+
     // Cache ročních výsledků (Cache::flexible): doba „čerstvosti" a krajní doba
     // platnosti staré hodnoty (stale-while-revalidate), v sekundách.
     'yearly_cache_fresh' => (int) env('YEARLY_CACHE_FRESH', 300),

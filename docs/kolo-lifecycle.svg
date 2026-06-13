@@ -25,7 +25,7 @@
   <!-- ── Title ── -->
   <text x="530" y="28" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a"
         letter-spacing="0.2">Životní cyklus závodního kola</text>
-  <text x="530" y="44" text-anchor="middle" font-size="11" fill="#64748b">KoloStav · čistá funkce času ze sloupců VkvpaKola</text>
+  <text x="530" y="44" text-anchor="middle" font-size="11" fill="#64748b">KoloStav · odvozeno z času (a u Vyhodnocené i z převzetí záznamů)</text>
 
   <!-- ════════════════════════════════════════════════════════════════
        STATE BOXES  (top=68, height=76, center_y=106)
@@ -103,8 +103,8 @@
   <text x="538" y="70" text-anchor="middle" font-size="8" fill="#6366f1">pátek 23:59 UTC</text>
 
   <!-- ④→⑤ label -->
-  <text x="726" y="57" text-anchor="middle" font-size="8.5" fill="#15803d" font-weight="600">admin: Vyhodnotit</text>
-  <text x="726" y="69" text-anchor="middle" font-size="8" fill="#16a34a">nastaví vyhodnoceno</text>
+  <text x="726" y="57" text-anchor="middle" font-size="8.5" fill="#15803d" font-weight="600">vše převzato / +20 dní</text>
+  <text x="726" y="69" text-anchor="middle" font-size="8" fill="#16a34a">denní cron → vyhodnoceno</text>
 
   <!-- ════════════════════════════════════════════════════════════════
        LEGEND  (bottom bar)
@@ -115,9 +115,9 @@
   <line x1="30" y1="178" x2="65" y2="178" stroke="#4338ca" stroke-width="2" marker-end="url(#arr-auto)"/>
   <text x="72" y="182" font-size="10" fill="#475569">automatický přechod uplynutím času (žádný cron)</text>
 
-  <!-- Legend: manual transition -->
+  <!-- Legend: evaluation transition -->
   <line x1="370" y1="178" x2="405" y2="178" stroke="#15803d" stroke-width="2" marker-end="url(#arr-manual)"/>
-  <text x="412" y="182" font-size="10" fill="#475569">manuální akce administrátora</text>
+  <text x="412" y="182" font-size="10" fill="#475569">vyhodnocení kola: vše převzato nebo +20 dní od uzávěrky (denní cron)</text>
 
   <!-- Legend: terminal state -->
   <circle cx="680" cy="178" r="8" fill="none" stroke="#475569" stroke-width="1.5"/>

@@ -59,6 +59,10 @@ EDI files may arrive as Windows-1250; `EdiParser` converts via `iconv` before pr
 
 `RankRoundJob` runs synchronously (`dispatchSync`) so ranking and cache invalidation never depend on a queue worker; every mutation of a ranked entry (admin toggle/delete/edit, round evaluation) must dispatch it.
 
+### Round Lifecycle (`KoloStav`)
+
+`VkvpaKola::stav()` derives the phase from time (`datum_konani`, `datum_uzaverky`) plus the `vyhodnoceno` timestamp: `Nadchazejici → Aktivni → Prijem → Uzavrene → Vyhodnocene`. There is **no manual "close round" action** — the transition into `Vyhodnocene` (setting `vyhodnoceno`) is automatic, gated by `VkvpaKola::maBytVyhodnoceno()`: the round must be past reception (`Uzavrene`) **and** either every entry is taken over (`schvaleno = true`) or the fallback window elapsed (`vkvpa.finalize_fallback_days` = 20 days after `datum_uzaverky`). `ScoringService::finalizeIfDue()` performs it (ranks + sets `vyhodnoceno`); it's invoked both by the daily `kola:finalize-evaluated` command and inline in `ZaznamController::update()` when an admin takes over the last entry after the deadline. Per-entry "převzetí" is the `VkvpaData.schvaleno` flag (button "P"); un-taking-over is only allowed while the round still accepts reports (`prijimaHlaseni()`, i.e. between `datum_konani` and `datum_uzaverky`) — after the deadline an entry can only be edited (which recomputes points).
+
 ### Caching
 
 `config/cache.php` keeps Laravel's secure default `serializable_classes => false` — objects are never unserialized from cache, so **only plain arrays/scalars may be cached** (a cached Eloquent collection comes back as `__PHP_Incomplete_Class`). Two application caches exist:

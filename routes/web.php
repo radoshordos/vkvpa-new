@@ -8,7 +8,6 @@ use App\Http\Controllers\Admin\EdiDebugController;
 use App\Http\Controllers\Admin\ImportController;
 use App\Http\Controllers\Admin\KategorieController;
 use App\Http\Controllers\Admin\KolaAdminController;
-use App\Http\Controllers\Admin\VyhodnoceniController;
 use App\Http\Controllers\Admin\ZaznamController;
 use App\Http\Controllers\DiskuseController;
 use App\Http\Controllers\EdiController;
@@ -94,9 +93,9 @@ Route::middleware('admin')->group(function (): void {
     Route::get('/admin/kola/{kolo}/edit', [KolaAdminController::class, 'edit'])->name('kola.admin.edit');
     Route::patch('/admin/kola/{kolo}', [KolaAdminController::class, 'update'])->name('kola.admin.update');
 
-    // Vyhodnocení a uzávěrka kola
-    Route::post('/admin/kola/{kolo}/vyhodnotit', [VyhodnoceniController::class, 'vyhodnotit'])->name('kola.vyhodnotit');
-    Route::post('/admin/kola/{kolo}/uzavrit', [VyhodnoceniController::class, 'uzavrit'])->name('kola.uzavrit');
+    // Vyhodnocení kola probíhá automaticky (denní příkaz kola:finalize-evaluated:
+    // po uzávěrce, když jsou všechny záznamy převzaty nebo uplynulo 20 dní) –
+    // žádná ruční akce „vyhodnotit/uzavřít" už není.
 
     // CRUD nad záznamem výsledkové listiny:
     //   P – převzít (PATCH), X – smazat (DELETE). U = editace přes GET hlaseni.index?id=

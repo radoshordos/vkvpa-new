@@ -72,6 +72,25 @@ final class ScoringService
     }
 
     /**
+     * Automaticky vyhodnotí kolo, pokud na to dozrálo ({@see VkvpaKola::maBytVyhodnoceno()}:
+     * po uzávěrce a buď všechny záznamy převzaté, nebo uplynula 20denní lhůta).
+     * Přepočítá pořadí (a invaliduje cache ročních výsledků) a nastaví `vyhodnoceno`.
+     *
+     * @return bool true, pokud kolo bylo právě vyhodnoceno; false, pokud na to ještě nedozrálo
+     */
+    public function finalizeIfDue(VkvpaKola $kolo): bool
+    {
+        if (! $kolo->maBytVyhodnoceno()) {
+            return false;
+        }
+
+        $this->rankRound($kolo->id);
+        $this->closeRound($kolo->id);
+
+        return true;
+    }
+
+    /**
      * Spočítá skóre deníku z QSO řádků (bodování per velký čtverec dle pravidel):
      *  - domácí velký čtverec = první 4 znaky PWWLo,
      *  - pocet     = započítaná QSO (včetně QSO do vlastního čtverce),

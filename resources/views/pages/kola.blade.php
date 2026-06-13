@@ -43,13 +43,9 @@
           <td class="whitespace-nowrap">{{ $k->vyhodnoceno?->format('j. n. Y H:i') ?? '—' }}</td>
           @if ($isAdmin)
             <td>
-              <div class="flex flex-wrap gap-2">
-                <a href="{{ route('kola.admin.edit', $k->id) }}" class="btn btn-ghost btn-sm">{{ __('pages.kola.btn_edit') }}</a>
-                @unless ($k->vyhodnoceno)
-                  <form action="{{ route('kola.vyhodnotit', $k->id) }}" method="post">@csrf<button type="submit" class="btn btn-primary btn-sm">{{ __('pages.kola.btn_evaluate') }}</button></form>
-                  <form action="{{ route('kola.uzavrit', $k->id) }}" method="post">@csrf<button type="submit" class="btn btn-ghost btn-sm">{{ __('pages.kola.btn_close') }}</button></form>
-                @endunless
-              </div>
+              {{-- Vyhodnocení probíhá automaticky (po uzávěrce: vše převzato / 20 dní),
+                   admin už kolo ručně neuzavírá – jen edituje termíny a název. --}}
+              <a href="{{ route('kola.admin.edit', $k->id) }}" class="btn btn-ghost btn-sm">{{ __('pages.kola.btn_edit') }}</a>
             </td>
           @endif
         </tr>
