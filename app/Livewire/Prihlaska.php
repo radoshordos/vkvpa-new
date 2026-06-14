@@ -353,15 +353,17 @@ class Prihlaska extends Component
         // a původní + redukovaný (EDIR) soubor – vše z paměti, bez zápisu do DB.
         // Předáváme jako data šablony (ne public property), takže nic neserializujeme.
         $report = null;
-        $ediSrc = '';
+        $ediLines = [];
         $ediReduced = '';
 
         if ($this->mode === 'edi-review' && $this->upload !== null) {
             try {
                 $log = $this->parseUpload();
+                $reducer = app(EdiReducer::class);
                 $report = app(EdiScoreDebugger::class)->analyze($log);
-                $ediSrc = $log->rawSource;
-                $ediReduced = app(EdiReducer::class)->reduce($log->rawSource);
+                // Řádky původního EDI s příznakem, zda je EDIR (ořez na okno) zahodí.
+                $ediLines = $reducer->annotate($log->rawSource);
+                $ediReduced = $reducer->reduce($log->rawSource);
             } catch (Throwable) {
                 // Náhled bez rozpadu – chybu nahrání řeší updatedUpload/odeslat.
             }
@@ -371,7 +373,7 @@ class Prihlaska extends Component
             'kola' => VkvpaKola::query()->orderByDesc('datum_konani')->limit(36)->get(),
             'kategorieList' => VkvpaKategorie::query()->orderBy('id')->get(),
             'report' => $report,
-            'ediSrc' => $ediSrc,
+            'ediLines' => $ediLines,
             'ediReduced' => $ediReduced,
         ]);
     }

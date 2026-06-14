@@ -175,6 +175,22 @@ class PrihlaskaTest extends TestCase
             ->assertSee('PWWLo');           // obsah původního EDI je vidět
     }
 
+    public function test_edi_review_colors_out_of_window_lines_dropped_by_edir(): void
+    {
+        $this->koloProDatum('2026-03-15');
+        // QSO ve 12:30 je mimo okno → EDIR ho zahodí → v EDI náhledu zvýrazněno.
+        $edi = "[REG1TEST;1]\nTName=Provozni aktiv\nTDate=20260315;20260315\n"
+            ."PCall=OK2KJT\nPWWLo=JN99AJ\nPSect=MULTI\nPBand=144 MHz\n"
+            ."RHBBS=ok2kjt@example.com\nSPowe=100\n[QSORecords;2]\n"
+            ."260315;0830;OK1IN;1;59;001;59;001;;JN89PV;3;;;;\n"
+            ."260315;1230;OK1OUT;1;59;002;59;002;;JN79VS;3;;;;\n[END;]\n";
+
+        Livewire::test(Prihlaska::class)
+            ->set('upload', $this->file($edi))
+            ->assertSet('mode', 'edi-review')
+            ->assertSee('var(--danger-soft)', false); // zahozený řádek je obarven
+    }
+
     // ── Ruční podání ─────────────────────────────────────────────────────────
 
     public function test_manual_submission_is_stored_pending_and_redirects(): void

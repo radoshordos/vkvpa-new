@@ -120,11 +120,16 @@
                 @endif
 
                 {{-- Původní a redukovaný (EDIR) soubor – sbalitelné --}}
-                @if ($ediSrc !== '')
+                @if ($ediLines !== [])
                     <div class="mt-3 grid gap-3 sm:grid-cols-2">
                         <details class="rounded-lg border border-line p-3">
-                            <summary class="cursor-pointer text-sm font-semibold text-heading">EDI soubor</summary>
-                            <pre class="mt-2 max-h-80 overflow-auto rounded bg-surface-2 p-2 text-xs">{{ $ediSrc }}</pre>
+                            <summary class="cursor-pointer text-sm font-semibold text-heading">
+                                EDI soubor
+                                <span class="ml-1 font-normal text-xs text-muted">(červeně řádky, které EDIR ořízne – mimo okno)</span>
+                            </summary>
+                            <div class="mt-2 max-h-80 overflow-auto rounded bg-surface-2 p-2 font-mono text-xs leading-relaxed">
+                                @foreach ($ediLines as $l)<div class="whitespace-pre" style="{{ $l['dropped'] ? 'background-color:var(--danger-soft);color:var(--danger);text-decoration:line-through' : '' }}">{{ $l['text'] === '' ? ' ' : $l['text'] }}</div>@endforeach
+                            </div>
                         </details>
                         <details class="rounded-lg border border-line p-3">
                             <summary class="cursor-pointer text-sm font-semibold text-heading">EDIR – oříznutý na závodní okno (08:00–11:00 UTC)</summary>

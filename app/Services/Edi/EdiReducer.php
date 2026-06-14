@@ -73,6 +73,55 @@ final class EdiReducer
         return implode("\n", $out);
     }
 
+    /**
+     * Oanotuje řádky původního EDI příznakem, zda je redukce (EDIR) zahodí –
+     * tj. QSO řádek mimo závodní okno. Slouží k barevnému zvýraznění v náhledu.
+     *
+     * @param  string  $raw  původní obsah EDI souboru
+     * @return list<array{text: string, dropped: bool}>
+     */
+    public function annotate(string $raw): array
+    {
+        $out = [];
+        $state = 'head';
+
+        foreach (preg_split('/\r\n|\r|\n/', $raw) ?: [] as $line) {
+            $buf = trim($line);
+
+            if ($state === 'head') {
+                $out[] = ['text' => $line, 'dropped' => false];
+                if (str_starts_with($buf, '[QSORecords;')) {
+                    $state = 'records';
+                }
+
+                continue;
+            }
+
+            if ($state === 'records') {
+                if (str_starts_with($buf, '[END')) {
+                    $state = 'tail';
+                    $out[] = ['text' => $line, 'dropped' => false];
+
+                    continue;
+                }
+                if ($buf === '') {
+                    $out[] = ['text' => $line, 'dropped' => false];
+
+                    continue;
+                }
+                // QSO řádek: Date;Time;… – druhý sloupec je čas (HHMM).
+                $time = explode(';', $buf)[1] ?? '';
+                $out[] = ['text' => $line, 'dropped' => ! $this->inWindow($time)];
+
+                continue;
+            }
+
+            $out[] = ['text' => $line, 'dropped' => false];
+        }
+
+        return $out;
+    }
+
     /** Je čas QSO (HHMM) uvnitř závodního okna (včetně hranic)? */
     private function inWindow(string $time): bool
     {
