@@ -107,6 +107,32 @@
                     </x-alert>
                 @endif
 
+                {{-- Rozpad spojení (co se započítalo a proč) – sbalitelné --}}
+                @if ($report)
+                    <details class="mt-4 rounded-lg border border-line p-3">
+                        <summary class="cursor-pointer text-sm font-semibold text-heading">
+                            Rozpad spojení – co se započítalo a proč ({{ $report->pocet }}/{{ $report->parsedCount }} QSO)
+                        </summary>
+                        <div class="mt-3">
+                            @include('partials.edi-rozpad', ['report' => $report])
+                        </div>
+                    </details>
+                @endif
+
+                {{-- Původní a redukovaný (EDIR) soubor – sbalitelné --}}
+                @if ($ediSrc !== '')
+                    <div class="mt-3 grid gap-3 sm:grid-cols-2">
+                        <details class="rounded-lg border border-line p-3">
+                            <summary class="cursor-pointer text-sm font-semibold text-heading">EDI soubor</summary>
+                            <pre class="mt-2 max-h-80 overflow-auto rounded bg-surface-2 p-2 text-xs">{{ $ediSrc }}</pre>
+                        </details>
+                        <details class="rounded-lg border border-line p-3">
+                            <summary class="cursor-pointer text-sm font-semibold text-heading">EDIR – oříznutý na závodní okno (08:00–11:00 UTC)</summary>
+                            <pre class="mt-2 max-h-80 overflow-auto rounded bg-surface-2 p-2 text-xs">{{ $ediReduced }}</pre>
+                        </details>
+                    </div>
+                @endif
+
                 {{-- Kontaktní údaje – editovatelné --}}
                 <div class="mt-5 border-t border-line pt-4">
                     @include('livewire.partials.prihlaska-kontakt')

@@ -1,0 +1,41 @@
+[REG1TEST;1]
+TName=VHF Region 1
+TDate=20260215;20260215
+PCall=9A8D
+PWWLo=JN95LM
+PExch=#
+PAdr1=Sadovi bb, Daljska Planina
+PAdr2=
+PSect=MULTI-OP
+PBand=10 GHz
+PClub=Radio Club "Dario Dujmovic" Dalj
+RName=Franjo Radic
+RCall=9A4BB
+RAdr1=Bana Josipa Jelacica 12/1 
+RAdr2=
+RPoCo=31226
+RCity=Dalj
+RCoun=Croatia
+RPhon=
+RHBBS=antun.dzanko@gmail.com
+MOpe1=9A4BB 9A4BA 9A4EK
+MOpe2=
+STXEq=FT-101D + tvr Khune 10G2
+SPowe=10
+SRXEq=FT-101D + tvr Khune 10G2
+SAnte=2x16el LFA
+SAntH=22;178
+CQSOs=2;1
+CQSOP=67
+CWWLs=1;0;1
+CWWLB=0
+CExcs=0;0;1
+CExcB=0
+CDXCs=1;0;1
+CDXCB=0
+CToSc=67
+CODXC=9A5M;JN95GO;34
+[Remarks]
+
+[QSORecords;2]
+260215;1022;9A2UV;2;599;001;599;001;;JN95GM;33;;;;

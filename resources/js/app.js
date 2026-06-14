@@ -71,12 +71,52 @@ document.addEventListener('change', (e) => {
 
 // <input type=file data-file-zone="id" data-file-name="id"> – zvýrazní
 // drop-zónu a ukáže jméno vybraného souboru.
-document.addEventListener('change', (e) => {
-    const input = e.target;
+function refreshFileZone(input) {
     if (!(input instanceof HTMLInputElement) || input.type !== 'file' || !input.dataset.fileZone) return;
     const zone = document.getElementById(input.dataset.fileZone);
     const name = document.getElementById(input.dataset.fileName || '');
     const file = input.files && input.files[0];
     if (zone) zone.classList.toggle('has-file', !!file);
     if (name) name.textContent = file ? file.name : '';
+}
+
+document.addEventListener('change', (e) => {
+    refreshFileZone(e.target);
+});
+
+// Drag & drop: skrytý <input> uvnitř .upload-zone nedostane „drop“ sám,
+// proto soubor zachytíme na zóně a vložíme ho do inputu ručně.
+function fileInputForZone(zone) {
+    return zone ? zone.querySelector('input[type=file][data-file-zone]') : null;
+}
+
+['dragenter', 'dragover'].forEach((type) => {
+    document.addEventListener(type, (e) => {
+        const zone = e.target.closest && e.target.closest('.upload-zone');
+        if (!zone || !fileInputForZone(zone)) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'copy';
+        zone.classList.add('dragover');
+    });
+});
+
+document.addEventListener('dragleave', (e) => {
+    const zone = e.target.closest && e.target.closest('.upload-zone');
+    // dragleave se ozve i při přechodu mezi vnořenými prvky – reagujeme
+    // jen když kurzor opustí zónu úplně.
+    if (!zone || (e.relatedTarget && zone.contains(e.relatedTarget))) return;
+    zone.classList.remove('dragover');
+});
+
+document.addEventListener('drop', (e) => {
+    const zone = e.target.closest && e.target.closest('.upload-zone');
+    const input = fileInputForZone(zone);
+    if (!input) return;
+    e.preventDefault();
+    zone.classList.remove('dragover');
+    const files = e.dataTransfer && e.dataTransfer.files;
+    if (!files || !files.length) return;
+    input.files = files;
+    refreshFileZone(input);
+    input.dispatchEvent(new Event('change', { bubbles: true }));
 });

@@ -162,6 +162,19 @@ class PrihlaskaTest extends TestCase
         $this->assertSame(1, Edihead::count());
     }
 
+    public function test_edi_review_shows_per_qso_breakdown_and_files(): void
+    {
+        $this->koloProDatum('2026-03-15');
+        $edi = (string) file_get_contents(__DIR__.'/../fixtures/sample.edi');
+
+        Livewire::test(Prihlaska::class)
+            ->set('upload', $this->file($edi))
+            ->assertSet('mode', 'edi-review')
+            ->assertSee('Rozpad spojení')   // sbalitelný rozpad QSO
+            ->assertSee('EDIR')             // odkaz na redukovaný soubor
+            ->assertSee('PWWLo');           // obsah původního EDI je vidět
+    }
+
     // ── Ruční podání ─────────────────────────────────────────────────────────
 
     public function test_manual_submission_is_stored_pending_and_redirects(): void

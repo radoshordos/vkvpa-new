@@ -20,7 +20,9 @@ use App\Models\VkvpaKola;
 use App\Rules\ValidMaidenhead;
 use App\Services\Edi\EdiLog;
 use App\Services\Edi\EdiParser;
+use App\Services\Edi\EdiReducer;
 use App\Services\Edi\EdiValidator;
+use App\Services\Scoring\EdiScoreDebugger;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 use Livewire\Attributes\Validate;
@@ -347,9 +349,30 @@ class Prihlaska extends Component
 
     public function render(): View
     {
+        // V náhledu EDI dopočítáme rozpad spojení (co se započítalo a proč)
+        // a původní + redukovaný (EDIR) soubor – vše z paměti, bez zápisu do DB.
+        // Předáváme jako data šablony (ne public property), takže nic neserializujeme.
+        $report = null;
+        $ediSrc = '';
+        $ediReduced = '';
+
+        if ($this->mode === 'edi-review' && $this->upload !== null) {
+            try {
+                $log = $this->parseUpload();
+                $report = app(EdiScoreDebugger::class)->analyze($log);
+                $ediSrc = $log->rawSource;
+                $ediReduced = app(EdiReducer::class)->reduce($log->rawSource);
+            } catch (Throwable) {
+                // Náhled bez rozpadu – chybu nahrání řeší updatedUpload/odeslat.
+            }
+        }
+
         return view('livewire.prihlaska', [
             'kola' => VkvpaKola::query()->orderByDesc('datum_konani')->limit(36)->get(),
             'kategorieList' => VkvpaKategorie::query()->orderBy('id')->get(),
+            'report' => $report,
+            'ediSrc' => $ediSrc,
+            'ediReduced' => $ediReduced,
         ]);
     }
 }
