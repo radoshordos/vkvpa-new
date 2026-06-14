@@ -82,9 +82,23 @@ class VysledkyController extends Controller
 
     public function pribezne(Request $request): View
     {
-        // Průběžné výsledky se zobrazují vždy jen pro jedno kolo – nejstarší
-        // nevyhodnocené s otevřeným upload oknem. Výběr kola se nenabízí.
+        $isAdmin = (bool) $request->user()?->is_admin;
+
+        // Veřejnost: vždy jen jedno kolo – nejstarší nevyhodnocené s otevřeným
+        // upload oknem; výběr kola se nenabízí. Admin smí listovat ve všech
+        // kolech, která mají záznamy (výběr přes ?kolo=).
+        $kolaVyber = $isAdmin
+            ? VkvpaKola::query()->whereHas('hlaseni')->orderByDesc('datum_konani')->get()
+            : collect();
+
         $kolo = VkvpaKola::aktualniProPrubezne();
+        if ($isAdmin) {
+            $zvolene = $request->integer('kolo');
+            $kolo = $zvolene !== 0
+                ? VkvpaKola::find($zvolene)
+                // Bez výběru: aktuální průběžné, jinak nejnovější kolo se záznamy.
+                : ($kolo ?? VkvpaKola::query()->whereHas('hlaseni')->orderByDesc('datum_konani')->first());
+        }
 
         $katId = $request->integer('kategorie');
 
@@ -101,6 +115,7 @@ class VysledkyController extends Controller
         return view('pages.pribezne-vysledky', [
             'active' => 'pribezne_vysledky',
             'kolo' => $kolo,
+            'kolaVyber' => $kolaVyber,
             'kategorie' => VkvpaKategorie::query()->orderBy('id')->whereIn('id', $obsazeneKatIds)->get()->keyBy('id'),
             'katId' => $katId,
             'vysledky' => $vysledky,

@@ -37,6 +37,10 @@ class EdiImportTest extends TestCase
         $this->assertSame('JN99BP', $first->receivedWwl);
         $this->assertSame(2, $first->qsoPoints);
 
+        // date 'YYMMDD' + time 'HHMM' → sloučené UTC DATETIME.
+        $this->assertNotNull($first->qso_at);
+        $this->assertSame('2026-03-15 08:00:00', $first->qso_at->utc()->format('Y-m-d H:i:s'));
+
         $this->assertCount(2, $head->lines);
     }
 

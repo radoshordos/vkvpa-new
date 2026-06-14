@@ -138,6 +138,16 @@
                     </div>
                 @endif
 
+                {{-- Výkon (QRP/LP) – předvyplněno z hlavičky (SPowe), závodník může opravit --}}
+                <div class="mt-5 border-t border-line pt-4">
+                    <label class="mb-2 flex items-center gap-2 text-sm">
+                        <input type="checkbox" wire:model="qrp" value="1"> {{ __('pages.hlaseni.field_qrp') }}
+                    </label>
+                    <label class="flex items-center gap-2 text-sm">
+                        <input type="checkbox" wire:model="lp" value="1"> {{ __('pages.hlaseni.field_lp') }}
+                    </label>
+                </div>
+
                 {{-- Kontaktní údaje – editovatelné --}}
                 <div class="mt-5 border-t border-line pt-4">
                     @include('livewire.partials.prihlaska-kontakt')

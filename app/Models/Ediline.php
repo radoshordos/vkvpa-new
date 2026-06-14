@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 use Override;
 
 /**
@@ -19,6 +20,7 @@ use Override;
  * @property int $edihead_id
  * @property string|null $date
  * @property string|null $time
+ * @property Carbon|null $qso_at
  * @property string|null $call_sign
  * @property int|null $mode_code
  * @property string|null $sent_rst
@@ -38,7 +40,7 @@ use Override;
  * @property-read Edihead|null $head
  */
 #[Fillable([
-    'edihead_id', 'date', 'time', 'call_sign', 'mode_code', 'sent_rst',
+    'edihead_id', 'date', 'time', 'qso_at', 'call_sign', 'mode_code', 'sent_rst',
     'sent_qso_number', 'received_rst', 'received_qso_number',
     'received_exchange', 'received_wwl', 'qso_points',
     'new_exchange_n', 'new_wwl_n', 'new_dxcc_n',
@@ -88,6 +90,7 @@ class Ediline extends Model
     {
         return [
             'edihead_id' => 'integer',
+            'qso_at' => 'datetime',
             'mode_code' => 'integer',
             'sent_qso_number' => 'integer',
             'received_qso_number' => 'integer',

@@ -38,6 +38,7 @@ final class EdiImportService
                     'edihead_id' => $head->id,
                     'date' => $q->date,
                     'time' => $q->time,
+                    'qso_at' => $q->qsoAt(),
                     'call_sign' => $q->callSign,
                     'mode_code' => $this->intOrNull($q->modeCode),
                     'sent_rst' => $q->sentRst,

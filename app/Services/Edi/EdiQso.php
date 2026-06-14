@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services\Edi;
 
+use App\Console\Commands\BackfillEdilineQsoAt;
+
 /**
  * Jedno spojení (QSO) z EDI deníku – 15 polí přesně dle formátu REG1TEST.
  * Hodnoty jsou uchovány tak, jak byly naparsovány (řetězce); přetypování
@@ -28,6 +30,33 @@ final readonly class EdiQso
         public string $newDxcc,
         public string $duplicate,
     ) {}
+
+    /**
+     * Sloučené datum+čas QSO jako UTC DATETIME 'Y-m-d H:i:s', nebo null když
+     * pole chybí / nedávají platné datum. Závodní časy jsou vždy UTC (shodně
+     * s ContestWindow/ScoringService); roky 00–68 → 20xx, 69–99 → 19xx (pivot
+     * PHP formátu 'y').
+     */
+    public function qsoAt(): ?string
+    {
+        return self::combineDateTime($this->date, $this->time);
+    }
+
+    /**
+     * Složí EDI datum ('YYMMDD') a čas ('HHMM') do UTC DATETIME 'Y-m-d H:i:s'.
+     * Sdíleno importem ({@see EdiImportService}) i zpětným doplněním legacy
+     * deníků ({@see BackfillEdilineQsoAt}).
+     */
+    public static function combineDateTime(string $date, string $time): ?string
+    {
+        if ($date === '' || $time === '') {
+            return null;
+        }
+
+        $dt = \DateTimeImmutable::createFromFormat('!ymdHi', $date.$time, new \DateTimeZone('UTC'));
+
+        return $dt === false ? null : $dt->format('Y-m-d H:i:s');
+    }
 
     /**
      * Vytvoří QSO z 15 zachycených skupin regexu (index 1..15 z preg_match).
