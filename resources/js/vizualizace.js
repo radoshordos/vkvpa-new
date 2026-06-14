@@ -155,7 +155,7 @@ function updateLegend(key) {
     const rows = [['#60a5fa', 'SSB'], ['#fbbf24', 'CW']];
     if (hasOtherMode) rows.push(['#9ca3af', 'Ostatní']);
     if (key === 'playback') rows.push(['#a855f7', 'Nový násobič']);
-    if (key === 'crk' && (cfg.roundStations || []).length > 0) rows.push(['#cc66ff', 'Stanice z kola']);
+    if (key === 'crk' && roundStationsOn && (cfg.roundStations || []).length > 0) rows.push(['#cc66ff', 'Stanice z kola']);
 
     legendCtl = L.control({ position: 'bottomright' });
     legendCtl.onAdd = function () {
@@ -202,12 +202,21 @@ cfg.points.forEach(function (p) {
     addModeEntry(crkLayer, p.mode, members);
 });
 
-// Všechny stanice z kola s ≥ 5 QSO.
+// Všechny stanice z kola s ≥ 5 QSO – samostatná podvrstva, přepínatelná
+// filtrem „Stanice z kola" (viz tlačítko data-round-filter).
+const crkRoundStations = L.layerGroup();
+let roundStationsOn = true;
 (cfg.roundStations || []).forEach(function (s) {
     L.circleMarker([s.lat, s.lon], {
         radius: 3, color: '#9933cc', fillColor: '#cc66ff', fillOpacity: 0.7,
-    }).addTo(crkLayer).bindPopup(`<strong>${s.call}</strong><br>${s.wwl}<br>${s.count} QSO`);
+    }).addTo(crkRoundStations).bindPopup(`<strong>${s.call}</strong><br>${s.wwl}<br>${s.count} QSO`);
 });
+
+function applyRoundStations(key) {
+    const want = key === 'crk' && roundStationsOn && (cfg.roundStations || []).length > 0;
+    if (want) { if (!crkLayer.hasLayer(crkRoundStations)) crkLayer.addLayer(crkRoundStations); }
+    else { crkLayer.removeLayer(crkRoundStations); }
+}
 
 // Mřížka velkých čtverců (2° délky × 1° šířky) – překresluje se podle výřezu,
 // dokud je vrstva CRK aktivní (viz přepínání vrstev níže).
@@ -362,6 +371,7 @@ function showLayer(key) {
     map.off('moveend', redrawCrkGrid);
     stopReplay();
     layers[key].addTo(map);
+    applyRoundStations(key);
     if (key === 'crk') { redrawCrkGrid(); map.on('moveend', redrawCrkGrid); }
     if (key === 'playback') {
         // Výchozí stav: celý deník zobrazen (slider na konci okna).
@@ -372,6 +382,11 @@ function showLayer(key) {
     playbackControls.classList.toggle('flex', key === 'playback');
     // Filtr provozu nedává smysl na vrstvě Lokátory (agreguje čtverce).
     document.getElementById('viz-mode-filter').classList.toggle('hidden', key === 'lokatory');
+    // Filtr „Stanice z kola" má smysl jen na CRK a jen když jsou data k dispozici.
+    const roundFilter = document.getElementById('viz-round-filter');
+    if (roundFilter) {
+        roundFilter.classList.toggle('hidden', !(key === 'crk' && (cfg.roundStations || []).length > 0));
+    }
     updateLegend(key);
     if (homeMarker) homeMarker.addTo(map);
     document.querySelectorAll('[data-map-layer]').forEach((b) => b.classList.toggle('active', b.dataset.mapLayer === key));
@@ -390,6 +405,16 @@ document.querySelectorAll('[data-mode-filter]').forEach(function (btn) {
         modeFilter[m] = !modeFilter[m];
         btn.classList.toggle('active', modeFilter[m]);
         applyModeFilter();
+    });
+});
+
+// Filtr „Stanice z kola" – přepíná zobrazení cizích stanic z kola na vrstvě CRK.
+document.querySelectorAll('[data-round-filter]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+        roundStationsOn = !roundStationsOn;
+        btn.classList.toggle('active', roundStationsOn);
+        applyRoundStations('crk');
+        updateLegend('crk');
     });
 });
 
