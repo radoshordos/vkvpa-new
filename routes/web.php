@@ -59,9 +59,8 @@ Route::get('/diskuse', [DiskuseController::class, 'index'])->name('diskuse.index
 Route::get('/diskuse/{kolo}', [DiskuseController::class, 'show'])->name('diskuse.show');
 Route::post('/diskuse/{kolo}', [DiskuseController::class, 'store'])->middleware('throttle:diskuse')->name('diskuse.store');
 
-// Nahrání EDI deníku (využívá EdiParser/EdiImportService z Fáze 5).
-Route::get('/edi', [EdiController::class, 'create'])->name('edi.create');
-Route::post('/edi', [EdiController::class, 'store'])->middleware('throttle:edi-upload')->name('edi.store');
+// Nahrání EDI deníku (i ruční hlášení) řeší Livewire komponent App\Livewire\Prihlaska
+// vykreslený na stránce /hlaseni – samostatná routa /edi pro upload už není potřeba.
 
 // Zobrazení EDI deníku (sloupec „Akce / EDI" ve výsledkové listině):
 //   EDI  – původní EDI soubor,

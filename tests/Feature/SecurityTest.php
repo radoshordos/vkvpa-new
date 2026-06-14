@@ -151,11 +151,13 @@ class SecurityTest extends TestCase
 
     public function test_hlaseni_form_contains_csrf_token(): void
     {
-        $this->kolo(); // aktivní kolo zpřístupní formulář hlášení
+        $this->kolo(); // aktivní kolo zpřístupní podání hlášení
 
+        // Nové podání řeší Livewire komponent Prihlaska – CSRF nezajišťuje hidden
+        // _token, ale Livewire token (data-csrf) ověřovaný na jeho update routě.
         $this->get('/hlaseni')
             ->assertOk()
-            ->assertSee('name="_token"', false);
+            ->assertSee('data-csrf=', false);
     }
 
     public function test_diskuse_form_contains_csrf_token(): void

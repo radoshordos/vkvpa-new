@@ -4,13 +4,11 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use App\Models\Edihead;
 use App\Models\User;
 use App\Models\VkvpaData;
 use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
@@ -30,18 +28,6 @@ class HlaseniTest extends TestCase
         $kat = VkvpaKategorie::create(['nazev' => '144 MHz', 'popis' => '', 'zkratka' => 'A', 'dxid' => 0]);
 
         return [$kolo, $kat];
-    }
-
-    /** Založí kolo s daným dnem konání, aby ho import podle TDate dohledal. */
-    private function koloProDatum(string $datum): void
-    {
-        VkvpaKola::create([
-            'datum_konani' => $datum.' 08:00:00',
-            // Uzávěrka v budoucnu → upload okno (stav Příjem) je otevřené.
-            'datum_uzaverky' => now()->addDay(),
-            'nazev' => 'Kolo '.$datum,
-            'poznamka' => '',
-        ]);
     }
 
     /** @return array<string, mixed> */
@@ -94,11 +80,10 @@ class HlaseniTest extends TestCase
         [$kolo] = $this->prepare();
         $kolo->update(['datum_uzaverky' => now()->subDay()]);
 
-        // Mimo upload okno se EDI panel ani ruční formulář nenabízejí.
-        $this->get('/hlaseni?showfrm=1')
+        // Mimo upload okno se podávací komponent (drop-zóna EDI) nenabízí.
+        $this->get('/hlaseni')
             ->assertOk()
-            ->assertDontSee(route('edi.store'))
-            ->assertDontSee('name="znacka"', false);
+            ->assertDontSee('id="edi-file"', false);
     }
 
     public function test_hlaseni_page_shows_forms_in_prijem_state(): void
@@ -107,9 +92,10 @@ class HlaseniTest extends TestCase
         // Den závodu proběhl, uzávěrka v budoucnu → stav Příjem.
         $kolo->update(['datum_uzaverky' => now()->addDay()]);
 
+        // Ve stavu Příjem se vykreslí Livewire komponent s drop-zónou pro EDI.
         $this->get('/hlaseni')
             ->assertOk()
-            ->assertSee(route('edi.store'));
+            ->assertSee('id="edi-file"', false);
     }
 
     public function test_manual_report_rejected_outside_upload_window(): void
@@ -160,134 +146,6 @@ class HlaseniTest extends TestCase
 
         // Anonym nesmí editovat existující záznam.
         $this->post('/hlaseni', $payload)->assertForbidden();
-    }
-
-    public function test_edi_upload_creates_reserved_row_and_session(): void
-    {
-        $this->koloProDatum('2026-03-15'); // sample.edi se koná 15. 3. 2026
-        $edi = (string) file_get_contents(__DIR__.'/../fixtures/sample.edi');
-        $file = UploadedFile::fake()->createWithContent('02OK2KJT.edi', $edi);
-
-        $resp = $this->post('/edi', ['upload' => $file])
-            ->assertRedirect(route('hlaseni.index', ['import' => 'success']));
-
-        $this->assertSame(1, Edihead::count());
-
-        $row = VkvpaData::first();
-        $this->assertNotNull($row);
-        $this->assertSame('OK2KJT', $row->znacka);
-        $this->assertFalse((bool) $row->schvaleno);          // rezervovaný řádek = Čeká
-        // Kategorie určena z hlavičky: PBand 144 MHz + PSect MULTI + OK → „144 MHz multi op" (id 2).
-        $this->assertSame(2, $row->id_kategorie);
-        $resp->assertSessionHas('owned_data_id', $row->id);  // vlastní řádek v session
-    }
-
-    public function test_edi_upload_with_unknown_band_is_rejected(): void
-    {
-        $edi = (string) file_get_contents(__DIR__.'/../fixtures/sample.edi');
-        // Změníme pásmo na nerozpoznané (KV 14 MHz) → deník se má odmítnout.
-        $edi = str_replace('PBand=144 MHz', 'PBand=14 MHz', $edi);
-
-        $this->post('/edi', ['upload' => UploadedFile::fake()->createWithContent('x.edi', $edi)])
-            ->assertSessionHasErrors('upload');
-
-        $this->assertSame(0, Edihead::count()); // nic se neimportovalo
-    }
-
-    public function test_edi_upload_with_tdate_not_matching_qsos_is_rejected(): void
-    {
-        $edi = (string) file_get_contents(__DIR__.'/../fixtures/sample.edi');
-        // Datum v hlavičce posuneme na jinou (rovněž třetí) neděli, než mají QSO řádky
-        // (260315) → třetí neděle dubna je 19. 4. 2026, ale spojení jsou z 15. 3. → neshoda
-        // s QSO; bez opravy by se skóre spočítalo z 0 QSO, deník proto odmítneme.
-        $edi = str_replace('TDate=20260315;20260315', 'TDate=20260419;20260419', $edi);
-
-        $this->post('/edi', ['upload' => UploadedFile::fake()->createWithContent('x.edi', $edi)])
-            ->assertSessionHasErrors('upload');
-
-        $this->assertSame(0, Edihead::count()); // nic se neimportovalo
-    }
-
-    public function test_edi_upload_rejected_when_tdate_is_not_third_sunday(): void
-    {
-        // 18. 4. 2026 je sobota; třetí neděle dubna je až 19. 4. Závod se koná vždy
-        // třetí neděli, takže deník s tímto TDate se musí odmítnout.
-        $edi = implode("\n", [
-            '[REG1TEST;1]',
-            'TName=VKV PA 2026/04',
-            'TDate=20260418;20260418',
-            'PCall=OK1SAT',
-            'PWWLo=JN99AJ',
-            'PSect=MULTI',
-            'PBand=144 MHz',
-            'RName=Test',
-            'RPhon=',
-            'RHBBS=',
-            'SPowe=100',
-            '[QSORecords;1]',
-            '260418;0830;OK1AB;1;59;001;59;001;;JN89AA;3;;;;',
-            '[END;]',
-        ])."\n";
-
-        $this->post('/edi', ['upload' => UploadedFile::fake()->createWithContent('x.edi', $edi)])
-            ->assertSessionHasErrors('upload');
-
-        $this->assertSame(0, Edihead::count());
-    }
-
-    public function test_edi_upload_accepts_tdate_range_when_one_day_is_third_sunday(): void
-    {
-        // Šablona 24h závodu vyplní TDate jako rozsah sobota;neděle. Třetí neděle ledna
-        // 2026 je 18. 1. – stačí, že ji rozsah obsahuje, deník proto musí projít.
-        $this->koloProDatum('2026-01-18');
-        $edi = implode("\n", [
-            '[REG1TEST;1]',
-            'TName=VKV PA 2026/01',
-            'TDate=20260117;20260118',
-            'PCall=OK1RNG',
-            'PWWLo=JN99AJ',
-            'PSect=MULTI',
-            'PBand=144 MHz',
-            'RName=Test',
-            'RPhon=',
-            'RHBBS=',
-            'SPowe=100',
-            '[QSORecords;1]',
-            '260117;0830;OK1AB;1;59;001;59;001;;JN89AA;3;;;;',
-            '[END;]',
-        ])."\n";
-
-        $this->post('/edi', ['upload' => UploadedFile::fake()->createWithContent('x.edi', $edi)])
-            ->assertRedirect(route('hlaseni.index', ['import' => 'success']));
-
-        $this->assertSame(1, Edihead::count());
-    }
-
-    public function test_edi_upload_rejected_when_no_round_exists(): void
-    {
-        // Žádné kolo pro březen 2026 není založeno → deník se musí odmítnout.
-        $edi = (string) file_get_contents(__DIR__.'/../fixtures/sample.edi');
-
-        $this->post('/edi', ['upload' => UploadedFile::fake()->createWithContent('x.edi', $edi)])
-            ->assertSessionHasErrors('upload');
-
-        $this->assertSame(0, Edihead::count());
-    }
-
-    public function test_duplicate_edi_upload_is_rejected(): void
-    {
-        $this->koloProDatum('2026-03-15'); // sample.edi se koná 15. 3. 2026
-        $edi = (string) file_get_contents(__DIR__.'/../fixtures/sample.edi');
-
-        // První nahrání projde.
-        $this->post('/edi', ['upload' => UploadedFile::fake()->createWithContent('a.edi', $edi)])
-            ->assertRedirect(route('hlaseni.index', ['import' => 'success']));
-
-        // Druhé nahrání téhož deníku (stejná značka + kolo) → odmítnuto s hláškou.
-        $this->post('/edi', ['upload' => UploadedFile::fake()->createWithContent('b.edi', $edi)])
-            ->assertSessionHasErrors('upload');
-
-        $this->assertSame(1, Edihead::count()); // druhý import se neuložil
     }
 
     public function test_duplicate_manual_submission_is_rejected(): void

@@ -4,73 +4,20 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Actions\ImportEdiAction;
-use App\Exceptions\DuplicateEdiException;
-use App\Exceptions\EdiParseException;
-use App\Exceptions\RoundNotFoundException;
-use App\Exceptions\TDateMismatchException;
-use App\Exceptions\TDateNotContestDayException;
-use App\Exceptions\UnknownBandException;
-use App\Exceptions\UnknownSectionException;
-use App\Exceptions\UploadWindowClosedException;
-use App\Http\Requests\StoreEdiRequest;
 use App\Models\Edihead;
 use App\Models\VkvpaKola;
-use App\Services\Edi\EdiParser;
 use App\Services\Edi\EdiReducer;
-use App\Services\Edi\EdiValidator;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response;
-use Illuminate\View\View;
 
 /**
- * Nahrání EDI deníku. QSO řádky se parsují do `edilines` (přes EdiParser/EdiImportService),
- * poté se založí „rezervovaný" řádek ve vkvpa_data (schvaleno=0) a jeho ID se uloží
- * do session; formulář pak tento řádek edituje.
+ * Zobrazení uloženého EDI deníku ve výsledkové listině (původní i redukovaný
+ * soubor). Nahrávání nových deníků řeší Livewire komponent App\Livewire\Prihlaska.
  */
 class EdiController extends Controller
 {
     public function __construct(
-        private readonly EdiParser $parser,
-        private readonly ImportEdiAction $action,
         private readonly EdiReducer $reducer,
-        private readonly EdiValidator $validator,
     ) {}
-
-    public function create(): View
-    {
-        return view('pages.edi-upload', ['active' => 'edit_hlaseni']);
-    }
-
-    public function store(StoreEdiRequest $request): RedirectResponse
-    {
-        $content = (string) file_get_contents($request->file('upload')->getRealPath());
-
-        try {
-            $log = $this->parser->parse($content);
-        } catch (EdiParseException $e) {
-            return back()
-                ->withErrors(['upload' => $e->getMessage()])
-                ->with('lineErrors', $e->lineErrors);
-        }
-
-        try {
-            // Admin smí importovat deník i mimo upload okno (opravy starých kol).
-            $row = $this->action->execute($log, enforceUploadWindow: ! (bool) $request->user()?->is_admin);
-        } catch (TDateNotContestDayException|RoundNotFoundException|TDateMismatchException|DuplicateEdiException|UnknownBandException|UnknownSectionException|UploadWindowClosedException $e) {
-            return back()->withErrors(['upload' => $e->getMessage()]);
-        }
-
-        // ID vlastněného řádku v session – povolí jeho editaci i nepřihlášenému.
-        $request->session()->put('owned_data_id', $row->id);
-
-        // Nefatální kontrola kvality deníku – upozornění se ukáže na hlášení.
-        $warnings = $this->validator->validate($log)->messages();
-
-        return redirect()
-            ->route('hlaseni.index', ['import' => 'success'])
-            ->with('importWarnings', $warnings);
-    }
 
     /**
      * Zobrazí původní EDI soubor deníku – akce „EDI" ve výsledkové listině.
@@ -152,7 +99,7 @@ class EdiController extends Controller
         $klice = implode('|', self::REDIGOVANE_KLICE);
 
         return preg_replace(
-            '/^(' . $klice . ')=.*$/mi',
+            '/^('.$klice.')=.*$/mi',
             '$1=[restricted]',
             $content
         ) ?? $content;

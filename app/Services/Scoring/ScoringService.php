@@ -8,6 +8,7 @@ use App\Models\Edihead;
 use App\Models\VkvpaData;
 use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
+use App\Services\Edi\EdiLog;
 use App\Support\ContestWindow;
 use App\Support\Maidenhead;
 use App\Support\VkvpaSettings;
@@ -115,14 +116,57 @@ final class ScoringService
             ->get(['received_wwl'])
             ->map(static fn ($l): string => strtoupper(substr(trim($l->receivedWwl), 0, 4)))
             ->filter(static fn (string $sq): bool => $sq !== '')
-            ->values();
+            ->values()
+            ->all();
 
-        $pocet = $squares->count();
+        return $this->scoreSquares($home, $squares);
+    }
+
+    /**
+     * Spočítá skóre deníku přímo z naparsovaného {@see EdiLog} – bez zápisu do DB.
+     * Pravidla pro okno/den jsou identická se {@see scoreEdi()}; používá se pro
+     * náhled při podání hlášení, než se deník uloží.
+     */
+    public function scoreLog(EdiLog $log): EdiScore
+    {
+        $home = strtoupper(substr(trim($log->header->pWWLo()), 0, 4));
+        $den = substr(trim($log->header->tDate()), 2, 6);
+        $from = ContestWindow::from();
+        $to = ContestWindow::to();
+
+        $squares = [];
+        foreach ($log->qsos as $qso) {
+            $time = trim($qso->time);
+            if ($time < $from || $time > $to) {
+                continue;
+            }
+            if ($den !== '' && trim($qso->date) !== $den) {
+                continue;
+            }
+
+            $square = strtoupper(substr(trim($qso->receivedWwl), 0, 4));
+            if ($square !== '') {
+                $squares[] = $square;
+            }
+        }
+
+        return $this->scoreSquares($home, $squares);
+    }
+
+    /**
+     * Společné jádro bodování: ze seznamu velkých čtverců (4 znaky, už
+     * odfiltrované na závodní okno a den) spočítá pocet/boduZaQso/nasobice.
+     *
+     * @param  array<int, string>  $squares
+     */
+    private function scoreSquares(string $home, array $squares): EdiScore
+    {
+        $pocet = count($squares);
         // Body za spojení přepočítáme z lokátorů, ne z deníku.
-        $boduZaQso = $squares->sum(static fn (string $sq): int => Maidenhead::qsoPoints($home, $sq));
+        $boduZaQso = array_sum(array_map(static fn (string $sq): int => Maidenhead::qsoPoints($home, $sq), $squares));
 
         // Násobiče: různé velké čtverce, se kterými bylo pracováno, + vždy vlastní.
-        $unique = $squares->all();
+        $unique = $squares;
         if ($home !== '') {
             $unique[] = $home;
         }

@@ -1,5 +1,7 @@
 {{--
-    Hlášení. EDI upload nebo ruční formulář dle stavu; pod tím průběžné výsledky.
+    Hlášení. Nové podání (EDI i ruční) řeší Livewire komponent <livewire:prihlaska>;
+    editaci existujícího záznamu (admin / vlastník) ruční formulář níže. Pod tím
+    průběžné výsledky.
 --}}
 @extends('layouts.app')
 
@@ -14,76 +16,17 @@
 
 {{-- announcement řeší centrální <x-flash /> v layoutu --}}
 
-@if (!empty(session('importWarnings')))
-    <x-alert type="warning">
-        <strong>{{ __('pages.hlaseni.import_warnings') }}</strong>
-        <ul class="mt-1 list-disc pl-5">
-            @foreach (session('importWarnings') as $w)
-                <li class="font-normal">{{ $w }}</li>
-            @endforeach
-        </ul>
-    </x-alert>
-@endif
-
 @if ($maAktivniKolo)
 
-{{-- ===== EDI upload panel ===== --}}
-@if (!$showManual)
-<div class="card mb-6">
-    <div class="flex items-center gap-3 border-b border-line px-5 py-4">
-        <div class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-brand-soft">
-            <x-icon name="file" class="h-5 w-5 text-brand" />
-        </div>
-        <p class="text-sm font-semibold text-heading">{{ __('pages.hlaseni.heading_edi') }}</p>
-    </div>
-
-    <div class="px-5 py-4">
-        @if ($errors->has('upload'))
-            <x-alert type="error" class="mb-3">
-                {{ $errors->first('upload') }}
-                @foreach (session('lineErrors', []) as $le)
-                    <br><span class="font-normal">{{ __('pages.hlaseni.error_line') }}: {{ $le }}</span>
-                @endforeach
-            </x-alert>
-        @endif
-
-        <form action="{{ route('edi.store') }}" method="post" enctype="multipart/form-data">
-            @csrf
-            <label class="upload-zone" id="edi-zone">
-                <input
-                    type="file" name="upload" id="edi-file" accept=".edi,.txt" class="sr-only"
-                    data-file-zone="edi-zone" data-file-name="edi-name"
-                >
-                <svg class="upload-zone-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                    <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"/>
-                </svg>
-                <span id="edi-name" class="upload-zone-name">{{ __('pages.hlaseni.tab_edi') }}…</span>
-                <span class="upload-zone-hint">{{ __('pages.hlaseni.edi_info') }}</span>
-            </label>
-
-            <div class="mt-3 flex items-center gap-3">
-                <button type="submit" class="btn btn-primary">{{ __('pages.hlaseni.btn_upload') }}</button>
-            </div>
-        </form>
-
-        <div class="mt-4 border-t border-line pt-4">
-            <a href="{{ route('hlaseni.index', ['showfrm' => 1]) }}" class="link-arrow">
-                {{ __('pages.hlaseni.no_edi_link') }}
-                <x-icon name="arrow-right" />
-            </a>
-        </div>
-    </div>
-</div>
-@endif
-
-{{-- ===== Ruční formulář – jen když je potřeba ===== --}}
-@if ($showManual)
-@if ($errors->any() && ! ($errors->count() === 1 && $errors->has('upload')))
+@if ($e === null)
+{{-- ===== Nové podání – jednotný Livewire komponent (EDI náhled / ruční) ===== --}}
+<livewire:prihlaska />
+@else
+{{-- ===== Editace existujícího záznamu (admin / vlastník) ===== --}}
+@if ($errors->any())
     <x-alert type="error">
         @foreach ($errors->all() as $err)
-            @if ($err !== $errors->first('upload'))
-                {{ $err }}<br>
-            @endif
+            {{ $err }}<br>
         @endforeach
     </x-alert>
 @endif
@@ -93,7 +36,7 @@
         <div class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-brand-soft">
             <x-icon name="file" class="h-5 w-5 text-brand" />
         </div>
-        <p class="text-sm font-semibold text-heading">{{ __('pages.hlaseni.heading_manual') }}</p>
+        <p class="text-sm font-semibold text-heading">Editace záznamu</p>
     </div>
     <div class="p-5">
     @csrf
@@ -233,37 +176,4 @@
     @include('partials.del-modal')
 @endif
 @endif
-
-@push('scripts')
-<script @cspNonce>
-(function () {
-    var zone  = document.getElementById('edi-zone');
-    var input = document.getElementById('edi-file');
-    if (! zone || ! input) return;
-
-    zone.addEventListener('dragover', function (e) {
-        e.preventDefault();
-        zone.classList.add('dragover');
-    });
-
-    zone.addEventListener('dragleave', function (e) {
-        if (! zone.contains(e.relatedTarget)) zone.classList.remove('dragover');
-    });
-
-    zone.addEventListener('drop', function (e) {
-        e.preventDefault();
-        zone.classList.remove('dragover');
-        if (e.dataTransfer && e.dataTransfer.files.length) {
-            input.files = e.dataTransfer.files;
-            // change spustí stejnou obsluhu jako ruční výběr (zobrazení názvu)
-            input.dispatchEvent(new Event('change'));
-        }
-    });
-
-    // Drop mimo zónu nesmí otevřít soubor místo stránky
-    document.addEventListener('dragover', function (e) { e.preventDefault(); });
-    document.addEventListener('drop', function (e) { e.preventDefault(); });
-}());
-</script>
-@endpush
 @endsection

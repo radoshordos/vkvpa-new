@@ -30,10 +30,6 @@ class HlaseniController extends Controller
         $targetId = $editId ?: $ownedId;
         $edit = $targetId > 0 ? VkvpaData::find($targetId) : null;
 
-        $showManual = $edit !== null
-            || $request->has('showfrm')
-            || old('znacka') !== null;
-
         $idKola = $edit->id_kola ?? ($request->integer('kolo') ?: null);
         $idKategorie = $edit->id_kategorie ?? ($request->integer('kategorie') ?: null);
 
@@ -52,7 +48,6 @@ class HlaseniController extends Controller
                 || (bool) ($request->user()?->is_admin),
             'kola' => VkvpaKola::query()->orderByDesc('datum_konani')->limit(36)->get(),
             'kategorie' => VkvpaKategorie::query()->orderBy('id')->get(),
-            'showManual' => $showManual,
             'edit' => $edit,
             'vysledky' => $vysledky,
         ]);

@@ -46,13 +46,20 @@ final readonly class ImportEdiAction
     ) {}
 
     /**
-     * @param  bool  $notify  rozeslat potvrzovací e-maily (jednotlivé nahrání ano,
-     *                        hromadný admin import ne)
-     * @param  bool  $enforceUploadWindow  vyžadovat otevřené upload okno kola
-     *                                     (veřejné nahrání ano, hromadný admin
-     *                                     backfill starých kol ne)
+     * Nedestruktivní validace deníku pro náhled „ke kontrole" – proběhnou
+     * všechny business kontroly (kolo dle TDate, den závodu, okno příjmu,
+     * shoda TDate s QSO, duplicita, kategorie) a spočítá se skóre z paměti,
+     * ale do DB se nic nezapisuje. Vyhazuje stejné výjimky jako {@see execute()}.
+     *
+     * @throws TDateNotContestDayException
+     * @throws RoundNotFoundException
+     * @throws TDateMismatchException
+     * @throws DuplicateEdiException
+     * @throws UnknownBandException
+     * @throws UnknownSectionException
+     * @throws UploadWindowClosedException
      */
-    public function execute(EdiLog $log, bool $notify = true, bool $enforceUploadWindow = true): VkvpaData
+    public function preview(EdiLog $log, bool $enforceUploadWindow = true): ImportEdiPreview
     {
         $h = $log->header;
         $pcall = $h->pCall();
@@ -94,8 +101,34 @@ final readonly class ImportEdiAction
             throw new UnknownSectionException($h->pSect());
         }
 
+        return new ImportEdiPreview($idKola, $idKategorie, $this->scoring->scoreLog($log));
+    }
+
+    /**
+     * @param  bool  $notify  rozeslat potvrzovací e-maily (jednotlivé nahrání ano,
+     *                        hromadný admin import ne)
+     * @param  bool  $enforceUploadWindow  vyžadovat otevřené upload okno kola
+     *                                     (veřejné nahrání ano, hromadný admin
+     *                                     backfill starých kol ne)
+     * @param  array<string, mixed>  $overrides  hodnoty, kterými závodník v náhledu
+     *                                           přepsal odvozená pole (kontakt,
+     *                                           schvaleno) – sloučí se do payloadu
+     *                                           před vytvořením řádku i odesláním
+     *                                           potvrzovacích e-mailů
+     */
+    public function execute(EdiLog $log, bool $notify = true, bool $enforceUploadWindow = true, array $overrides = []): VkvpaData
+    {
+        $h = $log->header;
+        $pcall = $h->pCall();
+
+        // Stejné business validace jako náhled – garantuje, že to, co závodník
+        // viděl ke kontrole, projde i při uložení.
+        $preview = $this->preview($log, $enforceUploadWindow);
+        $idKola = $preview->idKola;
+        $idKategorie = $preview->idKategorie;
+
         try {
-            $data = DB::transaction(function () use ($log, $h, $pcall, $idKola, $idKategorie): VkvpaData {
+            $data = DB::transaction(function () use ($log, $h, $pcall, $idKola, $idKategorie, $overrides): VkvpaData {
                 $head = $this->importer->import($log, $idKola);
                 $score = $this->scoring->scoreEdi($head);
 
@@ -116,6 +149,10 @@ final readonly class ImportEdiAction
                     'lp' => $h->isLp(),
                     'edihead_id' => $head->id,
                     'schvaleno' => false,
+                    // Závodníkem upravená pole z náhledu (kontakt, příp. schvaleno
+                    // u admina) mají přednost před hodnotami odvozenými z hlavičky.
+                    // Skóre/kolo/kategorie/značka jsou autoritativní – ty nepřepisujeme.
+                    ...$overrides,
                 ]);
             });
         } catch (UniqueConstraintViolationException) {

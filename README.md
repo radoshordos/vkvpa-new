@@ -236,7 +236,7 @@ app/
 ├── Listeners/
 │   └── SendEdiMailsListener.php  # Odesílání emailů po importu (queue)
 ├── Livewire/
-│   └── EdiUpload.php       # Reaktivní Livewire komponenta pro nahrání EDI (idle/uploading/success/error)
+│   └── Prihlaska.php       # Jednotné podání hlášení (EDI náhled / ruční formulář → Odeslat)
 ├── Models/                 # Eloquent modely
 ├── Services/
 │   ├── Edi/                # EdiParser, EdiImportService, EdiReducer, CategoryResolver,
@@ -268,9 +268,9 @@ resources/
     ├── emails/             # Šablony emailů
     ├── layouts/app.blade.php
     ├── livewire/
-    │   └── edi-upload.blade.php  # Blade šablona Livewire EdiUpload komponenty
+    │   └── prihlaska.blade.php   # Blade šablona Livewire komponentu Prihlaska
     ├── pages/              # Stránky (home, hlaseni, kola, vysledky, diskuse, vizualizace,
-    │                       #          porovnani, edi-upload, admin/*)
+    │                       #          porovnani, admin/*)
     └── partials/           # menu, footer, menu-item, no-active-period
 docs/
 ├── kolo-lifecycle.svg      # Diagram životního cyklu závodního kola (KoloStav)
@@ -508,8 +508,6 @@ VkvpaKola ──► Prispevek[]
 | GET | `/diskuse` | `DiskuseController@index` | `diskuse.index` |
 | GET | `/diskuse/{kolo}` | `DiskuseController@show` | `diskuse.show` |
 | POST | `/diskuse/{kolo}` | `DiskuseController@store` | `diskuse.store` |
-| GET | `/edi` | `EdiController@create` | `edi.create` |
-| POST | `/edi` | `EdiController@store` | `edi.store` |
 | GET | `/edi/{head}/soubor` | `EdiController@zobrazit` | `edi.soubor` |
 | GET | `/edi/{head}/soubor-redukovany` | `EdiController@zobrazitRedukovany` | `edi.soubor.redukovany` |
 | GET | `/edi/{head}/vizualizace` | `EdiVizualizaceController@show` | `edi.vizualizace` |
@@ -576,7 +574,7 @@ Systém podporuje EDI soubory ve formátu REF 01 (standardní závodní log pro 
 
 Vzorové EDI soubory jsou v `resources/edi/` a slouží jako fixture pro unit testy.
 
-Nahrání EDI deníku probíhá přes **Livewire komponentu** `EdiUpload` (`app/Livewire/EdiUpload.php`): soubor se nahraje reaktivně bez přenačtení stránky, ihned se parsuje a zobrazí výsledek (počet QSO, body, varování) nebo chybová hlášení.
+Podání hlášení (EDI i ruční) probíhá přes **Livewire komponentu** `Prihlaska` (`app/Livewire/Prihlaska.php`) na stránce `/hlaseni`: nahraný EDI se naparsuje a obboduje **jen v paměti** (do DB se nic nezapíše) a zobrazí ke kontrole; teprve tlačítko „Odeslat" vše uloží a přesměruje na průběžné výsledky. Volba „Nemám EDI soubor" přepne na ruční formulář se stejnou grafikou.
 
 ### Klíčové třídy
 
@@ -590,9 +588,9 @@ Nahrání EDI deníku probíhá přes **Livewire komponentu** `EdiUpload` (`app/
 | `QsoGeometry` | `app/Services/Edi/QsoGeometry.php` | Výpočty souřadnic, vzdáleností, azimutů, průběhu skóre a porovnání deníků (sdíleno vizualizací i porovnáním) |
 | `PorovnaniRivals` | `app/Services/Edi/PorovnaniRivals.php` | Výběr soupeřů pro porovnání deníků (totéž kolo + kategorie, až po uzávěrce) |
 | `BigSquareCount` | `app/Services/Edi/BigSquareCount.php` | Agregace QSO do 4-znakových Maidenhead čtverců |
-| `ImportEdiAction` | `app/Actions/ImportEdiAction.php` | Orchestrace celého importu: validace → uložení → scoring → event |
+| `ImportEdiAction` | `app/Actions/ImportEdiAction.php` | Orchestrace importu: `preview()` (validace + skóre bez zápisu) → `execute()` (uložení → scoring → event) |
 | `SkokanService` | `app/Services/Scoring/SkokanService.php` | „Skokan" – body-delta závodníka oproti poslednímu startu ve stejné kategorii + největší skokan kola (zobrazeno ve výsledkové listině) |
-| `EdiUpload` | `app/Livewire/EdiUpload.php` | Livewire reaktivní upload komponenta (stavy idle/uploading/success/error) |
+| `Prihlaska` | `app/Livewire/Prihlaska.php` | Livewire podání hlášení (režimy choose / edi-review / manual; uloží až při „Odeslat") |
 
 ### Value objekty
 
