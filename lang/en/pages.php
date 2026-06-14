@@ -150,6 +150,8 @@ return [
         'title' => 'Year results – VKV PA',
         'heading' => 'Year results',
         'filter_year' => 'Year',
+        'filter_category' => 'Category',
+        'filter_all' => 'All',
         'filter_qrp' => 'QRP only',
         'filter_lp' => 'LP only',
         'btn_show' => 'Show',

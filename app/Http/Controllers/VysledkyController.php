@@ -128,13 +128,19 @@ class VysledkyController extends Controller
         $rok = max(2000, min($currentYear, $request->integer('rok', $currentYear)));
         $qrp = $request->boolean('qrp');
         $lp = $request->boolean('lp');
+        $katId = $request->integer('kategorie');
 
+        // Kategorie řadíme podle id (jinak by pořadí sekcí určovalo první výskyt
+        // v seřazení podle bodů). Volitelný filtr zúží výpis na jedinou kategorii.
         $vysledky = $this->scoring->yearlyResults($rok, $qrp, $lp)
-            ->groupBy('kategorie_id');
+            ->groupBy('kategorie_id')
+            ->when($katId !== 0, fn ($g) => $g->only([$katId]))
+            ->sortKeys();
 
         return view('pages.vysledky-rocni', [
             'active' => 'rocni_vysledky',
             'rok' => $rok,
+            'katId' => $katId,
             'kategorie' => VkvpaKategorie::query()->orderBy('id')->get()->keyBy('id'),
             'vysledky' => $vysledky,
         ]);
