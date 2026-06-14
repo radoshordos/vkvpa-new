@@ -93,7 +93,7 @@ class ScoringServiceTest extends TestCase
     public function test_score_edi_ok1io_real_log(): void
     {
         // Reálný deník OK1IO (VKV PA 2026/01, JO70NR) z resources/edi.
-        $edi = (string) file_get_contents(resource_path('edi/01ok1io.edi'));
+        $edi = (string) file_get_contents(resource_path('edi/012026/01ok1io.edi'));
         $head = new EdiImportService()->import(new EdiParser()->parse($edi));
 
         $score = app(ScoringService::class)->scoreEdi($head);
