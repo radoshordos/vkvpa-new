@@ -35,9 +35,13 @@ class SecurityHeaders
         // script-src: místo 'unsafe-inline' per-request nonce – inline skript bez
         // nonce (typický payload XSS) prohlížeč nespustí. Externí skripty kryje
         // host-source (cdn.jsdelivr.net).
+        // 'unsafe-eval': vyžaduje Livewire 4 / Alpine, který vyhodnocuje výrazy
+        // direktiv (wire:click, x-*) přes new Function(); bez něj interaktivní
+        // komponenty (podání hlášení) nefungují. Inline <script> i tak zůstávají
+        // blokované (chybí 'unsafe-inline'), eval nezpracovává uživatelská data.
         $response->headers->set('Content-Security-Policy', implode('; ', [
             "default-src 'self'",
-            "script-src 'self' 'nonce-{$nonce}' cdn.jsdelivr.net",
+            "script-src 'self' 'unsafe-eval' 'nonce-{$nonce}' cdn.jsdelivr.net",
             "style-src 'self' 'unsafe-inline' cdn.jsdelivr.net",
             "img-src 'self' data: https://tile.openstreetmap.org",
             "font-src 'self' data:",

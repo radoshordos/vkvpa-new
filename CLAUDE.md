@@ -110,7 +110,7 @@ Two Mailable classes: `HlaseniPrijato` (confirmation to contestant) and `Hlaseni
 
 ### CSP (Content Security Policy)
 
-`SecurityHeaders` middleware sends a nonce-based CSP — `script-src` has **no** `'unsafe-inline'`. Every inline `<script>` in Blade MUST carry the `@cspNonce` directive (`<script @cspNonce>`), otherwise the browser silently blocks it. Inline event handler attributes (`onclick=`, `onchange=`, …) are blocked by CSP entirely — use `data-*` attributes + listeners (global delegated handlers `[data-autosubmit]` and `[data-file-zone]` live in `resources/js/app.js`). `@vite` and `@livewireScripts` pick the nonce up automatically from `Vite::cspNonce()`.
+`SecurityHeaders` middleware sends a nonce-based CSP — `script-src` has **no** `'unsafe-inline'` (it does carry `'unsafe-eval'`, which Livewire 4 / Alpine require to evaluate `wire:*` directive expressions — do not remove it or interactive components break). Every inline `<script>` in Blade MUST carry the `@cspNonce` directive (`<script @cspNonce>`), otherwise the browser silently blocks it. Inline event handler attributes (`onclick=`, `onchange=`, …) are blocked by CSP entirely — use `data-*` attributes + listeners (global delegated handlers `[data-autosubmit]` and `[data-file-zone]` live in `resources/js/app.js`). `@vite` and `@livewireScripts` pick the nonce up automatically from `Vite::cspNonce()`.
 
 ### Code Style
 

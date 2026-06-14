@@ -184,6 +184,19 @@ class SecurityTest extends TestCase
         $response->assertSee('nonce="'.$this->cspNonceOf($scriptSrc).'"', false);
     }
 
+    public function test_csp_script_src_allows_unsafe_eval_for_livewire(): void
+    {
+        // Livewire 4 / Alpine vyhodnocuje výrazy direktiv (wire:click) přes
+        // new Function(); 'unsafe-eval' je proto záměrné – bez něj nefungují
+        // interaktivní komponenty (podání hlášení). Nemazat.
+        $scriptSrc = $this->cspDirective(
+            (string) $this->get('/')->headers->get('Content-Security-Policy'),
+            'script-src',
+        );
+
+        $this->assertStringContainsString("'unsafe-eval'", $scriptSrc);
+    }
+
     public function test_csp_nonce_differs_per_request(): void
     {
         $first = (string) $this->get('/')->headers->get('Content-Security-Policy');
