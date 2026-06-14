@@ -4,14 +4,10 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
-use Override;
-
 class VkvpaPrihlaseniTableSeeder extends JsonTableSeeder
 {
-    #[Override]
     protected string $table = 'vkvpa_prihlaseni';
 
-    #[Override]
     protected ?int $autoIncrement = 12981;
 
     /**

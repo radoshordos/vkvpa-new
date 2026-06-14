@@ -13,15 +13,19 @@ class SampleDatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        // Pořadí respektuje cizí klíče (na MySQL se vynucují) – rodičovské
+        // tabulky se plní dřív než ty, které na ně odkazují: kola+kategorie →
+        // edihead → edilines/vkvpa_data → diskuse. prihlaseni (user_id NULL) a
+        // prefixes jsou bez závislostí.
         $this->call([
+            VkvpaKolaTableSeeder::class,
+            VkvpaKategorieTableSeeder::class,
             EdiheadTableSeeder::class,
             EdilinesTableSeeder::class,
-            PrefixesTableSeeder::class,
-            VkvpaKategorieTableSeeder::class,
-            VkvpaKolaTableSeeder::class,
             VkvpaDataTableSeeder::class,
-            VkvpaPrihlaseniTableSeeder::class,
             DiskuseSeeder::class,
+            VkvpaPrihlaseniTableSeeder::class,
+            PrefixesTableSeeder::class,
         ]);
     }
 }
