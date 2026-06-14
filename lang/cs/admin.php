@@ -12,6 +12,7 @@ return [
     'nav_edi_debug' => 'EDI kontrola bodů',
     'nav_categories' => 'Správa kategorií',
     'nav_imports' => 'EDI hromadný import',
+    'nav_users' => 'Údaje závodníků',
     'nav_api_docs' => 'API dokumentace',
 
     // Login
@@ -68,6 +69,23 @@ return [
     'deniky_col_qso' => 'QSO',
     'deniky_col_upload' => 'Nahráno',
     'deniky_link_debug' => 'Kontrola bodů',
+
+    // Údaje závodníků (kontaktní / osobní data z vkvpa_data)
+    'uzivatele_title' => 'Údaje závodníků – Administrace VKV PA',
+    'uzivatele_heading' => 'Kontaktní údaje závodníků',
+    'uzivatele_desc' => 'Osobní a kontaktní údaje (jméno, e-mail, telefon, IP) z hlášení v tabulce vkvpa_data. Citlivá data – přístupné pouze administrátorovi.',
+    'uzivatele_filter_round' => 'Kolo',
+    'uzivatele_filter_all_rounds' => '— všechna kola —',
+    'uzivatele_filter_search' => 'Hledat',
+    'uzivatele_filter_search_ph' => 'Značka / jméno / e-mail / telefon…',
+    'uzivatele_btn_show' => 'Zobrazit',
+    'uzivatele_empty' => 'Žádné záznamy neodpovídají zadání.',
+    'uzivatele_col_call' => 'Značka',
+    'uzivatele_col_name' => 'Jméno',
+    'uzivatele_col_email' => 'E-mail',
+    'uzivatele_col_phone' => 'Telefon',
+    'uzivatele_col_round' => 'Kolo',
+    'uzivatele_col_sent' => 'Odesláno',
 
     // EDI debug
     'debug_title' => 'EDI debug – VKV PA',

@@ -90,9 +90,9 @@
     </div>
 
     <div class="grid gap-x-5 sm:grid-cols-2">
-        <x-field name="jmeno" :label="__('pages.hlaseni.field_name')" :value="$val('jmeno', $e->jmeno ?? '')" />
+        <x-field name="jmeno" :label="__('pages.hlaseni.field_name')" :value="$val('jmeno', $e->jmeno ?? '')" required />
         <x-field name="email" :label="__('pages.hlaseni.field_contact')" :value="$val('email', $e->mail ?? '')" required />
-        <x-field name="telefon" :label="__('pages.hlaseni.field_phone')" :value="$val('telefon', $e->telefon ?? '')" />
+        <x-field name="telefon" :label="__('pages.hlaseni.field_phone')" :value="$val('telefon', $e->telefon ?? '')" required />
     </div>
 
     <x-field name="poznamka" :label="__('pages.hlaseni.field_note')">
@@ -144,7 +144,7 @@
                 <tr @class(['row-pending' => ! $r->schvaleno])>
                     <td class="num font-bold">{{ $i + 1 }}.</td>
                     <td class="mono font-bold">
-                        {{ $r->znacka }}{{ $r->qrp ? ' /QRP' : '' }}
+                        {{ $r->znacka }}@if ($r->qrp)<x-badge variant="qrp" class="ml-1">QRP</x-badge>@elseif ($r->lp)<x-badge variant="lp" class="ml-1">LP</x-badge>@endif
                         {{-- Vizualizace vlastního deníku – jen pro řádek aktuálního závodníka s nahraným EDI --}}
                         @if ($e && $r->id === $e->id && $r->edihead_id !== null)
                             <x-vizualizace-odkaz :head="$r->edihead_id" target="_blank" class="ml-1" />

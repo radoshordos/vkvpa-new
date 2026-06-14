@@ -12,6 +12,7 @@ return [
     'nav_edi_debug' => 'EDI score check',
     'nav_categories' => 'Category management',
     'nav_imports' => 'EDI bulk import',
+    'nav_users' => 'Entrant details',
     'nav_api_docs' => 'API documentation',
 
     // Login
@@ -68,6 +69,23 @@ return [
     'deniky_col_qso' => 'QSO',
     'deniky_col_upload' => 'Uploaded',
     'deniky_link_debug' => 'Score check',
+
+    // Entrant details (contact / personal data from vkvpa_data)
+    'uzivatele_title' => 'Entrant details – VKV PA Administration',
+    'uzivatele_heading' => 'Entrant contact details',
+    'uzivatele_desc' => 'Personal and contact data (name, e-mail, phone, IP) from entries in the vkvpa_data table. Sensitive data – accessible to administrators only.',
+    'uzivatele_filter_round' => 'Round',
+    'uzivatele_filter_all_rounds' => '— all rounds —',
+    'uzivatele_filter_search' => 'Search',
+    'uzivatele_filter_search_ph' => 'Callsign / name / e-mail / phone…',
+    'uzivatele_btn_show' => 'Show',
+    'uzivatele_empty' => 'No records match your query.',
+    'uzivatele_col_call' => 'Callsign',
+    'uzivatele_col_name' => 'Name',
+    'uzivatele_col_email' => 'E-mail',
+    'uzivatele_col_phone' => 'Phone',
+    'uzivatele_col_round' => 'Round',
+    'uzivatele_col_sent' => 'Submitted',
 
     // EDI debug
     'debug_title' => 'EDI debug – VKV PA',
