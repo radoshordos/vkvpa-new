@@ -19,7 +19,6 @@ use App\Services\Edi\EdiImportService;
 use App\Services\Edi\EdiLog;
 use App\Services\Edi\EdiQso;
 use App\Services\Scoring\ScoringService;
-use App\Support\ContestCalendar;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\Context;
@@ -58,8 +57,6 @@ final readonly class ImportEdiAction
         $h = $log->header;
         $pcall = $h->pCall();
 
-        $this->assertTDateIsContestDay($h->tDate());
-
         $idKola = $this->scoring->koloForTDate($h->tDate()) ?? 0;
 
         Context::add('znacka', $pcall);
@@ -67,6 +64,12 @@ final readonly class ImportEdiAction
 
         if ($idKola === 0) {
             throw new RoundNotFoundException($h->tDate());
+        }
+
+        $kolo = VkvpaKola::query()->find($idKola);
+
+        if ($kolo !== null) {
+            $this->assertTDateIsContestDay($h->tDate(), $kolo);
         }
 
         if ($enforceUploadWindow) {
@@ -149,14 +152,15 @@ final readonly class ImportEdiAction
     }
 
     /**
-     * Ověří, že TDate odpovídá termínu závodu. Kolo VKV PA se koná vždy třetí
-     * neděli v měsíci; TDate ale může být i dvoudenní rozsah (start;end), když
-     * účastník použil šablonu 24h závodu. Stačí proto, aby třetí neděli
-     * odpovídalo alespoň jedno z dat uvedených v TDate.
+     * Ověří, že TDate odpovídá termínu závodu. Termín bereme z DB
+     * (`vkvpa_kola.datum_konani` nalezeného kola), ne z výpočtu „třetí neděle",
+     * aby šlo snadno testovat libovolně nadefinovaná kola. TDate může být
+     * i dvoudenní rozsah (start;end) ze šablony 24h závodu – stačí proto, aby
+     * dni konání odpovídalo alespoň jedno z dat uvedených v TDate.
      *
      * @throws TDateNotContestDayException
      */
-    private function assertTDateIsContestDay(string $tdate): void
+    private function assertTDateIsContestDay(string $tdate, VkvpaKola $kolo): void
     {
         $dates = $this->parseTDateDates($tdate);
         if ($dates === []) {
@@ -164,10 +168,9 @@ final readonly class ImportEdiAction
             return;
         }
 
-        if (array_any(
-            $dates,
-            fn (CarbonImmutable $d): bool => $d->isSameDay(ContestCalendar::thirdSundayOf((int) $d->year, (int) $d->month)),
-        )) {
+        $denKonani = $kolo->datum_konani;
+
+        if (array_any($dates, fn (CarbonImmutable $d): bool => $d->isSameDay($denKonani))) {
             return;
         }
 
