@@ -150,4 +150,19 @@ class VysledkyRocniTest extends TestCase
             ->assertSee('OK1VHF')
             ->assertSee('OK1UHF');
     }
+
+    public function test_rocni_category_filter_narrows_to_one_category(): void
+    {
+        $kat144 = $this->kat('144 MHz single op');
+        $kat432 = $this->kat('432 MHz single op');
+        $kolo = $this->kolo('2026');
+
+        $this->entry($kolo, $kat144, 'OK1VHF', 1000);
+        $this->entry($kolo, $kat432, 'OK1UHF', 800);
+
+        $this->get(route('rocni_vysledky', ['rok' => 2026, 'kategorie' => $kat432->id]))
+            ->assertOk()
+            ->assertSee('OK1UHF')
+            ->assertDontSee('OK1VHF');
+    }
 }

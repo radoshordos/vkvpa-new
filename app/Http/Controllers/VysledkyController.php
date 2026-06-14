@@ -130,11 +130,13 @@ class VysledkyController extends Controller
         $lp = $request->boolean('lp');
         $katId = $request->integer('kategorie');
 
+        // Volitelný filtr zúží výpis na jedinou kategorii (filtrujeme řádky před
+        // seskupením – Eloquent\Collection::only() bere klíče jako PK modelů).
         // Kategorie řadíme podle id (jinak by pořadí sekcí určovalo první výskyt
-        // v seřazení podle bodů). Volitelný filtr zúží výpis na jedinou kategorii.
+        // v seřazení podle bodů).
         $vysledky = $this->scoring->yearlyResults($rok, $qrp, $lp)
+            ->when($katId !== 0, fn ($c) => $c->where('kategorie_id', $katId))
             ->groupBy('kategorie_id')
-            ->when($katId !== 0, fn ($g) => $g->only([$katId]))
             ->sortKeys();
 
         return view('pages.vysledky-rocni', [
