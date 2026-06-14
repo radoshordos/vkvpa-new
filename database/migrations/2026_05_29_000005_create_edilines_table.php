@@ -18,6 +18,9 @@ return new class extends Migration
             $table->integer('edihead_id');
             $table->string('date', 6)->nullable();
             $table->string('time', 4)->nullable();
+            // Sloučené datum+čas QSO v UTC (date 'YYMMDD' + time 'HHMM').
+            // Plní se u nových importů; sloupce date/time zatím zůstávají.
+            $table->dateTime('qso_at')->nullable();
             $table->string('call_sign', 30)->nullable();
             $table->integer('mode_code')->nullable();
             $table->string('sent_rst', 3)->nullable();
