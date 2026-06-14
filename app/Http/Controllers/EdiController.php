@@ -113,11 +113,21 @@ class EdiController extends Controller
         }
     }
 
+    /**
+     * EDI hlavičkové klíče s osobními údaji cizích závodníků – hodnota se ve
+     * výpisu nahrazuje za [restricted], aby neunikaly adresy/telefony apod.
+     */
+    private const REDIGOVANE_KLICE = [
+        'PAdr1', 'PAdr2', 'RAdr1', 'RAdr2', 'RPoCo', 'RCity', 'RPhon', 'RHBBS',
+    ];
+
     private function ediResponse(Edihead $head, string $content, string $pcall, string $variant): Response
     {
         if (trim($content) === '') {
             abort(404, 'EDI soubor není pro tento deník k dispozici.');
         }
+
+        $content = $this->redigovatOsobniUdaje($content);
 
         $base = $pcall !== '' ? $pcall : 'denik';
         // Sanitize: keep only safe ASCII chars to prevent header injection.
@@ -128,5 +138,20 @@ class EdiController extends Controller
             'Content-Type' => 'text/plain; charset=utf-8',
             'Content-Disposition' => "inline; filename=\"{$filename}\"; filename*=UTF-8''{$filename}",
         ]);
+    }
+
+    /**
+     * Nahradí hodnoty osobních hlavičkových klíčů ({@see REDIGOVANE_KLICE})
+     * za [restricted] a zachová původní oddělovač řádků (CRLF/LF).
+     */
+    private function redigovatOsobniUdaje(string $content): string
+    {
+        $klice = implode('|', self::REDIGOVANE_KLICE);
+
+        return preg_replace(
+            '/^(' . $klice . ')=.*$/mi',
+            '$1=[restricted]',
+            $content
+        ) ?? $content;
     }
 }
