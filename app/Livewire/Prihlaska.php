@@ -243,6 +243,8 @@ class Prihlaska extends Component
                     'telefon' => $this->telefon,
                     'soapbox' => $this->soapbox,
                     'poznamka' => $this->poznamka,
+                    'qrp' => $this->qrp,
+                    'lp' => $this->lp,
                     'schvaleno' => $this->isAdmin(),
                 ],
             );
