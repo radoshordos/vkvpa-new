@@ -22,6 +22,7 @@ return [
             'items' => [
                 ['key' => 'hlaseni.index',    'trans' => 'nav.log_import'],
                 ['key' => 'deniky.index',     'trans' => 'admin.nav_logs',      'admin' => true],
+                ['key' => 'uzivatele.index',  'trans' => 'admin.nav_users',     'admin' => true],
                 ['key' => 'importy.index',    'trans' => 'admin.nav_imports',   'admin' => true],
                 ['key' => 'edi.debug.create', 'trans' => 'admin.nav_edi_debug', 'admin' => true],
             ],

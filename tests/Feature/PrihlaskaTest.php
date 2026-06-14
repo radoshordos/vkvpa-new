@@ -156,6 +156,7 @@ class PrihlaskaTest extends TestCase
         Livewire::test(Prihlaska::class)
             ->set('upload', $this->file($edi))
             ->set('email', 'ok1rng@example.com')
+            ->set('telefon', '+420 777 123 456')
             ->call('odeslat')
             ->assertRedirect(route('pribezne_vysledky'));
 
@@ -203,7 +204,9 @@ class PrihlaskaTest extends TestCase
             ->set('kategorie', $kat->id)
             ->set('znacka', 'ok2kjt')
             ->set('locator', 'jn99aj')
+            ->set('jmeno', 'Jan Novák')
             ->set('email', 'test@example.com')
+            ->set('telefon', '+420 777 123 456')
             ->set('pocet', 10)
             ->set('nasobice', 5)
             ->set('body', 50)
@@ -230,7 +233,9 @@ class PrihlaskaTest extends TestCase
             ->set('kategorie', $kat->id)
             ->set('znacka', 'ok2kjt')
             ->set('locator', 'jn99aj')
+            ->set('jmeno', 'Jan Novák')
             ->set('email', 'test@example.com')
+            ->set('telefon', '+420 777 123 456')
             ->set('pocet', 10)
             ->set('nasobice', 5)
             ->set('body', 50)
@@ -272,7 +277,9 @@ class PrihlaskaTest extends TestCase
             ->set('kategorie', $kat->id)
             ->set('znacka', 'ok2kjt')
             ->set('locator', 'jn99aj')
+            ->set('jmeno', 'Jan Novák')
             ->set('email', 'test@example.com')
+            ->set('telefon', '+420 777 123 456')
             ->call('odeslat')
             ->assertHasErrors('znacka');
 
@@ -290,7 +297,9 @@ class PrihlaskaTest extends TestCase
             ->set('kategorie', $kat->id)
             ->set('znacka', 'ok2kjt')
             ->set('locator', 'jn99aj')
+            ->set('jmeno', 'Jan Novák')
             ->set('email', 'test@example.com')
+            ->set('telefon', '+420 777 123 456')
             ->call('odeslat')
             ->assertHasErrors('kolo');
 
@@ -311,7 +320,9 @@ class PrihlaskaTest extends TestCase
             ->set('kategorie', $kat->id)
             ->set('znacka', 'ok2kjt')
             ->set('locator', 'jn99aj')
+            ->set('jmeno', 'Jan Novák')
             ->set('email', 'test@example.com')
+            ->set('telefon', '+420 777 123 456')
             ->call('odeslat')
             ->assertRedirect(route('pribezne_vysledky', ['kolo' => $kolo->id]));
 

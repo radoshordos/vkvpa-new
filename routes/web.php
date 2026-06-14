@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\EdiDebugController;
 use App\Http\Controllers\Admin\ImportController;
 use App\Http\Controllers\Admin\KategorieController;
 use App\Http\Controllers\Admin\KolaAdminController;
+use App\Http\Controllers\Admin\UzivateleController;
 use App\Http\Controllers\Admin\ZaznamController;
 use App\Http\Controllers\DiskuseController;
 use App\Http\Controllers\EdiController;
@@ -109,6 +110,7 @@ Route::middleware('admin')->group(function (): void {
     Route::get('/admin/edi-debug/{head}', [EdiDebugController::class, 'show'])->name('edi.debug.show')->whereNumber('head');
 
     Route::get('/admin/deniky', [DenikyController::class, 'index'])->name('deniky.index');
+    Route::get('/admin/uzivatele', [UzivateleController::class, 'index'])->name('uzivatele.index');
     Route::get('/admin/kategorie', [KategorieController::class, 'index'])->name('kategorie.index');
     Route::get('/admin/kategorie/create', [KategorieController::class, 'create'])->name('kategorie.create');
     Route::post('/admin/kategorie', [KategorieController::class, 'store'])->name('kategorie.store');

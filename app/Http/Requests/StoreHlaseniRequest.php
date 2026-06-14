@@ -6,6 +6,7 @@ namespace App\Http\Requests;
 
 use App\Models\VkvpaKola;
 use App\Rules\ValidMaidenhead;
+use App\Rules\ValidPhone;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Override;
@@ -55,6 +56,8 @@ class StoreHlaseniRequest extends FormRequest
         $this->merge([
             'znacka' => $this->string('znacka')->trim()->upper()->value(),
             'locator' => $this->string('locator')->trim()->upper()->value(),
+            'jmeno' => $this->string('jmeno')->trim()->value(),
+            'telefon' => $this->string('telefon')->trim()->value(),
         ]);
     }
 
@@ -70,13 +73,13 @@ class StoreHlaseniRequest extends FormRequest
             'kategorie' => ['nullable', 'integer', 'exists:vkvpa_kategorie,id'],
             'znacka' => ['required', 'string', 'max:10'],
             'locator' => ['required', 'string', 'max:6', new ValidMaidenhead],
+            'jmeno' => ['required', 'string', 'max:60'],
             'email' => ['required', 'email', 'max:250'],
+            'telefon' => ['required', 'string', 'max:20', new ValidPhone],
             'pocet' => ['nullable', 'integer', 'min:0'],
             'bodu_za_qso' => ['nullable', 'integer', 'min:0'],
             'nasobice' => ['nullable', 'integer', 'min:0'],
             'body' => ['nullable', 'integer', 'min:0'],
-            'jmeno' => ['nullable', 'string', 'max:60'],
-            'telefon' => ['nullable', 'string', 'max:20'],
             'poznamka' => ['nullable', 'string', 'max:250'],
             'soapbox' => ['nullable', 'string', 'max:250'],
             'qrp' => ['nullable', 'boolean'],
@@ -90,7 +93,9 @@ class StoreHlaseniRequest extends FormRequest
         return [
             'znacka.required' => 'Chybí povinná pole! (volací znak)',
             'kolo.required' => 'Chybí povinná pole! (kolo)',
-            'email.required' => 'Chybí povinná pole! (kontakt / e-mail)',
+            'jmeno.required' => 'Chybí povinná pole! (jméno)',
+            'email.required' => 'Chybí povinná pole! (e-mail)',
+            'telefon.required' => 'Chybí povinná pole! (telefon)',
             'locator.required' => 'Chybí povinná pole! (lokátor)',
         ];
     }

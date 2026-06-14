@@ -18,6 +18,7 @@ use App\Models\VkvpaData;
 use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
 use App\Rules\ValidMaidenhead;
+use App\Rules\ValidPhone;
 use App\Services\Edi\EdiLog;
 use App\Services\Edi\EdiParser;
 use App\Services\Edi\EdiReducer;
@@ -216,12 +217,19 @@ class Prihlaska extends Component
     {
         $this->resetEdiState();
 
+        $this->jmeno = trim($this->jmeno);
+        $this->telefon = trim($this->telefon);
+
         $this->validate([
+            'jmeno' => ['required', 'string', 'max:60'],
             'email' => ['required', 'email', 'max:250'],
-            'jmeno' => ['nullable', 'string', 'max:60'],
-            'telefon' => ['nullable', 'string', 'max:20'],
+            'telefon' => ['required', 'string', 'max:20', new ValidPhone],
             'poznamka' => ['nullable', 'string', 'max:250'],
             'soapbox' => ['nullable', 'string', 'max:250'],
+        ], attributes: [
+            'jmeno' => 'jméno',
+            'email' => 'e-mail',
+            'telefon' => 'telefon',
         ]);
 
         try {
@@ -273,24 +281,28 @@ class Prihlaska extends Component
     {
         $this->znacka = mb_strtoupper(trim($this->znacka));
         $this->locator = mb_strtoupper(trim($this->locator));
+        $this->jmeno = trim($this->jmeno);
+        $this->telefon = trim($this->telefon);
 
         $this->validate([
             'kolo' => ['required', 'integer', 'exists:vkvpa_kola,id'],
             'kategorie' => ['required', 'integer', 'exists:vkvpa_kategorie,id'],
             'znacka' => ['required', 'string', 'max:10'],
             'locator' => ['required', 'string', 'max:6', new ValidMaidenhead],
+            'jmeno' => ['required', 'string', 'max:60'],
             'email' => ['required', 'email', 'max:250'],
+            'telefon' => ['required', 'string', 'max:20', new ValidPhone],
             'pocet' => ['nullable', 'integer', 'min:0'],
             'bodu_za_qso' => ['nullable', 'integer', 'min:0'],
             'nasobice' => ['nullable', 'integer', 'min:0'],
             'body' => ['nullable', 'integer', 'min:0'],
-            'jmeno' => ['nullable', 'string', 'max:60'],
-            'telefon' => ['nullable', 'string', 'max:20'],
             'poznamka' => ['nullable', 'string', 'max:250'],
             'soapbox' => ['nullable', 'string', 'max:250'],
         ], attributes: [
             'kolo' => 'kolo',
-            'email' => 'kontakt / e-mail',
+            'jmeno' => 'jméno',
+            'email' => 'e-mail',
+            'telefon' => 'telefon',
             'znacka' => 'volací znak',
             'locator' => 'lokátor',
         ]);

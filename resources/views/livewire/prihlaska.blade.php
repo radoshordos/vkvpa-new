@@ -68,7 +68,7 @@
                 <dl class="grid grid-cols-2 gap-x-5 gap-y-3 sm:grid-cols-4">
                     <div>
                         <dt class="label">{{ __('pages.hlaseni.field_callsign') }}</dt>
-                        <dd class="mono font-bold text-heading">{{ $pcall }}{{ $qrp ? ' /QRP' : '' }}</dd>
+                        <dd class="mono font-bold text-heading">{{ $pcall }}@if ($qrp)<x-badge variant="qrp" class="ml-1">QRP</x-badge>@elseif ($lp)<x-badge variant="lp" class="ml-1">LP</x-badge>@endif</dd>
                     </div>
                     <div>
                         <dt class="label">{{ __('pages.hlaseni.field_locator') }}</dt>
