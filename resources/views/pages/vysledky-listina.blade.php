@@ -75,7 +75,12 @@
                     <tr @class(['row-pending' => ! $r->schvaleno, 'group'])>
                         <td class="num font-bold">{{ $poradi }}.</td>
                         <td>
-                            <span class="mono font-bold">{{ $r->znacka }}</span>@if ($r->qrp)<x-badge variant="qrp" class="ml-1">QRP</x-badge>@elseif ($r->lp)<x-badge variant="lp" class="ml-1">LP</x-badge>@endif @if ($sk['top'])<x-badge variant="skokan" class="ml-1" title="Největší skokan v kategorii (oproti poslednímu startu)">SKOKAN</x-badge>@endif
+                            @if ($isAdmin)
+                                <a href="{{ route('uzivatele.index', ['kolo' => $r->id_kola, 'q' => $r->znacka]) }}" class="link mono font-bold" title="{{ __('pages.vysledky.link_contact') }}">{{ $r->znacka }}</a>
+                            @else
+                                <span class="mono font-bold">{{ $r->znacka }}</span>
+                            @endif
+                            @if ($r->qrp)<x-badge variant="qrp" class="ml-1">QRP</x-badge>@elseif ($r->lp)<x-badge variant="lp" class="ml-1">LP</x-badge>@endif @if ($sk['top'])<x-badge variant="skokan" class="ml-1" title="Největší skokan v kategorii (oproti poslednímu startu)">SKOKAN</x-badge>@endif
                             @if ($r->jmeno)<br><span class="text-muted">{{ $r->jmeno }}</span>@endif
                             @if ($r->timestamp)<br><span class="text-xs text-muted">{{ $r->timestamp->format('j. n. H:i') }}</span>@endif
                         </td>

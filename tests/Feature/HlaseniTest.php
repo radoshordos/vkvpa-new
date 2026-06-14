@@ -38,7 +38,9 @@ class HlaseniTest extends TestCase
             'kategorie' => $kat,
             'znacka' => 'ok2kjt',
             'locator' => 'jn99aj',
+            'jmeno' => 'Jan Novák',
             'email' => 'test@example.com',
+            'telefon' => '+420 777 123 456',
             'pocet' => 10,
             'nasobice' => 5,
             'body' => 50,
@@ -126,9 +128,19 @@ class HlaseniTest extends TestCase
     {
         [$kolo, $kat] = $this->prepare();
         $payload = $this->payload($kolo->id, $kat->id);
-        unset($payload['email']);
+        unset($payload['email'], $payload['jmeno'], $payload['telefon']);
 
-        $this->post('/hlaseni', $payload)->assertSessionHasErrors('email');
+        $this->post('/hlaseni', $payload)->assertSessionHasErrors(['email', 'jmeno', 'telefon']);
+        $this->assertSame(0, VkvpaData::count());
+    }
+
+    public function test_invalid_phone_rejected(): void
+    {
+        [$kolo, $kat] = $this->prepare();
+        $payload = $this->payload($kolo->id, $kat->id);
+        $payload['telefon'] = 'abc';
+
+        $this->post('/hlaseni', $payload)->assertSessionHasErrors('telefon');
         $this->assertSame(0, VkvpaData::count());
     }
 

@@ -165,7 +165,7 @@
             @foreach ($radky as $i => $r)
                 <tr @class(['row-pending' => ! $r->schvaleno])>
                     <td class="num font-bold">{{ $i + 1 }}.</td>
-                    <td class="mono font-bold">{{ $r->znacka }}{{ $r->qrp ? ' /QRP' : '' }}</td>
+                    <td class="mono font-bold">{{ $r->znacka }}@if ($r->qrp)<x-badge variant="qrp" class="ml-1">QRP</x-badge>@elseif ($r->lp)<x-badge variant="lp" class="ml-1">LP</x-badge>@endif</td>
                     <td class="mono whitespace-nowrap">{{ $r->locator }}</td>
                     <td class="num">{{ (int) $r->pocet }}</td>
                     <td class="num">{{ (int) $r->nasobice }}</td>

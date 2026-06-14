@@ -37,9 +37,9 @@ class ValidateCategoryMatrix extends Command
             ->pluck('id')
             ->map(static function (mixed $id): int {
                 if (is_numeric($id)) {
-                    return (int) $id;
+                    return (int)$id;
                 }
-                throw new \UnexpectedValueException('Non-numeric category ID: '.get_debug_type($id));
+                throw new \UnexpectedValueException('Non-numeric category ID: ' . get_debug_type($id));
             })
             ->sort()
             ->values()
@@ -49,25 +49,28 @@ class ValidateCategoryMatrix extends Command
         $extra = array_diff($existing, $expected);
 
         if ($missing === [] && $extra === []) {
-            outro(sprintf('OK – všechna %d ID kategorií existují v databázi.', count($expected)));
+            $expected
+                |> count(...)
+                |> (fn($x) => sprintf('OK – všechna %d ID kategorií existují v databázi.', $x))
+                |> outro(...);
 
             return self::SUCCESS;
         }
 
         if ($missing !== []) {
             error('Chybějící ID (jsou v matici, ale ne v DB):');
-            table(
-                ['ID', 'Stav'],
-                array_map(fn (int $id): array => [(string) $id, 'chybí v DB'], array_values($missing)),
-            );
+            $missing
+                |> array_values(...)
+                |> (fn($x) => array_map(fn(int $id): array => [(string)$id, 'chybí v DB'], $x))
+                |> (fn($x) => table(['ID', 'Stav'], $x));
         }
 
         if ($extra !== []) {
             warning('Navíc v DB (nejsou v matici):');
-            table(
-                ['ID', 'Stav'],
-                array_map(fn (int $id): array => [(string) $id, 'navíc v DB'], array_values($extra)),
-            );
+            $extra
+                |> array_values(...)
+                |> (fn($x) => array_map(fn(int $id): array => [(string)$id, 'navíc v DB'], $x))
+                |> (fn($x) => table(['ID', 'Stav'], $x));
         }
 
         return self::FAILURE;
