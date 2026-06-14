@@ -127,7 +127,10 @@ class EdiController extends Controller
             abort(404, 'EDI soubor není pro tento deník k dispozici.');
         }
 
-        $content = $this->redigovatOsobniUdaje($content);
+        // Admin vidí skutečné hodnoty; ostatním osobní údaje redigujeme.
+        if (! auth()->user()?->is_admin) {
+            $content = $this->redigovatOsobniUdaje($content);
+        }
 
         $base = $pcall !== '' ? $pcall : 'denik';
         // Sanitize: keep only safe ASCII chars to prevent header injection.
