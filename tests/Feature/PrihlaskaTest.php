@@ -170,7 +170,7 @@ class PrihlaskaTest extends TestCase
         Livewire::test(Prihlaska::class)
             ->set('upload', $this->file($edi))
             ->assertSet('mode', 'edi-review')
-            ->assertSee('Rozpad spojení')   // sbalitelný rozpad QSO
+            ->assertSee('Analýza spojení')  // sbalitelný rozpad QSO
             ->assertSee('EDIR')             // odkaz na redukovaný soubor
             ->assertSee('PWWLo');           // obsah původního EDI je vidět
     }
@@ -235,7 +235,8 @@ class PrihlaskaTest extends TestCase
             ->set('nasobice', 5)
             ->set('body', 50)
             ->call('odeslat')
-            ->assertRedirect(route('pribezne_vysledky'));
+            // Admin se přesměruje rovnou na kolo svého hlášení (smí listovat v kolech).
+            ->assertRedirect(route('pribezne_vysledky', ['kolo' => $kolo->id]));
 
         $this->assertTrue((bool) VkvpaData::firstOrFail()->schvaleno);
     }
@@ -312,7 +313,7 @@ class PrihlaskaTest extends TestCase
             ->set('locator', 'jn99aj')
             ->set('email', 'test@example.com')
             ->call('odeslat')
-            ->assertRedirect(route('pribezne_vysledky'));
+            ->assertRedirect(route('pribezne_vysledky', ['kolo' => $kolo->id]));
 
         $this->assertSame(1, VkvpaData::count());
     }
