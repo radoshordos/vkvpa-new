@@ -8,6 +8,7 @@ use App\Services\Edi\CategoryResolver;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
+use UnexpectedValueException;
 use function Laravel\Prompts\error;
 use function Laravel\Prompts\intro;
 use function Laravel\Prompts\outro;
@@ -39,7 +40,7 @@ class ValidateCategoryMatrix extends Command
                 if (is_numeric($id)) {
                     return (int)$id;
                 }
-                throw new \UnexpectedValueException('Non-numeric category ID: ' . get_debug_type($id));
+                throw new UnexpectedValueException('Non-numeric category ID: ' . get_debug_type($id));
             })
             ->sort()
             ->values()
