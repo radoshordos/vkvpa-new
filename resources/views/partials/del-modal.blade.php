@@ -41,8 +41,11 @@
     });
 
     confirmBtn.addEventListener('click', function () {
+        // Pozor: close() vynuluje `pending`, takže formulář si musíme uložit
+        // do lokální proměnné ještě před zavřením modalu.
+        var form = pending;
         close();
-        if (pending) { pending.submit(); }
+        if (form) { form.submit(); }
     });
 
     function close() {
