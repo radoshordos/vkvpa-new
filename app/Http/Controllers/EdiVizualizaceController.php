@@ -115,7 +115,7 @@ class EdiVizualizaceController extends Controller
             match ($l->mode) {
                 QsoMode::Ssb => $ssb[$i]++,
                 QsoMode::Cw => $cw[$i]++,
-                QsoMode::Other => $ostatni[$i]++,
+                default => $ostatni[$i]++,
             };
         }
 
