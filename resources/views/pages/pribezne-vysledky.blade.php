@@ -15,7 +15,15 @@
 <form method="get" action="{{ route('pribezne_vysledky') }}" class="card mb-4 flex flex-wrap items-end gap-4 p-3">
     <div class="field mb-0">
         <span class="label">{{ __('pages.pribezne.filter_round') }}</span>
-        <strong>{{ $kolo->nazev }} ({{ $kolo->datum_konani?->format('j. n. Y') }})</strong>
+        @if ($isAdmin && $kolaVyber->isNotEmpty())
+            <select id="kolo" name="kolo" class="select w-auto">
+                @foreach ($kolaVyber as $k)
+                    <option value="{{ $k->id }}" @selected($k->id === $kolo->id)>{{ $k->nazev }} ({{ $k->datum_konani?->format('j. n. Y') }})</option>
+                @endforeach
+            </select>
+        @else
+            <strong>{{ $kolo->nazev }} ({{ $kolo->datum_konani?->format('j. n. Y') }})</strong>
+        @endif
     </div>
     <div class="field mb-0">
         <label class="label" for="kategorie">{{ __('pages.pribezne.filter_category') }}</label>
@@ -88,9 +96,18 @@
 <script @cspNonce>
 (function () {
     var kategorie = document.getElementById('kategorie');
-    var form = kategorie ? kategorie.closest('form') : null;
-    if (form) {
+    var kolo = document.getElementById('kolo');
+    var form = (kategorie || kolo) ? (kategorie || kolo).closest('form') : null;
+    if (!form) { return; }
+    if (kategorie) {
         kategorie.addEventListener('change', function () { form.submit(); });
+    }
+    if (kolo) {
+        // Při změně kola vynulovat kategorii – ta z minulého kola v novém být nemusí.
+        kolo.addEventListener('change', function () {
+            if (kategorie) { kategorie.value = '0'; }
+            form.submit();
+        });
     }
 }());
 </script>
