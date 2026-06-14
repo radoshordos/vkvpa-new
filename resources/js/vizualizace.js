@@ -155,7 +155,7 @@ function updateLegend(key) {
     const rows = [['#60a5fa', 'SSB'], ['#fbbf24', 'CW']];
     if (hasOtherMode) rows.push(['#9ca3af', 'Ostatní']);
     if (key === 'playback') rows.push(['#a855f7', 'Nový násobič']);
-    if (key === 'crk' && roundStationsOn && (cfg.roundStations || []).length > 0) rows.push(['#cc66ff', 'Stanice z kola']);
+    if (key === 'crk' && roundStationsOn && (cfg.roundStations || []).length > 0) rows.push(['#cc66ff', 'Nejčastější protistanice']);
 
     legendCtl = L.control({ position: 'bottomright' });
     legendCtl.onAdd = function () {
@@ -202,8 +202,8 @@ cfg.points.forEach(function (p) {
     addModeEntry(crkLayer, p.mode, members);
 });
 
-// Všechny stanice z kola s ≥ 5 QSO – samostatná podvrstva, přepínatelná
-// filtrem „Stanice z kola" (viz tlačítko data-round-filter).
+// Nejčastější protistanice kola (≥ 5 QSO napříč všemi deníky) – samostatná
+// podvrstva, přepínatelná filtrem (viz tlačítko data-round-filter).
 const crkRoundStations = L.layerGroup();
 let roundStationsOn = true;
 (cfg.roundStations || []).forEach(function (s) {
