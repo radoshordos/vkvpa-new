@@ -152,6 +152,8 @@ return [
         'title' => 'Roční výsledky – VKV PA',
         'heading' => 'Roční výsledky',
         'filter_year' => 'Rok',
+        'filter_category' => 'Kategorie',
+        'filter_all' => 'Vše',
         'filter_qrp' => 'jen QRP',
         'filter_lp' => 'jen LP',
         'btn_show' => 'Vypsat',

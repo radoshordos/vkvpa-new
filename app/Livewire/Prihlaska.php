@@ -266,7 +266,7 @@ class Prihlaska extends Component
         // Pořadí kola přepočítat hned (u nepřevzatého řádku neškodné).
         RankRoundJob::dispatchSync($row->id_kola);
 
-        return $this->dokonceno();
+        return $this->dokonceno($row->id_kola);
     }
 
     private function odeslatRucne(): mixed
@@ -334,14 +334,19 @@ class Prihlaska extends Component
 
         RankRoundJob::dispatchSync($row->id_kola);
 
-        return $this->dokonceno();
+        return $this->dokonceno($row->id_kola);
     }
 
-    private function dokonceno(): mixed
+    private function dokonceno(int $idKola): mixed
     {
         session()->flash('announcement', 'Hlášení bylo uloženo.');
 
-        return $this->redirectRoute('pribezne_vysledky', navigate: false);
+        // Admin smí podat hlášení i pro jiné než aktuální průběžné kolo (backfill).
+        // Aby na výsledcích viděl právě to kolo, předáme ?kolo= (výběr kola má jen
+        // admin). Veřejnost vždy podává do aktuálního průběžného kola – bez parametru.
+        $params = $this->isAdmin() ? ['kolo' => $idKola] : [];
+
+        return $this->redirectRoute('pribezne_vysledky', $params, navigate: false);
     }
 
     private function isAdmin(): bool

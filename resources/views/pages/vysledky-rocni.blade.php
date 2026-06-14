@@ -12,6 +12,15 @@
       @endfor
     </select>
   </div>
+  <div class="field mb-0">
+    <label class="label" for="kategorie">{{ __('pages.rocni.filter_category') }}</label>
+    <select id="kategorie" name="kategorie" class="select w-auto">
+      <option value="0" @selected($katId === 0)>{{ __('pages.rocni.filter_all') }}</option>
+      @foreach ($kategorie as $kat)
+        <option value="{{ $kat->id }}" @selected($katId === $kat->id)>{{ $kat->nazev }}</option>
+      @endforeach
+    </select>
+  </div>
   <label class="flex items-center gap-2 pb-1 text-sm">
     <input id="qrp-rocni" type="checkbox" name="qrp" value="1" @checked(request()->boolean('qrp'))> {{ __('pages.rocni.filter_qrp') }}
   </label>
@@ -29,6 +38,7 @@
     var form = document.getElementById('rok')?.closest('form');
     if (form) {
         document.getElementById('rok').addEventListener('change', function () { form.submit(); });
+        document.getElementById('kategorie').addEventListener('change', function () { form.submit(); });
         document.getElementById('qrp-rocni').addEventListener('change', function () { form.submit(); });
         document.getElementById('lp-rocni').addEventListener('change', function () { form.submit(); });
     }

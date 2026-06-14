@@ -111,7 +111,7 @@
                 @if ($report)
                     <details class="mt-4 rounded-lg border border-line p-3">
                         <summary class="cursor-pointer text-sm font-semibold text-heading">
-                            Rozpad spojení – co se započítalo a proč ({{ $report->pocet }}/{{ $report->parsedCount }} QSO)
+                            Analýza spojení – co se započítalo a proč ({{ $report->pocet }}/{{ $report->parsedCount }} QSO)
                         </summary>
                         <div class="mt-3">
                             @include('partials.edi-rozpad', ['report' => $report])
