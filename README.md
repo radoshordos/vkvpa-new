@@ -45,7 +45,7 @@ Webový systém pro správu a vyhodnocování závodů v pásmu VKV (Very High F
 | Reaktivní komponenty | Livewire 4 |
 | Mapy | Leaflet 1.9.4 |
 | Grafy | Chart.js 4.5 |
-| Databáze | MySQL 8.0 (s `ALLOW_INVALID_DATES`) |
+| Databáze | MySQL 8.0 |
 | Fronty | Laravel Queue (database driver) |
 | Kontejnerizace | Docker + Docker Compose |
 | Testy | PHPUnit 13 |
@@ -199,7 +199,7 @@ Hlášení se od běžných závodníků přijímají ve stavech `Aktivni` a `Pr
 
 ### Dvě databázové schémata
 
-**EDI schéma** (`edihead`, `edilines`): odvozeno z původního systému, ale plně normalizováno na `snake_case` názvy sloupců (`mode_code`, `received_wwl`, `qso_points`, `t_date`, `p_call` apod.) – přistupuje se k nim jako k běžným Eloquent atributům, žádný magický `$line->{'...'}` přístup ani potlačení `property.notFound`. Oba modely mají `#[WithoutTimestamps]` (vlastní časové sloupce `stamp`, `d_cas`). Model `Ediline` navíc nabízí **PHP 8.4 property hooks** (`$receivedWwl`, `$qsoPoints`, `$modeCode`, `$mode`, `$newWwl`), které surové sloupce normalizují/castují. Původní SQL dump (se starými dash-názvy) je držen jen jako provenience v `database/source_sql/` a je vyloučen z PHPStan/Pint.
+**EDI schéma** (`edihead`, `edilines`): odvozeno z původního systému, ale plně normalizováno na `snake_case` názvy sloupců (`mode_code`, `received_wwl`, `qso_points`, `t_date`, `p_call` apod.) – přistupuje se k nim jako k běžným Eloquent atributům, žádný magický `$line->{'...'}` přístup ani potlačení `property.notFound`. Oba modely mají `#[WithoutTimestamps]` (vlastní časové sloupce `stamp`, `d_cas`). Model `Ediline` navíc nabízí **PHP 8.4 property hooks** (`$receivedWwl`, `$qsoPoints`, `$modeCode`, `$mode`, `$newWwl`), které surové sloupce normalizují/castují.
 
 **Aplikační schéma** (`vkvpa_*`): `VkvpaData` (závodní záznamy/výsledky), `VkvpaKola` (kola závodu), `VkvpaKategorie` (kategorie), `VkvpaPrihlaseni` (přihlašovací tokeny), `Prispevek` (diskuze ke kolům).
 

@@ -26,12 +26,10 @@ services:
                 condition: service_healthy
     db:
         image: mysql:8.0
-        # ALLOW_INVALID_DATES NAHRAZUJE celý serverový sql_mode (zahodí i
-        # STRICT_TRANS_TABLES) – nutné pro import legacy dumpu
-        # (database/source_sql/ obsahuje nulová/neplatná data). Aplikace tím
-        # není dotčena: Laravel si přes `strict => true` (config/database.php)
-        # nastavuje plný striktní sql_mode per session.
-        command: --sql-mode="ALLOW_INVALID_DATES" --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+        # Seed snapshoty mají neplatná data normalizovaná na NULL, takže běží
+        # výchozí striktní sql_mode MySQL 8.0 (ALLOW_INVALID_DATES už netřeba –
+        # legacy dumpy v database/source_sql/ byly převedeny do seederů a smazány).
+        command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
         environment:
             MYSQL_DATABASE: ${DB_DATABASE:-digipa}
             MYSQL_USER: ${DB_USERNAME:-vkvpa}

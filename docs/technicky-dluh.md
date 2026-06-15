@@ -150,8 +150,6 @@ Důsledky:
 - `preventAccessingMissingAttributes` je **zapnuté** (`AppServiceProvider`);
   `Edihead`/`Ediline` nepotřebují žádný per-model opt-out (ten má jen `User`
   kvůli `Authenticatable` traitu). Překlep v názvu sloupce teď odhalí runtime.
-- Původní SQL dump se starými dash-názvy zůstává jen jako provenience v
-  `database/source_sql/` (vyloučeno z PHPStan i Pint).
 
 ---
 
