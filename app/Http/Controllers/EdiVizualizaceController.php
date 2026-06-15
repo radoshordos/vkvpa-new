@@ -36,7 +36,7 @@ class EdiVizualizaceController extends Controller
         // citlivá vrstva roundStations se vydává až po uzavření kola
         // (viz QsoGeometry).
         $home = Maidenhead::toLatLon((string) $head->p_wwlo);
-        $homeSq = strtoupper(substr((string) $head->p_wwlo, 0, 4));
+        $homeSq = Maidenhead::bigSquare((string) $head->p_wwlo);
 
         $enriched = $this->geometry->enrichedQsos($head, $home, 'time');
 
@@ -140,7 +140,7 @@ class EdiVizualizaceController extends Controller
         $avgDist = count($dists) > 0 ? (int) round(array_sum($dists) / count($dists)) : 0;
 
         $uniqueSq = $lines
-            ->map(fn (EnrichedQso $l): string => strtoupper(substr($l->wwl, 0, 4)))
+            ->map(fn (EnrichedQso $l): string => Maidenhead::bigSquare($l->wwl))
             ->unique()
             ->count();
 

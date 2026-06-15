@@ -35,7 +35,7 @@ final class EdiScoreDebugger
     public function analyze(EdiLog $log): EdiDebugReport
     {
         $header = $log->header;
-        $home = strtoupper(substr(trim($header->pWWLo()), 0, 4));
+        $home = Maidenhead::bigSquare($header->pWWLo());
         // Den závodu = YYMMDD ze začátku TDate (formát YYYYMMDD;YYYYMMDD).
         $den = substr(trim($header->tDate()), 2, 6);
         $from = ContestWindow::from();
@@ -60,7 +60,7 @@ final class EdiScoreDebugger
 
             $time = trim($qso->time);
             $date = trim($qso->date);
-            $square = strtoupper(substr(trim($qso->receivedWwl), 0, 4));
+            $square = Maidenhead::bigSquare($qso->receivedWwl);
             // Body za spojení přepočítáme z lokátorů, ne z deníku (qsoPoints).
             $points = Maidenhead::qsoPoints($home, $square);
 

@@ -106,7 +106,7 @@ final class ScoringService
      */
     public function scoreEdi(Edihead $head): EdiScore
     {
-        $home = strtoupper(substr(trim((string) $head->p_wwlo), 0, 4));
+        $home = Maidenhead::bigSquare((string) $head->p_wwlo);
         // Den závodu = YYMMDD ze začátku t_date (formát YYYYMMDD;YYYYMMDD).
         $den = substr(trim((string) $head->t_date), 2, 6);
 
@@ -114,7 +114,7 @@ final class ScoringService
             ->whereBetween('time', [ContestWindow::from(), ContestWindow::to()])
             ->when($den !== '', fn ($q) => $q->where('date', $den))
             ->get(['received_wwl'])
-            ->map(static fn ($l): string => strtoupper(substr(trim($l->receivedWwl), 0, 4)))
+            ->map(static fn ($l): string => Maidenhead::bigSquare($l->receivedWwl))
             ->filter(static fn (string $sq): bool => $sq !== '')
             ->values()
             ->all();
@@ -129,7 +129,7 @@ final class ScoringService
      */
     public function scoreLog(EdiLog $log): EdiScore
     {
-        $home = strtoupper(substr(trim($log->header->pWWLo()), 0, 4));
+        $home = Maidenhead::bigSquare($log->header->pWWLo());
         $den = substr(trim($log->header->tDate()), 2, 6);
         $from = ContestWindow::from();
         $to = ContestWindow::to();
@@ -144,7 +144,7 @@ final class ScoringService
                 continue;
             }
 
-            $square = strtoupper(substr(trim($qso->receivedWwl), 0, 4));
+            $square = Maidenhead::bigSquare($qso->receivedWwl);
             if ($square !== '') {
                 $squares[] = $square;
             }

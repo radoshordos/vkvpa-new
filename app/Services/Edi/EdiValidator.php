@@ -46,7 +46,7 @@ final class EdiValidator
 
             // Stejné pořadí vyloučení jako ve scoreEdi: okno → den → prázdný WWL.
             $time = trim($qso->time);
-            $square = strtoupper(substr($wwl, 0, 4));
+            $square = Maidenhead::bigSquare($wwl);
             if (! ($time >= $from && $time <= $to)) {
                 $outOfWindow++;
             } elseif ($den !== '' && trim($qso->date) !== $den) {

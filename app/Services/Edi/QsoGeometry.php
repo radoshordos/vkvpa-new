@@ -38,7 +38,7 @@ final class QsoGeometry
      */
     public function enrichedQsos(Edihead $head, ?array $home, string $orderColumn = 'time'): Collection
     {
-        $homeSq = strtoupper(substr((string) $head->p_wwlo, 0, 4));
+        $homeSq = Maidenhead::bigSquare((string) $head->p_wwlo);
 
         return $head->lines()
             ->whereBetween('time', [ContestWindow::from(), ContestWindow::to()])
@@ -76,7 +76,7 @@ final class QsoGeometry
 
                 // Body za spojení přepočítáme z lokátorů (neplatný → 0); sloupec
                 // qso_points z deníku se ignoruje (shodně se ScoringService).
-                $workedSq = strtoupper(substr(trim($wwl), 0, 4));
+                $workedSq = Maidenhead::bigSquare($wwl);
 
                 return new EnrichedQso(
                     lat: $lat,
@@ -104,7 +104,7 @@ final class QsoGeometry
         $counts = [];
 
         foreach ($head->lines()->whereBetween('time', [ContestWindow::from(), ContestWindow::to()])->get(['received_wwl']) as $l) {
-            $sq = strtoupper(substr(trim($l->receivedWwl), 0, 4));
+            $sq = Maidenhead::bigSquare($l->receivedWwl);
             if (preg_match('/^[A-R]{2}\d{2}$/', $sq) === 1) {
                 $counts[$sq] = ($counts[$sq] ?? 0) + 1;
             }
@@ -333,7 +333,7 @@ final class QsoGeometry
 
         foreach ($lines as $l) {
             $sum += $l->points;
-            $sq = strtoupper(substr(trim($l->wwl), 0, 4));
+            $sq = Maidenhead::bigSquare($l->wwl);
             if (preg_match('/^[A-R]{2}\d{2}$/', $sq) === 1) {
                 $squares[$sq] = true;
             }
