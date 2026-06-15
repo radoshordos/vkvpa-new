@@ -21,6 +21,12 @@ return [
     'admin_email' => env('ADMIN_EMAIL', 'admin@example.com'),
     'admin_pass' => env('ADMIN_PASS'),
 
+    // Basic-auth pověření pro Adminer (z nich docker/entrypoint.sh generuje
+    // .htpasswd). Čtou se i v app:health-check – proto přes config (env() by
+    // při config:cache vracelo null).
+    'adminer_auth_user' => env('ADMINER_AUTH_USER', ''),
+    'adminer_auth_password' => env('ADMINER_AUTH_PASSWORD', ''),
+
     'token_ttl_days' => 5,
 
     // Maximální velikost nahrávaného EDI souboru v kilobajtech.
