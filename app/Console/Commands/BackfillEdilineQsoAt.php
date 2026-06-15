@@ -36,13 +36,15 @@ use Illuminate\Support\Facades\DB;
  */
 final class BackfillEdilineQsoAt extends Command
 {
-    protected $signature = 'edilines:backfill-qso-at {--dry-run : Jen vypsat, co by se stalo, bez zápisu} {--head= : Omezit na jeden edihead.id}';
+    protected $signature = 'edilines:backfill-qso-at {--dry-run : Jen vypsat, co by se stalo, bez zápisu} {--head= : Omezit na jeden edihead.id} {--simple : Jen složit qso_at z existujícího date+time; legacy deníky vyžadující re-parse src přeskočit} {--lenient : Když striktní parser src odmítne (FM/mód 6 s prázdným Received-RST, odfiltrovaná „error“ QSO), zkusit tolerantní rozsplit QSO řádků dle „;“}';
 
     protected $description = 'Doplní edilines.qso_at (a u legacy deníků date/time/mode) ze surového EDI (edihead.src).';
 
     public function handle(EdiParser $parser, EdiReducer $reducer): int
     {
         $dryRun = (bool) $this->option('dry-run');
+        $simple = (bool) $this->option('simple');
+        $lenient = (bool) $this->option('lenient');
 
         $query = Edihead::query()
             ->whereHas('lines', fn ($q) => $q->whereNull('qso_at'))
@@ -54,20 +56,22 @@ final class BackfillEdilineQsoAt extends Command
 
         $heads = 0;
         $full = 0;
+        $lenientCount = 0;
         $fallback = 0;
         $skipped = 0;
         $rowsUpdated = 0;
 
         // Chunkování po id: src deníků je velký text, načítat všech 369 najednou
         // by vyčerpalo paměť. Každý chunk se po zpracování uvolní.
-        $query->chunkById(50, function (Collection $chunk) use ($parser, $reducer, $dryRun, &$heads, &$full, &$fallback, &$skipped, &$rowsUpdated): void {
+        $query->chunkById(50, function (Collection $chunk) use ($parser, $reducer, $dryRun, $simple, $lenient, &$heads, &$full, &$lenientCount, &$fallback, &$skipped, &$rowsUpdated): void {
             foreach ($chunk as $head) {
                 $heads++;
-                $result = $this->backfillHead($parser, $reducer, $head, $dryRun);
+                $result = $this->backfillHead($parser, $reducer, $head, $dryRun, $simple, $lenient);
                 $rowsUpdated += $result['rows'];
 
                 match ($result['mode']) {
                     'full' => $full++,
+                    'lenient' => $lenientCount++,
                     'fallback' => $fallback++,
                     default => $skipped++,
                 };
@@ -79,10 +83,11 @@ final class BackfillEdilineQsoAt extends Command
         });
 
         $this->info(sprintf(
-            '%sdeníků: %d (full %d, fallback %d, skip %d), upraveno řádků: %d',
+            '%sdeníků: %d (full %d, lenient %d, fallback %d, skip %d), upraveno řádků: %d',
             $dryRun ? '[dry-run] ' : '',
             $heads,
             $full,
+            $lenientCount,
             $fallback,
             $skipped,
             $rowsUpdated,
@@ -92,9 +97,9 @@ final class BackfillEdilineQsoAt extends Command
     }
 
     /**
-     * @return array{mode: 'full'|'fallback'|'skip', rows: int, note: string}
+     * @return array{mode: 'full'|'lenient'|'fallback'|'skip', rows: int, note: string}
      */
-    private function backfillHead(EdiParser $parser, EdiReducer $reducer, Edihead $head, bool $dryRun): array
+    private function backfillHead(EdiParser $parser, EdiReducer $reducer, Edihead $head, bool $dryRun, bool $simple = false, bool $lenient = false): array
     {
         $rows = $head->lines()->orderBy('id')->get(['id', 'date', 'time', 'received_wwl']);
 
@@ -119,17 +124,39 @@ final class BackfillEdilineQsoAt extends Command
             return ['mode' => 'fallback', 'rows' => count($fallback), 'note' => ''];
         }
 
+        // V --simple režimu se src nepřepisuje: doplň aspoň qso_at u řádků,
+        // které date+time mají, a legacy deník nech na pozdější plný běh.
+        if ($simple) {
+            if ($fallback !== []) {
+                $this->applyUpdates($fallback, $dryRun);
+
+                return ['mode' => 'fallback', 'rows' => count($fallback), 'note' => ''];
+            }
+
+            return ['mode' => 'skip', 'rows' => 0, 'note' => 'legacy (prázdné date/time) – vyžaduje re-parse src, přeskočeno v --simple'];
+        }
+
         // 2) Legacy deník (prázdné date/time): obnov date/time/mode/qso_at ze
         //    src podle pořadí. edilines drží jen QSO v okně (po EDIR), proto
         //    zkusíme jak plný src, tak jeho ořez reduce(src) – použijeme ten,
         //    který sedne počtem QSO i pořadím lokátorů.
         $raw = (string) $head->src;
-        $candidates = [
-            $this->parseSrc($parser, $raw),
-            $this->parseSrc($parser, $reducer->reduce($raw)),
-        ];
 
-        foreach ($candidates as $qsos) {
+        // Striktní kandidáti (plný src + EDIR ořez). Lenientní rozsplit se zkusí
+        // až nakonec a jen s --lenient, aby striktní výsledek měl přednost.
+        $candidates = [
+            'full' => $this->parseSrc($parser, $raw),
+            'full2' => $this->parseSrc($parser, $reducer->reduce($raw)),
+        ];
+        if ($lenient) {
+            // I lenientní variantu zkus jak na plném src, tak na EDIR ořezu –
+            // edilines drží jen QSO v okně, takže u logů s QSO mimo okno sedne
+            // až zredukovaný src.
+            $candidates['lenient'] = $this->parseSrcLenient($raw);
+            $candidates['lenient2'] = $this->parseSrcLenient($reducer->reduce($raw));
+        }
+
+        foreach ($candidates as $kind => $qsos) {
             if ($qsos === null || count($qsos) !== $rows->count() || ! $this->wwlOrderMatches($rows, $qsos)) {
                 continue;
             }
@@ -148,7 +175,7 @@ final class BackfillEdilineQsoAt extends Command
 
             $this->applyUpdates($updates, $dryRun);
 
-            return ['mode' => 'full', 'rows' => count($updates), 'note' => ''];
+            return ['mode' => str_starts_with($kind, 'lenient') ? 'lenient' : 'full', 'rows' => count($updates), 'note' => ''];
         }
 
         // 3) Co šlo složit z částečných date/time, aspoň ulož; zbytek nejde.
@@ -158,7 +185,7 @@ final class BackfillEdilineQsoAt extends Command
             return ['mode' => 'fallback', 'rows' => count($fallback), 'note' => ''];
         }
 
-        $srcCount = $candidates[0] === null ? -1 : count($candidates[0]);
+        $srcCount = $candidates['full'] === null ? -1 : count($candidates['full']);
         $note = $srcCount === -1
             ? 'src chybí/nejde naparsovat a řádky nemají date+time'
             : sprintf('src dává %d QSO, edilines má %d (nesedí ani po EDIR ořezu)', $srcCount, $rows->count());
@@ -180,6 +207,61 @@ final class BackfillEdilineQsoAt extends Command
         } catch (EdiParseException) {
             return null;
         }
+    }
+
+    /**
+     * Tolerantní extrakce QSO řádků ze src jen pro doplnění času: čte sekci
+     * [QSORecords;N] řádek po řádku a každý rozsplitne podle „;“ na pevné pozice
+     * (date, time, …, received_wwl). Na rozdíl od striktního parseru NEvyžaduje
+     * Received-RST/číslo (FM/mód 6 logy je mají prázdné) a NEodfiltrovává řádky
+     * s „error“ značkou (zůstaly i v edilines) – proto sedí počtem i pořadím.
+     * Bezpečnost zajišťuje až následná kontrola počtu QSO + pořadí lokátorů.
+     *
+     * @return list<EdiQso>|null null = ve src není sekce QSO
+     */
+    private function parseSrcLenient(string $src): ?array
+    {
+        if (trim($src) === '') {
+            return null;
+        }
+
+        $inRecords = false;
+        $qsos = [];
+
+        foreach (preg_split('/\r\n|\r|\n/', $src) ?: [] as $line) {
+            $line = trim($line);
+
+            if (str_starts_with($line, '[QSORecords;')) {
+                $inRecords = true;
+
+                continue;
+            }
+            if (! $inRecords) {
+                continue;
+            }
+            if (str_starts_with($line, '[')) {
+                // Konec sekce ([END…], [Remarks] apod.).
+                break;
+            }
+            if ($line === '') {
+                continue;
+            }
+
+            $f = explode(';', $line);
+            if (count($f) < 10) {
+                continue; // není to QSO řádek
+            }
+
+            $qsos[] = new EdiQso(
+                date: $f[0], time: $f[1], callSign: $f[2], modeCode: $f[3],
+                sentRst: $f[4], sentQsoNumber: $f[5], receivedRst: $f[6],
+                receivedQsoNumber: $f[7], receivedExchange: $f[8], receivedWwl: $f[9],
+                qsoPoints: $f[10] ?? '', newExchange: $f[11] ?? '', newWwl: $f[12] ?? '',
+                newDxcc: $f[13] ?? '', duplicate: $f[14] ?? '',
+            );
+        }
+
+        return $qsos === [] ? null : $qsos;
     }
 
     /**
