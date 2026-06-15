@@ -76,12 +76,15 @@
             "Illuminate\\Foundation\\ComposerScripts::prePackageUninstall"
         ],
         "deploy": [
+            "@php artisan storage:link --ansi",
             "@php artisan config:cache --ansi",
             "@php artisan route:cache --ansi",
             "@php artisan view:cache --ansi",
+            "@php artisan event:cache --ansi",
             "@php artisan migrate --force --ansi",
             "@php artisan queue:restart",
-            "npm run build"
+            "npm run build",
+            "@php artisan app:health-check --ansi"
         ],
         "stan": "@php vendor/bin/phpstan analyse --memory-limit=1G",
         "lint": "pint --test"

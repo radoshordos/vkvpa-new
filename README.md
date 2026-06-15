@@ -30,6 +30,7 @@ Webový systém pro správu a vyhodnocování závodů v pásmu VKV (Very High F
 - [REST API](#rest-api)
 - [Emaily](#emaily)
 - [Plánované příkazy](#plánované-příkazy)
+- [Nasazení do produkce](#nasazení-do-produkce)
 - [PWA](#pwa)
 - [CI/CD](#cicd)
 
@@ -898,6 +899,72 @@ Laravel Scheduler spouští dva Artisan příkazy – stavy nadcházející/prob
 `ContestCalendar` automaticky vypočítává termíny závodů: třetí neděle v měsíci 08:00–11:00 UTC, uzávěrka v pátek téhož týdne 23:59 UTC.
 
 > **Poznámka pro nasazení:** Laravel Scheduler musí být registrován v cronu serveru: `* * * * * php /var/www/artisan schedule:run >> /dev/null 2>&1`
+
+---
+
+## Nasazení do produkce
+
+Sekvenci nasazovacích kroků obstará `composer deploy` (symlink úložiště, cache
+konfigurace/tras/views/událostí, migrace `--force`, `queue:restart`, build
+frontendu a závěrečný health-check). Kromě toho je potřeba na úrovni serveru
+zajistit **tři věci, které aplikace sama nespustí**:
+
+### 1. HTTPS (jinak aplikace nenastartuje)
+
+V produkci `AppServiceProvider::boot()` tvrdě vyžaduje `SESSION_SECURE_COOKIE=true`
+a `SESSION_ENCRYPT=true` – bez platného TLS certifikátu vyhodí výjimku už při
+bootu. Nasazuj výhradně za HTTPS.
+
+### 2. Queue worker (jinak se neodešlou e-maily)
+
+`SendEdiMailsListener` je `ShouldQueue` a potvrzení o přijetí hlášení i
+notifikace vyhodnocovateli posílá přes frontu (`QUEUE_CONNECTION=database`).
+Bez běžícího workera se **žádný e-mail neodešle**. Příklad systemd služby:
+
+```ini
+# /etc/systemd/system/vkvpa-queue.service
+[Unit]
+Description=VKV PA queue worker
+After=network.target mysql.service
+
+[Service]
+User=www-data
+Restart=always
+ExecStart=/usr/bin/php /var/www/artisan queue:work --tries=3 --timeout=120
+
+[Install]
+WantedBy=multi-user.target
+```
+
+`composer deploy` volá `queue:restart`, takže worker po nasazení načte nový kód.
+
+### 3. Cron scheduler (jinak se kola netvoří ani nevyhodnocují)
+
+```cron
+* * * * * php /var/www/artisan schedule:run >> /dev/null 2>&1
+```
+
+### Předspouštěcí kontrola
+
+```bash
+php artisan app:health-check
+```
+
+Ověří APP_KEY, `APP_DEBUG`, HTTPS/session, připojení k DB, frontu (tabulka
+`jobs`), mail, kontaktní e-mail, symlink úložiště, existenci admin účtu a
+ochranu Adminer. Vrací nenulový kód při blokujícím (FAIL) nálezu – proto je
+zařazen i jako poslední krok `composer deploy`. Cron a běžící worker je nutné
+ověřit na serveru zvlášť (zevnitř je health-check ověřit nedokáže).
+
+### Kontrolní seznam před prvním spuštěním
+
+- [ ] `.env`: `APP_ENV=production`, `APP_DEBUG=false`, vygenerovaný `APP_KEY`, `APP_URL` na https doménu
+- [ ] DB přihlašovací údaje, silné `ADMIN_PASS`, SMTP (`MAIL_HOST/USERNAME/PASSWORD`), `CONTACT_MAIL`/`CONTACT_NAME`
+- [ ] HTTPS certifikát, `SESSION_SECURE_COOKIE=true`, `SESSION_ENCRYPT=true`
+- [ ] Běžící queue worker a cron `schedule:run`
+- [ ] `composer deploy` proběhl bez chyb (včetně `app:health-check`)
+- [ ] Adminer: vyplněné `ADMINER_AUTH_USER`/`ADMINER_AUTH_PASSWORD` (nebo Adminer z webrootu odstranit)
+- [ ] Smoke test: login → upload EDI → výsledková listina → mapy → kontrola doručeného e-mailu
 
 ---
 
