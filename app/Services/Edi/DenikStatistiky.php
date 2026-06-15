@@ -40,7 +40,7 @@ class DenikStatistiky
         $out = [];
 
         foreach ($lines as $idx => $l) {
-            $sq = strtoupper(substr(trim($l->wwl), 0, 4));
+            $sq = Maidenhead::bigSquare($l->wwl);
             if (preg_match('/^[A-R]{2}\d{2}$/', $sq) !== 1 || isset($seen[$sq])) {
                 continue;
             }
@@ -148,7 +148,7 @@ class DenikStatistiky
         $by = [];
 
         foreach ($lines as $l) {
-            $sq = strtoupper(substr(trim($l->wwl), 0, 4));
+            $sq = Maidenhead::bigSquare($l->wwl);
             if (preg_match('/^[A-R]{2}\d{2}$/', $sq) !== 1) {
                 continue;
             }

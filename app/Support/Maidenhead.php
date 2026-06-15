@@ -25,6 +25,19 @@ final class Maidenhead
     }
 
     /**
+     * Velký čtverec (první 4 znaky lokátoru), normalizovaný na velká písmena
+     * bez okolních mezer. Nevaliduje formát – pro ověření použij
+     * {@see isValidLocator()} na výsledku.
+     */
+    public static function bigSquare(string $locator): string
+    {
+        return $locator
+            |> trim(...)
+            |> strtoupper(...)
+            |> (fn (string $s): string => substr($s, 0, 4));
+    }
+
+    /**
      * @return array{lat: float, lon: float}|null null při neplatném lokátoru
      */
     public static function toLatLon(string $locator): ?array

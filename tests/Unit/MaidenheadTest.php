@@ -33,6 +33,14 @@ class MaidenheadTest extends TestCase
         $this->assertNull(Maidenhead::toLatLon(''));
     }
 
+    public function test_big_square_extracts_and_normalizes(): void
+    {
+        $this->assertSame('JN99', Maidenhead::bigSquare('jn99aj'));
+        $this->assertSame('JN99', Maidenhead::bigSquare('  JN99AJ  '));
+        $this->assertSame('JN99', Maidenhead::bigSquare('JN99'));
+        $this->assertSame('', Maidenhead::bigSquare(''));
+    }
+
     public function test_big_square_center(): void
     {
         $c = Maidenhead::bigSquareCenter('JN99');

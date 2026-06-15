@@ -34,7 +34,7 @@ class EdiPorovnaniController extends Controller
     public function show(Request $request, Edihead $head): View
     {
         $home = Maidenhead::toLatLon((string) $head->p_wwlo);
-        $homeSq = strtoupper(substr((string) $head->p_wwlo, 0, 4));
+        $homeSq = Maidenhead::bigSquare((string) $head->p_wwlo);
 
         $fromMin = self::minutes(ContestWindow::from());
         $toMin = self::minutes(ContestWindow::to());
@@ -64,7 +64,7 @@ class EdiPorovnaniController extends Controller
                     ...$diff,
                 ];
 
-                $rivalSq = strtoupper(substr((string) $rival->p_wwlo, 0, 4));
+                $rivalSq = Maidenhead::bigSquare((string) $rival->p_wwlo);
                 $rivalEnriched = $this->geometry->enrichedQsos($rival, $rivalHome, 'time');
                 $rivalCumulative = $this->geometry->prubehSkore($rivalEnriched, $rivalSq);
 
