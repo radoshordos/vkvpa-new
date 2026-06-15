@@ -7,6 +7,7 @@ namespace Tests\Feature;
 use App\Models\Edihead;
 use App\Models\Ediline;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Testing\PendingCommand;
 use Tests\TestCase;
 
 /**
@@ -34,15 +35,18 @@ class BackfillEdilineQsoAtTest extends TestCase
             ['edihead_id' => $head->id, 'received_wwl' => 'JN89PV'],
         ]);
 
-        $this->artisan('edilines:backfill-qso-at')->assertSuccessful();
+        $this->runBackfill();
 
         $lines = Ediline::where('edihead_id', $head->id)->orderBy('id')->get();
+        $this->assertCount(2, $lines);
+        $first = $lines->firstOrFail();
+        $second = $lines->skip(1)->firstOrFail();
 
-        $this->assertSame('0800', $lines[0]->time);
-        $this->assertSame('260315', $lines[0]->date);
-        $this->assertSame(1, $lines[0]->mode_code);
-        $this->assertSame('2026-03-15 08:00:00', $lines[0]->qso_at?->utc()->format('Y-m-d H:i:s'));
-        $this->assertSame('2026-03-15 08:01:00', $lines[1]->qso_at?->utc()->format('Y-m-d H:i:s'));
+        $this->assertSame('0800', $first->time);
+        $this->assertSame('260315', $first->date);
+        $this->assertSame(1, $first->mode_code);
+        $this->assertSame('2026-03-15 08:00:00', $first->qso_at?->utc()->format('Y-m-d H:i:s'));
+        $this->assertSame('2026-03-15 08:01:00', $second->qso_at?->utc()->format('Y-m-d H:i:s'));
     }
 
     /** Moderní deník (date/time vyplněné) jen složí qso_at, src se nečte. */
@@ -54,7 +58,7 @@ class BackfillEdilineQsoAtTest extends TestCase
             ['edihead_id' => $head->id, 'date' => '260315', 'time' => '0945', 'received_wwl' => 'JN99BP'],
         ]);
 
-        $this->artisan('edilines:backfill-qso-at')->assertSuccessful();
+        $this->runBackfill();
 
         $line = Ediline::where('edihead_id', $head->id)->firstOrFail();
         $this->assertSame('2026-03-15 09:45:00', $line->qso_at?->utc()->format('Y-m-d H:i:s'));
@@ -66,7 +70,7 @@ class BackfillEdilineQsoAtTest extends TestCase
         $head = Edihead::create(['t_date' => '20260315', 'p_call' => 'OK2KJT', 'p_wwlo' => 'JN99BP', 'r_name' => 'Test', 'r_hbbs' => '', 's_powe' => 5, 'src' => '']);
         Ediline::insert([['edihead_id' => $head->id, 'received_wwl' => 'JN99BP']]);
 
-        $this->artisan('edilines:backfill-qso-at')->assertSuccessful();
+        $this->runBackfill();
 
         $this->assertNull(Ediline::where('edihead_id', $head->id)->firstOrFail()->qso_at);
     }
@@ -80,8 +84,21 @@ class BackfillEdilineQsoAtTest extends TestCase
             ['edihead_id' => $head->id, 'received_wwl' => 'JN89PV'],
         ]);
 
-        $this->artisan('edilines:backfill-qso-at', ['--dry-run' => true])->assertSuccessful();
+        $this->runBackfill(['--dry-run' => true]);
 
         $this->assertNull(Ediline::where('edihead_id', $head->id)->orderBy('id')->firstOrFail()->qso_at);
+    }
+
+    /**
+     * Spustí backfill příkaz a ověří úspěch. `artisan()` vrací union
+     * `PendingCommand|int`; assertInstanceOf typ zúží na PendingCommand.
+     *
+     * @param  array<string, mixed>  $params
+     */
+    private function runBackfill(array $params = []): void
+    {
+        $command = $this->artisan('edilines:backfill-qso-at', $params);
+        $this->assertInstanceOf(PendingCommand::class, $command);
+        $command->assertSuccessful();
     }
 }
