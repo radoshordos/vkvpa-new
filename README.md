@@ -85,6 +85,7 @@ Webový systém pro správu a vyhodnocování závodů v pásmu VKV (Very High F
 - **Diskuse** – komentáře k závodním kolům (throttle ochrana, moderace adminem)
 - **Admin dashboard** – statistiky sezóny, trend účasti, distribuce kategorií, top 10 stanic
 - **Admin rozhraní** – CRUD kol a kategorií, převzetí (schválení)/smazání záznamu (vyhodnocení kola probíhá automaticky), EDI debug, hromadný import
+- **Údaje závodníků** – administrátorský přehled kontaktních a osobních údajů (jméno, e-mail, telefon) z hlášení, s filtrem dle kola a fulltextovým hledáním; citlivá data přístupná jen adminovi
 - **EDI debug** – analýza bodování bez uložení (pro adminy)
 - **REST API** – veřejné JSON API s výsledky a OpenAPI/Swagger dokumentací
 - **Přepínání jazyka** – čeština / angličtina (ukládáno do session)
@@ -145,9 +146,11 @@ Další prvky nezávislé na fázi:
 |:-----------------------------:|:----------------:|
 | ![EDI debug](docs/screenshots/admin-edi-debug.png) | ![Správa kategorií](docs/screenshots/admin-kategorie.png) |
 
-| Hromadný import ZIP |
-|:-------------------:|
-| ![Hromadný import](docs/screenshots/admin-importy.png) |
+| Hromadný import ZIP | Údaje závodníků |
+|:-------------------:|:---------------:|
+| ![Hromadný import](docs/screenshots/admin-importy.png) | ![Údaje závodníků](docs/screenshots/admin-uzivatele.png) |
+
+> Pozn.: snímek „Údaje závodníků" používá smyšlená demonstrační data (`example.com`) – stránka v provozu zobrazuje skutečné osobní údaje, proto se reálná data do dokumentace nepublikují.
 
 ---
 
@@ -447,6 +450,8 @@ Testy využívají `DB_CONNECTION=sqlite` a `DB_DATABASE=:memory:` – není pot
 
 Skutečné EDI soubory pro testy (fixture) jsou v `resources/edi/` a využívají se v unit testech.
 
+Aktuální stav kvality (PHP 8.5): **341 testů** zelených, PHPStan level 10 bez chyb, Pint bez výtek, `composer audit` i `npm audit` bez zranitelností. Kompletní bezpečnostní a předprodukční audit je v [`AUDIT.md`](AUDIT.md).
+
 ---
 
 ## Databáze
@@ -534,6 +539,7 @@ VkvpaKola ──► Prispevek[]
 | POST | `/admin/edi-debug` | `EdiDebugController@analyze` | `edi.debug.store` |
 | GET | `/admin/edi-debug/{head}` | `EdiDebugController@show` | `edi.debug.show` |
 | GET | `/admin/deniky` | `DenikyController@index` | `deniky.index` |
+| GET | `/admin/uzivatele` | `UzivateleController@index` | `uzivatele.index` |
 | GET | `/admin/kategorie` | `KategorieController@index` | `kategorie.index` |
 | POST | `/admin/kategorie` | `KategorieController@store` | `kategorie.store` |
 | GET | `/admin/kategorie/{kategorie}/edit` | `KategorieController@edit` | `kategorie.edit` |

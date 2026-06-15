@@ -175,7 +175,9 @@ class AuthorizationEdgeCasesTest extends TestCase
             'kategorie' => $kat->id,
             'znacka' => 'OK1NOVY',
             'locator' => 'JN99AJ',
+            'jmeno' => 'Nový Závodník',
             'email' => 'novy@example.com',
+            'telefon' => '+420 777 123 456',
         ])->assertRedirect(route('vysledkova_listina', ['kolo' => $kolo->id]));
 
         $this->assertSame(1, VkvpaData::count());
