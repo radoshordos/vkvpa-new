@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace App\Services\Edi;
 
-use App\Console\Commands\BackfillEdilineQsoAt;
-
 /**
  * Jedno spojení (QSO) z EDI deníku – 15 polí přesně dle formátu REG1TEST.
  * Hodnoty jsou uchovány tak, jak byly naparsovány (řetězce); přetypování
@@ -44,8 +42,7 @@ final readonly class EdiQso
 
     /**
      * Složí EDI datum ('YYMMDD') a čas ('HHMM') do UTC DATETIME 'Y-m-d H:i:s'.
-     * Sdíleno importem ({@see EdiImportService}) i zpětným doplněním legacy
-     * deníků ({@see BackfillEdilineQsoAt}).
+     * Sdíleno importem ({@see EdiImportService}).
      */
     public static function combineDateTime(string $date, string $time): ?string
     {

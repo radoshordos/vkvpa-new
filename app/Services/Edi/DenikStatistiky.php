@@ -346,19 +346,21 @@ class DenikStatistiky
      */
     public function nezapocitana(Edihead $head): array
     {
-        $den = ContestWindow::dayFromTDate((string) $head->t_date);
+        $den = ContestWindow::dateFromTDate((string) $head->t_date);
         $from = ContestWindow::from();
         $to = ContestWindow::to();
 
         $radky = [];
 
-        foreach ($head->lines()->orderBy('time')->get(['call_sign', 'time', 'date', 'duplicate_qso_d']) as $l) {
-            $time = trim((string) $l->time);
+        foreach ($head->lines()->orderBy('qso_at')->get(['call_sign', 'qso_at', 'duplicate_qso_d']) as $l) {
+            $at = $l->qso_at?->utc();
+            // Bez času (qso_at = null) QSO do skóre stejně nespadne → „mimo okno".
+            $hhmm = $at?->format('Hi') ?? '';
             $duvod = null;
 
-            if ($time < $from || $time > $to) {
+            if ($hhmm < $from || $hhmm > $to) {
                 $duvod = 'mimo závodní okno';
-            } elseif ($den !== '' && trim((string) $l->date) !== $den) {
+            } elseif ($den !== null && $at?->format('Y-m-d') !== $den) {
                 $duvod = 'jiný den než závod';
             } elseif (trim((string) $l->duplicate_qso_d) !== '') {
                 $duvod = 'v deníku označeno jako duplicita (D)';
@@ -367,7 +369,7 @@ class DenikStatistiky
             if ($duvod !== null) {
                 $radky[] = [
                     'call' => (string) $l->call_sign,
-                    'cas' => strlen($time) === 4 ? substr($time, 0, 2).':'.substr($time, 2, 2) : $time,
+                    'cas' => $at?->format('H:i') ?? '—',
                     'duvod' => $duvod,
                 ];
             }

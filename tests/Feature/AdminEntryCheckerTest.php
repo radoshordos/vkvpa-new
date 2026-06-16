@@ -82,7 +82,7 @@ class AdminEntryCheckerTest extends TestCase
         return Ediline::create([
             'edihead_id' => $head->id,
             'call_sign' => $callSign,
-            'time' => $time,
+            'qso_at' => '2026-03-15 '.substr($time, 0, 2).':'.substr($time, 2, 2).':00',
             'received_wwl' => 'JN89QL',
         ]);
     }
@@ -318,7 +318,7 @@ class AdminEntryCheckerTest extends TestCase
         Ediline::create([
             'edihead_id' => $head->id,
             'call_sign' => 'OK2BAD',
-            'time' => '0900',
+            'qso_at' => '2026-03-15 09:00:00',
             'received_wwl' => 'ZZ99XX',  // neplatný Maidenhead
         ]);
         $entry = $this->entry($kolo, $kat, ['edihead_id' => $head->id]);
