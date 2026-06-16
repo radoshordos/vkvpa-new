@@ -26,11 +26,11 @@ final class HealthCheckCommand extends Command
 
     protected $description = 'Předspouštěcí kontrola produkční konfigurace (env, DB, fronta, mail, úložiště).';
 
-    private const OK = 'OK';
+    private const string OK = 'OK';
 
-    private const WARN = 'WARN';
+    private const string WARN = 'WARN';
 
-    private const FAIL = 'FAIL';
+    private const string FAIL = 'FAIL';
 
     /** @var list<array{0:string,1:string,2:string}> */
     private array $rows = [];
@@ -61,7 +61,10 @@ final class HealthCheckCommand extends Command
 
         if ($fails !== []) {
             $this->newLine();
-            $this->error(sprintf('Nalezeno %d blokujících problémů – oprav je před spuštěním.', count($fails)));
+            $fails
+                |> count(...)
+                |> (fn($x) => sprintf('Nalezeno %d blokujících problémů – oprav je před spuštěním.', $x))
+                |> $this(...);
 
             return self::FAILURE;
         }
