@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Edihead;
+use App\Services\Edi\DenikStatistiky;
 use App\Services\Edi\EnrichedQso;
 use App\Services\Edi\PorovnaniRivals;
 use App\Services\Edi\QsoGeometry;
@@ -36,8 +37,8 @@ class EdiPorovnaniController extends Controller
         $home = Maidenhead::toLatLon((string) $head->p_wwlo);
         $homeSq = Maidenhead::bigSquare((string) $head->p_wwlo);
 
-        $fromMin = self::minutes(ContestWindow::from());
-        $toMin = self::minutes(ContestWindow::to());
+        $fromMin = DenikStatistiky::minutes(ContestWindow::from());
+        $toMin = DenikStatistiky::minutes(ContestWindow::to());
 
         $rivals = $this->porovnani->rivals($head);
         $rival = $rivals->firstWhere('id', $request->integer('porovnat'));
@@ -181,11 +182,5 @@ class EdiPorovnaniController extends Controller
             'nasobice' => $last['nasobice'] ?? 0,
             'body' => $last['body'] ?? 0,
         ];
-    }
-
-    /** Čas „HHMM" → minuty od půlnoci. */
-    private static function minutes(string $hhmm): int
-    {
-        return (int) substr($hhmm, 0, 2) * 60 + (int) substr($hhmm, 2, 2);
     }
 }

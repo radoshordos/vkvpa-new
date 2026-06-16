@@ -115,6 +115,34 @@ class EdiParserTest extends TestCase
         $this->assertSame('OK2DEF', $log->qsos[1]->callSign);
     }
 
+    public function test_rejects_qso_with_invalid_maidenhead_locator(): void
+    {
+        // ZZ99AJ má první 2 písmena mimo A–R → lokátor odmítnut, ale QSO s JN79AB projde.
+        $edi = "[REG1TEST;1]\nPCall=OK1ABC\n[QSORecords;2]\n"
+            ."260315;0800;OK1ABC;1;59;001;59;001;;JN79AB;3;;;;\n"
+            ."260315;0810;OK1XYZ;1;59;002;59;002;;ZZ99AJ;3;;;;\n[END;]\n";
+
+        $log = new EdiParser()->parse($edi);
+
+        $this->assertSame(1, $log->qsoCount());                    // jen platné QSO
+        $this->assertSame('JN79AB', $log->qsos[0]->receivedWwl);
+        $this->assertCount(1, $log->lineErrors);                   // ZZ99AJ odmítnuto
+        $this->assertStringContainsString('ZZ99AJ', $log->lineErrors[0]);
+        $this->assertStringContainsString('OK1XYZ', $log->lineErrors[0]);
+    }
+
+    public function test_accepts_valid_maidenhead_boundary_locators(): void
+    {
+        // RA09AX: R je poslední platné písmeno (A–R), A09 digit, AX je poslední platný subčtverec.
+        $edi = "[REG1TEST;1]\nPCall=OK1ABC\n[QSORecords;1]\n"
+            ."260315;0800;OK1ABC;1;59;001;59;001;;RA09AX;3;;;;\n[END;]\n";
+
+        $log = new EdiParser()->parse($edi);
+
+        $this->assertSame(1, $log->qsoCount());
+        $this->assertSame([], $log->lineErrors);
+    }
+
     public function test_skips_error_line_that_otherwise_matches_pattern(): void
     {
         // Chybový řádek je jinak zcela validní (vyplněný čas i pole) a vyhověl by

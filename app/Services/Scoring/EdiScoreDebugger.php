@@ -37,7 +37,7 @@ final class EdiScoreDebugger
         $header = $log->header;
         $home = Maidenhead::bigSquare($header->pWWLo());
         // Den závodu = YYMMDD ze začátku TDate (formát YYYYMMDD;YYYYMMDD).
-        $den = substr(trim($header->tDate()), 2, 6);
+        $den = ContestWindow::dayFromTDate($header->tDate());
         $from = ContestWindow::from();
         $to = ContestWindow::to();
 
