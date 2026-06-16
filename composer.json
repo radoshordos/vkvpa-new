@@ -12,7 +12,8 @@
         "dg/adminer-custom": "^3.3",
         "laravel/framework": "^13.12",
         "laravel/tinker": "^3.0",
-        "livewire/livewire": "^4.3"
+        "livewire/livewire": "^4.3",
+        "mjaschen/phpgeo": "^6.0"
     },
     "require-dev": {
         "barryvdh/laravel-ide-helper": "^3.7",
