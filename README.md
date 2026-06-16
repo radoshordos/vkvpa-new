@@ -11,7 +11,6 @@ Webový systém pro správu a vyhodnocování závodů v pásmu VKV (Very High F
 - [Technologie](#technologie)
 - [Funkce](#funkce)
 - [Úvodní stránka](#úvodní-stránka)
-- [Náhledy aplikace](#náhledy-aplikace)
 - [Architektura](#architektura)
 - [Instalace](#instalace)
 - [Docker](#docker)
@@ -121,40 +120,6 @@ Další prvky nezávislé na fázi:
 
 ---
 
-## Náhledy aplikace
-
-### Životní cyklus závodního kola
-
-![Životní cyklus závodního kola](docs/kolo-lifecycle.svg)
-
-### Veřejná část
-
-| Kola závodu | Nahrání EDI deníku |
-|:-----------:|:------------------:|
-| ![Kola závodu](docs/screenshots/kola.png) | ![Nahrání EDI souboru](docs/screenshots/edi-upload.png) |
-
-| Výsledková listina | Roční výsledky |
-|:-----------------:|:--------------:|
-| ![Výsledková listina](docs/screenshots/vysledky.png) | ![Roční výsledky](docs/screenshots/vysledky-rocni.png) |
-
-### Administrace
-
-| Přihlášení admina | Nahrané EDI deníky |
-|:-----------------:|:-----------------:|
-| ![Přihlášení](docs/screenshots/login.png) | ![Nahrané deníky](docs/screenshots/admin-deniky.png) |
-
-| EDI debug – kontrola bodování | Správa kategorií |
-|:-----------------------------:|:----------------:|
-| ![EDI debug](docs/screenshots/admin-edi-debug.png) | ![Správa kategorií](docs/screenshots/admin-kategorie.png) |
-
-| Hromadný import ZIP | Údaje závodníků |
-|:-------------------:|:---------------:|
-| ![Hromadný import](docs/screenshots/admin-importy.png) | ![Údaje závodníků](docs/screenshots/admin-uzivatele.png) |
-
-> Pozn.: snímek „Údaje závodníků" používá smyšlená demonstrační data (`example.com`) – stránka v provozu zobrazuje skutečné osobní údaje, proto se reálná data do dokumentace nepublikují.
-
----
-
 ## Architektura
 
 ### EDI import pipeline
@@ -183,7 +148,9 @@ SendEdiMailsListener (queue) ──► HlaseniPrijato + HlaseniProVyhodnocovatel
 
 ### Životní cyklus kola (KoloStav)
 
-Diagram stavu je v [`docs/kolo-lifecycle.svg`](docs/kolo-lifecycle.svg). Stav je čistá funkce času – odvozuje se ze tří sloupců `VkvpaKola` (`datum_konani` = start závodu jako datetime, standardně třetí neděle 08:00 UTC):
+![Životní cyklus závodního kola](docs/kolo-lifecycle.svg)
+
+Stav je čistá funkce času – odvozuje se ze tří sloupců `VkvpaKola` (`datum_konani` = start závodu jako datetime, standardně třetí neděle 08:00 UTC):
 
 | Stav | Label | Podmínka |
 |------|-------|----------|
@@ -278,7 +245,7 @@ resources/
     └── partials/           # menu, footer, menu-item, no-active-period
 docs/
 ├── kolo-lifecycle.svg      # Diagram životního cyklu závodního kola (KoloStav)
-├── screenshots/            # Snímky obrazovky aplikace
+├── migrace-php-8.5.md      # Záznam migrace na PHP 8.5
 └── technicky-dluh.md       # Dokumentace technického dluhu
 ```
 
