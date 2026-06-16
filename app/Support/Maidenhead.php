@@ -24,7 +24,7 @@ final class Maidenhead
         return $locator
                 |> trim(...)
                 |> strtoupper(...)
-                |> (fn($x) => preg_match('/^[A-R]{2}\d{2}([A-X]{2})?$/', $x)) === 1;
+                |> (fn ($x) => preg_match('/^[A-R]{2}\d{2}([A-X]{2})?$/', $x)) === 1;
     }
 
     /**
@@ -37,7 +37,7 @@ final class Maidenhead
         return $locator
                 |> trim(...)
                 |> strtoupper(...)
-                |> (fn($x) => substr($x, 0, 4));
+                |> (fn ($x) => substr($x, 0, 4));
     }
 
     /**
@@ -49,7 +49,7 @@ final class Maidenhead
         return $square
                 |> trim(...)
                 |> strtoupper(...)
-                |> (fn($x) => preg_match('/^[A-R]{2}\d{2}$/', $x)) === 1;
+                |> (fn ($x) => preg_match('/^[A-R]{2}\d{2}$/', $x)) === 1;
     }
 
     /**

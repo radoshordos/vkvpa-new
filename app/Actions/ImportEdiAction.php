@@ -261,7 +261,7 @@ final readonly class ImportEdiAction
             static fn (CarbonImmutable $d): string => $d->format('ymd'),
             $this->parseTDateDates($tdate),
         );
-        $qsoDays = array_map(static fn(EdiQso $q): string => $q->date, $qsos)
+        $qsoDays = array_map(static fn (EdiQso $q): string => $q->date, $qsos)
                 |> array_unique(...)
                 |> array_values(...);
 
@@ -271,8 +271,8 @@ final readonly class ImportEdiAction
 
         if (array_intersect($tdateDays, $qsoDays) === []) {
             $preview = array_slice($qsoDays, 0, 3)
-                    |> (fn($x) => array_map($this->formatEdiDate(...), $x))
-                    |> (fn($x) => implode(', ', $x));
+                    |> (fn ($x) => array_map($this->formatEdiDate(...), $x))
+                    |> (fn ($x) => implode(', ', $x));
             throw new TDateMismatchException($tdate, $preview);
         }
     }
