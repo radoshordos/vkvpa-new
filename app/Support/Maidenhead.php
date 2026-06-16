@@ -21,7 +21,10 @@ final class Maidenhead
      */
     public static function isValidLocator(string $locator): bool
     {
-        return preg_match('/^[A-R]{2}\d{2}([A-X]{2})?$/', strtoupper(trim($locator))) === 1;
+        return $locator
+                |> trim(...)
+                |> strtoupper(...)
+                |> (fn($x) => preg_match('/^[A-R]{2}\d{2}([A-X]{2})?$/', $x)) === 1;
     }
 
     /**
@@ -31,7 +34,10 @@ final class Maidenhead
      */
     public static function bigSquare(string $locator): string
     {
-        return substr(strtoupper(trim($locator)), 0, 4);
+        return $locator
+                |> trim(...)
+                |> strtoupper(...)
+                |> (fn($x) => substr($x, 0, 4));
     }
 
     /**
@@ -40,7 +46,10 @@ final class Maidenhead
      */
     public static function isValidBigSquare(string $square): bool
     {
-        return preg_match('/^[A-R]{2}\d{2}$/', strtoupper(trim($square))) === 1;
+        return $square
+                |> trim(...)
+                |> strtoupper(...)
+                |> (fn($x) => preg_match('/^[A-R]{2}\d{2}$/', $x)) === 1;
     }
 
     /**
