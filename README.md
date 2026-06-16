@@ -189,10 +189,16 @@ app/
 ├── Actions/
 │   └── ImportEdiAction.php     # Orchestrace celého EDI importu (validace, ukládání, scoring, event)
 ├── Console/Commands/
-│   └── EnsureUpcomingRoundsCommand.php   # Průběžné zakládání kol dle ContestCalendar
+│   ├── EnsureUpcomingRoundsCommand.php   # kola:ensure-upcoming – zakládání kol dle ContestCalendar
+│   ├── FinalizeEvaluatedRoundsCommand.php # kola:finalize-evaluated – automatické vyhodnocení kol
+│   ├── HealthCheckCommand.php            # app:health-check – předspouštěcí kontrola nasazení
+│   ├── ValidateCategoryMatrix.php        # vkvpa:validate-categories – kontrola matice kategorií
+│   └── BackfillEdilineQsoAt.php          # edilines:backfill-qso-at – doplnění času QSO (údržba)
 ├── Enums/
-│   ├── KoloStav.php        # Enum: fáze kola (nadcházející / aktivní / příjem / uzavřené / vyhodnocené)
-│   └── QsoMode.php         # Enum: SSB (1) / CW (2) / Other (0)
+│   ├── KoloStav.php        # Fáze kola (nadcházející / aktivní / příjem / uzavřené / vyhodnocené)
+│   ├── QsoMode.php         # Druh provozu: SSB (1) / CW (2) / Other (0)
+│   ├── QsoCountStatus.php  # Započítatelnost QSO (counted / out_of_window / wrong_date / empty_wwl)
+│   └── Severity.php        # Závažnost validačního nálezu (fatal / warning / info)
 ├── Events/
 │   └── EdiImported.php     # Event po úspěšném importu EDI deníku
 ├── Http/
@@ -212,8 +218,10 @@ app/
 ├── Services/
 │   ├── Edi/                # EdiParser, EdiImportService, EdiReducer, CategoryResolver,
 │   │                       # EdiValidator, EdiValidationReport, QsoGeometry, PorovnaniRivals,
-│   │                       # EnrichedQso, BigSquareCount
-│   └── Scoring/            # ScoringService, EdiScoreDebugger, value objekty
+│   │                       # DenikStatistiky, BigSquareCount, EnrichedQso a value objekty
+│   │                       # (EdiLog, EdiHeader, EdiQso)
+│   └── Scoring/            # ScoringService, SkokanService, EdiScoreDebugger + value objekty
+│                           # (EdiScore, EdiDebugReport, EdiDebugRow)
 ├── Mail/                   # HlaseniPrijato, HlaseniProVyhodnocovatele
 └── Support/                # Maidenhead, ContestWindow, ContestCalendar, VkvpaSettings
 config/
@@ -259,7 +267,7 @@ Vite kompiluje čtyři oddělené JS entry-pointy (`app.js`, `vizualizace.js`, `
 
 - PHP 8.5 s rozšířeními: `pdo`, `gd`, `mbstring`, `intl`
 - Composer
-- Node.js 20+
+- Node.js 22+ (CI build běží na Node 22; Vite 8 vyžaduje Node ≥ 20.19)
 - MySQL 8.0
 
 ### Krok za krokem
@@ -426,21 +434,21 @@ Aktuální stav kvality (PHP 8.5): **341 testů** zelených, PHPStan level 10 be
 
 ### Migrace
 
+Jedna migrace na tabulku – každá `create_*` migrace nese finální schéma tabulky včetně odchozích cizích klíčů, seřazeno tak, aby odkazované tabulky vznikly dřív (pořadí dle prefixu souboru):
+
 | Soubor | Účel |
 |--------|------|
 | `create_cache_table` | Laravel cache |
 | `create_jobs_table` | Laravel queue jobs |
-| `create_edihead_table` | Hlavičky EDI logů (legacy schéma) |
-| `create_edilines_table` | QSO záznamy (legacy schéma) |
-| `create_prefixes_table` | Mapování prefixů na země (DXCC) |
-| `create_vkvpa_data_table` | Závodní záznamy / výsledky |
-| `create_vkvpa_kategorie_table` | Kategorie závodů |
-| `create_vkvpa_kola_table` | Kola závodu |
-| `create_vkvpa_prihlaseni_table` | Dočasné přihlašovací tokeny |
 | `create_users_table` | Admin uživatelé |
-| `add_aktivni_to_vkvpa_kola` | Příznak aktivního kola (později zrušen) |
+| `create_vkvpa_kola_table` | Kola závodu (`datum_konani` jako datetime = start závodu 08:00 UTC) |
+| `create_vkvpa_kategorie_table` | Kategorie závodů |
+| `create_edihead_table` | Hlavičky EDI logů (EDI schéma, snake_case) |
+| `create_edilines_table` | QSO záznamy (EDI schéma; FK na `edihead` deklarovaný inline) |
+| `create_vkvpa_data_table` | Závodní záznamy / výsledky (FK na kolo, kategorii, edihead) |
 | `create_diskuse_table` | Diskuzní příspěvky ke kolům |
-| `kola_lifecycle_datetime` | `datum_konani` jako datetime (start závodu 08:00 UTC), odstranění `aktivni` |
+| `create_vkvpa_prihlaseni_table` | Dočasné přihlašovací tokeny |
+| `create_prefixes_table` | Mapování prefixů na země (DXCC) |
 
 ### Modely a vztahy
 
@@ -486,8 +494,10 @@ VkvpaKola ──► Prispevek[]
 | GET | `/edi/{head}/vizualizace` | `EdiVizualizaceController@show` | `edi.vizualizace` |
 | GET | `/edi/{head}/porovnani` | `EdiPorovnaniController@show` | `edi.porovnani` |
 | GET | `/lang/{locale}` | closure | `lang.switch` |
-| GET | `/login` | `AuthController` | `login` |
-| GET | `/login/token/{kod}` | token login | – |
+| GET | `/login` | `AuthController@showLoginForm` | `login` |
+| POST | `/login` | `AuthController@login` | – |
+| GET | `/login/token/{kod}` | `AuthController@loginViaToken` | `login.token` |
+| POST | `/logout` | `AuthController@logout` | `logout` |
 | GET | `/mail-image` | `MailImageController@show` | `mail.image` |
 
 ### Admin trasy (middleware: `admin`)
@@ -509,6 +519,7 @@ VkvpaKola ──► Prispevek[]
 | GET | `/admin/deniky` | `DenikyController@index` | `deniky.index` |
 | GET | `/admin/uzivatele` | `UzivateleController@index` | `uzivatele.index` |
 | GET | `/admin/kategorie` | `KategorieController@index` | `kategorie.index` |
+| GET | `/admin/kategorie/create` | `KategorieController@create` | `kategorie.create` |
 | POST | `/admin/kategorie` | `KategorieController@store` | `kategorie.store` |
 | GET | `/admin/kategorie/{kategorie}/edit` | `KategorieController@edit` | `kategorie.edit` |
 | PATCH | `/admin/kategorie/{kategorie}` | `KategorieController@update` | `kategorie.update` |
@@ -582,6 +593,8 @@ Všechny enumy jsou v `app/Enums/`. Backed enumy nesou hodnotu (`value`), která
 |------|-----|---------|---------|
 | `QsoMode` | `int` | `Ssb(1)`, `Cw(2)`, `Other(0)` | Druh provozu z EDI `Mode-code`; řídí barvy v mapách a vizualizaci. `fromCode()` mapuje neznámý kód na `Other`, `label()` vrací `SSB`/`CW`/`?` |
 | `KoloStav` | `string` | `Nadchazejici`, `Aktivni`, `Prijem`, `Uzavrene`, `Vyhodnocene` | Fáze životního cyklu kola, odvozená z času (`datum_konani` = start závodu, `datum_uzaverky`) a sloupce `vyhodnoceno`; do `Vyhodnocené` se kolo dostane automaticky po uzávěrce (vše převzato / +20 dní, viz `VkvpaKola::maBytVyhodnoceno()` a `kola:finalize-evaluated`). Logika v `VkvpaKola::stav()`, diagram: [`docs/kolo-lifecycle.svg`](docs/kolo-lifecycle.svg). `label()` vrací `Nadcházející`/`Probíhá`/`Příjem hlášení`/`Zpracování výsledků`/`Vyhodnocené`; `badgeClass()` barvu badge. |
+| `QsoCountStatus` | `string` | `Counted`, `OutOfWindow`, `WrongDate`, `EmptyWwl` | Důvod (ne)započítání QSO do bodování – odlišuje spojení mimo závodní okno, ve špatný den a s prázdným lokátorem od platných |
+| `Severity` | `string` | `Fatal`, `Warning`, `Info` | Závažnost nálezu EDI validace (`EdiValidationReport`); `Warning`/`Info` neblokují import |
 
 ### Rozlišení kategorií
 
@@ -638,11 +651,12 @@ Oba se při importu EDI nastaví automaticky z pole `SPowe` a předvyplní zašk
 
 ## Mapové pohledy
 
-Mapa je součástí stránky vizualizace (`/edi/{head}/vizualizace`) jako čtyři přepínatelné Leaflet vrstvy. Dřívější samostatné stránky `/edi/{head}/mapa/*` (M/N/S/C) byly zrušeny – zjednodušení UX, vše je na jedné URL:
+Mapa je součástí stránky vizualizace (`/edi/{head}/vizualizace`) jako pět přepínatelných Leaflet vrstev. Dřívější samostatné stránky `/edi/{head}/mapa/*` (M/N/S/C) byly zrušeny – zjednodušení UX, vše je na jedné URL:
 
 | Vrstva | Popis |
 |--------|-------|
-| CRK (výchozí) | Kombinovaný pohled ve stylu vkvzavody.crk.cz |
+| Přehrávání (výchozí) | QSO se objevují chronologicky (paprsek + špendlík) podle slideru 08:00–11:00 a tlačítka ▶ |
+| CRK | Kombinovaný pohled ve stylu vkvzavody.crk.cz (paprsky, kružnice vzdáleností, mřížka čtverců, stanice z kola) |
 | Ježek | Čáry z domácí stanice na všechna pracovaná QSO |
 | Špendlíky | Pin na každé QSO, popup s vzdáleností a azimutem |
 | Lokátory | Velké čtverce s počtem QSO jako popisek |
@@ -695,11 +709,13 @@ Schodový graf: kumulativní body za spojení × průběžný počet násobičů
 
 #### Vážená azimutová růžice (Chart.js PolarArea)
 
-Polární graf rozdělující QSO do 8 sektorů po 45°, počítáno po směru hodinových ručiček od severu, s přepínáním vážení: počet QSO / součet km / součet bodů.
+Polární graf rozdělující QSO do 16 sektorů po 22,5°, počítáno po směru hodinových ručiček od severu, s přepínáním vážení: počet QSO / součet km / součet bodů (`DenikStatistiky::azimuthRose()`).
 
 ```
-S (0°) → SV (45°) → V (90°) → JV (135°) → J (180°) → JZ (225°) → Z (270°) → SZ (315°)
+S → SSV → SV → VSV → V → VJV → JV → JJV → J → JJZ → JZ → ZJZ → Z → ZSZ → SZ → SSZ
 ```
+
+> Pozn.: směrová růžice na stránce **Porovnání deníků** (Chart.js Radar) používá hrubší dělení na 8 světových stran po 45° (`DenikStatistiky::azimuthCounts()`).
 
 #### Časová osa QSO s násobiči (Chart.js Bar)
 
@@ -948,16 +964,16 @@ Uživatelé na mobilních zařízeních a desktopu mohou aplikaci přidat na dom
 
 ## CI/CD
 
-GitHub Actions workflow (`.github/workflows/ci.yml`) – job `quality`:
+GitHub Actions workflow (`.github/workflows/ci.yml`) běží při `push` i `pull_request` a skládá se ze **čtyř paralelních jobů**:
 
-| Krok | Příkaz |
-|------|--------|
-| Testy | `composer test` |
-| Statická analýza | `composer stan` |
-| Code style | `composer lint` |
-| Frontend build | `npm ci && npm run build` |
+| Job | Krok(y) | Příkaz |
+|-----|---------|--------|
+| `test` (Tests) | testy s pokrytím (pcov) | `php artisan test --coverage` |
+| `analyse` (Static Analysis) | statická analýza + code style | `composer stan` && `composer lint` |
+| `audit` (Security Audit) | kontrola zranitelností závislostí | `composer audit --locked --abandoned=report` |
+| `build` (Frontend Build) | produkční build frontendu | `npm ci --ignore-scripts && npm run build` |
 
-Běží na `ubuntu-latest`, PHP 8.5, Node 22. Timeout 15 minut.
+Všechny joby běží na `ubuntu-latest` s timeoutem 10 minut. PHP joby na PHP 8.5 (rozšíření `gd, intl, mbstring, pdo, pdo_sqlite, sqlite3, zip`), `build` na Node 22. Workflow má `permissions: contents: read`.
 
 ---
 
