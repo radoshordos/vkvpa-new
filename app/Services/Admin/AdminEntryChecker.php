@@ -9,7 +9,9 @@ use App\Models\Edihead;
 use App\Models\Ediline;
 use App\Models\VkvpaData;
 use App\Services\Edi\DenikStatistiky;
+use App\Support\ContestWindow;
 use App\Support\Finding;
+use App\Support\Maidenhead;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
 
@@ -43,18 +45,11 @@ final class AdminEntryChecker
             return $findings; // ruční hlášení bez EDI – EDI kontroly přeskočit
         }
 
-        $head = Edihead::with(['lines' => static fn (HasMany $q) => $q->select('edihead_id', 'call_sign', 'time')])
+        $head = Edihead::with(['lines' => static fn (HasMany $q) => $q->select('edihead_id', 'call_sign', 'time', 'received_wwl')])
             ->find($entry->edihead_id);
 
         if ($head === null) {
             return $findings;
-        }
-
-        if (trim((string) $head->p_call) === '') {
-            $findings[] = new Finding(
-                Severity::Fatal,
-                'Deník nemá volací značku (PCall) – hlášení nelze přiřadit závodníkovi. Záznam by měl být smazán.',
-            );
         }
 
         foreach ($this->selfQsoWarnings($head) as $w) {
@@ -69,6 +64,26 @@ final class AdminEntryChecker
         $crossWarning = $this->crossCheckWarning($head, (int) $entry->id_kola);
         if ($crossWarning !== null) {
             $findings[] = $crossWarning;
+        }
+
+        $homeLoc = $this->invalidHomeLocatorWarning($head);
+        if ($homeLoc !== null) {
+            $findings[] = $homeLoc;
+        }
+
+        $dupes = $this->duplicateCallsWarning($head->lines);
+        if ($dupes !== null) {
+            $findings[] = $dupes;
+        }
+
+        $invalidLoc = $this->invalidLocatorsWarning($head->lines);
+        if ($invalidLoc !== null) {
+            $findings[] = $invalidLoc;
+        }
+
+        $window = $this->outOfWindowWarning($head->lines);
+        if ($window !== null) {
+            $findings[] = $window;
         }
 
         return $findings;
@@ -209,6 +224,109 @@ final class AdminEntryChecker
                 'Křížová kontrola: %d z pracovaných protistaní má v tomto kole odevzdán log – doporučeno porovnat záznamy.',
                 $count,
             ),
+        );
+    }
+
+    // ── Neplatný domácí lokátor ───────────────────────────────────────────────
+
+    private function invalidHomeLocatorWarning(Edihead $head): ?Finding
+    {
+        $pWWLo = trim((string) $head->p_wwlo);
+
+        if ($pWWLo === '') {
+            return new Finding(
+                Severity::Warning,
+                'Domácí lokátor (PWWLo) je prázdný – vzdálenosti ani body nelze spočítat, skóre bude 0.',
+            );
+        }
+
+        if (! Maidenhead::isValidLocator($pWWLo)) {
+            return new Finding(
+                Severity::Warning,
+                'Domácí lokátor „'.$pWWLo.'" (PWWLo) není platný Maidenhead formát – skóre bude 0.',
+            );
+        }
+
+        return null;
+    }
+
+    // ── Duplicitní spojení ────────────────────────────────────────────────────
+
+    /** @param Collection<int, Ediline> $lines */
+    private function duplicateCallsWarning(Collection $lines): ?Finding
+    {
+        $dupes = $lines
+            ->pluck('call_sign')
+            ->map(static fn (mixed $c): string => strtoupper(trim(is_string($c) ? $c : '')))
+            ->filter()
+            ->countBy()
+            ->filter(static fn (int $n): bool => $n > 1);
+
+        if ($dupes->isEmpty()) {
+            return null;
+        }
+
+        $total = $dupes->count();
+        $list = $dupes->take(8)->map(static fn (int $n, string $c): string => $c.' ('.$n.'×)')->implode(', ');
+        $more = $total > 8 ? ' …' : '';
+
+        return new Finding(
+            Severity::Warning,
+            'Duplicitní spojení (stanice navázána víckrát): '.$list.$more.'. Duplicity se bodují 0.',
+        );
+    }
+
+    // ── Neplatné lokátory protistanice ───────────────────────────────────────
+
+    /** @param Collection<int, Ediline> $lines */
+    private function invalidLocatorsWarning(Collection $lines): ?Finding
+    {
+        $invalid = $lines
+            ->filter(static function (Ediline $l): bool {
+                $wwl = trim((string) $l->received_wwl);
+
+                return $wwl !== '' && ! Maidenhead::isValidLocator($wwl);
+            })
+            ->take(8)
+            ->map(static function (Ediline $l): string {
+                $call = strtoupper(trim((string) $l->call_sign));
+                $wwl = trim((string) $l->received_wwl);
+
+                return ($call !== '' ? $call : '?').': '.$wwl;
+            })
+            ->values();
+
+        if ($invalid->isEmpty()) {
+            return null;
+        }
+
+        return new Finding(
+            Severity::Warning,
+            'Neplatný WWL lokátor u spojení: '.$invalid->implode(', ').'.',
+        );
+    }
+
+    // ── QSO mimo závodní okno ────────────────────────────────────────────────
+
+    /** @param Collection<int, Ediline> $lines */
+    private function outOfWindowWarning(Collection $lines): ?Finding
+    {
+        $from = ContestWindow::from();
+        $to = ContestWindow::to();
+
+        $count = $lines->filter(static function (Ediline $l) use ($from, $to): bool {
+            $t = trim((string) $l->time);
+
+            return $t !== '' && ! ($t >= $from && $t <= $to);
+        })->count();
+
+        if ($count === 0) {
+            return null;
+        }
+
+        return new Finding(
+            Severity::Info,
+            $count.' QSO mimo závodní okno ('.$from.'–'.$to.' UTC) – tato spojení se nezapočítávají.',
         );
     }
 }

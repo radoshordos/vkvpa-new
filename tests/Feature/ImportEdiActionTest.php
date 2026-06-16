@@ -7,6 +7,7 @@ namespace Tests\Feature;
 use App\Actions\ImportEdiAction;
 use App\Actions\ImportEdiPreview;
 use App\Exceptions\DuplicateEdiException;
+use App\Exceptions\EmptyPCallException;
 use App\Exceptions\RoundNotFoundException;
 use App\Exceptions\TDateMismatchException;
 use App\Exceptions\TDateNotContestDayException;
@@ -217,5 +218,26 @@ class ImportEdiActionTest extends TestCase
 
         // Tentokrát s enforceUploadWindow=true (výchozí chování veřejného uploadu).
         $this->action()->execute($this->sampleLog(), notify: false, enforceUploadWindow: true);
+    }
+
+    public function test_throws_empty_pcall_when_pcall_is_missing(): void
+    {
+        $edi = implode("\n", [
+            '[REG1TEST;1]',
+            'TDate=20260315;20260315',
+            'PCall=',
+            'PWWLo=JN99AJ',
+            'PSect=SINGLE',
+            'PBand=144 MHz',
+            'RName=Test',
+            'RPhon=',
+            'RHBBS=',
+            'SPowe=5',
+            '[QSORecords;0]',
+            '[END;]',
+        ])."\n";
+
+        $this->expectException(EmptyPCallException::class);
+        $this->execute((new EdiParser)->parse($edi));
     }
 }

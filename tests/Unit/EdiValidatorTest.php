@@ -106,20 +106,6 @@ class EdiValidatorTest extends TestCase
         $this->assertStringContainsString('deklaruje 5 QSO', implode(' ', $report->messages()));
     }
 
-    public function test_detects_empty_pcall(): void
-    {
-        $header = new EdiHeader([
-            'PCall' => '', 'PWWLo' => 'JN99AJ', 'TDate' => '20260118;20260118',
-            'PBand' => '144 MHz', 'PSect' => 'SINGLE', 'SPowe' => '100',
-        ]);
-        $log = new EdiLog($header, [], '', 0);
-
-        $report = new EdiValidator()->validate($log);
-
-        $this->assertTrue($report->emptyPCall);
-        $this->assertStringContainsString('PCall', implode(' ', $report->messages()));
-    }
-
     public function test_detects_invalid_home_locator(): void
     {
         $header = new EdiHeader([
@@ -153,7 +139,6 @@ class EdiValidatorTest extends TestCase
     {
         $report = new EdiValidator()->validate($this->log(0));
 
-        $this->assertFalse($report->emptyPCall);
         $this->assertNull($report->invalidHomeLocator);
     }
 

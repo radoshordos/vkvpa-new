@@ -248,19 +248,102 @@ class AdminEntryCheckerTest extends TestCase
         $this->assertEmpty($crossWarnings);
     }
 
-    public function test_fatal_warning_when_edihead_has_empty_pcall(): void
+    public function test_warns_for_invalid_home_locator(): void
     {
         $kolo = $this->kolo();
         $kat = $this->kat();
-        $head = $this->edihead($kolo, '');
+        $head = Edihead::create([
+            'id_kola' => $kolo->id,
+            'p_call' => 'OK1TEST',
+            'p_wwlo' => 'ZZ99AJ',  // neplatný lokátor
+            't_date' => '20260315',
+            'r_name' => 'Jan Novák',
+            'r_hbbs' => '',
+            's_powe' => 50,
+        ]);
         $entry = $this->entry($kolo, $kat, ['edihead_id' => $head->id]);
 
         $warnings = $this->checker->warnings($entry);
 
-        $found = array_filter($warnings, static fn ($w): bool => str_contains($w->message, 'PCall'));
+        $found = array_filter($warnings, static fn ($w): bool => str_contains($w->message, 'PWWLo'));
         $this->assertNotEmpty($found);
-        $fatalWarning = array_values($found)[0];
-        $this->assertSame(Severity::Fatal, $fatalWarning->severity);
-        $this->assertStringContainsString('smazán', $fatalWarning->message);
+        $this->assertSame(Severity::Warning, array_values($found)[0]->severity);
+    }
+
+    public function test_warns_for_empty_home_locator(): void
+    {
+        $kolo = $this->kolo();
+        $kat = $this->kat();
+        $head = Edihead::create([
+            'id_kola' => $kolo->id,
+            'p_call' => 'OK1TEST',
+            'p_wwlo' => '',  // prázdný lokátor
+            't_date' => '20260315',
+            'r_name' => 'Jan Novák',
+            'r_hbbs' => '',
+            's_powe' => 50,
+        ]);
+        $entry = $this->entry($kolo, $kat, ['edihead_id' => $head->id]);
+
+        $warnings = $this->checker->warnings($entry);
+
+        $found = array_filter($warnings, static fn ($w): bool => str_contains($w->message, 'PWWLo'));
+        $this->assertNotEmpty($found);
+        $this->assertSame(Severity::Warning, array_values($found)[0]->severity);
+    }
+
+    public function test_warns_for_duplicate_call_signs(): void
+    {
+        $kolo = $this->kolo();
+        $kat = $this->kat();
+        $head = $this->edihead($kolo);
+        $this->ediline($head, 'OK2XYZ', '0900');
+        $this->ediline($head, 'OK2XYZ', '0930');  // duplicitní
+        $this->ediline($head, 'OK3ABC', '1000');
+        $entry = $this->entry($kolo, $kat, ['edihead_id' => $head->id]);
+
+        $warnings = $this->checker->warnings($entry);
+
+        $found = array_filter($warnings, static fn ($w): bool => str_contains($w->message, 'Duplicitní'));
+        $this->assertNotEmpty($found);
+        $this->assertSame(Severity::Warning, array_values($found)[0]->severity);
+        $this->assertStringContainsString('OK2XYZ', array_values($found)[0]->message);
+    }
+
+    public function test_warns_for_invalid_received_locator(): void
+    {
+        $kolo = $this->kolo();
+        $kat = $this->kat();
+        $head = $this->edihead($kolo);
+        Ediline::create([
+            'edihead_id' => $head->id,
+            'call_sign' => 'OK2BAD',
+            'time' => '0900',
+            'received_wwl' => 'ZZ99XX',  // neplatný Maidenhead
+        ]);
+        $entry = $this->entry($kolo, $kat, ['edihead_id' => $head->id]);
+
+        $warnings = $this->checker->warnings($entry);
+
+        $found = array_filter($warnings, static fn ($w): bool => str_contains($w->message, 'Neplatný WWL'));
+        $this->assertNotEmpty($found);
+        $this->assertSame(Severity::Warning, array_values($found)[0]->severity);
+        $this->assertStringContainsString('OK2BAD', array_values($found)[0]->message);
+    }
+
+    public function test_info_for_out_of_window_qsos(): void
+    {
+        $kolo = $this->kolo();
+        $kat = $this->kat();
+        $head = $this->edihead($kolo);
+        $this->ediline($head, 'OK2XYZ', '0900');   // v okně
+        $this->ediline($head, 'OK3ABC', '1200');   // mimo okno
+        $entry = $this->entry($kolo, $kat, ['edihead_id' => $head->id]);
+
+        $warnings = $this->checker->warnings($entry);
+
+        $found = array_filter($warnings, static fn ($w): bool => str_contains($w->message, 'mimo závodní okno'));
+        $this->assertNotEmpty($found);
+        $this->assertSame(Severity::Info, array_values($found)[0]->severity);
     }
 }
