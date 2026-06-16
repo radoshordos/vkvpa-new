@@ -28,7 +28,6 @@ use Override;
  * @property string $r_name
  * @property string|null $r_emai
  * @property string $r_phon
- * @property string $r_hbbs
  * @property int $s_powe
  * @property string|null $s_tx_eq
  * @property string|null $s_ante
@@ -42,7 +41,7 @@ use Override;
  */
 #[Fillable([
     'id_kola', 't_date', 'p_call', 'p_wwlo', 'p_sect', 'p_band',
-    'r_name', 'r_emai', 'r_phon', 'r_hbbs', 's_powe', 's_tx_eq', 's_ante',
+    'r_name', 'r_emai', 'r_phon', 's_powe', 's_tx_eq', 's_ante',
     'src', 'remarks', 's_rcr',
 ])]
 #[Table(name: 'edihead')]

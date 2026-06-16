@@ -36,7 +36,7 @@ class EdiZobrazeniTest extends TestCase
 
         return Edihead::create([
             't_date' => '20260315;20260315', 'p_call' => 'OK2KJT', 'p_wwlo' => 'JN99AJ',
-            'p_sect' => '', 'p_band' => '', 'r_name' => 'X', 'r_phon' => '', 'r_hbbs' => '',
+            'p_sect' => '', 'p_band' => '', 'r_name' => 'X', 'r_phon' => '', 'r_emai' => '',
             's_powe' => 100, 'src' => $raw,
         ]);
     }

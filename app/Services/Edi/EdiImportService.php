@@ -26,8 +26,8 @@ final class EdiImportService
                 'p_sect' => $h->pSect(),
                 'p_band' => $h->pBand(),
                 'r_name' => $h->rName(),
+                'r_emai' => $h->rEmail(),
                 'r_phon' => $h->rPhon(),
-                'r_hbbs' => $h->rHBBS(),
                 's_powe' => $h->sPowe(),
                 'src' => $log->rawSource,
             ]);

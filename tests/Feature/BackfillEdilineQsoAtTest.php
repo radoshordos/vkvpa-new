@@ -27,7 +27,7 @@ class BackfillEdilineQsoAtTest extends TestCase
     /** Legacy deník (prázdné date/time) se obnoví ze src podle pořadí lokátorů. */
     public function test_backfills_legacy_lines_from_src(): void
     {
-        $head = Edihead::create(['t_date' => '20260315', 'p_call' => 'OK2KJT', 'p_wwlo' => 'JN99BP', 'r_name' => 'Test', 'r_hbbs' => '', 's_powe' => 5, 'src' => self::SRC]);
+        $head = Edihead::create(['t_date' => '20260315', 'p_call' => 'OK2KJT', 'p_wwlo' => 'JN99BP', 'r_name' => 'Test', 'r_emai' => '', 's_powe' => 5, 'src' => self::SRC]);
 
         // Snapshot legacy: lokátor sedí, ale date/time/mode/qso_at chybí.
         Ediline::insert([
@@ -52,7 +52,7 @@ class BackfillEdilineQsoAtTest extends TestCase
     /** Moderní deník (date/time vyplněné) jen složí qso_at, src se nečte. */
     public function test_backfills_qso_at_from_existing_date_time(): void
     {
-        $head = Edihead::create(['t_date' => '20260315', 'p_call' => 'OK2KJT', 'p_wwlo' => 'JN99BP', 'r_name' => 'Test', 'r_hbbs' => '', 's_powe' => 5, 'src' => '']);
+        $head = Edihead::create(['t_date' => '20260315', 'p_call' => 'OK2KJT', 'p_wwlo' => 'JN99BP', 'r_name' => 'Test', 'r_emai' => '', 's_powe' => 5, 'src' => '']);
 
         Ediline::insert([
             ['edihead_id' => $head->id, 'date' => '260315', 'time' => '0945', 'received_wwl' => 'JN99BP'],
@@ -67,7 +67,7 @@ class BackfillEdilineQsoAtTest extends TestCase
     /** Nekonzistentní deník (src bez date/time nelze spárovat) se přeskočí. */
     public function test_skips_when_unrecoverable(): void
     {
-        $head = Edihead::create(['t_date' => '20260315', 'p_call' => 'OK2KJT', 'p_wwlo' => 'JN99BP', 'r_name' => 'Test', 'r_hbbs' => '', 's_powe' => 5, 'src' => '']);
+        $head = Edihead::create(['t_date' => '20260315', 'p_call' => 'OK2KJT', 'p_wwlo' => 'JN99BP', 'r_name' => 'Test', 'r_emai' => '', 's_powe' => 5, 'src' => '']);
         Ediline::insert([['edihead_id' => $head->id, 'received_wwl' => 'JN99BP']]);
 
         $this->runBackfill();
@@ -78,7 +78,7 @@ class BackfillEdilineQsoAtTest extends TestCase
     /** Dry-run nic nezapíše. */
     public function test_dry_run_does_not_write(): void
     {
-        $head = Edihead::create(['t_date' => '20260315', 'p_call' => 'OK2KJT', 'p_wwlo' => 'JN99BP', 'r_name' => 'Test', 'r_hbbs' => '', 's_powe' => 5, 'src' => self::SRC]);
+        $head = Edihead::create(['t_date' => '20260315', 'p_call' => 'OK2KJT', 'p_wwlo' => 'JN99BP', 'r_name' => 'Test', 'r_emai' => '', 's_powe' => 5, 'src' => self::SRC]);
         Ediline::insert([
             ['edihead_id' => $head->id, 'received_wwl' => 'JN99BP'],
             ['edihead_id' => $head->id, 'received_wwl' => 'JN89PV'],

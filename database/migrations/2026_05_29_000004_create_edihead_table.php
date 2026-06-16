@@ -25,7 +25,6 @@ return new class extends Migration
             $table->string('r_name', 50);
             $table->string('r_emai', 100)->nullable();
             $table->string('r_phon', 50)->default('');
-            $table->string('r_hbbs', 50);
             $table->unsignedSmallInteger('s_powe');
             $table->string('s_tx_eq', 100)->nullable();
             $table->string('s_ante', 100)->nullable();

@@ -112,7 +112,7 @@ class ScoringServiceTest extends TestCase
     {
         $head = Edihead::create([
             't_date' => '20260118;20260118', 'p_call' => 'OK1TEST', 'p_wwlo' => 'JN99AA',
-            'p_sect' => '', 'p_band' => '', 'r_name' => '', 'r_phon' => '', 'r_hbbs' => '', 's_powe' => 100,
+            'p_sect' => '', 'p_band' => '', 'r_name' => '', 'r_phon' => '', 'r_emai' => '', 's_powe' => 100,
         ]);
         Ediline::insert([
             // 2 QSO uvnitř okna (cizí čtverce JN89, JO70) → počítají se.
@@ -140,7 +140,7 @@ class ScoringServiceTest extends TestCase
         // je vždy násobičem – právě jednou, i když se v něm pracovalo.
         $head = Edihead::create([
             't_date' => '20260118;20260118', 'p_call' => 'OK1TEST', 'p_wwlo' => 'JN99AJ',
-            'p_sect' => '', 'p_band' => '', 'r_name' => '', 'r_phon' => '', 'r_hbbs' => '', 's_powe' => 100,
+            'p_sect' => '', 'p_band' => '', 'r_name' => '', 'r_phon' => '', 'r_emai' => '', 's_powe' => 100,
         ]);
         Ediline::insert([
             // vlastní čtverec JN99 (2 body) + 2× cizí JN89 (3 body) ve stejném čtverci.
@@ -189,7 +189,7 @@ class ScoringServiceTest extends TestCase
         // Deník bez QSO řádků: pocet=0, nasobice=1 (vlastní čtverec vždy), body=0.
         $head = Edihead::create([
             't_date' => '20260118;20260118', 'p_call' => 'OK1TEST', 'p_wwlo' => 'JN99AJ',
-            'p_sect' => '', 'p_band' => '', 'r_name' => '', 'r_phon' => '', 'r_hbbs' => '', 's_powe' => 100,
+            'p_sect' => '', 'p_band' => '', 'r_name' => '', 'r_phon' => '', 'r_emai' => '', 's_powe' => 100,
         ]);
         // Žádné edilines.
 
@@ -205,7 +205,7 @@ class ScoringServiceTest extends TestCase
     {
         $head = Edihead::create([
             't_date' => '20260118;20260118', 'p_call' => 'OK1TEST', 'p_wwlo' => 'JN99AJ',
-            'p_sect' => '', 'p_band' => '', 'r_name' => '', 'r_phon' => '', 'r_hbbs' => '', 's_powe' => 100,
+            'p_sect' => '', 'p_band' => '', 'r_name' => '', 'r_phon' => '', 'r_emai' => '', 's_powe' => 100,
         ]);
         Ediline::insert([
             ['edihead_id' => $head->id, 'date' => '260118', 'time' => '0759', 'call_sign' => 'A', 'received_wwl' => 'JN89AA', 'qso_points' => 3],
@@ -227,7 +227,7 @@ class ScoringServiceTest extends TestCase
         // 0759 a 1101 musí být vyřazeny.
         $head = Edihead::create([
             't_date' => '20260118;20260118', 'p_call' => 'OK1TEST', 'p_wwlo' => 'JN99AJ',
-            'p_sect' => '', 'p_band' => '', 'r_name' => '', 'r_phon' => '', 'r_hbbs' => '', 's_powe' => 100,
+            'p_sect' => '', 'p_band' => '', 'r_name' => '', 'r_phon' => '', 'r_emai' => '', 's_powe' => 100,
         ]);
         Ediline::insert([
             ['edihead_id' => $head->id, 'date' => '260118', 'time' => '0759', 'call_sign' => 'A', 'received_wwl' => 'JN89AA', 'qso_points' => 0],
@@ -251,7 +251,7 @@ class ScoringServiceTest extends TestCase
         // ale QSO ve vzdálených čtvercích se stále počítají.
         $head = Edihead::create([
             't_date' => '20260118;20260118', 'p_call' => 'OK1TEST', 'p_wwlo' => '',
-            'p_sect' => '', 'p_band' => '', 'r_name' => '', 'r_phon' => '', 'r_hbbs' => '', 's_powe' => 100,
+            'p_sect' => '', 'p_band' => '', 'r_name' => '', 'r_phon' => '', 'r_emai' => '', 's_powe' => 100,
         ]);
         Ediline::insert([
             ['edihead_id' => $head->id, 'date' => '260118', 'time' => '0830', 'call_sign' => 'A', 'received_wwl' => 'JN89AA', 'qso_points' => 0],

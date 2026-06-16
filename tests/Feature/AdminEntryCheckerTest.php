@@ -72,7 +72,7 @@ class AdminEntryCheckerTest extends TestCase
             'p_wwlo' => 'JN79FX',
             't_date' => '20260315',
             'r_name' => 'Jan Novák',
-            'r_hbbs' => '',
+            'r_emai' => '',
             's_powe' => 50,
         ]);
     }
@@ -258,7 +258,7 @@ class AdminEntryCheckerTest extends TestCase
             'p_wwlo' => 'ZZ99AJ',  // neplatný lokátor
             't_date' => '20260315',
             'r_name' => 'Jan Novák',
-            'r_hbbs' => '',
+            'r_emai' => '',
             's_powe' => 50,
         ]);
         $entry = $this->entry($kolo, $kat, ['edihead_id' => $head->id]);
@@ -280,7 +280,7 @@ class AdminEntryCheckerTest extends TestCase
             'p_wwlo' => '',  // prázdný lokátor
             't_date' => '20260315',
             'r_name' => 'Jan Novák',
-            'r_hbbs' => '',
+            'r_emai' => '',
             's_powe' => 50,
         ]);
         $entry = $this->entry($kolo, $kat, ['edihead_id' => $head->id]);

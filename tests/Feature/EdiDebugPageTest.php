@@ -61,7 +61,7 @@ class EdiDebugPageTest extends TestCase
             'p_wwlo' => 'JN79',
             'p_band' => '144 MHz',
             'r_name' => 'A',
-            'r_hbbs' => 'a@a.cz',
+            'r_emai' => 'a@a.cz',
             's_powe' => 100,
             'src' => $src,
         ]);

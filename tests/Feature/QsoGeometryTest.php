@@ -200,8 +200,8 @@ class QsoGeometryTest extends TestCase
      */
     private function seedCompareLogs(int $idKola): array
     {
-        $headA = Edihead::create(['id_kola' => $idKola, 't_date' => '20260315', 'p_call' => 'OK1AAA', 'p_wwlo' => 'JN79', 'p_band' => '144 MHz', 'r_name' => 'A', 'r_hbbs' => 'a@a.cz', 's_powe' => 100]);
-        $headB = Edihead::create(['id_kola' => $idKola, 't_date' => '20260315', 'p_call' => 'OK1BBB', 'p_wwlo' => 'JN89', 'p_band' => '144 MHz', 'r_name' => 'B', 'r_hbbs' => 'b@b.cz', 's_powe' => 100]);
+        $headA = Edihead::create(['id_kola' => $idKola, 't_date' => '20260315', 'p_call' => 'OK1AAA', 'p_wwlo' => 'JN79', 'p_band' => '144 MHz', 'r_name' => 'A', 'r_emai' => 'a@a.cz', 's_powe' => 100]);
+        $headB = Edihead::create(['id_kola' => $idKola, 't_date' => '20260315', 'p_call' => 'OK1BBB', 'p_wwlo' => 'JN89', 'p_band' => '144 MHz', 'r_name' => 'B', 'r_emai' => 'b@b.cz', 's_powe' => 100]);
 
         Ediline::create(['edihead_id' => $headA->id, 'date' => '260315', 'time' => '0810', 'call_sign' => 'OK5BIG', 'received_wwl' => 'JN99AA']);
         Ediline::create(['edihead_id' => $headA->id, 'date' => '260315', 'time' => '0815', 'call_sign' => 'OK9SML', 'received_wwl' => 'JO60AA']);
@@ -221,8 +221,8 @@ class QsoGeometryTest extends TestCase
      */
     private function seedRoundLogs(int $idKola): Edihead
     {
-        $headA = Edihead::create(['id_kola' => $idKola, 't_date' => '20260315', 'p_call' => 'OK1AAA', 'p_wwlo' => 'JN79', 'p_band' => '144 MHz', 'r_name' => 'A', 'r_hbbs' => 'a@a.cz', 's_powe' => 100]);
-        $headB = Edihead::create(['id_kola' => $idKola, 't_date' => '20260315', 'p_call' => 'OK1BBB', 'p_wwlo' => 'JN89', 'p_band' => '144 MHz', 'r_name' => 'B', 'r_hbbs' => 'b@b.cz', 's_powe' => 100]);
+        $headA = Edihead::create(['id_kola' => $idKola, 't_date' => '20260315', 'p_call' => 'OK1AAA', 'p_wwlo' => 'JN79', 'p_band' => '144 MHz', 'r_name' => 'A', 'r_emai' => 'a@a.cz', 's_powe' => 100]);
+        $headB = Edihead::create(['id_kola' => $idKola, 't_date' => '20260315', 'p_call' => 'OK1BBB', 'p_wwlo' => 'JN89', 'p_band' => '144 MHz', 'r_name' => 'B', 'r_emai' => 'b@b.cz', 's_powe' => 100]);
 
         // OK5BIG: 3 QSO v deníku A + 2 v deníku B = 5 napříč kolem → projde (min 5).
         foreach (['0810', '0811', '0812'] as $t) {
