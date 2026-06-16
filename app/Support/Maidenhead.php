@@ -4,11 +4,6 @@ declare(strict_types=1);
 
 namespace App\Support;
 
-use Location\Bearing\BearingSpherical;
-use Location\Coordinate;
-use Location\Distance\Vincenty;
-use Location\Exception\NotConvergingException;
-
 /**
  * Převod Maidenhead QTH lokátoru (např. „JN99AJ") na zeměpisné souřadnice
  * (střed čtverce).
@@ -138,36 +133,33 @@ final class Maidenhead
     }
 
     /**
-     * Vzdálenost mezi dvěma body v kilometrech (Vincenty, WGS-84).
-     * Pro popup mapy „N" (vzdálenost spojení).
+     * Vzdálenost mezi dvěma body v kilometrech (haversine, koule R=6371 km).
+     * Pro popup mapy „N" (vzdálenost spojení) – pro závodní vzdálenosti je
+     * rozdíl proti elipsoidu zanedbatelný a shodný s konvencí logovacího SW.
      */
     public static function distanceKm(float $lat1, float $lon1, float $lat2, float $lon2): float
     {
-        try {
-            return new Vincenty()->getDistance(
-                new Coordinate($lat1, $lon1),
-                new Coordinate($lat2, $lon2),
-            ) / 1000.0;
-        } catch (NotConvergingException) {
-            // Antipodální body – záložní haversine.
-            $dLat = deg2rad($lat2 - $lat1);
-            $dLon = deg2rad($lon2 - $lon1);
-            $a = sin($dLat / 2) ** 2
-                + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($dLon / 2) ** 2;
+        $dLat = deg2rad($lat2 - $lat1);
+        $dLon = deg2rad($lon2 - $lon1);
+        $a = sin($dLat / 2) ** 2
+            + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($dLon / 2) ** 2;
 
-            return 6371.0 * 2 * atan2(sqrt($a), sqrt(1 - $a));
-        }
+        return 6371.0 * 2 * atan2(sqrt($a), sqrt(1 - $a));
     }
 
     /**
      * Azimut (kompasový směr) z bodu 1 do bodu 2 ve stupních 0–360 (0 = sever).
-     * Pro popup mapy „N" (směr na protistanici).
+     * Počáteční azimut ortodromy. Pro popup mapy „N" (směr na protistanici).
      */
     public static function bearingDeg(float $lat1, float $lon1, float $lat2, float $lon2): float
     {
-        return new BearingSpherical()->calculateBearing(
-            new Coordinate($lat1, $lon1),
-            new Coordinate($lat2, $lon2),
-        );
+        $phi1 = deg2rad($lat1);
+        $phi2 = deg2rad($lat2);
+        $dLon = deg2rad($lon2 - $lon1);
+
+        $y = sin($dLon) * cos($phi2);
+        $x = cos($phi1) * sin($phi2) - sin($phi1) * cos($phi2) * cos($dLon);
+
+        return fmod(rad2deg(atan2($y, $x)) + 360.0, 360.0);
     }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Edi;
 
 use App\Actions\ImportEdiAction;
+use App\Enums\QsoCountStatus;
 use App\Support\ContestWindow;
 use App\Support\Maidenhead;
 
@@ -62,15 +63,13 @@ final readonly class EdiValidationReport
             }
 
             // Stejné pořadí vyloučení jako ve scoreEdi: okno → den → prázdný WWL.
-            $time = trim($qso->time);
             $square = Maidenhead::bigSquare($wwl);
-            if (! ($time >= $from && $time <= $to)) {
-                $outOfWindow++;
-            } elseif ($den !== '' && trim($qso->date) !== $den) {
-                $wrongDate++;
-            } elseif ($square === '') {
-                $empty++;
-            }
+            match (QsoCountStatus::classify($qso->time, $qso->date, $square, $den, $from, $to)) {
+                QsoCountStatus::OutOfWindow => $outOfWindow++,
+                QsoCountStatus::WrongDate => $wrongDate++,
+                QsoCountStatus::EmptyWwl => $empty++,
+                QsoCountStatus::Counted => null,
+            };
         }
 
         $duplicates = array_filter($callCounts, static fn (int $n): bool => $n > 1);
