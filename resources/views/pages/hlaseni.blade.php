@@ -31,6 +31,20 @@
     </x-alert>
 @endif
 
+@if ($isAdmin && !empty($adminWarnings))
+<div class="card mb-4 border-amber-300 bg-amber-50">
+    <div class="flex items-center gap-3 border-b border-amber-200 px-5 py-3">
+        <x-icon name="triangle-alert" class="h-5 w-5 flex-shrink-0 text-amber-600" />
+        <p class="text-sm font-semibold text-amber-800">Varování administrátora</p>
+    </div>
+    <ul class="space-y-1 px-5 py-3 text-sm text-amber-900">
+        @foreach ($adminWarnings as $w)
+            <li class="flex gap-2"><span class="mt-0.5 flex-shrink-0 text-amber-500">&#9654;</span><span>{{ $w }}</span></li>
+        @endforeach
+    </ul>
+</div>
+@endif
+
 <form action="{{ route('hlaseni.store') }}" method="post" class="card mb-6">
     <div class="flex items-center gap-3 border-b border-line px-5 py-4">
         <div class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-brand-soft">
