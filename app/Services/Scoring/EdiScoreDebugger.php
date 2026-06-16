@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Scoring;
 
+use App\Enums\QsoCountStatus;
 use App\Exceptions\UnknownBandException;
 use App\Models\VkvpaKategorie;
 use App\Services\Edi\CategoryResolver;
@@ -37,7 +38,7 @@ final class EdiScoreDebugger
         $header = $log->header;
         $home = Maidenhead::bigSquare($header->pWWLo());
         // Den závodu = YYMMDD ze začátku TDate (formát YYYYMMDD;YYYYMMDD).
-        $den = substr(trim($header->tDate()), 2, 6);
+        $den = ContestWindow::dayFromTDate($header->tDate());
         $from = ContestWindow::from();
         $to = ContestWindow::to();
 
@@ -64,6 +65,7 @@ final class EdiScoreDebugger
             // Body za spojení přepočítáme z lokátorů, ne z deníku (qsoPoints).
             $points = Maidenhead::qsoPoints($home, $square);
 
+            // Nezávislé příznaky pro rozpad po řádcích (každý se zobrazuje zvlášť).
             $inWindow = $time >= $from && $time <= $to;
             $dateMatches = $den === '' || $date === $den;
             $isEmpty = $square === '';
@@ -73,32 +75,30 @@ final class EdiScoreDebugger
                 $duplicates++;
             }
 
-            $counted = false;
+            // Vítězný důvod (a tím i čítače) určuje kanonické pořadí ze sdíleného
+            // enumu – shodně se scoreEdi/scoreLog: nejdřív čas, pak den, pak WWL.
+            $status = QsoCountStatus::classify($time, $date, $square, $den, $from, $to);
+            $counted = $status->isCounted();
             $newMultiplier = false;
 
-            // Pořadí důvodů kopíruje filtr scoreEdi: nejdřív čas, pak den, pak prázdný WWL.
-            // Vlastní velký čtverec se započítává (2 body), není to ale nový cizí násobič
-            // – vlastní čtverec je vždy násobičem (ta „+1“ k cizím čtvercům).
-            if (! $inWindow) {
-                $reason = 'out_of_window';
-                $outOfWindow++;
-            } elseif (! $dateMatches) {
-                $reason = 'wrong_date';
-                $wrongDate++;
-            } elseif ($isEmpty) {
-                $reason = 'empty_wwl';
-                $emptyWwl++;
-            } else {
-                $reason = 'counted';
-                $counted = true;
+            if ($counted) {
                 $pocet++;
                 $boduZaQso += $points;
+                // Vlastní velký čtverec se započítává (2 body), není to ale nový
+                // cizí násobič – vlastní čtverec je vždy násobičem (ta „+1“).
                 if ($isOwn) {
                     $ownSquare++;
                 } elseif (! in_array($square, $foreignSquares, true)) {
                     $foreignSquares[] = $square;
                     $newMultiplier = true;
                 }
+            } else {
+                match ($status) {
+                    QsoCountStatus::OutOfWindow => $outOfWindow++,
+                    QsoCountStatus::WrongDate => $wrongDate++,
+                    QsoCountStatus::EmptyWwl => $emptyWwl++,
+                    QsoCountStatus::Counted => null,
+                };
             }
 
             $rows[] = new EdiDebugRow(
@@ -116,7 +116,7 @@ final class EdiScoreDebugger
                 counted: $counted,
                 newMultiplier: $newMultiplier,
                 duplicate: $duplicate,
-                reason: $reason,
+                reason: $status->value,
             );
         }
 

@@ -31,10 +31,16 @@ final class Maidenhead
      */
     public static function bigSquare(string $locator): string
     {
-        return $locator
-            |> trim(...)
-            |> strtoupper(...)
-            |> (fn (string $s): string => substr($s, 0, 4));
+        return substr(strtoupper(trim($locator)), 0, 4);
+    }
+
+    /**
+     * Je řetězec platný velký čtverec (přesně 4 znaky Maidenhead, normalizováno)?
+     * Vstup se před porovnáním ořízne a převede na velká písmena.
+     */
+    public static function isValidBigSquare(string $square): bool
+    {
+        return preg_match('/^[A-R]{2}\d{2}$/', strtoupper(trim($square))) === 1;
     }
 
     /**

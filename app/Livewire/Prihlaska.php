@@ -7,6 +7,7 @@ namespace App\Livewire;
 use App\Actions\ImportEdiAction;
 use App\Exceptions\DuplicateEdiException;
 use App\Exceptions\EdiParseException;
+use App\Exceptions\EmptyPCallException;
 use App\Exceptions\RoundNotFoundException;
 use App\Exceptions\TDateMismatchException;
 use App\Exceptions\TDateNotContestDayException;
@@ -154,7 +155,7 @@ class Prihlaska extends Component
         try {
             $preview = $action->preview($log, enforceUploadWindow: ! $this->isAdmin());
         } catch (
-            TDateNotContestDayException|RoundNotFoundException|TDateMismatchException|
+            EmptyPCallException|TDateNotContestDayException|RoundNotFoundException|TDateMismatchException|
             DuplicateEdiException|UnknownBandException|UnknownSectionException|
             UploadWindowClosedException $e
         ) {
@@ -257,7 +258,7 @@ class Prihlaska extends Component
                 ],
             );
         } catch (
-            TDateNotContestDayException|RoundNotFoundException|TDateMismatchException|
+            EmptyPCallException|TDateNotContestDayException|RoundNotFoundException|TDateMismatchException|
             DuplicateEdiException|UnknownBandException|UnknownSectionException|
             UploadWindowClosedException $e
         ) {

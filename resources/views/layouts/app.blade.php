@@ -29,7 +29,7 @@
     <link rel="manifest" href="/site.webmanifest">
 
     {{-- Open Graph / Twitter – náhled při sdílení --}}
-    @php $ogImage = asset('screenshots/vysledky.png'); @endphp
+    @php $ogImage = asset('icon.svg'); @endphp
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="VKV provozní aktiv">
     <meta property="og:title" content="@yield('title', 'VKV provozní aktiv')">

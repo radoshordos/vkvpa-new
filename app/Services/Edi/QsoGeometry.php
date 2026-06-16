@@ -72,7 +72,7 @@ final class QsoGeometry
                 $azimut = $home === null ? null : (int) round(Maidenhead::bearingDeg($home['lat'], $home['lon'], $lat, $lon));
 
                 $time = (string) $l->time;
-                $timeMinutes = (int) substr($time, 0, 2) * 60 + (int) substr($time, 2, 2);
+                $timeMinutes = DenikStatistiky::minutes($time);
 
                 // Body za spojení přepočítáme z lokátorů (neplatný → 0); sloupec
                 // qso_points z deníku se ignoruje (shodně se ScoringService).
@@ -105,7 +105,7 @@ final class QsoGeometry
 
         foreach ($head->lines()->whereBetween('time', [ContestWindow::from(), ContestWindow::to()])->get(['received_wwl']) as $l) {
             $sq = Maidenhead::bigSquare($l->receivedWwl);
-            if (preg_match('/^[A-R]{2}\d{2}$/', $sq) === 1) {
+            if (Maidenhead::isValidBigSquare($sq)) {
                 $counts[$sq] = ($counts[$sq] ?? 0) + 1;
             }
         }
@@ -325,7 +325,7 @@ final class QsoGeometry
         $sum = 0;
         /** @var array<string, true> $squares */
         $squares = [];
-        if (preg_match('/^[A-R]{2}\d{2}$/', $homeSq) === 1) {
+        if (Maidenhead::isValidBigSquare($homeSq)) {
             $squares[$homeSq] = true;
         }
 
@@ -334,13 +334,13 @@ final class QsoGeometry
         foreach ($lines as $l) {
             $sum += $l->points;
             $sq = Maidenhead::bigSquare($l->wwl);
-            if (preg_match('/^[A-R]{2}\d{2}$/', $sq) === 1) {
+            if (Maidenhead::isValidBigSquare($sq)) {
                 $squares[$sq] = true;
             }
 
             $out[] = [
                 't' => $l->timeMinutes,
-                'cas' => sprintf('%02d:%02d', intdiv($l->timeMinutes, 60), $l->timeMinutes % 60),
+                'cas' => DenikStatistiky::hhmm($l->timeMinutes),
                 'call' => $l->call,
                 'points' => $l->points,
                 'nasobice' => count($squares),

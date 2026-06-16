@@ -105,6 +105,34 @@ class VkvpaData extends Model
     }
 
     /**
+     * Scope: jen QRP stanice (≤5 W). Sloupec kvalifikujeme názvem tabulky,
+     * aby scope fungoval i v dotazech s joinem (roční výsledky).
+     *
+     * @param  Builder<VkvpaData>  $query
+     * @return Builder<VkvpaData>
+     */
+    #[Scope]
+    protected function onlyQrp(Builder $query): Builder
+    {
+        return $query->where($this->qualifyColumn('qrp'), true);
+    }
+
+    /**
+     * Scope: jen nízkovýkonové stanice. QRP (≤5 W) je podmnožinou LP (<100 W),
+     * proto „jen LP" zahrnuje i QRP stanice.
+     *
+     * @param  Builder<VkvpaData>  $query
+     * @return Builder<VkvpaData>
+     */
+    #[Scope]
+    protected function onlyLp(Builder $query): Builder
+    {
+        return $query->where(fn (Builder $w): Builder => $w
+            ->where($this->qualifyColumn('lp'), true)
+            ->orWhere($this->qualifyColumn('qrp'), true));
+    }
+
+    /**
      * Scope: průběžné výsledky kola (i nepřevzaté = stav „Čeká"), volitelně
      * filtrované kategorií, seřazené po kategoriích a bodech.
      * Sdíleno mezi formulářem hlášení a stránkou průběžných výsledků.

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Scoring;
 
+use App\Enums\QsoCountStatus;
 use App\Models\Edihead;
 use App\Models\VkvpaData;
 use App\Models\VkvpaKategorie;
@@ -108,7 +109,7 @@ final class ScoringService
     {
         $home = Maidenhead::bigSquare((string) $head->p_wwlo);
         // Den závodu = YYMMDD ze začátku t_date (formát YYYYMMDD;YYYYMMDD).
-        $den = substr(trim((string) $head->t_date), 2, 6);
+        $den = ContestWindow::dayFromTDate((string) $head->t_date);
 
         $squares = $head->lines()
             ->whereBetween('time', [ContestWindow::from(), ContestWindow::to()])
@@ -130,22 +131,14 @@ final class ScoringService
     public function scoreLog(EdiLog $log): EdiScore
     {
         $home = Maidenhead::bigSquare($log->header->pWWLo());
-        $den = substr(trim($log->header->tDate()), 2, 6);
+        $den = ContestWindow::dayFromTDate($log->header->tDate());
         $from = ContestWindow::from();
         $to = ContestWindow::to();
 
         $squares = [];
         foreach ($log->qsos as $qso) {
-            $time = trim($qso->time);
-            if ($time < $from || $time > $to) {
-                continue;
-            }
-            if ($den !== '' && trim($qso->date) !== $den) {
-                continue;
-            }
-
             $square = Maidenhead::bigSquare($qso->receivedWwl);
-            if ($square !== '') {
+            if (QsoCountStatus::classify($qso->time, $qso->date, $square, $den, $from, $to)->isCounted()) {
                 $squares[] = $square;
             }
         }
@@ -247,14 +240,11 @@ final class ScoringService
             ->orderByDesc('celkem');
 
         if ($qrpOnly) {
-            $query->where('vkvpa_data.qrp', true);
+            $query->onlyQrp();
         }
 
-        // QRP (≤5 W) je podmnožinou LP (<100 W), proto „jen LP" zahrnuje i QRP stanice.
         if ($lpOnly) {
-            $query->where(
-                fn ($w) => $w->where('vkvpa_data.lp', true)->orWhere('vkvpa_data.qrp', true),
-            );
+            $query->onlyLp();
         }
 
         return $query->get();

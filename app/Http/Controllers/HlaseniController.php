@@ -10,6 +10,7 @@ use App\Models\Edihead;
 use App\Models\VkvpaData;
 use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
+use App\Services\Admin\AdminEntryChecker;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -38,6 +39,10 @@ class HlaseniController extends Controller
             ? VkvpaData::prubezne($idKola, $idKategorie)->get()
             : collect();
 
+        $adminWarnings = ($request->user()?->is_admin && $edit !== null)
+            ? app(AdminEntryChecker::class)->warnings($edit)
+            : [];
+
         return view('pages.hlaseni', [
             'active' => 'edit_hlaseni',
             // Stránka hlášení (EDI i ruční formulář) jen v otevřeném upload okně;
@@ -50,6 +55,7 @@ class HlaseniController extends Controller
             'kategorie' => VkvpaKategorie::query()->orderBy('id')->get(),
             'edit' => $edit,
             'vysledky' => $vysledky,
+            'adminWarnings' => $adminWarnings,
         ]);
     }
 

@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace App\Services\Edi;
 
 use App\Actions\ImportEdiAction;
+use App\Enums\QsoCountStatus;
+use App\Support\ContestWindow;
+use App\Support\Maidenhead;
 
 /**
  * Souhrn nálezů kontroly kvality EDI deníku po importu (nefatální upozornění).
@@ -18,6 +21,8 @@ final readonly class EdiValidationReport
     /**
      * @param  array<string, int>  $duplicateCalls  značka → počet výskytů (jen >1)
      * @param  list<string>  $invalidLocators  ukázka „ZNAČKA: WWL" s vadným lokátorem
+     * @param  list<string>  $lineErrors  QSO odmítnutá parserem (neplatný Maidenhead)
+     * @param  ?string  $invalidHomeLocator  neplatný PWWLo (null = v pořádku)
      */
     public function __construct(
         public array $duplicateCalls,
@@ -27,9 +32,64 @@ final readonly class EdiValidationReport
         public int $wrongDate,
         public int $declaredTotal,
         public int $parsedCount,
-        public int $lineErrors,
+        public array $lineErrors,
         public int $ignoredLines,
+        public ?string $invalidHomeLocator = null,
     ) {}
+
+    public static function fromLog(EdiLog $log): self
+    {
+        $den = ContestWindow::dayFromTDate($log->header->tDate());
+        $from = ContestWindow::from();
+        $to = ContestWindow::to();
+
+        /** @var array<string, int> $callCounts */
+        $callCounts = [];
+        /** @var list<string> $invalid */
+        $invalid = [];
+        $empty = 0;
+        $outOfWindow = 0;
+        $wrongDate = 0;
+
+        foreach ($log->qsos as $qso) {
+            $call = strtoupper(trim($qso->callSign));
+            if ($call !== '') {
+                $callCounts[$call] = ($callCounts[$call] ?? 0) + 1;
+            }
+
+            $wwl = trim($qso->receivedWwl);
+            if ($wwl !== '' && ! Maidenhead::isValidLocator($wwl) && count($invalid) < 8) {
+                $invalid[] = ($call !== '' ? $call : '?').': '.$wwl;
+            }
+
+            // Stejné pořadí vyloučení jako ve scoreEdi: okno → den → prázdný WWL.
+            $square = Maidenhead::bigSquare($wwl);
+            match (QsoCountStatus::classify($qso->time, $qso->date, $square, $den, $from, $to)) {
+                QsoCountStatus::OutOfWindow => $outOfWindow++,
+                QsoCountStatus::WrongDate => $wrongDate++,
+                QsoCountStatus::EmptyWwl => $empty++,
+                QsoCountStatus::Counted => null,
+            };
+        }
+
+        $duplicates = array_filter($callCounts, static fn (int $n): bool => $n > 1);
+        arsort($duplicates);
+
+        $pWWLo = trim($log->header->pWWLo());
+
+        return new self(
+            duplicateCalls: $duplicates,
+            invalidLocators: $invalid,
+            emptyLocators: $empty,
+            outOfWindow: $outOfWindow,
+            wrongDate: $wrongDate,
+            declaredTotal: $log->declaredTotal,
+            parsedCount: $log->qsoCount(),
+            lineErrors: $log->lineErrors,
+            ignoredLines: count($log->ignoredLines),
+            invalidHomeLocator: Maidenhead::isValidLocator($pWWLo) ? null : $pWWLo,
+        );
+    }
 
     public function hasWarnings(): bool
     {
@@ -44,6 +104,21 @@ final readonly class EdiValidationReport
     public function messages(): array
     {
         $m = [];
+
+        // ── Problémy v hlavičce (nejzávažnější – vliv na celý deník) ─────────
+
+        if ($this->invalidHomeLocator !== null) {
+            $loc = $this->invalidHomeLocator === '' ? '(prázdné)' : '„'.$this->invalidHomeLocator.'"';
+            $m[] = 'Domácí lokátor '.$loc.' v poli PWWLo není platný Maidenhead formát – výsledné skóre bude 0, protože vzdálenosti ani body nelze spočítat.';
+        }
+
+        // ── QSO odmítnutá parserem (neplatný lokátor) ────────────────────────
+
+        foreach ($this->lineErrors as $err) {
+            $m[] = $err;
+        }
+
+        // ── Ostatní QSO-úroveň ───────────────────────────────────────────────
 
         if ($this->duplicateCalls !== []) {
             $list = [];
@@ -73,10 +148,6 @@ final readonly class EdiValidationReport
 
         if ($this->declaredTotal > 0 && $this->declaredTotal !== $this->parsedCount) {
             $m[] = 'Hlavička deklaruje '.$this->declaredTotal.' QSO, ale v deníku jich je '.$this->parsedCount.'.';
-        }
-
-        if ($this->lineErrors > 0) {
-            $m[] = $this->lineErrors.' řádků se nepodařilo zpracovat (neodpovídají formátu QSO).';
         }
 
         if ($this->ignoredLines > 0) {

@@ -46,11 +46,8 @@ class VysledkyController extends Controller
             $radky = VkvpaData::query()
                 ->where('id_kola', $kolo->id)
                 ->when($jenPrevzate, fn ($q) => $q->where('schvaleno', true))
-                ->when($request->boolean('qrp'), fn ($q) => $q->where('qrp', true))
-                // QRP (≤5 W) je podmnožinou LP (<100 W), proto „jen LP" zahrnuje i QRP stanice.
-                ->when($request->boolean('lp'), fn ($q) => $q->where(
-                    fn ($w) => $w->where('lp', true)->orWhere('qrp', true),
-                ))
+                ->when($request->boolean('qrp'), fn ($q) => $q->onlyQrp())
+                ->when($request->boolean('lp'), fn ($q) => $q->onlyLp())
                 ->when($hledat !== '', fn ($q) => $q->where(
                     fn ($w) => $w->where('znacka', 'like', sprintf('%%%s%%', $hledat))
                         ->orWhere('locator', 'like', sprintf('%%%s%%', $hledat)),
