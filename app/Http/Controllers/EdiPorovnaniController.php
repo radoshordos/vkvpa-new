@@ -6,13 +6,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Edihead;
 use App\Services\Edi\DenikStatistiky;
-use App\Services\Edi\EnrichedQso;
 use App\Services\Edi\PorovnaniRivals;
 use App\Services\Edi\QsoGeometry;
 use App\Support\ContestWindow;
 use App\Support\Maidenhead;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
 /**
@@ -30,6 +28,7 @@ class EdiPorovnaniController extends Controller
     public function __construct(
         private readonly QsoGeometry $geometry,
         private readonly PorovnaniRivals $porovnani,
+        private readonly DenikStatistiky $stats,
     ) {}
 
     public function show(Request $request, Edihead $head): View
@@ -70,15 +69,15 @@ class EdiPorovnaniController extends Controller
                 $rivalCumulative = $this->geometry->prubehSkore($rivalEnriched, $rivalSq);
 
                 $timeline = [
-                    'labels' => self::timelineLabels($fromMin, $toMin),
-                    'mine' => self::timelineCounts($enriched, $fromMin, $toMin),
-                    'rival' => self::timelineCounts($rivalEnriched, $fromMin, $toMin),
+                    'labels' => $this->stats->timelineLabels($fromMin, $toMin),
+                    'mine' => $this->stats->timelineCounts($enriched, $fromMin, $toMin),
+                    'rival' => $this->stats->timelineCounts($rivalEnriched, $fromMin, $toMin),
                 ];
 
                 $azimuth = [
                     'labels' => ['S', 'SV', 'V', 'JV', 'J', 'JZ', 'Z', 'SZ'],
-                    'mine' => self::azimuthCounts($enriched),
-                    'rival' => self::azimuthCounts($rivalEnriched),
+                    'mine' => $this->stats->azimuthCounts($enriched),
+                    'rival' => $this->stats->azimuthCounts($rivalEnriched),
                 ];
             }
         }
@@ -102,67 +101,6 @@ class EdiPorovnaniController extends Controller
             ],
             'roundDataPending' => $head->id_kola !== null && ! $this->geometry->roundResultsDisclosable($head),
         ]);
-    }
-
-    /**
-     * Popisky 15minutových intervalů závodního okna („08:00", „08:15", …).
-     *
-     * @return list<string>
-     */
-    private static function timelineLabels(int $fromMin, int $toMin): array
-    {
-        $labels = [];
-
-        for ($min = $fromMin; $min < $toMin; $min += 15) {
-            $labels[] = sprintf('%02d:%02d', intdiv($min, 60), $min % 60);
-        }
-
-        return $labels;
-    }
-
-    /**
-     * Počty QSO v 15minutových intervalech závodního okna (QSO přesně na
-     * konci okna patří do posledního intervalu) – shodné dělení jako
-     * timeline v inkubátoru.
-     *
-     * @param  Collection<int, EnrichedQso>  $lines
-     * @return list<int>
-     */
-    private static function timelineCounts(Collection $lines, int $fromMin, int $toMin): array
-    {
-        $count = max(1, (int) ceil(($toMin - $fromMin) / 15));
-        $buckets = array_fill(0, $count, 0);
-
-        foreach ($lines as $l) {
-            $i = $l->timeMinutes === $toMin ? $count - 1 : intdiv($l->timeMinutes - $fromMin, 15);
-
-            if ($i >= 0 && $i < $count) {
-                $buckets[$i]++;
-            }
-        }
-
-        return array_values($buckets);
-    }
-
-    /**
-     * Počty QSO v 8 směrových sektorech (45°) po směru hodinových ručiček
-     * od severu – pro směrovou růžici porovnání.
-     *
-     * @param  Collection<int, EnrichedQso>  $lines
-     * @return list<int>
-     */
-    private static function azimuthCounts(Collection $lines): array
-    {
-        $counts = array_fill(0, 8, 0);
-
-        foreach ($lines as $l) {
-            if ($l->azimut === null) {
-                continue;
-            }
-            $counts[(int) (($l->azimut + 22.5) / 45) % 8]++;
-        }
-
-        return array_values($counts);
     }
 
     /**

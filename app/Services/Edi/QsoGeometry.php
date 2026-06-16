@@ -340,7 +340,7 @@ final class QsoGeometry
 
             $out[] = [
                 't' => $l->timeMinutes,
-                'cas' => sprintf('%02d:%02d', intdiv($l->timeMinutes, 60), $l->timeMinutes % 60),
+                'cas' => DenikStatistiky::hhmm($l->timeMinutes),
                 'call' => $l->call,
                 'points' => $l->points,
                 'nasobice' => count($squares),

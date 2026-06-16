@@ -71,15 +71,11 @@ class DenikStatistiky
      */
     public function timeline(Collection $lines, array $nasobice, int $fromMin, int $toMin): array
     {
-        $count = max(1, (int) ceil(($toMin - $fromMin) / 15));
+        $count = $this->timelineBuckets($fromMin, $toMin);
 
-        $labels = [];
+        $labels = $this->timelineLabels($fromMin, $toMin);
         $celkem = array_fill(0, $count, 0);
         $nove = array_fill(0, $count, 0);
-
-        for ($i = 0; $i < $count; $i++) {
-            $labels[] = self::hhmm($fromMin + $i * 15);
-        }
 
         $bucket = function (int $t) use ($fromMin, $toMin, $count): ?int {
             // QSO přesně na konci okna patří do posledního intervalu.
@@ -134,6 +130,74 @@ class DenikStatistiky
             'km' => array_values($km),
             'body' => array_values($body),
         ];
+    }
+
+    /**
+     * Popisky 15minutových intervalů závodního okna („08:00", „08:15", …).
+     * Sdíleno timeline grafem i stránkou porovnání deníků.
+     *
+     * @return list<string>
+     */
+    public function timelineLabels(int $fromMin, int $toMin): array
+    {
+        $count = $this->timelineBuckets($fromMin, $toMin);
+
+        $labels = [];
+        for ($i = 0; $i < $count; $i++) {
+            $labels[] = self::hhmm($fromMin + $i * 15);
+        }
+
+        return $labels;
+    }
+
+    /**
+     * Počty QSO v 15minutových intervalech závodního okna (QSO přesně na
+     * konci okna patří do posledního intervalu).
+     *
+     * @param  Collection<int, EnrichedQso>  $lines
+     * @return list<int>
+     */
+    public function timelineCounts(Collection $lines, int $fromMin, int $toMin): array
+    {
+        $count = $this->timelineBuckets($fromMin, $toMin);
+        $buckets = array_fill(0, $count, 0);
+
+        foreach ($lines as $l) {
+            $i = $l->timeMinutes === $toMin ? $count - 1 : intdiv($l->timeMinutes - $fromMin, 15);
+
+            if ($i >= 0 && $i < $count) {
+                $buckets[$i]++;
+            }
+        }
+
+        return array_values($buckets);
+    }
+
+    /**
+     * Počty QSO v 8 směrových sektorech (45°) po směru hodinových ručiček
+     * od severu – pro směrovou růžici porovnání dvou deníků.
+     *
+     * @param  Collection<int, EnrichedQso>  $lines
+     * @return list<int>
+     */
+    public function azimuthCounts(Collection $lines): array
+    {
+        $counts = array_fill(0, 8, 0);
+
+        foreach ($lines as $l) {
+            if ($l->azimut === null) {
+                continue;
+            }
+            $counts[(int) (($l->azimut + 22.5) / 45) % 8]++;
+        }
+
+        return array_values($counts);
+    }
+
+    /** Počet 15minutových intervalů v závodním okně. */
+    private function timelineBuckets(int $fromMin, int $toMin): int
+    {
+        return max(1, (int) ceil(($toMin - $fromMin) / 15));
     }
 
     /**
