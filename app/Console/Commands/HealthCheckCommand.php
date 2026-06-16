@@ -63,8 +63,8 @@ final class HealthCheckCommand extends Command
             $this->newLine();
             $fails
                 |> count(...)
-                |> (fn($x) => sprintf('Nalezeno %d blokujících problémů – oprav je před spuštěním.', $x))
-                |> $this(...);
+                |> (fn ($x) => sprintf('Nalezeno %d blokujících problémů – oprav je před spuštěním.', $x))
+                |> $this->error(...);
 
             return self::FAILURE;
         }
