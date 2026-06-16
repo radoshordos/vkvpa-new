@@ -43,6 +43,7 @@ final class EdiParser
         $fields = [];
         $qsos = [];
         $ignored = [];
+        $lineErrors = [];
         $declaredTotal = 0;
         $raw = '';
 
@@ -68,11 +69,17 @@ final class EdiParser
                         $ignored[] = $buf;
                     }
                 } elseif (preg_match(self::QSO_PATTERN, $upper, $m)) {
-                    $qsos[] = EdiQso::fromMatch($m);
+                    // Lokátor musí být platný Maidenhead: první 2 písmena A–R,
+                    // číslice 0–9, subčtverec A–X. Jinak je QSO odmítnuto.
+                    if (preg_match('/^[A-R]{2}[0-9]{2}([A-X]{2})?$/', $m[10]) !== 1) {
+                        $lineErrors[] = 'QSO s '.$m[3].' odmítnuto: lokátor „'.$m[10]
+                            .'" není platný Maidenhead (první 2 písmena musí být A–R, subčtverec A–X).';
+                    } else {
+                        $qsos[] = EdiQso::fromMatch($m);
+                    }
                 } elseif ($buf !== '') {
-                    // Neparsovatelný řádek (prázdná povinná pole, neplatný
-                    // lokátor…) – přeskočíme a importujeme zbytek deníku.
-                    // Nezapočítává se do platných QSO.
+                    // Neparsovatelný řádek (prázdná povinná pole apod.) –
+                    // přeskočíme a importujeme zbytek deníku.
                     $ignored[] = $buf;
                 }
             }
@@ -91,23 +98,26 @@ final class EdiParser
             }
         }
 
-        // Žádné platné spojení, ač deník nějaká deklaruje → soubor nemá platnou
-        // strukturu EDI (např. odeslaný .txt místo .edi) → odmítnout.
-        if ($qsos === [] && $declaredTotal > 0) {
+        // Žádné platné ani odmítnuté spojení, ač deník nějaká deklaruje → soubor
+        // nemá platnou strukturu EDI (např. odeslaný .txt místo .edi) → odmítnout.
+        // Pokud jsou QSO odmítnuta pro neplatný lokátor ($lineErrors), soubor
+        // je validní EDI – pokračujeme a závodník uvidí varování.
+        if ($qsos === [] && $lineErrors === [] && $declaredTotal > 0) {
             throw new EdiParseException(
                 'Soubor nevypadá jako platný EDI deník – nepodařilo se z něj načíst žádné spojení.',
                 $ignored,
             );
         }
 
-        // Platná + ignorovaná spojení musí dohromady dát deklarovaný počet;
-        // jinak v deníku něco chybí/přebývá (nesedí počet řádků).
-        if ($declaredTotal !== count($qsos) + count($ignored)) {
+        // Platná + odmítnutá (neplatný lokátor) + ignorovaná (ERROR) spojení
+        // musí dohromady dát deklarovaný počet; jinak v deníku něco chybí.
+        if ($declaredTotal !== count($qsos) + count($lineErrors) + count($ignored)) {
             throw new EdiParseException(
                 sprintf(
-                    'Nesoulad počtu QSO: deklarováno %d, naparsováno %d, ignorováno %d.',
+                    'Nesoulad počtu QSO: deklarováno %d, naparsováno %d, odmítnuto %d, ignorováno %d.',
                     $declaredTotal,
                     count($qsos),
+                    count($lineErrors),
                     count($ignored),
                 ),
                 $ignored,
@@ -119,6 +129,7 @@ final class EdiParser
             qsos: $qsos,
             rawSource: $raw,
             declaredTotal: $declaredTotal,
+            lineErrors: $lineErrors,
             ignoredLines: $ignored,
         );
     }

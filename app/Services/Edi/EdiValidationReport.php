@@ -16,8 +16,10 @@ use App\Actions\ImportEdiAction;
 final readonly class EdiValidationReport
 {
     /**
-     * @param  array<string, int>  $duplicateCalls  značka → počet výskytů (jen >1)
-     * @param  list<string>  $invalidLocators  ukázka „ZNAČKA: WWL" s vadným lokátorem
+     * @param  array<string, int>  $duplicateCalls   značka → počet výskytů (jen >1)
+     * @param  list<string>        $invalidLocators   ukázka „ZNAČKA: WWL" s vadným lokátorem
+     * @param  list<string>        $lineErrors        QSO odmítnutá parserem (neplatný Maidenhead)
+     * @param  ?string             $invalidHomeLocator neplatný PWWLo (null = v pořádku)
      */
     public function __construct(
         public array $duplicateCalls,
@@ -27,8 +29,10 @@ final readonly class EdiValidationReport
         public int $wrongDate,
         public int $declaredTotal,
         public int $parsedCount,
-        public int $lineErrors,
+        public array $lineErrors,
         public int $ignoredLines,
+        public bool $emptyPCall = false,
+        public ?string $invalidHomeLocator = null,
     ) {}
 
     public function hasWarnings(): bool
@@ -44,6 +48,25 @@ final readonly class EdiValidationReport
     public function messages(): array
     {
         $m = [];
+
+        // ── Problémy v hlavičce (nejzávažnější – vliv na celý deník) ─────────
+
+        if ($this->emptyPCall) {
+            $m[] = 'Hlavička deníku neobsahuje volací značku (PCall) – deník nelze přiřadit závodníkovi. Zkontroluj pole PCall v EDI souboru.';
+        }
+
+        if ($this->invalidHomeLocator !== null) {
+            $loc = $this->invalidHomeLocator === '' ? '(prázdné)' : '„'.$this->invalidHomeLocator.'"';
+            $m[] = 'Domácí lokátor '.$loc.' v poli PWWLo není platný Maidenhead formát – výsledné skóre bude 0, protože vzdálenosti ani body nelze spočítat.';
+        }
+
+        // ── QSO odmítnutá parserem (neplatný lokátor) ────────────────────────
+
+        foreach ($this->lineErrors as $err) {
+            $m[] = $err;
+        }
+
+        // ── Ostatní QSO-úroveň ───────────────────────────────────────────────
 
         if ($this->duplicateCalls !== []) {
             $list = [];
@@ -73,10 +96,6 @@ final readonly class EdiValidationReport
 
         if ($this->declaredTotal > 0 && $this->declaredTotal !== $this->parsedCount) {
             $m[] = 'Hlavička deklaruje '.$this->declaredTotal.' QSO, ale v deníku jich je '.$this->parsedCount.'.';
-        }
-
-        if ($this->lineErrors > 0) {
-            $m[] = $this->lineErrors.' řádků se nepodařilo zpracovat (neodpovídají formátu QSO).';
         }
 
         if ($this->ignoredLines > 0) {

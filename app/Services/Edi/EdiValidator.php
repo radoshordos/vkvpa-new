@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Services\Edi;
 
-use App\Services\Scoring\ScoringService;
 use App\Support\ContestWindow;
 use App\Support\Maidenhead;
 
@@ -59,6 +58,9 @@ final class EdiValidator
         $duplicates = array_filter($callCounts, static fn (int $n): bool => $n > 1);
         arsort($duplicates);
 
+        $pCall = trim($log->header->pCall());
+        $pWWLo = trim($log->header->pWWLo());
+
         return new EdiValidationReport(
             duplicateCalls: $duplicates,
             invalidLocators: $invalid,
@@ -67,8 +69,10 @@ final class EdiValidator
             wrongDate: $wrongDate,
             declaredTotal: $log->declaredTotal,
             parsedCount: $log->qsoCount(),
-            lineErrors: count($log->lineErrors),
+            lineErrors: $log->lineErrors,
             ignoredLines: count($log->ignoredLines),
+            emptyPCall: $pCall === '',
+            invalidHomeLocator: Maidenhead::isValidLocator($pWWLo) ? null : $pWWLo,
         );
     }
 }
