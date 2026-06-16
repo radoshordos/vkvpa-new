@@ -183,5 +183,4 @@ class EdiPorovnaniController extends Controller
             'body' => $last['body'] ?? 0,
         ];
     }
-
 }

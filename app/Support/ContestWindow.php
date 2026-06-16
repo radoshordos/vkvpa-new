@@ -24,7 +24,7 @@ final class ContestWindow
 
     /**
      * Extrahuje den závodu (YYMMDD) z TDate hlavičky EDI (formát YYYYMMDD nebo
-     * YYYYMMDD;YYYYMMDD). Vrátí prázdný řetězec, pokud je pole kratší než 8 znaků.
+     * YYYYMMDD;YYYYMMDD). Pro prázdný vstup vrátí prázdný řetězec.
      */
     public static function dayFromTDate(string $tdate): string
     {

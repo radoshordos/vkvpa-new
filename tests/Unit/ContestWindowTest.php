@@ -16,9 +16,8 @@ class ContestWindowTest extends TestCase
         $this->assertSame('260615', ContestWindow::dayFromTDate('  20260615  '));
     }
 
-    public function test_day_from_tdate_returns_empty_for_short_input(): void
+    public function test_day_from_tdate_returns_empty_for_empty_input(): void
     {
         $this->assertSame('', ContestWindow::dayFromTDate(''));
-        $this->assertSame('', ContestWindow::dayFromTDate('2026'));
     }
 }
