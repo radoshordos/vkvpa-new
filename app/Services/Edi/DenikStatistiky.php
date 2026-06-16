@@ -8,6 +8,7 @@ use App\Models\Edihead;
 use App\Models\VkvpaData;
 use App\Models\VkvpaKola;
 use App\Support\ContestWindow;
+use App\Support\Maidenhead;
 use Illuminate\Support\Collection;
 
 /**
@@ -32,7 +33,7 @@ class DenikStatistiky
         /** @var array<string, true> $seen */
         $seen = [];
         $poradi = 0;
-        if (preg_match('/^[A-R]{2}\d{2}$/', $homeSq) === 1) {
+        if (Maidenhead::isValidBigSquare($homeSq)) {
             $seen[$homeSq] = true;
             $poradi = 1;
         }
@@ -41,7 +42,7 @@ class DenikStatistiky
 
         foreach ($lines as $idx => $l) {
             $sq = Maidenhead::bigSquare($l->wwl);
-            if (preg_match('/^[A-R]{2}\d{2}$/', $sq) !== 1 || isset($seen[$sq])) {
+            if (! Maidenhead::isValidBigSquare($sq) || isset($seen[$sq])) {
                 continue;
             }
 
@@ -149,7 +150,7 @@ class DenikStatistiky
 
         foreach ($lines as $l) {
             $sq = Maidenhead::bigSquare($l->wwl);
-            if (preg_match('/^[A-R]{2}\d{2}$/', $sq) !== 1) {
+            if (! Maidenhead::isValidBigSquare($sq)) {
                 continue;
             }
             $by[$sq] ??= ['square' => $sq, 'pocet' => 0, 'body' => 0];
@@ -281,7 +282,7 @@ class DenikStatistiky
      */
     public function nezapocitana(Edihead $head): array
     {
-        $den = substr(trim((string) $head->t_date), 2, 6);
+        $den = ContestWindow::dayFromTDate((string) $head->t_date);
         $from = ContestWindow::from();
         $to = ContestWindow::to();
 

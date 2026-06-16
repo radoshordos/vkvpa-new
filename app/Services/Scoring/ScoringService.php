@@ -108,7 +108,7 @@ final class ScoringService
     {
         $home = Maidenhead::bigSquare((string) $head->p_wwlo);
         // Den závodu = YYMMDD ze začátku t_date (formát YYYYMMDD;YYYYMMDD).
-        $den = substr(trim((string) $head->t_date), 2, 6);
+        $den = ContestWindow::dayFromTDate((string) $head->t_date);
 
         $squares = $head->lines()
             ->whereBetween('time', [ContestWindow::from(), ContestWindow::to()])
@@ -130,7 +130,7 @@ final class ScoringService
     public function scoreLog(EdiLog $log): EdiScore
     {
         $home = Maidenhead::bigSquare($log->header->pWWLo());
-        $den = substr(trim($log->header->tDate()), 2, 6);
+        $den = ContestWindow::dayFromTDate($log->header->tDate());
         $from = ContestWindow::from();
         $to = ContestWindow::to();
 

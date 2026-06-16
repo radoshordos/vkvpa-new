@@ -21,4 +21,13 @@ final class ContestWindow
     {
         return VkvpaSettings::contestWindowTo();
     }
+
+    /**
+     * Extrahuje den závodu (YYMMDD) z TDate hlavičky EDI (formát YYYYMMDD nebo
+     * YYYYMMDD;YYYYMMDD). Vrátí prázdný řetězec, pokud je pole kratší než 8 znaků.
+     */
+    public static function dayFromTDate(string $tdate): string
+    {
+        return substr(trim($tdate), 2, 6);
+    }
 }

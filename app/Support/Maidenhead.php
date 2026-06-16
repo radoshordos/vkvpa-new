@@ -38,6 +38,15 @@ final class Maidenhead
     }
 
     /**
+     * Je řetězec platný velký čtverec (přesně 4 znaky Maidenhead, normalizováno)?
+     * Vstup se před porovnáním ořízne a převede na velká písmena.
+     */
+    public static function isValidBigSquare(string $square): bool
+    {
+        return preg_match('/^[A-R]{2}\d{2}$/', strtoupper(trim($square))) === 1;
+    }
+
+    /**
      * @return array{lat: float, lon: float}|null null při neplatném lokátoru
      */
     public static function toLatLon(string $locator): ?array

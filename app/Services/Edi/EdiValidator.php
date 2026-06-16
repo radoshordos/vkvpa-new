@@ -21,7 +21,7 @@ final class EdiValidator
 {
     public function validate(EdiLog $log): EdiValidationReport
     {
-        $den = substr(trim($log->header->tDate()), 2, 6);
+        $den = ContestWindow::dayFromTDate($log->header->tDate());
         $from = ContestWindow::from();
         $to = ContestWindow::to();
 
