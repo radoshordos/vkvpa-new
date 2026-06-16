@@ -8,7 +8,6 @@ use App\Enums\KoloStav;
 use App\Models\Edihead;
 use App\Models\Ediline;
 use App\Models\VkvpaKola;
-use App\Support\ContestWindow;
 use App\Support\Maidenhead;
 use App\Support\VkvpaSettings;
 use Illuminate\Support\Collection;
@@ -33,17 +32,17 @@ final class QsoGeometry
      * Obohacená QSO v závodním okně (s platnými souřadnicemi).
      *
      * @param  array{lat: float, lon: float}|null  $home  souřadnice domácího QTH
-     * @param  string  $orderColumn  sloupec řazení (např. 'time' nebo 'received_wwl')
+     * @param  string  $orderColumn  sloupec řazení (např. 'qso_at' nebo 'received_wwl')
      * @return Collection<int, EnrichedQso>
      */
-    public function enrichedQsos(Edihead $head, ?array $home, string $orderColumn = 'time'): Collection
+    public function enrichedQsos(Edihead $head, ?array $home, string $orderColumn = 'qso_at'): Collection
     {
         $homeSq = Maidenhead::bigSquare((string) $head->p_wwlo);
 
         return $head->lines()
-            ->whereBetween('time', [ContestWindow::from(), ContestWindow::to()])
+            ->inContestWindow()
             ->orderBy($orderColumn)
-            ->get(['lon', 'lat', 'call_sign', 'received_wwl', 'time', 'mode_code'])
+            ->get(['lon', 'lat', 'call_sign', 'received_wwl', 'qso_at', 'mode_code'])
             ->map(function (Ediline $l) use ($home, $head, $homeSq): ?EnrichedQso {
                 $lat = $l->lat;
                 $lon = $l->lon;
@@ -71,8 +70,7 @@ final class QsoGeometry
                 $dist = $home === null ? null : (int) round(Maidenhead::distanceKm($home['lat'], $home['lon'], $lat, $lon));
                 $azimut = $home === null ? null : (int) round(Maidenhead::bearingDeg($home['lat'], $home['lon'], $lat, $lon));
 
-                $time = (string) $l->time;
-                $timeMinutes = DenikStatistiky::minutes($time);
+                $timeMinutes = $l->timeMinutes;
 
                 // Body za spojení přepočítáme z lokátorů (neplatný → 0); sloupec
                 // qso_points z deníku se ignoruje (shodně se ScoringService).
@@ -103,7 +101,7 @@ final class QsoGeometry
     {
         $counts = [];
 
-        foreach ($head->lines()->whereBetween('time', [ContestWindow::from(), ContestWindow::to()])->get(['received_wwl']) as $l) {
+        foreach ($head->lines()->inContestWindow()->get(['received_wwl']) as $l) {
             $sq = Maidenhead::bigSquare($l->receivedWwl);
             if (Maidenhead::isValidBigSquare($sq)) {
                 $counts[$sq] = ($counts[$sq] ?? 0) + 1;
@@ -189,8 +187,8 @@ final class QsoGeometry
         foreach (
             Ediline::query()
                 ->whereIn('edihead_id', $headIds)
-                ->whereBetween('time', [ContestWindow::from(), ContestWindow::to()])
-                ->orderBy('time')
+                ->inContestWindow()
+                ->orderBy('qso_at')
                 ->get(['call_sign', 'received_wwl', 'lon', 'lat']) as $l
         ) {
             $call = strtoupper(trim((string) $l->call_sign));

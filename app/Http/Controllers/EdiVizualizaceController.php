@@ -38,7 +38,7 @@ class EdiVizualizaceController extends Controller
         $home = Maidenhead::toLatLon((string) $head->p_wwlo);
         $homeSq = Maidenhead::bigSquare((string) $head->p_wwlo);
 
-        $enriched = $this->geometry->enrichedQsos($head, $home, 'time');
+        $enriched = $this->geometry->enrichedQsos($head, $home, 'qso_at');
 
         $fromMin = DenikStatistiky::minutes(ContestWindow::from());
         $toMin = DenikStatistiky::minutes(ContestWindow::to());

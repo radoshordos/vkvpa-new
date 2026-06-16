@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\QsoMode;
+use App\Support\ContestWindow;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
@@ -18,8 +21,6 @@ use Override;
  *
  * @property int $id
  * @property int $edihead_id
- * @property string|null $date
- * @property string|null $time
  * @property Carbon|null $qso_at
  * @property string|null $call_sign
  * @property int|null $mode_code
@@ -40,7 +41,7 @@ use Override;
  * @property-read Edihead|null $head
  */
 #[Fillable([
-    'edihead_id', 'date', 'time', 'qso_at', 'call_sign', 'mode_code', 'sent_rst',
+    'edihead_id', 'qso_at', 'call_sign', 'mode_code', 'sent_rst',
     'sent_qso_number', 'received_rst', 'received_qso_number',
     'received_exchange', 'received_wwl', 'qso_points',
     'new_exchange_n', 'new_wwl_n', 'new_dxcc_n',
@@ -83,6 +84,30 @@ class Ediline extends Model
     /** Opravený lokátor (new_wwl_n, prázdný string pokud chybí). */
     public string $newWwl {
         get => trim((string) ($this->{'new_wwl_n'} ?? ''));
+    }
+
+    /** Čas QSO jako minuty od půlnoci (UTC); 0 když qso_at chybí. */
+    public int $timeMinutes {
+        get {
+            $at = $this->qso_at?->utc();
+
+            return $at === null ? 0 : $at->hour * 60 + $at->minute;
+        }
+    }
+
+    /**
+     * Scope: jen QSO uvnitř závodního časového okna (čas dne 08:00–11:00 UTC),
+     * bez ohledu na den. Filtruje přes qso_at (`whereTime` je přenositelný mezi
+     * MySQL a SQLite); řádky bez qso_at se nezapočítají.
+     *
+     * @param  Builder<Ediline>  $query
+     */
+    #[Scope]
+    protected function inContestWindow(Builder $query): void
+    {
+        $query
+            ->whereTime('qso_at', '>=', ContestWindow::fromSqlTime())
+            ->whereTime('qso_at', '<=', ContestWindow::toSqlTime());
     }
 
     #[Override]

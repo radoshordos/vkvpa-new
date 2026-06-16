@@ -45,7 +45,7 @@ final class AdminEntryChecker
             return $findings; // ruční hlášení bez EDI – EDI kontroly přeskočit
         }
 
-        $head = Edihead::with(['lines' => static fn (HasMany $q) => $q->select('edihead_id', 'call_sign', 'time', 'received_wwl')])
+        $head = Edihead::with(['lines' => static fn (HasMany $q) => $q->select('edihead_id', 'call_sign', 'qso_at', 'received_wwl')])
             ->find($entry->edihead_id);
 
         if ($head === null) {
@@ -106,8 +106,7 @@ final class AdminEntryChecker
 
         foreach ($head->lines as $l) {
             if (strtoupper(trim((string) $l->call_sign)) === $myCall) {
-                $t = trim((string) $l->time);
-                $cas = strlen($t) === 4 ? substr($t, 0, 2).':'.substr($t, 2, 2) : $t;
+                $cas = $l->qso_at?->utc()->format('H:i') ?? '—';
                 $findings[] = new Finding(
                     Severity::Warning,
                     'Self-QSO v '.$cas.' – stanice navázala spojení sama se sebou (chyba loggeru, QSO se nezapočítá).',
@@ -130,7 +129,7 @@ final class AdminEntryChecker
     {
         /** @var list<int> $times */
         $times = $lines
-            ->map(static fn (Ediline $l): int => DenikStatistiky::minutes(trim((string) $l->time)))
+            ->map(static fn (Ediline $l): int => $l->timeMinutes)
             ->filter(static fn (int $t): bool => $t > 0)
             ->sort()
             ->values()
@@ -307,9 +306,9 @@ final class AdminEntryChecker
         $to = ContestWindow::to();
 
         $count = $lines->filter(static function (Ediline $l) use ($from, $to): bool {
-            $t = trim((string) $l->time);
+            $hhmm = $l->qso_at?->utc()->format('Hi');
 
-            return $t !== '' && ! ($t >= $from && $t <= $to);
+            return $hhmm !== null && ! ($hhmm >= $from && $hhmm <= $to);
         })->count();
 
         if ($count === 0) {

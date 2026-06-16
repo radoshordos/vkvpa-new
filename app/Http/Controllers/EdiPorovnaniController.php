@@ -42,7 +42,7 @@ class EdiPorovnaniController extends Controller
         $rivals = $this->porovnani->rivals($head);
         $rival = $rivals->firstWhere('id', $request->integer('porovnat'));
 
-        $enriched = $this->geometry->enrichedQsos($head, $home, 'time');
+        $enriched = $this->geometry->enrichedQsos($head, $home, 'qso_at');
         $cumulative = $this->geometry->prubehSkore($enriched, $homeSq);
 
         $compare = null;
@@ -65,7 +65,7 @@ class EdiPorovnaniController extends Controller
                 ];
 
                 $rivalSq = Maidenhead::bigSquare((string) $rival->p_wwlo);
-                $rivalEnriched = $this->geometry->enrichedQsos($rival, $rivalHome, 'time');
+                $rivalEnriched = $this->geometry->enrichedQsos($rival, $rivalHome, 'qso_at');
                 $rivalCumulative = $this->geometry->prubehSkore($rivalEnriched, $rivalSq);
 
                 $timeline = [

@@ -108,12 +108,12 @@ final class ScoringService
     public function scoreEdi(Edihead $head): EdiScore
     {
         $home = Maidenhead::bigSquare((string) $head->p_wwlo);
-        // Den závodu = YYMMDD ze začátku t_date (formát YYYYMMDD;YYYYMMDD).
-        $den = ContestWindow::dayFromTDate((string) $head->t_date);
+        // Den závodu jako plné datum (Y-m-d) ze začátku t_date (YYYYMMDD;YYYYMMDD).
+        $den = ContestWindow::dateFromTDate((string) $head->t_date);
 
         $squares = $head->lines()
-            ->whereBetween('time', [ContestWindow::from(), ContestWindow::to()])
-            ->when($den !== '', fn ($q) => $q->where('date', $den))
+            ->inContestWindow()
+            ->when($den !== null, fn ($q) => $q->whereDate('qso_at', $den))
             ->get(['received_wwl'])
             ->map(static fn ($l): string => Maidenhead::bigSquare($l->receivedWwl))
             ->filter(static fn (string $sq): bool => $sq !== '')
