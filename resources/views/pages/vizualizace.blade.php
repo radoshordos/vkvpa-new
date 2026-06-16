@@ -138,15 +138,6 @@ window.__vizConfig = {
   {{-- Ovládání přehrávání – viditelné jen v režimu „Přehrávání" (řídí JS). --}}
   <div id="viz-playback-controls" class="hidden items-center gap-3 mb-2 flex-wrap">
     <button type="button" id="viz-play" class="map-tab">▶ Přehrát</button>
-    <span class="inline-flex items-center gap-1">
-      <button type="button" id="viz-krok-zpet" class="map-tab" title="Předchozí QSO">⏮</button>
-      <button type="button" id="viz-krok-vpred" class="map-tab" title="Další QSO">⏭</button>
-    </span>
-    <span class="inline-flex items-center gap-1" title="Rychlost přehrávání">
-      <button type="button" class="map-tab" data-speed="100">½×</button>
-      <button type="button" class="map-tab active" data-speed="50">1×</button>
-      <button type="button" class="map-tab" data-speed="25">2×</button>
-    </span>
     <input type="range" id="viz-cas" class="flex-1 min-w-40"
            min="{{ $window['from'] }}" max="{{ $window['to'] }}" value="{{ $window['to'] }}" step="1">
     <span class="text-sm font-mono font-semibold text-heading" id="viz-cas-label"></span>

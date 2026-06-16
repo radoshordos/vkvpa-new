@@ -273,7 +273,7 @@ function applyTime(t) {
 }
 
 let timer = null;
-let speedMs = 50; // ms na minutu závodu (1× = 50 ms, viz tlačítka data-speed)
+const speedMs = 50; // ms na minutu závodu (pevná rychlost přehrávání 1×)
 
 function stopReplay() {
     if (timer !== null) { clearInterval(timer); timer = null; }
@@ -300,42 +300,6 @@ playBtn.addEventListener('click', function () {
     slider.value = String(t);
     applyTime(t);
     timer = setInterval(tick, speedMs);
-});
-
-// Rychlost přehrávání (½× / 1× / 2×) – za běhu se interval přeplánuje.
-document.querySelectorAll('[data-speed]').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-        speedMs = Number(btn.dataset.speed);
-        document.querySelectorAll('[data-speed]').forEach((b) => b.classList.toggle('active', b === btn));
-        if (timer !== null) {
-            clearInterval(timer);
-            timer = setInterval(tick, speedMs);
-        }
-    });
-});
-
-// Krokování po QSO: skok na čas předchozího/dalšího spojení.
-const qsoTimes = [...new Set(playbackItems.map((it) => it.t))].sort((a, b) => a - b);
-
-document.getElementById('viz-krok-vpred').addEventListener('click', function () {
-    stopReplay();
-    const cur = Number(slider.value);
-    const next = qsoTimes.find((t) => t > cur);
-    const t = next !== undefined ? next : cfg.window.to;
-    slider.value = String(t);
-    applyTime(t);
-});
-
-document.getElementById('viz-krok-zpet').addEventListener('click', function () {
-    stopReplay();
-    const cur = Number(slider.value);
-    let prev;
-    for (const t of qsoTimes) {
-        if (t < cur) prev = t; else break;
-    }
-    const t = prev !== undefined ? prev : cfg.window.from;
-    slider.value = String(t);
-    applyTime(t);
 });
 
 // Výřez nastavíme dřív, než zapneme vrstvu – mřížka CRK čte map.getBounds().
