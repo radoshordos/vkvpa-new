@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Services\Admin;
 
+use App\Enums\Severity;
 use App\Models\Edihead;
 use App\Models\Ediline;
 use App\Models\VkvpaData;
 use App\Services\Edi\DenikStatistiky;
+use App\Support\Finding;
 use Illuminate\Support\Collection;
 
 /**
@@ -22,60 +24,73 @@ final class AdminEntryChecker
      * Vrátí seznam varování relevantních pro schvalování záznamu.
      * Prázdný seznam = žádné podezřelé nálezy.
      *
-     * @return list<string>
+     * @return list<Finding>
      */
     public function warnings(VkvpaData $entry): array
     {
-        $msgs = [];
+        $findings = [];
 
         foreach ($this->contactWarnings($entry) as $w) {
-            $msgs[] = $w;
+            $findings[] = $w;
         }
 
         if ($entry->edihead_id === null) {
-            return $msgs; // ruční hlášení bez EDI – EDI kontroly přeskočit
+            return $findings; // ruční hlášení bez EDI – EDI kontroly přeskočit
         }
 
         $head = Edihead::with(['lines' => static fn ($q) => $q->select('edihead_id', 'call_sign', 'time')])
             ->find($entry->edihead_id);
 
         if ($head === null) {
-            return $msgs;
+            return $findings;
+        }
+
+        if (trim((string) $head->p_call) === '') {
+            $findings[] = new Finding(
+                Severity::Fatal,
+                'Deník nemá volací značku (PCall) – hlášení nelze přiřadit závodníkovi. Záznam by měl být smazán.',
+            );
         }
 
         foreach ($this->selfQsoWarnings($head) as $w) {
-            $msgs[] = $w;
+            $findings[] = $w;
         }
 
         $rateWarning = $this->operatingRateWarning($head->lines);
         if ($rateWarning !== null) {
-            $msgs[] = $rateWarning;
+            $findings[] = $rateWarning;
         }
 
         $crossWarning = $this->crossCheckWarning($head, (int) $entry->id_kola);
         if ($crossWarning !== null) {
-            $msgs[] = $crossWarning;
+            $findings[] = $crossWarning;
         }
 
-        return $msgs;
+        return $findings;
     }
 
     // ── Chybějící kontaktní údaje ─────────────────────────────────────────────
 
-    /** @return list<string> */
+    /** @return list<Finding> */
     private function contactWarnings(VkvpaData $entry): array
     {
-        $msgs = [];
+        $findings = [];
 
         if (trim((string) $entry->jmeno) === '') {
-            $msgs[] = 'Chybí jméno operátora – pole Jméno je prázdné.';
+            $findings[] = new Finding(
+                Severity::Warning,
+                'Chybí jméno operátora – pole Jméno je prázdné.',
+            );
         }
 
         if (trim((string) $entry->mail) === '') {
-            $msgs[] = 'Chybí kontaktní e-mail – závodníkovi nelze odeslat potvrzení ani ho kontaktovat.';
+            $findings[] = new Finding(
+                Severity::Warning,
+                'Chybí kontaktní e-mail – závodníkovi nelze odeslat potvrzení ani ho kontaktovat.',
+            );
         }
 
-        return $msgs;
+        return $findings;
     }
 
     // ── Self-QSO ─────────────────────────────────────────────────────────────
@@ -84,22 +99,25 @@ final class AdminEntryChecker
      * Spojení, kde volačka protistanice = vlastní volačka (chyba loggeru).
      *
      * @param  Collection<int, Ediline>  $lines
-     * @return list<string>
+     * @return list<Finding>
      */
     private function selfQsoWarnings(Edihead $head): array
     {
         $myCall = strtoupper(trim((string) $head->p_call));
-        $msgs = [];
+        $findings = [];
 
         foreach ($head->lines as $l) {
             if (strtoupper(trim((string) $l->call_sign)) === $myCall) {
                 $t = trim((string) $l->time);
                 $cas = strlen($t) === 4 ? substr($t, 0, 2).':'.substr($t, 2, 2) : $t;
-                $msgs[] = 'Self-QSO v '.$cas.' – stanice navázala spojení sama se sebou (chyba loggeru, QSO se nezapočítá).';
+                $findings[] = new Finding(
+                    Severity::Warning,
+                    'Self-QSO v '.$cas.' – stanice navázala spojení sama se sebou (chyba loggeru, QSO se nezapočítá).',
+                );
             }
         }
 
-        return $msgs;
+        return $findings;
     }
 
     // ── Neobvyklé tempo provozu ───────────────────────────────────────────────
@@ -113,7 +131,7 @@ final class AdminEntryChecker
      *
      * @param  Collection<int, Ediline>  $lines
      */
-    private function operatingRateWarning(Collection $lines): ?string
+    private function operatingRateWarning(Collection $lines): ?Finding
     {
         /** @var list<int> $times */
         $times = $lines
@@ -139,11 +157,14 @@ final class AdminEntryChecker
         }
 
         if ($max > self::RATE_THRESHOLD) {
-            return sprintf(
-                'Neobvyklé tempo provozu: %d QSO za %d minut (%s). Může naznačovat upravený nebo automaticky generovaný log.',
-                $max,
-                self::RATE_WINDOW_MIN,
-                (string) $maxWindow,
+            return new Finding(
+                Severity::Warning,
+                sprintf(
+                    'Neobvyklé tempo provozu: %d QSO za %d minut (%s). Může naznačovat upravený nebo automaticky generovaný log.',
+                    $max,
+                    self::RATE_WINDOW_MIN,
+                    (string) $maxWindow,
+                ),
             );
         }
 
@@ -159,7 +180,7 @@ final class AdminEntryChecker
      *
      * @param  Collection<int, Ediline>  $lines
      */
-    private function crossCheckWarning(Edihead $head, int $koloId): ?string
+    private function crossCheckWarning(Edihead $head, int $koloId): ?Finding
     {
         if ($koloId === 0) {
             return null;
@@ -187,9 +208,12 @@ final class AdminEntryChecker
             return null;
         }
 
-        return sprintf(
-            'Křížová kontrola: %d z pracovaných protistaní má v tomto kole odevzdán log – doporučeno porovnat záznamy.',
-            $count,
+        return new Finding(
+            Severity::Info,
+            sprintf(
+                'Křížová kontrola: %d z pracovaných protistaní má v tomto kole odevzdán log – doporučeno porovnat záznamy.',
+                $count,
+            ),
         );
     }
 }

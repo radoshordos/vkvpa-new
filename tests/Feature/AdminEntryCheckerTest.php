@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Enums\Severity;
 use App\Models\Edihead;
 use App\Models\Ediline;
 use App\Models\VkvpaData;
@@ -105,7 +106,8 @@ class AdminEntryCheckerTest extends TestCase
         $warnings = $this->checker->warnings($entry);
 
         $this->assertCount(1, $warnings);
-        $this->assertStringContainsString('jméno', mb_strtolower($warnings[0]));
+        $this->assertStringContainsString('jméno', mb_strtolower($warnings[0]->message));
+        $this->assertSame(Severity::Warning, $warnings[0]->severity);
     }
 
     public function test_warns_when_email_is_missing(): void
@@ -117,7 +119,8 @@ class AdminEntryCheckerTest extends TestCase
         $warnings = $this->checker->warnings($entry);
 
         $this->assertCount(1, $warnings);
-        $this->assertStringContainsString('e-mail', mb_strtolower($warnings[0]));
+        $this->assertStringContainsString('e-mail', mb_strtolower($warnings[0]->message));
+        $this->assertSame(Severity::Warning, $warnings[0]->severity);
     }
 
     public function test_warns_for_both_missing_name_and_email(): void
@@ -154,8 +157,9 @@ class AdminEntryCheckerTest extends TestCase
         $warnings = $this->checker->warnings($entry);
 
         $this->assertCount(1, $warnings);
-        $this->assertStringContainsString('Self-QSO', $warnings[0]);
-        $this->assertStringContainsString('09:30', $warnings[0]);
+        $this->assertStringContainsString('Self-QSO', $warnings[0]->message);
+        $this->assertStringContainsString('09:30', $warnings[0]->message);
+        $this->assertSame(Severity::Warning, $warnings[0]->severity);
     }
 
     public function test_no_self_qso_warning_when_all_calls_are_different(): void
@@ -185,8 +189,9 @@ class AdminEntryCheckerTest extends TestCase
 
         $warnings = $this->checker->warnings($entry);
 
-        $found = array_filter($warnings, static fn (string $w): bool => str_contains($w, 'tempo provozu'));
+        $found = array_filter($warnings, static fn ($w): bool => str_contains($w->message, 'tempo provozu'));
         $this->assertNotEmpty($found);
+        $this->assertSame(Severity::Warning, array_values($found)[0]->severity);
     }
 
     public function test_no_rate_warning_when_qso_spread_over_time(): void
@@ -202,7 +207,7 @@ class AdminEntryCheckerTest extends TestCase
 
         $warnings = $this->checker->warnings($entry);
 
-        $rateWarnings = array_filter($warnings, static fn (string $w): bool => str_contains($w, 'tempo provozu'));
+        $rateWarnings = array_filter($warnings, static fn ($w): bool => str_contains($w->message, 'tempo provozu'));
         $this->assertEmpty($rateWarnings);
     }
 
@@ -220,9 +225,11 @@ class AdminEntryCheckerTest extends TestCase
 
         $warnings = $this->checker->warnings($entry);
 
-        $found = array_filter($warnings, static fn (string $w): bool => str_contains($w, 'Křížová kontrola'));
+        $found = array_filter($warnings, static fn ($w): bool => str_contains($w->message, 'Křížová kontrola'));
         $this->assertNotEmpty($found);
-        $this->assertStringContainsString('1', array_values($found)[0]);
+        $crossWarning = array_values($found)[0];
+        $this->assertStringContainsString('1', $crossWarning->message);
+        $this->assertSame(Severity::Info, $crossWarning->severity);
     }
 
     public function test_no_cross_check_warning_when_no_worked_stations_have_logs(): void
@@ -236,7 +243,23 @@ class AdminEntryCheckerTest extends TestCase
 
         $warnings = $this->checker->warnings($entry);
 
-        $crossWarnings = array_filter($warnings, static fn (string $w): bool => str_contains($w, 'Křížová kontrola'));
+        $crossWarnings = array_filter($warnings, static fn ($w): bool => str_contains($w->message, 'Křížová kontrola'));
         $this->assertEmpty($crossWarnings);
+    }
+
+    public function test_fatal_warning_when_edihead_has_empty_pcall(): void
+    {
+        $kolo = $this->kolo();
+        $kat = $this->kat();
+        $head = $this->edihead($kolo, '');
+        $entry = $this->entry($kolo, $kat, ['edihead_id' => $head->id]);
+
+        $warnings = $this->checker->warnings($entry);
+
+        $found = array_filter($warnings, static fn ($w): bool => str_contains($w->message, 'PCall'));
+        $this->assertNotEmpty($found);
+        $fatalWarning = array_values($found)[0];
+        $this->assertSame(Severity::Fatal, $fatalWarning->severity);
+        $this->assertStringContainsString('smazán', $fatalWarning->message);
     }
 }

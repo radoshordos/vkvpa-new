@@ -31,15 +31,18 @@
     </x-alert>
 @endif
 
-@if ($isAdmin && !empty($adminWarnings))
-<div class="card mb-4 border-amber-300 bg-amber-50">
-    <div class="flex items-center gap-3 border-b border-amber-200 px-5 py-3">
-        <x-icon name="triangle-alert" class="h-5 w-5 flex-shrink-0 text-amber-600" />
-        <p class="text-sm font-semibold text-amber-800">Varování administrátora</p>
+@if ($isAdmin && count($adminWarnings) > 0)
+<div class="card mb-4 border-gray-300 bg-white">
+    <div class="flex items-center gap-3 border-b border-gray-200 px-5 py-3">
+        <x-icon name="triangle-alert" class="h-5 w-5 flex-shrink-0 text-gray-500" />
+        <p class="text-sm font-semibold text-gray-700">Varování administrátora</p>
     </div>
-    <ul class="space-y-1 px-5 py-3 text-sm text-amber-900">
+    <ul class="space-y-1 px-5 py-3 text-sm text-gray-800">
         @foreach ($adminWarnings as $w)
-            <li class="flex gap-2"><span class="mt-0.5 flex-shrink-0 text-amber-500">&#9654;</span><span>{{ $w }}</span></li>
+            <li class="flex items-start gap-2">
+                <span class="mt-0.5 inline-flex items-center rounded px-1.5 py-0.5 text-xs font-semibold {{ $w->severity->badgeClasses() }}">{{ $w->severity->label() }}</span>
+                <span>{{ $w->message }}</span>
+            </li>
         @endforeach
     </ul>
 </div>
