@@ -10,6 +10,7 @@ use App\Models\Ediline;
 use App\Models\VkvpaData;
 use App\Services\Edi\DenikStatistiky;
 use App\Support\Finding;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
 
 /**
@@ -38,7 +39,7 @@ final class AdminEntryChecker
             return $findings; // ruční hlášení bez EDI – EDI kontroly přeskočit
         }
 
-        $head = Edihead::with(['lines' => static fn ($q) => $q->select('edihead_id', 'call_sign', 'time')])
+        $head = Edihead::with(['lines' => static fn (HasMany $q) => $q->select('edihead_id', 'call_sign', 'time')])
             ->find($entry->edihead_id);
 
         if ($head === null) {
@@ -95,12 +96,7 @@ final class AdminEntryChecker
 
     // ── Self-QSO ─────────────────────────────────────────────────────────────
 
-    /**
-     * Spojení, kde volačka protistanice = vlastní volačka (chyba loggeru).
-     *
-     * @param  Collection<int, Ediline>  $lines
-     * @return list<Finding>
-     */
+    /** @return list<Finding> */
     private function selfQsoWarnings(Edihead $head): array
     {
         $myCall = strtoupper(trim((string) $head->p_call));
@@ -177,8 +173,6 @@ final class AdminEntryChecker
      * Informuje o počtu protistaní z tohoto deníku, které mají odevzdán
      * vlastní log v tomto kole – admin může porovnat záznamy ručně.
      * (Plná automatická křížová kontrola závisí na dostupnosti všech logů.)
-     *
-     * @param  Collection<int, Ediline>  $lines
      */
     private function crossCheckWarning(Edihead $head, int $koloId): ?Finding
     {
@@ -188,7 +182,7 @@ final class AdminEntryChecker
 
         $workedCalls = $head->lines
             ->pluck('call_sign')
-            ->map(static fn (mixed $c): string => strtoupper(trim((string) $c)))
+            ->map(static fn (mixed $c): string => strtoupper(trim(is_string($c) ? $c : '')))
             ->filter()
             ->unique()
             ->values()

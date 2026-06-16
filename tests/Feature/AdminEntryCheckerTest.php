@@ -41,6 +41,7 @@ class AdminEntryCheckerTest extends TestCase
         return VkvpaKategorie::create(['nazev' => '144 MHz', 'popis' => '', 'zkratka' => 'A', 'dxid' => 0]);
     }
 
+    /** @param array<string, mixed> $overrides */
     private function entry(VkvpaKola $kolo, VkvpaKategorie $kat, array $overrides = []): VkvpaData
     {
         return VkvpaData::create(array_merge([
