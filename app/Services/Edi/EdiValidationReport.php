@@ -18,10 +18,10 @@ use App\Support\Finding;
 final readonly class EdiValidationReport
 {
     /**
-     * @param  array<string, int>  $duplicateCalls   značka → počet výskytů (jen >1)
-     * @param  list<string>        $invalidLocators   ukázka „ZNAČKA: WWL" s vadným lokátorem
-     * @param  list<string>        $lineErrors        QSO odmítnutá parserem (neplatný Maidenhead)
-     * @param  ?string             $invalidHomeLocator neplatný PWWLo (null = v pořádku)
+     * @param  array<string, int>  $duplicateCalls  značka → počet výskytů (jen >1)
+     * @param  list<string>  $invalidLocators  ukázka „ZNAČKA: WWL" s vadným lokátorem
+     * @param  list<string>  $lineErrors  QSO odmítnutá parserem (neplatný Maidenhead)
+     * @param  ?string  $invalidHomeLocator  neplatný PWWLo (null = v pořádku)
      */
     public function __construct(
         public array $duplicateCalls,

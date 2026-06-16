@@ -157,7 +157,7 @@ class EdiValidatorTest extends TestCase
         $this->assertNull($report->invalidHomeLocator);
     }
 
-    public function test_lineErrors_from_parser_appear_in_messages(): void
+    public function test_line_errors_from_parser_appear_in_messages(): void
     {
         $header = new EdiHeader([
             'PCall' => 'OK1TEST', 'PWWLo' => 'JN99AJ', 'TDate' => '20260118;20260118',

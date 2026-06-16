@@ -16,6 +16,7 @@ use App\Models\Edihead;
 use App\Models\Ediline;
 use App\Models\VkvpaData;
 use App\Models\VkvpaKola;
+use App\Services\Edi\EdiLog;
 use App\Services\Edi\EdiParser;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -35,10 +36,10 @@ class ImportEdiActionTest extends TestCase
         parent::setUp();
 
         $this->kolo = VkvpaKola::create([
-            'datum_konani'  => '2026-03-15 08:00:00',
+            'datum_konani' => '2026-03-15 08:00:00',
             'datum_uzaverky' => now()->addDay(),
-            'nazev'         => '1. kolo 2026',
-            'poznamka'      => '',
+            'nazev' => '1. kolo 2026',
+            'poznamka' => '',
         ]);
     }
 
@@ -49,14 +50,14 @@ class ImportEdiActionTest extends TestCase
         return app(ImportEdiAction::class);
     }
 
-    private function sampleLog(): \App\Services\Edi\EdiLog
+    private function sampleLog(): EdiLog
     {
         $edi = (string) file_get_contents(__DIR__.'/../fixtures/sample.edi');
 
         return (new EdiParser)->parse($edi);
     }
 
-    private function execute(\App\Services\Edi\EdiLog $log): VkvpaData
+    private function execute(EdiLog $log): VkvpaData
     {
         return $this->action()->execute($log, notify: false, enforceUploadWindow: false);
     }
@@ -127,12 +128,12 @@ class ImportEdiActionTest extends TestCase
         $log = $this->sampleLog();
 
         $preview = $this->action()->preview($log, enforceUploadWindow: false);
-        $data    = $this->execute($log);
+        $data = $this->execute($log);
 
-        $this->assertSame($preview->score->pocet,     $data->pocet);
+        $this->assertSame($preview->score->pocet, $data->pocet);
         $this->assertSame($preview->score->boduZaQso, $data->bodu_za_qso);
-        $this->assertSame($preview->score->nasobice,  $data->nasobice);
-        $this->assertSame($preview->score->body,      $data->body);
+        $this->assertSame($preview->score->nasobice, $data->nasobice);
+        $this->assertSame($preview->score->body, $data->body);
     }
 
     // ---- výjimky --------------------------------------------------------

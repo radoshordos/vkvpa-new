@@ -21,6 +21,10 @@ use Illuminate\Support\Collection;
  */
 final class AdminEntryChecker
 {
+    private const int RATE_WINDOW_MIN = 10;
+
+    private const int RATE_THRESHOLD = 15;
+
     /**
      * Vrátí seznam varování relevantních pro schvalování záznamu.
      * Prázdný seznam = žádné podezřelé nálezy.
@@ -117,9 +121,6 @@ final class AdminEntryChecker
     }
 
     // ── Neobvyklé tempo provozu ───────────────────────────────────────────────
-
-    private const int RATE_WINDOW_MIN = 10;
-    private const int RATE_THRESHOLD = 15;
 
     /**
      * Detekuje podezřele vysoký počet QSO v krátkém okně.
