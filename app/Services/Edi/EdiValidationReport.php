@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Services\Edi;
 
 use App\Actions\ImportEdiAction;
+use App\Support\ContestWindow;
+use App\Support\Maidenhead;
 
 /**
  * Souhrn nálezů kontroly kvality EDI deníku po importu (nefatální upozornění).
@@ -33,6 +35,62 @@ final readonly class EdiValidationReport
         public int $ignoredLines,
         public ?string $invalidHomeLocator = null,
     ) {}
+
+    public static function fromLog(EdiLog $log): self
+    {
+        $den = ContestWindow::dayFromTDate($log->header->tDate());
+        $from = ContestWindow::from();
+        $to = ContestWindow::to();
+
+        /** @var array<string, int> $callCounts */
+        $callCounts = [];
+        /** @var list<string> $invalid */
+        $invalid = [];
+        $empty = 0;
+        $outOfWindow = 0;
+        $wrongDate = 0;
+
+        foreach ($log->qsos as $qso) {
+            $call = strtoupper(trim($qso->callSign));
+            if ($call !== '') {
+                $callCounts[$call] = ($callCounts[$call] ?? 0) + 1;
+            }
+
+            $wwl = trim($qso->receivedWwl);
+            if ($wwl !== '' && ! Maidenhead::isValidLocator($wwl) && count($invalid) < 8) {
+                $invalid[] = ($call !== '' ? $call : '?').': '.$wwl;
+            }
+
+            // Stejné pořadí vyloučení jako ve scoreEdi: okno → den → prázdný WWL.
+            $time = trim($qso->time);
+            $square = Maidenhead::bigSquare($wwl);
+            if (! ($time >= $from && $time <= $to)) {
+                $outOfWindow++;
+            } elseif ($den !== '' && trim($qso->date) !== $den) {
+                $wrongDate++;
+            } elseif ($square === '') {
+                $empty++;
+            }
+        }
+
+        $duplicates = array_filter($callCounts, static fn (int $n): bool => $n > 1);
+        arsort($duplicates);
+
+        $pWWLo = trim($log->header->pWWLo());
+
+        return new self(
+            duplicateCalls: $duplicates,
+            invalidLocators: $invalid,
+            emptyLocators: $empty,
+            outOfWindow: $outOfWindow,
+            wrongDate: $wrongDate,
+            declaredTotal: $log->declaredTotal,
+            parsedCount: $log->qsoCount(),
+            lineErrors: $log->lineErrors,
+            ignoredLines: count($log->ignoredLines),
+            invalidHomeLocator: Maidenhead::isValidLocator($pWWLo) ? null : $pWWLo,
+        );
+    }
 
     public function hasWarnings(): bool
     {

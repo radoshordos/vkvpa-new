@@ -56,34 +56,17 @@ final class AdminEntryChecker
             $findings[] = $w;
         }
 
-        $rateWarning = $this->operatingRateWarning($head->lines);
-        if ($rateWarning !== null) {
-            $findings[] = $rateWarning;
-        }
-
-        $crossWarning = $this->crossCheckWarning($head, (int) $entry->id_kola);
-        if ($crossWarning !== null) {
-            $findings[] = $crossWarning;
-        }
-
-        $homeLoc = $this->invalidHomeLocatorWarning($head);
-        if ($homeLoc !== null) {
-            $findings[] = $homeLoc;
-        }
-
-        $dupes = $this->duplicateCallsWarning($head->lines);
-        if ($dupes !== null) {
-            $findings[] = $dupes;
-        }
-
-        $invalidLoc = $this->invalidLocatorsWarning($head->lines);
-        if ($invalidLoc !== null) {
-            $findings[] = $invalidLoc;
-        }
-
-        $window = $this->outOfWindowWarning($head->lines);
-        if ($window !== null) {
-            $findings[] = $window;
+        // Jednorázová varování: admin-only (tempo, křížová kontrola) + kategorie-2
+        // (lokátor, duplicity, okno – zrcadlí logiku EdiValidationReport::fromLog()).
+        foreach (array_filter([
+            $this->operatingRateWarning($head->lines),
+            $this->crossCheckWarning($head, (int) $entry->id_kola),
+            $this->invalidHomeLocatorWarning($head),
+            $this->duplicateCallsWarning($head->lines),
+            $this->invalidLocatorsWarning($head->lines),
+            $this->outOfWindowWarning($head->lines),
+        ]) as $w) {
+            $findings[] = $w;
         }
 
         return $findings;
@@ -255,24 +238,33 @@ final class AdminEntryChecker
     /** @param Collection<int, Ediline> $lines */
     private function duplicateCallsWarning(Collection $lines): ?Finding
     {
-        $dupes = $lines
-            ->pluck('call_sign')
-            ->map(static fn (mixed $c): string => strtoupper(trim(is_string($c) ? $c : '')))
-            ->filter()
-            ->countBy()
-            ->filter(static fn (int $n): bool => $n > 1);
+        // array_count_values is typed array<string,int> by PHPStan stubs → safe at level 10.
+        $calls = $lines
+            ->map(static fn (Ediline $l): string => strtoupper(trim((string) $l->call_sign)))
+            ->filter(static fn (string $c): bool => $c !== '')
+            ->values()
+            ->all();
 
-        if ($dupes->isEmpty()) {
+        $dupes = array_filter(
+            array_count_values($calls),
+            static fn (int $n): bool => $n > 1,
+        );
+
+        if ($dupes === []) {
             return null;
         }
 
-        $total = $dupes->count();
-        $list = $dupes->take(8)->map(static fn (int $n, string $c): string => $c.' ('.$n.'×)')->implode(', ');
+        arsort($dupes);
+        $total = count($dupes);
+        $parts = [];
+        foreach (array_slice($dupes, 0, 8, true) as $call => $count) {
+            $parts[] = $call.' ('.$count.'×)';
+        }
         $more = $total > 8 ? ' …' : '';
 
         return new Finding(
             Severity::Warning,
-            'Duplicitní spojení (stanice navázána víckrát): '.$list.$more.'. Duplicity se bodují 0.',
+            'Duplicitní spojení (stanice navázána víckrát): '.implode(', ', $parts).$more.'. Duplicity se bodují 0.',
         );
     }
 
