@@ -134,11 +134,6 @@ window.__vizConfig = {
         <button type="button" class="map-tab active" data-mode-filter="0">Ostatní</button>
       @endif
     </span>
-    {{-- Filtr nejčastějších protistanic – jen na vrstvě CRK a jen když jsou data (řídí JS). --}}
-    <span id="viz-round-filter" class="hidden inline-flex items-center gap-2">
-      <button type="button" class="map-tab active" data-round-filter="1"
-        title="Stanice s ≥ 5 spojeními napříč všemi deníky kola">Nejčastější protistanice</button>
-    </span>
   </div>
   {{-- Ovládání přehrávání – viditelné jen v režimu „Přehrávání" (řídí JS). --}}
   <div id="viz-playback-controls" class="hidden items-center gap-3 mb-2 flex-wrap">
