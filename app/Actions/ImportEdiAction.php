@@ -6,6 +6,7 @@ namespace App\Actions;
 
 use App\Events\EdiImported;
 use App\Exceptions\DuplicateEdiException;
+use App\Exceptions\EmptyPCallException;
 use App\Exceptions\RoundNotFoundException;
 use App\Exceptions\TDateMismatchException;
 use App\Exceptions\TDateNotContestDayException;
@@ -31,6 +32,7 @@ use Throwable;
  *
  * Vyhodí výjimku při jakémkoli selhání; úspěch vrací nový VkvpaData řádek.
  *
+ * @throws EmptyPCallException Hlavička deníku neobsahuje volačí značku (PCall)
  * @throws TDateNotContestDayException TDate neodpovídá termínu kola (3. neděle v měsíci)
  * @throws RoundNotFoundException Pro datum z TDate neexistuje žádné kolo
  * @throws TDateMismatchException TDate v hlavičce neodpovídá datům QSO
@@ -63,6 +65,10 @@ final readonly class ImportEdiAction
     {
         $h = $log->header;
         $pcall = $h->pCall();
+
+        if (trim($pcall) === '') {
+            throw new EmptyPCallException;
+        }
 
         $idKola = $this->scoring->koloForTDate($h->tDate()) ?? 0;
 

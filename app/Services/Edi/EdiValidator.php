@@ -58,7 +58,6 @@ final class EdiValidator
         $duplicates = array_filter($callCounts, static fn (int $n): bool => $n > 1);
         arsort($duplicates);
 
-        $pCall = trim($log->header->pCall());
         $pWWLo = trim($log->header->pWWLo());
 
         return new EdiValidationReport(
@@ -71,7 +70,6 @@ final class EdiValidator
             parsedCount: $log->qsoCount(),
             lineErrors: $log->lineErrors,
             ignoredLines: count($log->ignoredLines),
-            emptyPCall: $pCall === '',
             invalidHomeLocator: Maidenhead::isValidLocator($pWWLo) ? null : $pWWLo,
         );
     }
