@@ -49,7 +49,7 @@ return [
     'footer' => [
         ['url' => '/rules/pa_vkv_2023–2022_12_23_{locale}.pdf',                      'trans' => 'nav.rules_cz',       'target' => '_blank'],
         ['url' => 'https://ceskyradioklub.cz/zavody/vkv-zavody/content/vkv-provozni-aktiv', 'trans' => 'nav.history', 'target' => '_blank'],
-        ['url' => 'http://www.crk.cz/',                                              'trans' => 'nav.official_web',    'target' => '_blank'],
+        ['url' => 'https://ceskyradioklub.cz/',                                      'trans' => 'nav.official_web',    'target' => '_blank'],
     ],
 
 ];
