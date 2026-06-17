@@ -112,9 +112,14 @@ class HlaseniController extends Controller
                 RankRoundJob::dispatchSync($puvodniKolo);
             }
         } else {
-            if (VkvpaData::query()->where('id_kola', $payload['id_kola'])->where('znacka', $znacka)->exists()) {
+            if (VkvpaData::query()
+                ->where('id_kola', $payload['id_kola'])
+                ->where('znacka', $znacka)
+                ->where('id_kategorie', $payload['id_kategorie'])
+                ->exists()
+            ) {
                 return back()
-                    ->withErrors(['znacka' => 'Pro toto kolo již existuje hlášení pro značku '.$znacka.'.'])
+                    ->withErrors(['znacka' => 'Pro toto kolo a kategorii již existuje hlášení pro značku '.$znacka.'.'])
                     ->withInput();
             }
 
