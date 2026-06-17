@@ -83,6 +83,7 @@
             "@php artisan event:cache --ansi",
             "@php artisan migrate --force --ansi",
             "@php artisan queue:restart",
+            "npm ci --include=dev --ignore-scripts",
             "npm run build",
             "@php artisan app:health-check --ansi"
         ],
