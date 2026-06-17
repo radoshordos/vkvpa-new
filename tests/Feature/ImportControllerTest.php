@@ -124,8 +124,11 @@ class ImportControllerTest extends TestCase
     public function test_store_skips_duplicate_edi_for_same_kolo(): void
     {
         $kolo = $this->kolo();
+        // Duplicita se hlídá na trojici kolo+značka+kategorie; sample deník
+        // (PSect=MULTI, PBand=144 MHz) spadá do kategorie 2, takže předvytvořený
+        // záznam musí mít stejnou kategorii, aby šlo o skutečný duplikát.
         VkvpaData::create([
-            'id_kola' => $kolo->id, 'id_kategorie' => 0, 'znacka' => 'OK2KJT',
+            'id_kola' => $kolo->id, 'id_kategorie' => 2, 'znacka' => 'OK2KJT',
             'locator' => 'JN99AJ', 'pocet' => 1, 'nasobice' => 1, 'body' => 1,
             'bodu_za_qso' => 1, 'schvaleno' => false,
         ]);

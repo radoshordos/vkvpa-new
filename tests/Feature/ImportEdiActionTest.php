@@ -63,6 +63,15 @@ class ImportEdiActionTest extends TestCase
         return $this->action()->execute($log, notify: false, enforceUploadWindow: false);
     }
 
+    /** Tentýž vzorový deník, ale s jiným pásmem v hlavičce (→ jiná kategorie). */
+    private function sampleLogOnBand(string $pBand): EdiLog
+    {
+        $edi = (string) file_get_contents(__DIR__.'/../fixtures/sample.edi');
+        $edi = (string) preg_replace('/^PBand=.*$/m', 'PBand='.$pBand, $edi);
+
+        return (new EdiParser)->parse($edi);
+    }
+
     // ---- happy path -----------------------------------------------------
 
     public function test_execute_creates_edihead_edilines_and_vkvpa_data(): void
@@ -164,6 +173,19 @@ class ImportEdiActionTest extends TestCase
 
         $this->expectException(DuplicateEdiException::class);
         $action->execute($this->sampleLog(), notify: false, enforceUploadWindow: false);
+    }
+
+    public function test_allows_same_station_in_different_category_of_same_round(): void
+    {
+        $action = $this->action();
+        $first = $action->execute($this->sampleLog(), notify: false, enforceUploadWindow: false);
+
+        // Tatáž stanice, totéž kolo, ale jiné pásmo → jiná kategorie. Duplicita
+        // se hlídá na trojici kolo+značka+kategorie, takže druhý deník projde.
+        $second = $action->execute($this->sampleLogOnBand('432 MHz'), notify: false, enforceUploadWindow: false);
+
+        $this->assertNotSame($first->id_kategorie, $second->id_kategorie);
+        $this->assertSame(2, VkvpaData::where('znacka', 'OK2KJT')->where('id_kola', $this->kolo->id)->count());
     }
 
     public function test_throws_tdate_mismatch_when_qso_date_differs_from_tdate(): void

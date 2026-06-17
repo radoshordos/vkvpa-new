@@ -318,8 +318,13 @@ class Prihlaska extends Component
             }
         }
 
-        if (VkvpaData::query()->where('id_kola', $this->kolo)->where('znacka', $this->znacka)->exists()) {
-            $this->addError('znacka', 'Pro toto kolo již existuje hlášení pro značku '.$this->znacka.'.');
+        if (VkvpaData::query()
+            ->where('id_kola', $this->kolo)
+            ->where('znacka', $this->znacka)
+            ->where('id_kategorie', $this->kategorie)
+            ->exists()
+        ) {
+            $this->addError('znacka', 'Pro toto kolo a kategorii již existuje hlášení pro značku '.$this->znacka.'.');
 
             return null;
         }

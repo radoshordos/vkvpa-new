@@ -91,10 +91,6 @@ final readonly class ImportEdiAction
 
         $this->assertTDateMatchesQsos($h->tDate(), $log->qsos);
 
-        if (VkvpaData::query()->where('znacka', $pcall)->where('id_kola', $idKola)->exists()) {
-            throw new DuplicateEdiException($pcall);
-        }
-
         try {
             $idKategorie = $this->categories->resolve($pcall, $h->pBand(), $h->pSect());
         } catch (UnknownBandException) {
@@ -105,6 +101,18 @@ final readonly class ImportEdiAction
 
         if ($idKategorie === null) {
             throw new UnknownSectionException($h->pSect());
+        }
+
+        // Duplicita se hlídá na trojici kolo + značka + kategorie (stejně jako
+        // unique index v DB) – tatáž stanice tak smí pro jedno kolo nahrát
+        // deníky do více kategorií, ale jen jeden na každou kategorii.
+        if (VkvpaData::query()
+            ->where('znacka', $pcall)
+            ->where('id_kola', $idKola)
+            ->where('id_kategorie', $idKategorie)
+            ->exists()
+        ) {
+            throw new DuplicateEdiException($pcall);
         }
 
         return new ImportEdiPreview($idKola, $idKategorie, $this->scoring->scoreLog($log));
