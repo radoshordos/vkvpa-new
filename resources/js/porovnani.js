@@ -115,8 +115,7 @@ if (prubehEl && cfg.compare && cfg.rivalCumulative) {
         },
         options: {
             responsive: true,
-            maintainAspectRatio: true,
-            aspectRatio: 3,
+            maintainAspectRatio: false,
             plugins: {
                 legend: { display: true },
                 title: { display: true, text: 'Průběh skóre (body za spojení × násobiče)', font: { size: 13 } },

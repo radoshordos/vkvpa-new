@@ -95,7 +95,7 @@ window.__porovnaniConfig = {
 
     {{-- ── Průběh skóre obou deníků ────────────────────────────────────── --}}
     <div class="rounded-lg border border-line bg-surface p-3 mb-4">
-      <canvas id="chartPrubeh"></canvas>
+      <div class="h-60 sm:h-72"><canvas id="chartPrubeh"></canvas></div>
       <p class="text-xs text-muted mt-2">Orientační průběh: kumulativní body za spojení × průběžný počet násobičů (vlastní čtverec se počítá od začátku). Počítá se jen z QSO s platným lokátorem.</p>
     </div>
 
