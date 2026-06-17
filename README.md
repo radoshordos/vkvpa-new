@@ -888,9 +888,13 @@ Laravel Scheduler spouští dva Artisan příkazy – stavy nadcházející/prob
 ## Nasazení do produkce
 
 Sekvenci nasazovacích kroků obstará `composer deploy` (symlink úložiště, cache
-konfigurace/tras/views/událostí, migrace `--force`, `queue:restart`, build
-frontendu a závěrečný health-check). Kromě toho je potřeba na úrovni serveru
-zajistit **tři věci, které aplikace sama nespustí**:
+konfigurace/tras/views/událostí, migrace `--force`, `queue:restart`, instalace
+npm balíčků a produkční build frontendu, závěrečný health-check). Build běží na
+serveru, takže je tam potřeba **Node.js** (≥ 22). `composer deploy` proto před
+`npm run build` spustí `npm ci --include=dev --ignore-scripts` – `--include=dev`
+nainstaluje i `vite` (je to devDependency, jinak by build skončil chybou
+`vite: not found`), `ci` jede z commitnutého `package-lock.json`. Kromě toho je
+potřeba na úrovni serveru zajistit **tři věci, které aplikace sama nespustí**:
 
 ### 1. HTTPS (jinak aplikace nenastartuje)
 

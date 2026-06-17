@@ -28,6 +28,22 @@ class HealthCheckCommandTest extends TestCase
             ->assertExitCode(0);
     }
 
+    /**
+     * `session.secure` je defaultně null (env bez fallbacku) – kontrola to musí
+     * snést a reportovat čistě, ne spadnout na Config::boolean (null není bool).
+     */
+    public function test_handles_null_session_secure(): void
+    {
+        config(['session.secure' => null, 'session.encrypt' => null]);
+
+        $command = $this->artisan('app:health-check');
+        $this->assertInstanceOf(PendingCommand::class, $command);
+
+        $command
+            ->expectsOutputToContain('Session')
+            ->assertExitCode(0);
+    }
+
     /** Existující admin se v přehledu rozpozná. */
     public function test_reports_admin_account(): void
     {
