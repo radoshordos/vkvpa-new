@@ -15,7 +15,6 @@ return [
     'year_results' => 'Roční výsledky',
     'discussion' => 'Diskuse',
     'rules_cz' => 'Pravidla závodu',
-    'official_rules' => 'Oficiální podmínky závodu',
-    'official_archive' => 'Oficiální archiv výsledků',
+    'history' => 'Historie závodu',
     'official_web' => 'Oficiální web pořadatele',
 ];

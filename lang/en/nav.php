@@ -15,7 +15,6 @@ return [
     'year_results' => 'Year results',
     'discussion' => 'Discussion',
     'rules_cz' => 'Contest rules',
-    'official_rules' => 'Official contest conditions',
-    'official_archive' => 'Official results archive',
+    'history' => 'Contest history',
     'official_web' => "Organizer's website",
 ];
