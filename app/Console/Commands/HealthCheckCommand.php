@@ -108,8 +108,10 @@ final class HealthCheckCommand extends Command
 
     private function checkSession(bool $isProduction): void
     {
-        $secure = Config::boolean('session.secure', false);
-        $encrypt = Config::boolean('session.encrypt', false);
+        // session.secure defaults to null (env('SESSION_SECURE_COOKIE') with no
+        // fallback), so read it null-safely – Config::boolean() throws on null.
+        $secure = Config::get('session.secure') === true;
+        $encrypt = Config::get('session.encrypt') === true;
         if ($isProduction && (! $secure || ! $encrypt)) {
             $this->add('Session', self::FAIL, 'v produkci je vyžadováno SESSION_SECURE_COOKIE=true a SESSION_ENCRYPT=true (a HTTPS)');
 
