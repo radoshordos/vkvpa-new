@@ -2,7 +2,21 @@
   <div class="mx-auto max-w-6xl px-4 py-6 text-xs text-muted 2xl:max-w-[88rem]">
     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
 
-      {{-- Sloupec 1: Kontakt a autorská práva --}}
+      {{-- Sloupec 1: Externí odkazy --}}
+      <div>
+        <p class="mb-2 font-medium text-ink">{{ __('app.useful_links') }}</p>
+        <ul class="space-y-1">
+          @foreach(config('navigation.footer') as $item)
+            <li>
+              <a class="underline hover:text-ink" href="{{ str_replace('{locale}', app()->getLocale(), $item['url']) }}" target="{{ $item['target'] ?? '_self' }}" rel="noopener noreferrer">
+                {{ __($item['trans']) }}
+              </a>
+            </li>
+          @endforeach
+        </ul>
+      </div>
+
+      {{-- Sloupec 2: Kontakt a autorská práva --}}
       <div>
         <p class="flex flex-wrap items-center gap-1">
           {{ __('app.contact_evaluator') }}
@@ -16,20 +30,6 @@
         <p class="mt-1">
           {{ __('app.hosted_by') }} <a class="underline" href="http://www.hamradio.cz">www.hamradio.cz</a>.
         </p>
-      </div>
-
-      {{-- Sloupec 2: Externí odkazy --}}
-      <div>
-        <p class="mb-2 font-medium text-ink">{{ __('app.useful_links') }}</p>
-        <ul class="space-y-1">
-          @foreach(config('navigation.footer') as $item)
-            <li>
-              <a class="underline hover:text-ink" href="{{ $item['url'] }}" target="{{ $item['target'] ?? '_self' }}" rel="noopener noreferrer">
-                {{ __($item['trans']) }}
-              </a>
-            </li>
-          @endforeach
-        </ul>
       </div>
 
     </div>

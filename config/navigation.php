@@ -47,10 +47,9 @@ return [
     ],
 
     'footer' => [
-        ['url' => 'https://vkvpa.hamradio.cz/rules/PA_VKV_2023–2022_12_23_cz.pdf', 'trans' => 'nav.rules_cz',       'target' => '_blank'],
-        ['url' => 'http://www.ok1kpa.com/pa-podminky.htm',                          'trans' => 'nav.official_rules',  'target' => '_blank'],
-        ['url' => 'http://www.ok1kpa.com/',                                          'trans' => 'nav.official_archive', 'target' => '_blank'],
-        ['url' => 'http://www.crk.cz/',                                              'trans' => 'nav.official_web',    'target' => '_blank'],
+        ['url' => '/rules/pa_vkv_2023–2022_12_23_{locale}.pdf',                      'trans' => 'nav.rules_cz',       'target' => '_blank'],
+        ['url' => 'https://ceskyradioklub.cz/zavody/vkv-zavody/content/vkv-provozni-aktiv', 'trans' => 'nav.history', 'target' => '_blank'],
+        ['url' => 'https://ceskyradioklub.cz/',                                      'trans' => 'nav.official_web',    'target' => '_blank'],
     ],
 
 ];
