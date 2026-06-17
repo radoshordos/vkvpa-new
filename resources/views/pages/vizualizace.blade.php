@@ -151,7 +151,7 @@ window.__vizConfig = {
 {{-- ── Průběh skóre ────────────────────────────────────────────────────── --}}
 <div class="relative rounded-lg border border-line bg-surface p-3 mb-4">
   <button type="button" class="chart-png" data-chart-png="chartPrubeh" data-nazev="prubeh-skore" title="Stáhnout graf jako PNG">⤓</button>
-  <canvas id="chartPrubeh"></canvas>
+  <div class="h-60 sm:h-72"><canvas id="chartPrubeh"></canvas></div>
   <p class="text-xs text-muted mt-2">Orientační průběh: kumulativní body za spojení × průběžný počet násobičů (vlastní čtverec {{ $homeSq }} se počítá od začátku). Počítá se jen z QSO s platným lokátorem.</p>
 </div>
 

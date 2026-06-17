@@ -430,8 +430,7 @@ const prubehChart = new Chart(document.getElementById('chartPrubeh'), {
     },
     options: {
         responsive: true,
-        maintainAspectRatio: true,
-        aspectRatio: 3,
+        maintainAspectRatio: false,
         plugins: {
             legend: { display: false },
             title: { display: true, text: 'Průběh skóre (body za spojení × násobiče)', font: { size: 13 } },
