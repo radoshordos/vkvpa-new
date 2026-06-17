@@ -902,7 +902,11 @@ bootu. Nasazuj výhradně za HTTPS.
 
 `SendEdiMailsListener` je `ShouldQueue` a potvrzení o přijetí hlášení i
 notifikace vyhodnocovateli posílá přes frontu (`QUEUE_CONNECTION=database`).
-Bez běžícího workera se **žádný e-mail neodešle**. Příklad systemd služby:
+Bez běžícího workera se **žádný e-mail neodešle**. Worker je jen
+`php artisan queue:work` – pod dohledem libovolného supervizoru. Vyber podle
+init systému serveru:
+
+#### a) systemd (Debian/Ubuntu se systemd)
 
 ```ini
 # /etc/systemd/system/vkvpa-queue.service
@@ -919,7 +923,88 @@ ExecStart=/usr/bin/php /var/www/artisan queue:work --tries=3 --timeout=120
 WantedBy=multi-user.target
 ```
 
+```bash
+systemctl enable --now vkvpa-queue
+```
+
+#### b) Supervisor (doporučeno na Devuanu / bez systemd)
+
+Nezávislý na init systému (`apt install supervisor`); takto worker spravuje
+i oficiální dokumentace Laravelu. `stopwaitsecs` musí být **vyšší** než
+`--timeout`, aby běžící job stihl doběhnout, než ho supervizor ukončí.
+
+```ini
+# /etc/supervisor/conf.d/vkvpa-queue.conf
+[program:vkvpa-queue]
+command=/usr/bin/php /var/www/artisan queue:work --tries=3 --timeout=120
+user=www-data
+autostart=true
+autorestart=true
+stopwaitsecs=130
+redirect_stderr=true
+stdout_logfile=/var/log/vkvpa-queue.log
+```
+
+```bash
+supervisorctl reread && supervisorctl update && supervisorctl start vkvpa-queue
+```
+
+#### c) SysVinit (nativní default Devuanu, bez extra balíku)
+
+```sh
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          vkvpa-queue
+# Required-Start:    $local_fs $network $remote_fs mysql
+# Required-Stop:     $local_fs $network $remote_fs
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: VKV PA queue worker
+### END INIT INFO
+# /etc/init.d/vkvpa-queue
+
+NAME=vkvpa-queue
+USER=www-data
+PHP=/usr/bin/php
+ARTISAN=/var/www/artisan
+DAEMON_ARGS="$ARTISAN queue:work --tries=3 --timeout=120"
+PIDFILE=/var/run/$NAME.pid
+
+. /lib/lsb/init-functions
+
+case "$1" in
+  start)
+    log_daemon_msg "Starting $NAME"
+    start-stop-daemon --start --background --make-pidfile --pidfile "$PIDFILE" \
+      --chuid "$USER" --exec "$PHP" -- $DAEMON_ARGS
+    log_end_msg $?
+    ;;
+  stop)
+    log_daemon_msg "Stopping $NAME"
+    # queue:work ukončuje SIGTERM korektně (dokončí běžící job, pak skončí);
+    # retry dává 130 s (> --timeout) než přijde KILL.
+    start-stop-daemon --stop --pidfile "$PIDFILE" --retry=TERM/130/KILL/5
+    rm -f "$PIDFILE"
+    log_end_msg $?
+    ;;
+  restart) "$0" stop; "$0" start ;;
+  status) status_of_proc -p "$PIDFILE" "$PHP" "$NAME" ;;
+  *) echo "Usage: $0 {start|stop|restart|status}"; exit 1 ;;
+esac
+exit 0
+```
+
+```bash
+chmod +x /etc/init.d/vkvpa-queue
+update-rc.d vkvpa-queue defaults
+service vkvpa-queue start
+```
+
 `composer deploy` volá `queue:restart`, takže worker po nasazení načte nový kód.
+U systemd i Supervisoru se po tomto signálu worker sám restartuje (`Restart=always`
+/ `autorestart=true`). **U holého SysVinit skriptu se po `queue:restart` worker
+ukončí a sám nenaběhne** – přidej proto `service vkvpa-queue restart` do deploy
+kroku, nebo použij respawn řádek v `/etc/inittab`.
 
 ### 3. Cron scheduler (jinak se kola netvoří ani nevyhodnocují)
 
