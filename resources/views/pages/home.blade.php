@@ -7,10 +7,10 @@
 {{-- ── Aktuální / nadcházející kolo ──────────────────────────────── --}}
 @if ($kolo)
 <div class="card mb-6 p-5">
-    <div class="flex flex-wrap items-start justify-between gap-4">
+    <div class="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
 
         {{-- Info o kole --}}
-        <div class="min-w-0 flex-1">
+        <div class="min-w-0 sm:flex-1">
             <div class="mb-1 text-xs font-semibold uppercase tracking-wide text-muted">
                 @if ($state === 'upcoming')  {{ __('pages.home.state_upcoming') }}
                 @elseif ($state === 'running') {{ __('pages.home.state_running') }}
@@ -52,7 +52,7 @@
 
         {{-- Odpočítávání --}}
         @if ($countdownTarget)
-        <div class="shrink-0 rounded-xl border border-line bg-surface-2 px-5 py-4 text-center">
+        <div class="w-full shrink-0 rounded-xl border border-line bg-surface-2 px-5 py-4 text-center sm:w-auto">
             <div id="js-countdown" class="font-mono text-3xl font-bold tabular-nums text-heading">--:--:--</div>
             <div class="mt-1 text-xs text-muted">
                 @if ($state === 'upcoming') {{ __('pages.home.countdown_to_start') }}
