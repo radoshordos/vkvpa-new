@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DenikyController;
 use App\Http\Controllers\Admin\EdiDebugController;
+use App\Http\Controllers\Admin\ExportController;
 use App\Http\Controllers\Admin\ImportController;
 use App\Http\Controllers\Admin\KategorieController;
 use App\Http\Controllers\Admin\KolaAdminController;
@@ -110,6 +111,11 @@ Route::middleware('admin')->group(function (): void {
     Route::get('/admin/edi-debug/{head}', [EdiDebugController::class, 'show'])->name('edi.debug.show')->whereNumber('head');
 
     Route::get('/admin/deniky', [DenikyController::class, 'index'])->name('deniky.index');
+
+    // Export EDI deníků po kolech (ZIP archiv).
+    Route::get('/admin/export', [ExportController::class, 'index'])->name('export.index');
+    Route::get('/admin/export/{kolo}', [ExportController::class, 'download'])->name('export.download');
+
     Route::get('/admin/uzivatele', [UzivateleController::class, 'index'])->name('uzivatele.index');
     Route::get('/admin/kategorie', [KategorieController::class, 'index'])->name('kategorie.index');
     Route::get('/admin/kategorie/create', [KategorieController::class, 'create'])->name('kategorie.create');
