@@ -127,8 +127,10 @@ class KolaAdminControllerTest extends TestCase
         $this->actingAs($this->admin())
             ->patch(route('kola.admin.update', $kolo->id), [
                 'nazev' => 'Nový název kola',
-                'datum_konani' => '2026-04-19T08:00',
-                'datum_uzaverky' => '2026-05-03T23:59',
+                // Start lze posunout nejvýše o 7 dní oproti původnímu termínu
+                // (původní = 2026-01-17), viz KoloRequest::startPosunRule().
+                'datum_konani' => '2026-01-18T08:00',
+                'datum_uzaverky' => '2026-02-01T23:59',
                 'poznamka' => 'Poznámka',
             ])
             ->assertRedirect(route('kola.admin.index'))

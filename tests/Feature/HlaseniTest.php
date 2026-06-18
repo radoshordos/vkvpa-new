@@ -144,7 +144,7 @@ class HlaseniTest extends TestCase
             ->assertRedirect(route('vysledkova_listina', ['kolo' => $kolo->id]));
 
         $this->assertSame(1, VkvpaData::count());
-        $this->assertSame('', VkvpaData::first()->mail);
+        $this->assertSame('', VkvpaData::firstOrFail()->mail);
     }
 
     public function test_invalid_phone_rejected(): void
