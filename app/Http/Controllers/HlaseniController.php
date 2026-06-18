@@ -11,6 +11,7 @@ use App\Models\VkvpaData;
 use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
 use App\Services\Admin\AdminEntryChecker;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -51,7 +52,21 @@ class HlaseniController extends Controller
             'maAktivniKolo' => VkvpaKola::existujeUploadOkno()
                 || $edit !== null
                 || (bool) ($request->user()?->is_admin),
-            'kola' => VkvpaKola::query()->orderByDesc('datum_konani')->limit(36)->get(),
+            // Do selektoru jen kola, která už začala – přesun záznamu do dosud
+            // nezačatého (nadcházejícího) kola by ho schoval ve výsledkové listině,
+            // která se otevírá až od startu závodu, a admin by se k němu (smazání,
+            // editaci) už nedostal. Vlastní kolo editovaného záznamu se přidá vždy,
+            // i kdyby bylo nadcházející (aby z formuláře nezmizelo).
+            'kola' => VkvpaKola::query()
+                ->where(function (Builder $q) use ($edit): void {
+                    $q->where('datum_konani', '<=', now());
+                    if ($edit !== null) {
+                        $q->orWhere('id', $edit->id_kola);
+                    }
+                })
+                ->orderByDesc('datum_konani')
+                ->limit(36)
+                ->get(),
             'kategorie' => VkvpaKategorie::query()->orderBy('id')->get(),
             'edit' => $edit,
             'vysledky' => $vysledky,
