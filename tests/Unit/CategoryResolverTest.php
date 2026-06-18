@@ -41,6 +41,17 @@ class CategoryResolverTest extends TestCase
         $this->assertSame(3, $this->resolver->resolve('OK1A', '432 MHZ', 'single')); // 432 single op
     }
 
+    public function test_band_without_space_before_unit(): void
+    {
+        // chybějící mezera mezi číslem a jednotkou: „47GHz" musí dát stejnou kategorii jako „47 GHz"
+        $this->assertSame(17, $this->resolver->resolve('OK1A', '47GHz', 'SO'));
+        $this->assertSame(17, $this->resolver->resolve('OK1A', '47 GHz', 'SO'));
+        // platí i pro MHz a desetinné pásmo, vč. nadbytečných mezer
+        $this->assertSame(1, $this->resolver->resolve('OK1A', '144MHz', 'SO'));
+        $this->assertSame(5, $this->resolver->resolve('OK1A', '1,3GHz', 'SO'));
+        $this->assertSame(13, $this->resolver->resolve('OK1A', '10  GHZ', 'SO'));
+    }
+
     public function test_power_suffix_is_ignored(): void
     {
         $this->assertSame(1, $this->resolver->resolve('OK1A', '144 MHz', 'SO-LP'));
