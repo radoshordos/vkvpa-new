@@ -12,6 +12,7 @@ return [
     'nav_edi_debug' => 'EDI score check',
     'nav_categories' => 'Category management',
     'nav_imports' => 'EDI bulk import',
+    'nav_export' => 'EDI export (ZIP)',
     'nav_users' => 'Entrant details',
     'nav_api_docs' => 'API documentation',
 
@@ -72,6 +73,16 @@ return [
     'deniky_col_qso' => 'QSO',
     'deniky_col_upload' => 'Uploaded',
     'deniky_link_debug' => 'Score check',
+
+    // EDI export per round (ZIP)
+    'export_title' => 'EDI log export – VKV PA Administration',
+    'export_heading' => 'EDI log export per round',
+    'export_desc' => 'Download all source EDI logs of a given round in a single ZIP archive. Only logs with a stored original EDI file are included.',
+    'export_empty' => 'There are no rounds yet.',
+    'export_col_round' => 'Round',
+    'export_col_date' => 'Contest date',
+    'export_col_count' => 'Logs',
+    'export_btn_zip' => 'Download ZIP',
 
     // Entrant details (contact / personal data from vkvpa_data)
     'uzivatele_title' => 'Entrant details – VKV PA Administration',

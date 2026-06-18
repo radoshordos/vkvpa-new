@@ -12,6 +12,7 @@ return [
     'nav_edi_debug' => 'EDI kontrola bodů',
     'nav_categories' => 'Správa kategorií',
     'nav_imports' => 'EDI hromadný import',
+    'nav_export' => 'Export EDI (ZIP)',
     'nav_users' => 'Údaje závodníků',
     'nav_api_docs' => 'API dokumentace',
 
@@ -72,6 +73,16 @@ return [
     'deniky_col_qso' => 'QSO',
     'deniky_col_upload' => 'Nahráno',
     'deniky_link_debug' => 'Kontrola bodů',
+
+    // Export EDI po kolech (ZIP)
+    'export_title' => 'Export EDI deníků – Administrace VKV PA',
+    'export_heading' => 'Export EDI deníků po kolech',
+    'export_desc' => 'Stáhněte si všechny zdrojové EDI deníky daného kola v jednom ZIP archivu. Zahrnují se jen deníky, které mají uložený původní EDI soubor.',
+    'export_empty' => 'Zatím neexistují žádná kola.',
+    'export_col_round' => 'Kolo',
+    'export_col_date' => 'Datum závodu',
+    'export_col_count' => 'Deníků',
+    'export_btn_zip' => 'Stáhnout ZIP',
 
     // Údaje závodníků (kontaktní / osobní data z vkvpa_data)
     'uzivatele_title' => 'Údaje závodníků – Administrace VKV PA',
