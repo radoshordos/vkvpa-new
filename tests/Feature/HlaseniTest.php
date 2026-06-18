@@ -128,10 +128,23 @@ class HlaseniTest extends TestCase
     {
         [$kolo, $kat] = $this->prepare();
         $payload = $this->payload($kolo->id, $kat->id);
-        unset($payload['email'], $payload['jmeno'], $payload['telefon']);
+        unset($payload['jmeno'], $payload['telefon']);
 
-        $this->post('/hlaseni', $payload)->assertSessionHasErrors(['email', 'jmeno', 'telefon']);
+        $this->post('/hlaseni', $payload)->assertSessionHasErrors(['jmeno', 'telefon']);
         $this->assertSame(0, VkvpaData::count());
+    }
+
+    public function test_manual_report_without_email_accepted(): void
+    {
+        [$kolo, $kat] = $this->prepare();
+        $payload = $this->payload($kolo->id, $kat->id);
+        unset($payload['email']);
+
+        $this->post('/hlaseni', $payload)
+            ->assertRedirect(route('vysledkova_listina', ['kolo' => $kolo->id]));
+
+        $this->assertSame(1, VkvpaData::count());
+        $this->assertSame('', VkvpaData::first()->mail);
     }
 
     public function test_invalid_phone_rejected(): void

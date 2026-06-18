@@ -90,7 +90,7 @@ class HlaseniController extends Controller
             'body' => $this->intFrom($v['body'] ?? 0),
             'qrp' => (bool) ($v['qrp'] ?? false),
             'lp' => (bool) ($v['lp'] ?? false),
-            'mail' => $v['email'],
+            'mail' => $v['email'] ?? '',
             'jmeno' => $v['jmeno'] ?? '',
             'telefon' => $v['telefon'] ?? '',
             'soapbox' => $v['soapbox'] ?? '',
