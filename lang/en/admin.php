@@ -32,8 +32,11 @@ return [
     'kolo_field_date' => 'Contest start (UTC)',
     'kolo_field_deadline' => 'Deadline (date and time)',
     'kolo_field_note' => 'Note',
+    'kolo_field_vyhodnoceno' => 'Evaluated (UTC)',
     'kolo_hint_date' => 'Changing the date auto-updates the deadline and round name. The time defines the contest start (08:00 UTC by default).',
+    'kolo_hint_date_edit' => 'The start may be shifted by at most 7 days from the original date.',
     'kolo_hint_deadline' => 'Normally the Friday after the contest at 23:59 UTC.',
+    'kolo_hint_vyhodnoceno' => 'Filled in = round is evaluated (terminal state). Empty = not evaluated.',
     'kolo_btn_create' => 'Create round',
     'kolo_btn_save' => 'Save changes',
 

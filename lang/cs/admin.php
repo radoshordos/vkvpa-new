@@ -32,8 +32,11 @@ return [
     'kolo_field_date' => 'Start závodu (UTC)',
     'kolo_field_deadline' => 'Uzávěrka (datum a čas)',
     'kolo_field_note' => 'Poznámka',
+    'kolo_field_vyhodnoceno' => 'Vyhodnoceno (UTC)',
     'kolo_hint_date' => 'Změnou data se automaticky přepočítá uzávěrka a název. Čas určuje start závodu (standardně 08:00 UTC).',
+    'kolo_hint_date_edit' => 'Start lze posunout nejvýše o 7 dní oproti původnímu termínu.',
     'kolo_hint_deadline' => 'Standardně pátek po závodu 23:59 UTC.',
+    'kolo_hint_vyhodnoceno' => 'Vyplněno = kolo je vyhodnocené (terminální stav). Prázdné = nevyhodnoceno.',
     'kolo_btn_create' => 'Vytvořit kolo',
     'kolo_btn_save' => 'Uložit změny',
 

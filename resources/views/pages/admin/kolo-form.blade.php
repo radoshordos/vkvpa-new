@@ -9,6 +9,7 @@
     $defKonani     = old('datum_konani',   $kolo?->datum_konani?->format('Y-m-d\TH:i') ?? ($sug['datum_konani'] ?? ''));
     $defUzaverky   = old('datum_uzaverky', $kolo?->datum_uzaverky?->format('Y-m-d\TH:i') ?? ($sug['datum_uzaverky'] ?? ''));
     $defPoznamka   = old('poznamka',       $kolo?->poznamka       ?? '');
+    $defVyhodnoceno = old('vyhodnoceno',   $kolo?->vyhodnoceno?->format('Y-m-d\TH:i') ?? '');
 @endphp
 
 <h1>{{ $kolo ? __('admin.kolo_edit_heading') : __('admin.kolo_create_heading') }}</h1>
@@ -29,8 +30,8 @@
 
         <div class="grid gap-x-5 sm:grid-cols-2">
             <x-field name="datum_konani" id="datum_konani" type="datetime-local" required
-                     :label="__('admin.kolo_field_date')" :value="$defKonani" :hint="$kolo ? null : __('admin.kolo_hint_date')"
-                     :readonly="$kolo !== null" />
+                     :label="__('admin.kolo_field_date')" :value="$defKonani"
+                     :hint="$kolo ? __('admin.kolo_hint_date_edit') : __('admin.kolo_hint_date')" />
 
             <x-field name="datum_uzaverky" id="datum_uzaverky" type="datetime-local" required
                      :label="__('admin.kolo_field_deadline')" :value="$defUzaverky" :hint="__('admin.kolo_hint_deadline')" />
@@ -38,6 +39,12 @@
 
         <x-field name="poznamka" id="poznamka" :label="__('admin.kolo_field_note')"
                  :value="$defPoznamka" maxlength="250" />
+
+        @if ($kolo)
+            <x-field name="vyhodnoceno" id="vyhodnoceno" type="datetime-local"
+                     :label="__('admin.kolo_field_vyhodnoceno')" :value="$defVyhodnoceno"
+                     :hint="__('admin.kolo_hint_vyhodnoceno')" />
+        @endif
 
         <div class="flex justify-end gap-3 pt-2">
             <a href="{{ route('kola.admin.index') }}" class="btn btn-ghost">{{ __('admin.btn_cancel') }}</a>

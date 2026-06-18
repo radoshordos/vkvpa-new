@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Admin;
 
+use App\Models\VkvpaKola;
+use Carbon\CarbonImmutable;
+use Closure;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Override;
@@ -31,10 +34,33 @@ class KoloRequest extends FormRequest
             'datum_konani' => [
                 'required', 'date',
                 Rule::unique('vkvpa_kola', 'datum_konani')->ignore($this->route('kolo')),
+                $this->startPosunRule(),
             ],
             'datum_uzaverky' => ['required', 'date'],
             'poznamka' => ['nullable', 'string', 'max:250'],
+            'vyhodnoceno' => ['nullable', 'date'],
         ];
+    }
+
+    /**
+     * Při úpravě kola smí být start závodu posunut nejvýše o 7 dní oproti
+     * původnímu termínu. Při vytváření (žádné původní kolo) se neuplatní.
+     */
+    private function startPosunRule(): Closure
+    {
+        return function (string $attribute, mixed $value, Closure $fail): void {
+            $kolo = $this->route('kolo');
+            if (! $kolo instanceof VkvpaKola || ! is_string($value)) {
+                return;
+            }
+
+            $puvodni = CarbonImmutable::parse($kolo->datum_konani);
+            $novy = CarbonImmutable::parse($value);
+
+            if ($puvodni->diffInDays($novy, true) > 7) {
+                $fail('Start závodu lze posunout nejvýše o 7 dní oproti původnímu termínu.');
+            }
+        };
     }
 
     #[Override]
@@ -63,6 +89,8 @@ class KoloRequest extends FormRequest
             'datum_uzaverky' => $this->string('datum_uzaverky')->value(),
             // poznamka je v DB NOT NULL – string() vrátí prázdný řetězec místo null.
             'poznamka' => $this->string('poznamka')->value(),
+            // Prázdné pole = nevyhodnoceno (NULL); vyplněné = terminální stav.
+            'vyhodnoceno' => $this->filled('vyhodnoceno') ? $this->string('vyhodnoceno')->value() : null,
         ];
     }
 }
