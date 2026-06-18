@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "autoPort": true,
+  "configurations": [
+    {
+      "name": "vkvpa",
+      "runtimeExecutable": "php",
+      "runtimeArgs": ["artisan", "serve"],
+      "port": 8000
+    }
+  ]
+}
