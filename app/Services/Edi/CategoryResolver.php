@@ -111,6 +111,11 @@ final class CategoryResolver
     {
         $key = strtoupper(trim($pBand));
 
+        // vlož mezeru mezi číslo (vč. „1,3"/„1.3") a jednotku: „47GHZ" → „47 GHZ"
+        $key = (string) preg_replace('/([\d,.]+)\s*(MHZ|GHZ)/', '$1 $2', $key);
+        // sjednoť vícenásobné mezery na jednu
+        $key = (string) preg_replace('/\s+/', ' ', $key);
+
         return self::BANDS[$key]
             ?? throw new UnknownBandException(sprintf('Nerozpoznané pásmo „%s“.', $pBand));
     }
