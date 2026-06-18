@@ -14,7 +14,7 @@ use Override;
 /**
  * Validace podání hlášení.
  *
- * Povinné: značka, kolo, e-mail, lokátor.
+ * Povinné: značka, kolo, lokátor (e-mail jen u podání s EDI deníkem).
  */
 class StoreHlaseniRequest extends FormRequest
 {
@@ -74,7 +74,9 @@ class StoreHlaseniRequest extends FormRequest
             'znacka' => ['required', 'string', 'max:10'],
             'locator' => ['required', 'string', 'max:6', new ValidMaidenhead],
             'jmeno' => ['required', 'string', 'max:60'],
-            'email' => ['required', 'email', 'max:250'],
+            // E-mail je povinný jen u podání s EDI deníkem (potvrzení o přijetí
+            // se posílá na něj). Ruční vkládání používají i lidé bez e-mailu.
+            'email' => [$this->integer('edihead_id') > 0 ? 'required' : 'nullable', 'email', 'max:250'],
             'telefon' => ['required', 'string', 'max:20', new ValidPhone],
             'pocet' => ['nullable', 'integer', 'min:0'],
             'bodu_za_qso' => ['nullable', 'integer', 'min:0'],
