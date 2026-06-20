@@ -25,6 +25,9 @@ class KategorieRequest extends FormRequest
     public function rules(): array
     {
         return [
+            // Volitelně lze při zakládání zadat konkrétní ID (jinak se přidělí
+            // automaticky). Při úpravě se ID nemění – pole se neposílá.
+            'id' => ['nullable', 'integer', 'min:1', Rule::unique('vkvpa_kategorie', 'id')],
             'nazev' => ['required', 'string', 'max:50'],
             // CategoryResolver páruje sekci z EDI hlavičky přes zkratku –
             // duplicitní zkratka by párování učinila nedeterministickým
@@ -45,6 +48,9 @@ class KategorieRequest extends FormRequest
             'nazev.required' => 'Název kategorie je povinný.',
             'zkratka.required' => 'Zkratka kategorie je povinná.',
             'zkratka.unique' => 'Kategorie s touto zkratkou už existuje.',
+            'id.integer' => 'ID musí být celé číslo.',
+            'id.min' => 'ID musí být kladné číslo.',
+            'id.unique' => 'Kategorie s tímto ID už existuje.',
             'dxid.required' => 'Pole dxid je povinné.',
             'dxid.integer' => 'Pole dxid musí být celé číslo.',
             'dxid.min' => 'Pole dxid nesmí být záporné.',
@@ -58,10 +64,17 @@ class KategorieRequest extends FormRequest
      */
     public function toModel(): array
     {
-        return [
+        $data = [
             'nazev' => $this->string('nazev')->value(),
             'zkratka' => $this->string('zkratka')->value(),
             'dxid' => $this->integer('dxid'),
         ];
+
+        // Ruční ID se uplatní jen při zakládání (na úpravě se pole neposílá).
+        if ($this->filled('id')) {
+            $data['id'] = $this->integer('id');
+        }
+
+        return $data;
     }
 }

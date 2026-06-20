@@ -12,6 +12,8 @@
         @csrf
 
         <div class="flex flex-wrap gap-3">
+            <x-field name="id" label="ID" type="number" hint="{{ __('Ponech prázdné pro automatické přidělení.') }}"
+                     wrapper="mb-0 w-24" :value="old('id')" min="1" />
             <x-field name="nazev" :label="__('admin.field_name')" required
                      wrapper="mb-0 min-w-48 flex-1" :value="old('nazev')" maxlength="50" />
             <x-field name="zkratka" :label="__('admin.field_abbr')" required class="mono"
