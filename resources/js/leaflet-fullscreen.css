@@ -1,0 +1,22 @@
+/* Tlačítko přepnutí na celou obrazovku (sdílené mapou i vizualizací). */
+/* `.leaflet-bar a` z Leafletu má vyšší specificitu a display: block –
+   selektor musí být silnější, jinak se ikonka nevycentruje. */
+.leaflet-bar a.leaflet-control-fullscreen-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.leaflet-control-fullscreen-btn svg {
+    width: 18px;
+    height: 18px;
+    display: block;
+}
+
+/* V režimu celé obrazovky musí kontejner mapy vyplnit celou plochu –
+   přebije pevnou výšku (52vh/70vh) z šablon. */
+.leaflet-container:fullscreen,
+.leaflet-container:-webkit-full-screen {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 0 !important;
+}

@@ -1,0 +1,10 @@
+{
+    "preset": "laravel",
+    "exclude": [
+        ".github",
+        "bootstrap/cache",
+        "public/adminer",
+        "storage",
+        "vendor"
+    ]
+}

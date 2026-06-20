@@ -1,0 +1,242 @@
+openapi: 3.0.3
+info:
+  title: VKV Provozní Aktiv API
+  description: |
+    Veřejné REST API pro výsledky amatérských rádiových závodů VHF VKV PA.
+
+    **Rate limit:** 60 requestů za minutu per IP adresa.
+    **Autentizace:** není vyžadována – všechna data jsou veřejná.
+    **CORS:** povolen pro všechny originy (GET metody).
+  version: 1.0.0
+  contact:
+    name: VKV Provozní Aktiv
+    email: ok1vum@hamradio.cz
+
+servers:
+  - url: /api
+    description: Produkční server
+
+tags:
+  - name: Kola
+    description: Závodní kola (contest periods)
+  - name: Výsledky
+    description: Výsledkové listiny
+
+paths:
+  /kola:
+    get:
+      summary: Seznam závodních kol
+      description: Vrací posledních 50 závodních kol seřazených od nejnovějšího.
+      operationId: listKola
+      tags: [Kola]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Kolo'
+              example:
+                data:
+                  - id: 5
+                    nazev: "2024 duben"
+                    datum_konani: "2024-04-20T08:00:00+00:00"
+                    datum_uzaverky: "2024-04-28T23:59:00+00:00"
+                    vyhodnoceno: "2024-05-01T10:00:00+00:00"
+                    stav: "vyhodnocene"
+
+  /vysledky/{kolo}:
+    get:
+      summary: Výsledky závodního kola
+      description: |
+        Výsledková listina pro dané závodní kolo.
+        Vrací pouze **schválené** záznamy seřazené po kategoriích a pořadí.
+      operationId: getVysledkyKolo
+      tags: [Výsledky]
+      parameters:
+        - $ref: '#/components/parameters/KoloId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  kolo:
+                    $ref: '#/components/schemas/Kolo'
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Vysledka'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /vysledky/rocni/{rok}:
+    get:
+      summary: Roční výsledky
+      description: |
+        Kumulativní roční výsledky – součet bodů za všechna kola daného roku.
+        Výsledky jsou **cachované** (stale-while-revalidate, TTL 30 minut).
+      operationId: getVysledkyRocni
+      tags: [Výsledky]
+      parameters:
+        - name: rok
+          in: path
+          required: true
+          description: Rok (4 cifry)
+          schema:
+            type: integer
+            minimum: 2000
+            maximum: 2100
+            example: 2024
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  rok:
+                    type: integer
+                    example: 2024
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RocniVysledka'
+
+components:
+  parameters:
+    KoloId:
+      name: kolo
+      in: path
+      required: true
+      description: Číselné ID závodního kola
+      schema:
+        type: integer
+        example: 5
+
+  schemas:
+    Kolo:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 5
+        nazev:
+          type: string
+          description: Název kola (obvykle rok + měsíc)
+          example: "2024 duben"
+        datum_konani:
+          type: string
+          format: date-time
+          description: Start závodu (standardně třetí neděle v měsíci 08:00 UTC)
+          example: "2024-04-20T08:00:00+00:00"
+        datum_uzaverky:
+          type: string
+          format: date-time
+          nullable: true
+          description: Uzávěrka pro příjem hlášení (ISO 8601)
+          example: "2024-04-28T23:59:00+00:00"
+        vyhodnoceno:
+          type: string
+          format: date-time
+          nullable: true
+          description: Datum vyhodnocení kola (null = neuzavřeno)
+          example: "2024-05-01T10:00:00+00:00"
+        stav:
+          type: string
+          enum: [nadchazejici, aktivni, prijem, uzavrene, vyhodnocene]
+          description: >-
+            Fáze životního cyklu kola odvozená z času: nadchazejici (před
+            startem), aktivni (závod právě běží), prijem (po závodě do
+            uzávěrky), uzavrene (po uzávěrce, zpracování výsledků),
+            vyhodnocene (terminální stav)
+
+    Vysledka:
+      type: object
+      properties:
+        poradi:
+          type: integer
+          description: Pořadí v kategorii (husté – shoda = stejné pořadí)
+          example: 1
+        znacka:
+          type: string
+          description: Volací značka závodníka
+          example: "OK1XY"
+        jmeno:
+          type: string
+          description: Jméno závodníka
+          example: "Jan Novák"
+        locator:
+          type: string
+          description: QTH lokátor (6 znaků Maidenhead)
+          example: "JN79FX"
+        kategorie_id:
+          type: integer
+          example: 1
+        kategorie:
+          type: string
+          nullable: true
+          description: Název kategorie
+          example: "2m SSB"
+        body:
+          type: integer
+          description: "Celkové body (body_za_qso × nasobice)"
+          example: 1250
+        pocet:
+          type: integer
+          description: Počet započítaných QSO
+          example: 45
+        nasobice:
+          type: integer
+          description: Počet různých velkých čtverců (násobiče)
+          example: 12
+        bodu_za_qso:
+          type: integer
+          description: Součet bodů za jednotlivá spojení
+          example: 120
+        qrp:
+          type: boolean
+          description: Závodník startoval v kategorii QRP
+        edi:
+          type: boolean
+          description: Závodník odevzdal EDI deník
+
+    RocniVysledka:
+      type: object
+      properties:
+        znacka:
+          type: string
+          example: "OK1XY"
+        jmeno:
+          type: string
+          example: "Jan Novák"
+        kategorie_id:
+          type: integer
+          example: 1
+        kategorie:
+          type: string
+          example: "2m SSB"
+        celkem:
+          type: integer
+          description: Součet bodů za celý rok
+          example: 4850
+
+  responses:
+    NotFound:
+      description: Záznam nenalezen
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: "No query results for model [App\\Models\\VkvpaKola]."

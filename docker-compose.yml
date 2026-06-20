@@ -1,0 +1,49 @@
+services:
+    web:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        volumes:
+            - ./:/var/www/html
+            # vendor/ žije v named volume (nativní FS kontejneru) – přes
+            # Windows bind-mount je čtení tisíců souborů ~100× pomalejší
+            # (TTFB ~5 s). Po změně composer.json spusť `composer install`
+            # UVNITŘ kontejneru: docker compose exec web composer install
+            - vendordata:/var/www/html/vendor
+        ports:
+            - "8080:80"
+        environment:
+            DB_HOST: db
+            DB_DATABASE: ${DB_DATABASE:-digipa}
+            DB_USERNAME: ${DB_USERNAME:-vkvpa}
+            DB_PASSWORD: ${DB_PASSWORD:-secret}
+            # Basic auth pro Adminer (public/adminer/). Bez vyplnění obou
+            # proměnných je přístup k Adminer odepřen (fail-closed).
+            ADMINER_AUTH_USER: ${ADMINER_AUTH_USER:-}
+            ADMINER_AUTH_PASSWORD: ${ADMINER_AUTH_PASSWORD:-}
+        depends_on:
+            db:
+                condition: service_healthy
+    db:
+        image: mysql:8.0
+        # Seed snapshoty mají neplatná data normalizovaná na NULL, takže běží
+        # výchozí striktní sql_mode MySQL 8.0 (ALLOW_INVALID_DATES už netřeba –
+        # legacy dumpy v database/source_sql/ byly převedeny do seederů a smazány).
+        command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+        environment:
+            MYSQL_DATABASE: ${DB_DATABASE:-digipa}
+            MYSQL_USER: ${DB_USERNAME:-vkvpa}
+            MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
+            MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootsecret}
+        volumes:
+            - dbdata:/var/lib/mysql
+        ports:
+            - "3306:3306"
+        healthcheck:
+            test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1"]
+            interval: 10s
+            timeout: 5s
+            retries: 10
+volumes:
+    dbdata:
+    vendordata:

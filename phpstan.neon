@@ -1,0 +1,14 @@
+# PHPStan + Larastan (Laravel-aware statická analýza).
+# Spuštění:  vendor/bin/phpstan analyse   (nebo: composer stan)
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    level: 10
+
+    paths:
+        - app
+        - routes
+        - database/migrations
+        - database/seeders
+        - tests

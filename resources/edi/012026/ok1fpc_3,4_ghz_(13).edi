@@ -1,0 +1,45 @@
+[REG1TEST;1]
+TName=Provozní aktiv 12/2025
+TDate=20251221;20251221
+PCall=OK1FPC
+PWWLo=JN79NU
+PExch=
+PAdr1=Březina  nr Kutná Hora
+PAdr2=
+PSect=SINGLE
+PBand=3,4 GHz
+PClub=
+RName=Aleš Jehlička
+RCall=
+RAdr1=Němčice 35
+RAdr2=
+RPoCo=28002
+RCity=Kolín
+RCoun=Česko
+RPhon=
+RHBBS=ok1fpc@seznam.cz
+MOpe1=
+MOpe2=
+STXEq=FT818+transvertor
+SPowe=0,5
+SRXEq=FT818+transvertor
+SAnte=60CM
+SAntH=2;555
+CQSOs=5;1
+CQSOP=435
+CWWLs=2;0;1
+CWWLB=0
+CExcs=0;0;1
+CExcB=0
+CDXCs=0;0;1
+CDXCB=0
+CToSc=435
+CODXC=OK1UFF;JO60XR;128
+[Remarks]
+Online EDI Generator ver 1.4, http://ok2kjt.net/edi
+[QSORecords;5]
+251221;0838;OK2KKW;1;59;001;59;001;;JO70FD;58;;N;;
+251221;0938;OK1DGR;1;59;002;59;003;;JO60XE;92;;N;;
+251221;0947;OK1UFF;1;59;003;59;002;;JO60XR;128;;;;
+251221;0948;OK1EM;1;59;004;59;002;;JO70CN;103;;;;
+251221;1042;OK1IME;1;59;005;59;003;;JO70FB;54;;;;

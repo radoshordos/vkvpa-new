@@ -1,0 +1,52 @@
+[WinContest]
+This data was exported using DD3KU WinContest V4.4.053
+Copyright 2018 by Klaus Raczek, DD3KU
+Support: email: dd3ku@darc.de
+Homepage: http://qsl.net/dd3ku
+Logs generated on 18.01.2026 15:12:49
+Call=DL1RWO
+Locator=JO60RS
+Band=432MHz
+ 
+
+[REG1TEST;1] 
+TName=OK-Activity Jant26
+TDate=20260118;20260118
+PCall=DL1RWO
+PWWLo=JO60RS
+PExch=
+PAdr1=nr. Dittersbach/Erzgebirge
+PAdr2=09623 Frauenstein
+PSect=Single
+PBand=435 MHz
+PClub=Y09
+RName=Wolfgang Gatzki
+RCall=DL1RWO
+RAdr1=Johann-Gottlieb-Fichte-Str. 20
+RAdr2=
+RPoCo=16540
+RCity=Hohen Neuendorf
+RCoun=Deutschland
+RPhon=
+RHBBS=
+MOpe1=
+MOpe2=
+STXEq=IC706MK2
+SPowe=20
+SRXEq=IC706MK2
+SAnte=5/8 El. DK7ZB Duoband
+SAntH=6;600
+CQSOs=2;1
+CQSOP=188
+CWWLs=2;0;1
+CWWLB=0
+CExcs=0;0;1
+CExcB=
+CDXCs=1;0;1
+CDXCB=0
+CToSc=188
+CODXC=OK1KZE;JN79FX;114
+[Remarks]
+[QSORecords;2]
+260118;0941;OK1KZE;1;59;001;59;051;;JN79FX;114;;;;
+260118;1012;OK1IN;1;59;002;59;042;;JO60XE;74;;;;

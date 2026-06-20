@@ -1,0 +1,115 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tests\Unit;
+
+use App\Support\Maidenhead;
+use PHPUnit\Framework\TestCase;
+
+class MaidenheadTest extends TestCase
+{
+    public function test_converts_known_locator(): void
+    {
+        $c = Maidenhead::toLatLon('JN99AJ');
+
+        $this->assertNotNull($c);
+        $this->assertEqualsWithDelta(49.40, $c['lat'], 0.1);
+        $this->assertEqualsWithDelta(18.04, $c['lon'], 0.1);
+    }
+
+    public function test_is_case_insensitive(): void
+    {
+        $this->assertEquals(
+            Maidenhead::toLatLon('JN99AJ'),
+            Maidenhead::toLatLon('jn99aj'),
+        );
+    }
+
+    public function test_returns_null_for_invalid(): void
+    {
+        $this->assertNull(Maidenhead::toLatLon('XXXX'));
+        $this->assertNull(Maidenhead::toLatLon('ZZ99ZZ')); // pole mimo A–R
+        $this->assertNull(Maidenhead::toLatLon(''));
+    }
+
+    public function test_is_valid_big_square(): void
+    {
+        $this->assertTrue(Maidenhead::isValidBigSquare('JN99'));
+        $this->assertTrue(Maidenhead::isValidBigSquare('jn99'));
+        $this->assertTrue(Maidenhead::isValidBigSquare('  JN99  '));
+        $this->assertFalse(Maidenhead::isValidBigSquare('JN99AJ'));
+        $this->assertFalse(Maidenhead::isValidBigSquare('JN9'));
+        $this->assertFalse(Maidenhead::isValidBigSquare(''));
+        $this->assertFalse(Maidenhead::isValidBigSquare('ZZ99'));
+    }
+
+    public function test_big_square_extracts_and_normalizes(): void
+    {
+        $this->assertSame('JN99', Maidenhead::bigSquare('jn99aj'));
+        $this->assertSame('JN99', Maidenhead::bigSquare('  JN99AJ  '));
+        $this->assertSame('JN99', Maidenhead::bigSquare('JN99'));
+        $this->assertSame('', Maidenhead::bigSquare(''));
+    }
+
+    public function test_big_square_center(): void
+    {
+        $c = Maidenhead::bigSquareCenter('JN99');
+
+        $this->assertNotNull($c);
+        // JN99: lon = 9*20-180 + 9*2 + 1 = 19; lat = 13*10-90 + 9 + 0.5 = 49.5
+        $this->assertEqualsWithDelta(19.0, $c['lon'], 0.001);
+        $this->assertEqualsWithDelta(49.5, $c['lat'], 0.001);
+    }
+
+    public function test_big_square_center_rejects_invalid(): void
+    {
+        $this->assertNull(Maidenhead::bigSquareCenter('ZZ99'));   // pole mimo A–R
+        $this->assertNull(Maidenhead::bigSquareCenter('JN9'));    // moc krátké
+        $this->assertNull(Maidenhead::bigSquareCenter('JN99AJ')); // 6 znaků není velký čtverec
+    }
+
+    public function test_big_square_ring_distance(): void
+    {
+        // Vlastní čtverec = 0.
+        $this->assertSame(0, Maidenhead::bigSquareRingDistance('JN99', 'JN99'));
+        // Sousední po délce (JN89 hned vedle JN99) = 1.
+        $this->assertSame(1, Maidenhead::bigSquareRingDistance('JN99', 'JN89'));
+        // Diagonální soused (JO80, o čtverec na sever i na západ) = 1.
+        $this->assertSame(1, Maidenhead::bigSquareRingDistance('JN99', 'JO80'));
+        // JO70: Δx=2, Δy=1 → Chebyshev = 2.
+        $this->assertSame(2, Maidenhead::bigSquareRingDistance('JN99', 'JO70'));
+        // Symetrie.
+        $this->assertSame(2, Maidenhead::bigSquareRingDistance('JO70', 'JN99'));
+    }
+
+    public function test_ring_distance_null_for_invalid(): void
+    {
+        $this->assertNull(Maidenhead::bigSquareRingDistance('JN99', 'ZZ99'));
+        $this->assertNull(Maidenhead::bigSquareRingDistance('', 'JN99'));
+    }
+
+    public function test_qso_points_follow_rules(): void
+    {
+        // Vlastní velký čtverec = 2 body, sousední = 3, další pás +1.
+        $this->assertSame(2, Maidenhead::qsoPoints('JN99', 'JN99'));
+        $this->assertSame(3, Maidenhead::qsoPoints('JN99', 'JN89'));
+        $this->assertSame(4, Maidenhead::qsoPoints('JN99', 'JO70'));
+        // Neplatný lokátor → 0 (spojení nelze ohodnotit).
+        $this->assertSame(0, Maidenhead::qsoPoints('JN99', 'XXXX'));
+    }
+
+    public function test_distance_km(): void
+    {
+        $this->assertEqualsWithDelta(0.0, Maidenhead::distanceKm(50.0, 15.0, 50.0, 15.0), 0.001);
+        // 1° zeměpisné šířky ≈ 111 km.
+        $this->assertEqualsWithDelta(111.0, Maidenhead::distanceKm(50.0, 15.0, 51.0, 15.0), 2.0);
+    }
+
+    public function test_bearing_deg(): void
+    {
+        // Přímo na sever ≈ 0°, na východ ≈ 90°.
+        $this->assertEqualsWithDelta(0.0, Maidenhead::bearingDeg(50.0, 15.0, 51.0, 15.0), 0.5);
+        $this->assertEqualsWithDelta(90.0, Maidenhead::bearingDeg(50.0, 15.0, 50.0, 16.0), 1.0);
+    }
+}

@@ -1,0 +1,295 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Actions;
+
+use App\Events\EdiImported;
+use App\Exceptions\DuplicateEdiException;
+use App\Exceptions\EmptyPCallException;
+use App\Exceptions\RoundNotFoundException;
+use App\Exceptions\TDateMismatchException;
+use App\Exceptions\TDateNotContestDayException;
+use App\Exceptions\UnknownBandException;
+use App\Exceptions\UnknownSectionException;
+use App\Exceptions\UploadWindowClosedException;
+use App\Models\VkvpaData;
+use App\Models\VkvpaKola;
+use App\Services\Edi\CategoryResolver;
+use App\Services\Edi\EdiImportService;
+use App\Services\Edi\EdiLog;
+use App\Services\Edi\EdiQso;
+use App\Services\Scoring\ScoringService;
+use Carbon\CarbonImmutable;
+use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Support\Facades\Context;
+use Illuminate\Support\Facades\DB;
+use Throwable;
+
+/**
+ * Orchestruje celý tok importu EDI deníku: validace business pravidel,
+ * uložení do DB, scoring a vytvoření rezervovaného řádku ve vkvpa_data.
+ *
+ * Vyhodí výjimku při jakémkoli selhání; úspěch vrací nový VkvpaData řádek.
+ *
+ * @throws EmptyPCallException Hlavička deníku neobsahuje volačí značku (PCall)
+ * @throws TDateNotContestDayException TDate neodpovídá termínu kola (3. neděle v měsíci)
+ * @throws RoundNotFoundException Pro datum z TDate neexistuje žádné kolo
+ * @throws TDateMismatchException TDate v hlavičce neodpovídá datům QSO
+ * @throws DuplicateEdiException Deník pro tuto stanici a kolo již existuje
+ * @throws UnknownBandException Pásmo z hlavičky EDI nelze přiřadit kategorii
+ */
+final readonly class ImportEdiAction
+{
+    public function __construct(
+        private EdiImportService $importer,
+        private ScoringService $scoring,
+        private CategoryResolver $categories,
+    ) {}
+
+    /**
+     * Nedestruktivní validace deníku pro náhled „ke kontrole" – proběhnou
+     * všechny business kontroly (kolo dle TDate, den závodu, okno příjmu,
+     * shoda TDate s QSO, duplicita, kategorie) a spočítá se skóre z paměti,
+     * ale do DB se nic nezapisuje. Vyhazuje stejné výjimky jako {@see execute()}.
+     *
+     * @throws TDateNotContestDayException
+     * @throws RoundNotFoundException
+     * @throws TDateMismatchException
+     * @throws DuplicateEdiException
+     * @throws UnknownBandException
+     * @throws UnknownSectionException
+     * @throws UploadWindowClosedException
+     */
+    public function preview(EdiLog $log, bool $enforceUploadWindow = true): ImportEdiPreview
+    {
+        $h = $log->header;
+        $pcall = $h->pCall();
+
+        if (trim($pcall) === '') {
+            throw new EmptyPCallException;
+        }
+
+        $idKola = $this->scoring->koloForTDate($h->tDate()) ?? 0;
+
+        Context::add('znacka', $pcall);
+        Context::add('id_kola', $idKola);
+
+        if ($idKola === 0) {
+            throw new RoundNotFoundException($h->tDate());
+        }
+
+        $kolo = VkvpaKola::query()->find($idKola);
+
+        if ($kolo !== null) {
+            $this->assertTDateIsContestDay($h->tDate(), $kolo);
+        }
+
+        if ($enforceUploadWindow) {
+            $this->assertUploadWindowOpen($idKola);
+        }
+
+        $this->assertTDateMatchesQsos($h->tDate(), $log->qsos);
+
+        try {
+            $idKategorie = $this->categories->resolve($pcall, $h->pBand(), $h->pSect());
+        } catch (UnknownBandException) {
+            throw new UnknownBandException(
+                'Nerozpoznané pásmo v deníku ('.$h->pBand().') – nelze určit kategorii. Oprav PBand a nahraj znovu.',
+            );
+        }
+
+        if ($idKategorie === null) {
+            throw new UnknownSectionException($h->pSect());
+        }
+
+        // Duplicita se hlídá na trojici kolo + značka + kategorie (stejně jako
+        // unique index v DB) – tatáž stanice tak smí pro jedno kolo nahrát
+        // deníky do více kategorií, ale jen jeden na každou kategorii.
+        if (VkvpaData::query()
+            ->where('znacka', $pcall)
+            ->where('id_kola', $idKola)
+            ->where('id_kategorie', $idKategorie)
+            ->exists()
+        ) {
+            throw new DuplicateEdiException($pcall);
+        }
+
+        return new ImportEdiPreview($idKola, $idKategorie, $this->scoring->scoreLog($log));
+    }
+
+    /**
+     * @param  bool  $notify  rozeslat potvrzovací e-maily (jednotlivé nahrání ano,
+     *                        hromadný admin import ne)
+     * @param  bool  $enforceUploadWindow  vyžadovat otevřené upload okno kola
+     *                                     (veřejné nahrání ano, hromadný admin
+     *                                     backfill starých kol ne)
+     * @param  array<string, mixed>  $overrides  hodnoty, kterými závodník v náhledu
+     *                                           přepsal odvozená pole (kontakt,
+     *                                           schvaleno) – sloučí se do payloadu
+     *                                           před vytvořením řádku i odesláním
+     *                                           potvrzovacích e-mailů
+     */
+    public function execute(EdiLog $log, bool $notify = true, bool $enforceUploadWindow = true, array $overrides = []): VkvpaData
+    {
+        $h = $log->header;
+        $pcall = $h->pCall();
+
+        // Stejné business validace jako náhled – garantuje, že to, co závodník
+        // viděl ke kontrole, projde i při uložení.
+        $preview = $this->preview($log, $enforceUploadWindow);
+        $idKola = $preview->idKola;
+        $idKategorie = $preview->idKategorie;
+
+        try {
+            $data = DB::transaction(function () use ($log, $h, $pcall, $idKola, $idKategorie, $overrides): VkvpaData {
+                $head = $this->importer->import($log, $idKola);
+                $score = $this->scoring->scoreEdi($head);
+
+                return VkvpaData::create([
+                    'id_kola' => $idKola,
+                    'id_kategorie' => $idKategorie,
+                    'znacka' => $pcall,
+                    'locator' => $h->pWWLo(),
+                    'jmeno' => $h->rName(),
+                    'mail' => $h->rEmail(),
+                    'telefon' => $h->rPhon(),
+                    'soapbox' => $h->get('RSoap'),
+                    'pocet' => $score->pocet,
+                    'nasobice' => $score->nasobice,
+                    'bodu_za_qso' => $score->boduZaQso,
+                    'body' => $score->body,
+                    'qrp' => $h->isQrp(),
+                    'lp' => $h->isLp(),
+                    'edihead_id' => $head->id,
+                    'schvaleno' => false,
+                    // Závodníkem upravená pole z náhledu (kontakt, příp. schvaleno
+                    // u admina) mají přednost před hodnotami odvozenými z hlavičky.
+                    // Skóre/kolo/kategorie/značka jsou autoritativní – ty nepřepisujeme.
+                    ...$overrides,
+                ]);
+            });
+        } catch (UniqueConstraintViolationException) {
+            throw new DuplicateEdiException($pcall);
+        }
+
+        if ($notify) {
+            // defer() odešle event až po odeslání HTTP odpovědi – queue dispatch
+            // nebrzdí redirect k uživateli. Transakce jsou v tomto bodě vždy uzavřeny.
+            defer(static fn () => EdiImported::dispatch($data));
+        }
+
+        return $data;
+    }
+
+    /**
+     * Ověří, že kolo právě přijímá hlášení – „upload okno" trvá od dne závodu
+     * (stav Aktivní) do uzávěrky (stav Příjem hlášení). Mimo okno (nadcházející,
+     * uzavřené či vyhodnocené kolo) se deník odmítne.
+     *
+     * @throws UploadWindowClosedException
+     */
+    private function assertUploadWindowOpen(int $idKola): void
+    {
+        $kolo = VkvpaKola::query()->find($idKola);
+
+        if ($kolo === null) {
+            return; // neexistenci kola hlásí RoundNotFoundException dříve
+        }
+
+        if (! $kolo->prijimaHlaseni()) {
+            throw new UploadWindowClosedException($kolo->nazev);
+        }
+    }
+
+    /**
+     * Ověří, že TDate odpovídá termínu závodu. Termín bereme z DB
+     * (`vkvpa_kola.datum_konani` nalezeného kola), ne z výpočtu „třetí neděle",
+     * aby šlo snadno testovat libovolně nadefinovaná kola. TDate může být
+     * i dvoudenní rozsah (start;end) ze šablony 24h závodu – stačí proto, aby
+     * dni konání odpovídalo alespoň jedno z dat uvedených v TDate.
+     *
+     * @throws TDateNotContestDayException
+     */
+    private function assertTDateIsContestDay(string $tdate, VkvpaKola $kolo): void
+    {
+        $dates = $this->parseTDateDates($tdate);
+        if ($dates === []) {
+            // Nečitelné TDate řeší jiná validace (TDateMismatchException / EdiValidator).
+            return;
+        }
+
+        $denKonani = $kolo->datum_konani;
+
+        if (array_any($dates, fn (CarbonImmutable $d): bool => $d->isSameDay($denKonani))) {
+            return;
+        }
+
+        throw new TDateNotContestDayException($tdate);
+    }
+
+    /**
+     * Vytáhne z TDate všechna validní data ve formátu YYYYMMDD (jedno i rozsah).
+     *
+     * @return CarbonImmutable[]
+     */
+    private function parseTDateDates(string $tdate): array
+    {
+        $dates = [];
+
+        foreach (preg_split('/[^0-9]+/', trim($tdate)) ?: [] as $token) {
+            if (strlen($token) !== 8) {
+                continue;
+            }
+
+            try {
+                $date = CarbonImmutable::createFromFormat('!Ymd', $token, 'UTC');
+            } catch (Throwable) {
+                continue;
+            }
+
+            // createFromFormat tichý overflow (např. měsíc 13) přeskočíme.
+            if ($date instanceof CarbonImmutable && $date->format('Ymd') === $token) {
+                $dates[] = $date;
+            }
+        }
+
+        return $dates;
+    }
+
+    /**
+     * @param  EdiQso[]  $qsos
+     *
+     * @throws TDateMismatchException
+     */
+    private function assertTDateMatchesQsos(string $tdate, array $qsos): void
+    {
+        // TDate může být i rozsah (start;end) – QSO musí sednout s kterýmkoli z jeho dnů.
+        $tdateDays = array_map(
+            static fn (CarbonImmutable $d): string => $d->format('ymd'),
+            $this->parseTDateDates($tdate),
+        );
+        $qsoDays = array_map(static fn (EdiQso $q): string => $q->date, $qsos)
+                |> array_unique(...)
+                |> array_values(...);
+
+        if ($tdateDays === [] || $qsoDays === []) {
+            return;
+        }
+
+        if (array_intersect($tdateDays, $qsoDays) === []) {
+            $preview = array_slice($qsoDays, 0, 3)
+                    |> (fn ($x) => array_map($this->formatEdiDate(...), $x))
+                    |> (fn ($x) => implode(', ', $x));
+            throw new TDateMismatchException($tdate, $preview);
+        }
+    }
+
+    /** Datum spojení YYMMDD (např. „260118") → čitelné „18.01.2026". */
+    private function formatEdiDate(string $yymmdd): string
+    {
+        return strlen($yymmdd) === 6
+            ? sprintf('%d. %d. 20%s', (int) substr($yymmdd, 4, 2), (int) substr($yymmdd, 2, 2), substr($yymmdd, 0, 2))
+            : $yymmdd;
+    }
+}
