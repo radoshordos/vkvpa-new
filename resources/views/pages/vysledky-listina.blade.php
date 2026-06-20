@@ -3,6 +3,16 @@
 --}}
 @extends('layouts.app')
 @section('title', __('pages.vysledky.title'))
+@section('meta_description', __('pages.vysledky.meta'))
+{{-- Canonical = hezké URL konkrétního kola; sjednocuje ?kolo=/filtry, aby se
+     listiny jednotlivých kol navzájem nekanibalizovaly. --}}
+@section('canonical', $kolo ? route('vysledkova_listina', ['kolo' => $kolo->id]) : route('vysledkova_listina'))
+
+@if ($kolo)
+    @section('jsonld')
+        @include('partials.jsonld-kolo', ['kolo' => $kolo])
+    @endsection
+@endif
 
 @section('content')
 @php

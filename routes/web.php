@@ -55,9 +55,13 @@ Route::post('/hlaseni', [HlaseniController::class, 'store'])->middleware('thrott
 // Výpis kol je jen pro admina (route kola.admin.index); staré /kola přesměrujeme.
 Route::redirect('/kola', '/admin/kola');
 
-Route::get('/vysledky', [VysledkyController::class, 'listina'])->name('vysledkova_listina');
-Route::get('/vysledky/pribezne', [VysledkyController::class, 'pribezne'])->name('pribezne_vysledky');
+// Hezké URL /vysledky/{kolo} je kanonická adresa výsledků konkrétního kola
+// (dřív jen ?kolo=, což sjednocovalo všechna kola do jednoho canonicalu).
+// Literální segmenty pribezne/rocni musí být registrovány PŘED wildcard
+// {kolo?} a {kolo} je omezen na čísla (whereNumber), aby je nepřebíral.
+Route::get('/vysledky/pribezne/{kolo?}', [VysledkyController::class, 'pribezne'])->name('pribezne_vysledky')->whereNumber('kolo');
 Route::get('/vysledky/rocni', [VysledkyController::class, 'rocni'])->name('rocni_vysledky');
+Route::get('/vysledky/{kolo?}', [VysledkyController::class, 'listina'])->name('vysledkova_listina')->whereNumber('kolo');
 
 // Obfuskovaný e-mail jako obrázek (footer) – nahrazuje mail.php
 Route::get('/mail-image', [MailImageController::class, 'show'])->name('mail.image');

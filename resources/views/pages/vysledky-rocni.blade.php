@@ -1,5 +1,9 @@
 @extends('layouts.app')
 @section('title', __('pages.rocni.title'))
+@section('meta_description', __('pages.rocni.meta'))
+{{-- Každý ročník je samostatný obsah → canonical nese ?rok (aktuální rok bez
+     parametru, aby odpovídal odkazu v navigaci a sitemapě). --}}
+@section('canonical', route('rocni_vysledky', $rok === (int) date('Y') ? [] : ['rok' => $rok]))
 @section('content')
 <h1>{{ __('pages.rocni.heading') }}</h1>
 

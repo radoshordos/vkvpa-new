@@ -124,6 +124,7 @@ return [
 
     'pribezne' => [
         'title' => 'Průběžné výsledky – VKV PA',
+        'meta' => 'Průběžné výsledky aktuálního kola VKV Provozního aktivu – pořadí stanic v reálném čase během příjmu hlášení.',
         'heading' => 'Průběžné výsledky kola',
         'filter_round' => 'Kolo',
         'filter_category' => 'Kategorie',
@@ -135,6 +136,7 @@ return [
 
     'vysledky' => [
         'title' => 'Výsledková listina – VKV PA',
+        'meta' => 'Výsledkové listiny jednotlivých kol VKV Provozního aktivu – pořadí v kategoriích, body, násobiče a QSO, s odkazy na deníky a statistiky.',
         'heading' => 'Výsledková listina',
         'filter_round' => 'Kolo',
         'filter_search' => 'Hledat',
@@ -167,6 +169,7 @@ return [
 
     'rocni' => [
         'title' => 'Roční výsledky – VKV PA',
+        'meta' => 'Roční souhrnné výsledky VKV Provozního aktivu – celkové pořadí stanic za rok napříč všemi koly.',
         'heading' => 'Roční výsledky',
         'filter_year' => 'Rok',
         'filter_category' => 'Kategorie',
@@ -183,6 +186,7 @@ return [
 
     'diskuse' => [
         'title' => 'Diskuse – :round – VKV PA',
+        'meta' => 'Diskuse k závodnímu kolu :round – komentáře, zážitky a fotografie účastníků VKV Provozního aktivu.',
         'heading' => 'Diskuse',
         'filter_round' => 'Kolo',
         'btn_go' => 'Přejít',
@@ -207,6 +211,7 @@ return [
 
     'viz' => [
         'title' => 'Vizualizace – :call – VKV PA',
+        'meta' => 'Vizualizace deníku stanice :call – mapa spojení, grafy a statistiky závodu VKV Provozní aktiv.',
         'heading' => 'Vizualizace deníku :call',
         'subtitle_charts' => 'mapa a grafy (Leaflet + Chart.js)',
         'compare_link' => '⚔️ Porovnání deníků',
@@ -305,6 +310,7 @@ return [
 
     'porovnani' => [
         'title' => 'Porovnání deníků – :call – VKV PA',
+        'meta' => 'Porovnání deníku stanice :call se soupeři z téhož kola VKV PA – mapa rozdílů v protistanicích a srovnání průběhu skóre.',
         'heading' => '⚔️ Porovnání deníků – :call',
         'subtitle' => 'porovnání s deníkem soupeře z téhož kola a kategorie',
         'viz_link' => 'vizualizace',

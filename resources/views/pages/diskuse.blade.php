@@ -1,5 +1,10 @@
 @extends('layouts.app')
 @section('title', __('pages.diskuse.title', ['round' => $kolo->nazev]))
+@section('meta_description', __('pages.diskuse.meta', ['round' => $kolo->nazev]))
+
+@section('jsonld')
+    @include('partials.jsonld-kolo', ['kolo' => $kolo])
+@endsection
 
 @section('content')
 @php $isAdmin = (bool) (auth()->user()?->is_admin); @endphp

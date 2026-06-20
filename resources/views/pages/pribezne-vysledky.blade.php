@@ -5,6 +5,10 @@
 --}}
 @extends('layouts.app')
 @section('title', __('pages.pribezne.title'))
+@section('meta_description', __('pages.pribezne.meta'))
+{{-- Průběžné výsledky jsou přechodné a veřejnost vidí vždy jen aktuální kolo –
+     canonical míří na stabilní bezparametrickou adresu. --}}
+@section('canonical', route('pribezne_vysledky'))
 
 @section('content')
 @php $isAdmin = (bool) (auth()->user()?->is_admin); @endphp
