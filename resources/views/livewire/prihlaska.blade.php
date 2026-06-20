@@ -92,7 +92,7 @@
                     </div>
                     <div>
                         <dt class="label">{{ __('pages.hlaseni.field_total') }}</dt>
-                        <dd class="font-bold text-heading">{{ number_format($bodyView, 0, ',', "\u{00a0}") }}</dd>
+                        <dd class="font-bold text-heading">{{ \Illuminate\Support\Number::format($bodyView, 0) }}</dd>
                     </div>
                 </dl>
 

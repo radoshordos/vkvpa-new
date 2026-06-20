@@ -9,10 +9,12 @@ use App\Listeners\SendEdiMailsListener;
 use App\Support\VkvpaSettings;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Events\LocaleUpdated;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Number;
 use Illuminate\Support\ServiceProvider;
 use Override;
 use RuntimeException;
@@ -38,9 +40,7 @@ class AppServiceProvider extends ServiceProvider
         // k neexistujícím atributům vyhodí výjimku – chyby se odhalí ve vývoji.
         // User má per-model opt-out (Authenticatable trait); edihead/edilines
         // jsou normalizované na snake_case, takže žádný opt-out nepotřebují.
-        Model::preventLazyLoading(! $this->app->isProduction());
-        Model::preventSilentlyDiscardingAttributes(! $this->app->isProduction());
-        Model::preventAccessingMissingAttributes(! $this->app->isProduction());
+        Model::shouldBeStrict(! $this->app->isProduction());
 
         // CSP nonce pro inline <script> bloky v Blade: <script @cspNonce>.
         // Nonce generuje SecurityHeaders middleware (Vite::useCspNonce()); mimo
@@ -51,6 +51,14 @@ class AppServiceProvider extends ServiceProvider
         );
 
         Event::listen(EdiImported::class, SendEdiMailsListener::class);
+
+        // Number::format() drží lokalizaci nezávisle na App::getLocale() (vlastní
+        // statický stav, default 'en') – navážeme na SetLocale middleware, aby
+        // čísla ve výpisech respektovala aktuální jazyk (cs/en) stránky.
+        Number::useLocale($this->app->getLocale());
+        Event::listen(LocaleUpdated::class, static function (LocaleUpdated $event): void {
+            Number::useLocale($event->locale);
+        });
 
         $this->configureRateLimiters();
 

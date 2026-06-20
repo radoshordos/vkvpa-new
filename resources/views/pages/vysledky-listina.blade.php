@@ -99,7 +99,7 @@
                         <td class="num">{{ $r->nasobice }}</td>
                         <td class="num">
                             <span class="font-bold text-warn">{{ $r->body }}</span><br>
-                            <span class="text-xs text-muted">{{ number_format($bq, 1, ',', '') }} b/QSO</span>
+                            <span class="text-xs text-muted">{{ \Illuminate\Support\Number::format($bq, 1) }} b/QSO</span>
                             @if ($sk['delta'] !== null)
                                 <br>
                                 @if ($sk['delta'] > 0)

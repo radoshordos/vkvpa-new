@@ -7,7 +7,11 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Config;
+use Laravel\Prompts\Exceptions\NonInteractiveValidationException;
 use RuntimeException;
+
+use function Laravel\Prompts\password;
+use function Laravel\Prompts\text;
 
 /**
  * Vytvoří administrátorský účet.
@@ -16,7 +20,10 @@ use RuntimeException;
  * ho při uložení zahashuje (bcrypt), takže se zde nevolá Hash::make (jinak by
  * došlo ke dvojímu hashování). Idempotentní: opakovaný seed účet jen aktualizuje.
  *
- * Vyžaduje proměnné prostředí ADMIN_USER a ADMIN_PASS (přes config/vkvpa.php).
+ * ADMIN_USER a ADMIN_PASS se čtou z .env (přes config/vkvpa.php); pokud chybí
+ * a běh je interaktivní, doplní se promptem. V neinteraktivním běhu (CI, testy,
+ * `--no-interaction`) prompt vyhodí NonInteractiveValidationException, kterou
+ * zachytíme a vyhodíme stejnou RuntimeException jako dřív.
  */
 class AdminUserSeeder extends Seeder
 {
@@ -27,7 +34,7 @@ class AdminUserSeeder extends Seeder
         $email = Config::string('vkvpa.admin_email', 'admin@example.com');
 
         if (blank($name) || blank($pass)) {
-            throw new RuntimeException('ADMIN_USER a ADMIN_PASS musí být nastaveny v .env před spuštěním seederu.');
+            [$name, $pass] = $this->promptForCredentials($name, $pass);
         }
 
         User::query()->updateOrCreate(
@@ -40,5 +47,25 @@ class AdminUserSeeder extends Seeder
         );
 
         $this->command->info("Admin účet '{$name}' připraven.");
+    }
+
+    /**
+     * @return array{0: string, 1: string}
+     */
+    private function promptForCredentials(string $name, string $pass): array
+    {
+        try {
+            if (blank($name)) {
+                $name = text('Jméno administrátorského účtu (ADMIN_USER)', required: true);
+            }
+
+            if (blank($pass)) {
+                $pass = password('Heslo administrátorského účtu (ADMIN_PASS)', required: true);
+            }
+        } catch (NonInteractiveValidationException) {
+            throw new RuntimeException('ADMIN_USER a ADMIN_PASS musí být nastaveny v .env před spuštěním seederu.');
+        }
+
+        return [$name, $pass];
     }
 }
