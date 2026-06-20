@@ -15,6 +15,7 @@ return [
     'nav_export' => 'Export EDI (ZIP)',
     'nav_users' => 'Údaje závodníků',
     'nav_api_docs' => 'API dokumentace',
+    'nav_password' => 'Změna hesla',
 
     // Login
     'login_title' => 'Přihlášení – VKV PA',
@@ -59,6 +60,15 @@ return [
 
     // Společné
     'btn_cancel' => 'Zrušit',
+
+    // Změna hesla
+    'heslo_title' => 'Změna hesla – Administrace VKV PA',
+    'heslo_heading' => 'Změna hesla',
+    'heslo_desc' => 'Pro změnu hesla zadejte současné heslo a dvakrát nové (alespoň 8 znaků).',
+    'heslo_current' => 'Současné heslo',
+    'heslo_new' => 'Nové heslo',
+    'heslo_confirm' => 'Nové heslo znovu',
+    'heslo_btn_save' => 'Změnit heslo',
 
     // Deníky
     'deniky_title' => 'Nahrané EDI deníky – Administrace VKV PA',
