@@ -92,15 +92,18 @@
         <x-field name="locator" :label="__('pages.hlaseni.field_locator')" :value="$val('locator', $e->locator ?? '')" required class="mono" />
     </div>
 
-    <label class="mb-2 flex items-center gap-2 text-sm">
-        <input type="checkbox" name="qrp" value="1" @checked($val('qrp', $e->qrp ?? false))>
-        {{ __('pages.hlaseni.field_qrp') }}
-    </label>
+    {{-- QRP/LP se vzájemně vylučují – zakliknutí jednoho odznačí druhý (app.js). --}}
+    <div data-power-group>
+        <label class="mb-2 flex items-center gap-2 text-sm">
+            <input type="checkbox" name="qrp" value="1" data-power-exclusive @checked($val('qrp', $e->qrp ?? false))>
+            {{ __('pages.hlaseni.field_qrp') }}
+        </label>
 
-    <label class="mb-4 flex items-center gap-2 text-sm">
-        <input type="checkbox" name="lp" value="1" @checked($val('lp', $e->lp ?? false))>
-        {{ __('pages.hlaseni.field_lp') }}
-    </label>
+        <label class="mb-4 flex items-center gap-2 text-sm">
+            <input type="checkbox" name="lp" value="1" data-power-exclusive @checked($val('lp', $e->lp ?? false))>
+            {{ __('pages.hlaseni.field_lp') }}
+        </label>
+    </div>
 
     {{-- Body / počty --}}
     <div class="grid grid-cols-2 gap-x-5 sm:grid-cols-4">

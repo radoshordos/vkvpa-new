@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\Vykon;
 use App\Services\Scoring\ScoringService;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
@@ -50,7 +51,9 @@ use Override;
  * Projekce z {@see ScoringService::yearlyResults()}:
  * @property-read int $kategorie_id
  * @property-read int|string $celkem
- * (`jmeno` je v projekci agregované přes MAX, typ sdílí s kmenovým sloupcem)
+ * (`jmeno` je v projekci agregované přes MAX, typ sdílí s kmenovým sloupcem;
+ *  `mesic_1`..`mesic_12` = body za měsíc, `vykon_1`..`vykon_12` = hodnota
+ *  {@see Vykon}::value daného měsíce nebo null pro plný výkon)
  */
 #[Fillable([
     'id_kola', 'id_kategorie', 'qrp', 'lp', 'znacka', 'locator',
@@ -78,6 +81,15 @@ class VkvpaData extends Model
     public function edihead(): BelongsTo
     {
         return $this->belongsTo(Edihead::class, 'edihead_id');
+    }
+
+    /**
+     * Výkonová kategorie záznamu odvozená z příznaků qrp/lp (QRP ⊂ LP).
+     * Jednotná reprezentace pro odznaky v listinách a podbarvení výsledků.
+     */
+    public function vykon(): Vykon
+    {
+        return Vykon::fromFlags($this->qrp, $this->lp);
     }
 
     /**

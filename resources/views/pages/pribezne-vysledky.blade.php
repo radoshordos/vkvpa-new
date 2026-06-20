@@ -68,7 +68,7 @@
             @foreach ($radky as $i => $r)
                 <tr @class(['row-pending' => ! $r->schvaleno, 'group' => $isAdmin])>
                     <td class="num font-bold">{{ $i + 1 }}.</td>
-                    <td class="mono font-bold">@if ($isAdmin)<a href="{{ route('uzivatele.index', ['kolo' => $r->id_kola, 'q' => $r->znacka]) }}" class="link" title="{{ __('pages.vysledky.link_contact') }}">{{ $r->znacka }}</a>@else{{ $r->znacka }}@endif@if ($r->qrp)<x-badge variant="qrp" class="ml-1">QRP</x-badge>@elseif ($r->lp)<x-badge variant="lp" class="ml-1">LP</x-badge>@endif</td>
+                    <td class="mono font-bold">@if ($isAdmin)<a href="{{ route('uzivatele.index', ['kolo' => $r->id_kola, 'q' => $r->znacka]) }}" class="link" title="{{ __('pages.vysledky.link_contact') }}">{{ $r->znacka }}</a>@else{{ $r->znacka }}@endif<x-vykon-badge :vykon="$r->vykon()" /></td>
                     <td class="mono whitespace-nowrap">{{ $r->locator }}</td>
                     <td class="num">{{ (int) $r->pocet }}</td>
                     <td class="num">{{ (int) $r->nasobice }}</td>

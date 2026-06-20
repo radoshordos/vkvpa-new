@@ -138,13 +138,14 @@
                     </div>
                 @endif
 
-                {{-- Výkon (QRP/LP) – předvyplněno z hlavičky (SPowe), závodník může opravit --}}
-                <div class="mt-5 border-t border-line pt-4">
+                {{-- Výkon (QRP/LP) – předvyplněno z hlavičky (SPowe), závodník může opravit.
+                     Vzájemně se vylučují – zakliknutí jednoho odznačí druhý (app.js). --}}
+                <div class="mt-5 border-t border-line pt-4" data-power-group>
                     <label class="mb-2 flex items-center gap-2 text-sm">
-                        <input type="checkbox" wire:model="qrp" value="1"> {{ __('pages.hlaseni.field_qrp') }}
+                        <input type="checkbox" wire:model="qrp" value="1" data-power-exclusive> {{ __('pages.hlaseni.field_qrp') }}
                     </label>
                     <label class="flex items-center gap-2 text-sm">
-                        <input type="checkbox" wire:model="lp" value="1"> {{ __('pages.hlaseni.field_lp') }}
+                        <input type="checkbox" wire:model="lp" value="1" data-power-exclusive> {{ __('pages.hlaseni.field_lp') }}
                     </label>
                 </div>
 
@@ -215,12 +216,15 @@
                     </div>
                 </div>
 
-                <label class="mb-2 flex items-center gap-2 text-sm">
-                    <input type="checkbox" wire:model="qrp" value="1"> {{ __('pages.hlaseni.field_qrp') }}
-                </label>
-                <label class="mb-4 flex items-center gap-2 text-sm">
-                    <input type="checkbox" wire:model="lp" value="1"> {{ __('pages.hlaseni.field_lp') }}
-                </label>
+                {{-- QRP/LP se vzájemně vylučují – zakliknutí jednoho odznačí druhý (app.js). --}}
+                <div data-power-group>
+                    <label class="mb-2 flex items-center gap-2 text-sm">
+                        <input type="checkbox" wire:model="qrp" value="1" data-power-exclusive> {{ __('pages.hlaseni.field_qrp') }}
+                    </label>
+                    <label class="mb-4 flex items-center gap-2 text-sm">
+                        <input type="checkbox" wire:model="lp" value="1" data-power-exclusive> {{ __('pages.hlaseni.field_lp') }}
+                    </label>
+                </div>
 
                 <div class="grid grid-cols-2 gap-x-5 sm:grid-cols-4">
                     <div class="field">

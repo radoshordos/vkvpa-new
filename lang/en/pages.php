@@ -180,6 +180,9 @@ return [
         'col_callsign' => 'Callsign',
         'col_total' => 'Total',
         'no_results' => 'No evaluated results for this year.',
+        'legend_label' => 'Power per month:',
+        'legend_qrp' => 'QRP (≤ 5 W)',
+        'legend_lp' => 'LP (< 100 W)',
     ],
 
     'diskuse' => [

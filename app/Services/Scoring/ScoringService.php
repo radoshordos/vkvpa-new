@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Scoring;
 
 use App\Enums\QsoCountStatus;
+use App\Enums\Vykon;
 use App\Models\Edihead;
 use App\Models\VkvpaData;
 use App\Models\VkvpaKategorie;
@@ -284,13 +285,21 @@ final class ScoringService
             ->whereYear('vkvpa_kola.datum_konani', $year)
             ->selectRaw('vkvpa_data.id_kategorie as kategorie_id, vkvpa_data.znacka, vkvpa_data.id_kola')
             ->selectRaw(self::BODY_EXPR.' as body', [$nullifyFrom])
+            // Výkon za měsíc: v daném (kategorie, značka, kolo) je nejvýš jeden
+            // záznam, MAX jen uspokojí GROUP BY (qrp/lp jsou 0/1). Aliasy záměrně
+            // mimo názvy qrp/lp – ty model castuje na bool a intAttr() by je
+            // přes is_numeric() přečetl jako 0.
+            ->selectRaw('MAX(vkvpa_data.qrp) as qrp_any, MAX(vkvpa_data.lp) as lp_any')
             ->groupBy('vkvpa_data.id_kategorie', 'vkvpa_data.znacka', 'vkvpa_data.id_kola')
             ->when($qrpOnly, fn ($q) => $q->onlyQrp())
             ->when($lpOnly, fn ($q) => $q->onlyLp())
             ->get();
 
-        // Mapa "kategorie|značka" => [měsíc => body] (víc kol v měsíci sečteno).
+        // Mapa "kategorie|značka" => [měsíc => body] (víc kol v měsíci sečteno)
+        // a paralelní mapa výkonu za měsíc (víc kol → ponecháme nejnižší výkon).
         $map = [];
+        /** @var array<string, array<int, Vykon>> $vykonMap */
+        $vykonMap = [];
         foreach ($breakdown as $b) {
             $month = $koloMonth[self::intAttr($b, 'id_kola')] ?? null;
             if ($month === null) {
@@ -298,14 +307,25 @@ final class ScoringService
             }
             $key = self::strAttr($b, 'kategorie_id').'|'.self::strAttr($b, 'znacka');
             $map[$key][$month] = ($map[$key][$month] ?? 0) + self::intAttr($b, 'body');
+
+            $vykon = Vykon::fromFlags(self::intAttr($b, 'qrp_any') === 1, self::intAttr($b, 'lp_any') === 1);
+            $prev = $vykonMap[$key][$month] ?? null;
+            if ($prev === null || $vykon->rank() > $prev->rank()) {
+                $vykonMap[$key][$month] = $vykon;
+            }
         }
 
         foreach ($rows as $row) {
-            $perMonth = $map[self::strAttr($row, 'kategorie_id').'|'.self::strAttr($row, 'znacka')] ?? [];
+            $rowKey = self::strAttr($row, 'kategorie_id').'|'.self::strAttr($row, 'znacka');
+            $perMonth = $map[$rowKey] ?? [];
+            $perVykon = $vykonMap[$rowKey] ?? [];
             // Pevně 12 měsíčních sloupců (i nulových) – ať je rok vidět celý a aby
             // přístup ve view nespadl na chybějícím atributu (strict mód modelu).
             for ($m = 1; $m <= 12; $m++) {
                 $row->setAttribute('mesic_'.$m, $perMonth[$m] ?? 0);
+                // Jen redukovaný výkon (QRP/LP) má smysl značit; plný = null.
+                $v = $perVykon[$m] ?? null;
+                $row->setAttribute('vykon_'.$m, $v !== null && $v->isReduced() ? $v->value : null);
             }
         }
     }
@@ -329,9 +349,10 @@ final class ScoringService
     /** Klíč cache ročních výsledků pro daný rok a kombinaci výkonových filtrů. */
     private function yearlyCacheKey(int $year, bool $qrpOnly, bool $lpOnly): string
     {
-        // v6: řádky nově nesou měsíční rozpad `mesic_1`..`mesic_12` (v3 přidalo
-        // agregované `jmeno`, v2 pole atributů bez něj, v1 serializovaná kolekce).
-        return sprintf('vkvpa:yearly:v6:%d:%d:%d', $year, $qrpOnly ? 1 : 0, $lpOnly ? 1 : 0);
+        // v7: řádky nově nesou výkon za měsíc `vykon_1`..`vykon_12` (v6 přidalo
+        // měsíční rozpad `mesic_1`..`mesic_12`, v3 agregované `jmeno`, v2 pole
+        // atributů bez něj, v1 serializovaná kolekce).
+        return sprintf('vkvpa:yearly:v7:%d:%d:%d', $year, $qrpOnly ? 1 : 0, $lpOnly ? 1 : 0);
     }
 
     /** Zahodí cache ročních výsledků daného roku (všechny kombinace výkonových filtrů). */

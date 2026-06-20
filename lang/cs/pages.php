@@ -182,6 +182,9 @@ return [
         'col_callsign' => 'Značka',
         'col_total' => 'Celkem',
         'no_results' => 'Pro tento rok nejsou žádné vyhodnocené výsledky.',
+        'legend_label' => 'Výkon v měsíci:',
+        'legend_qrp' => 'QRP (≤ 5 W)',
+        'legend_lp' => 'LP (< 100 W)',
     ],
 
     'diskuse' => [

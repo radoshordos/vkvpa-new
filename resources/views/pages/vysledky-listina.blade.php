@@ -90,7 +90,7 @@
                             @else
                                 <span class="mono font-bold">{{ $r->znacka }}</span>
                             @endif
-                            @if ($r->qrp)<x-badge variant="qrp" class="ml-1">QRP</x-badge>@elseif ($r->lp)<x-badge variant="lp" class="ml-1">LP</x-badge>@endif @if ($sk['top'])<x-badge variant="skokan" class="ml-1" title="{{ __('pages.vysledky.skokan_title') }}">SKOKAN</x-badge>@endif
+                            <x-vykon-badge :vykon="$r->vykon()" /> @if ($sk['top'])<x-badge variant="skokan" class="ml-1" title="{{ __('pages.vysledky.skokan_title') }}">SKOKAN</x-badge>@endif
                             @if ($r->jmeno)<br><span class="text-muted">{{ $r->jmeno }}</span>@endif
                             @if ($r->timestamp)<br><span class="text-xs text-muted">{{ $r->timestamp->format('j. n. H:i') }}</span>@endif
                         </td>
