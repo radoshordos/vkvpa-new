@@ -6,6 +6,7 @@
 @extends('layouts.app')
 
 @section('title', __('pages.hlaseni.title'))
+@section('meta_description', __('pages.hlaseni.meta'))
 
 @section('content')
 @php
@@ -13,6 +14,9 @@
     $isAdmin = (bool) (auth()->user()?->is_admin);
     $val = fn (string $name, $editVal = null, $def = '') => old($name, $editVal ?? $def);
 @endphp
+
+{{-- Hlavní nadpis stránky (H1). --}}
+<h1 class="mb-4 text-xl font-bold text-heading sm:text-2xl">{{ __('pages.hlaseni.heading') }}</h1>
 
 {{-- announcement řeší centrální <x-flash /> v layoutu --}}
 

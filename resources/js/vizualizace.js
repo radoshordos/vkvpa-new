@@ -257,21 +257,21 @@ const qsoCount = document.getElementById('viz-qso-count');
 const skoreLabel = document.getElementById('viz-skore');
 const playBtn = document.getElementById('viz-play');
 
-function applyTime(t) {
+function applyTime(time) {
     let shown = 0;
     playbackItems.forEach(function (it) {
-        const show = it.t <= t && modeFilter[it.mode];
+        const show = it.t <= time && modeFilter[it.mode];
         if (show) shown++;
         if (show && !it.shown) { it.group.forEach((g) => g.addTo(playbackLayer)); it.shown = true; }
         if (!show && it.shown) { it.group.forEach((g) => playbackLayer.removeLayer(g)); it.shown = false; }
     });
-    casLabel.textContent = hhmm(t);
+    casLabel.textContent = hhmm(time);
     qsoCount.textContent = String(shown);
 
-    // Průběžné skóre k času t (poslední záznam cfg.cumulative; je řazeno časem).
+    // Průběžné skóre k času (poslední záznam cfg.cumulative; je řazeno časem).
     let last = null;
     for (const c of cfg.cumulative) {
-        if (c.t > t) break;
+        if (c.t > time) break;
         last = c;
     }
     skoreLabel.textContent = last ? `${last.body} ${t.score_pts} · ${last.nasobice} ${t.score_mult}` : `0 ${t.score_pts}`;
@@ -286,10 +286,10 @@ function stopReplay() {
 }
 
 function tick() {
-    const t = Number(slider.value) + 1;
-    slider.value = String(t);
-    applyTime(t);
-    if (t >= cfg.window.to) stopReplay();
+    const time = Number(slider.value) + 1;
+    slider.value = String(time);
+    applyTime(time);
+    if (time >= cfg.window.to) stopReplay();
 }
 
 slider.addEventListener('input', function () {
@@ -299,11 +299,11 @@ slider.addEventListener('input', function () {
 
 playBtn.addEventListener('click', function () {
     if (timer !== null) { stopReplay(); return; }
-    let t = Number(slider.value);
-    if (t >= cfg.window.to) t = cfg.window.from;
+    let time = Number(slider.value);
+    if (time >= cfg.window.to) time = cfg.window.from;
     playBtn.textContent = t.pause;
-    slider.value = String(t);
-    applyTime(t);
+    slider.value = String(time);
+    applyTime(time);
     timer = setInterval(tick, speedMs);
 });
 
@@ -481,7 +481,7 @@ const timelineChart = new Chart(document.getElementById('chartTimeline'), {
     },
     options: {
         responsive: true,
-        maintainAspectRatio: true,
+        maintainAspectRatio: false,
         plugins: {
             legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } },
             title: { display: true, text: t.title_timeline, font: { size: 13 } },
@@ -583,7 +583,7 @@ charts.push(new Chart(document.getElementById('chartCtverce'), {
     options: {
         indexAxis: 'y',
         responsive: true,
-        maintainAspectRatio: true,
+        maintainAspectRatio: false,
         plugins: {
             legend: { display: false },
             title: { display: true, text: t.title_squares, font: { size: 13 } },
@@ -627,7 +627,7 @@ if (cfg.sezona) {
         },
         options: {
             responsive: true,
-            maintainAspectRatio: true,
+            maintainAspectRatio: false,
             plugins: {
                 legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } },
                 title: { display: true, text: (t.title_season || ':call').replace(':call', cfg.pcall), font: { size: 13 } },
@@ -680,7 +680,7 @@ charts.push(new Chart(document.getElementById('chartDist'), {
     },
     options: {
         responsive: true,
-        maintainAspectRatio: true,
+        maintainAspectRatio: false,
         plugins: {
             legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } },
             title: { display: true, text: t.title_dist, font: { size: 13 } },

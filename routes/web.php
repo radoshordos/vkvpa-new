@@ -19,6 +19,7 @@ use App\Http\Controllers\EdiVizualizaceController;
 use App\Http\Controllers\HlaseniController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MailImageController;
+use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\VysledkyController;
 use Illuminate\Support\Facades\Route;
 
@@ -38,6 +39,10 @@ Route::get('/lang/{locale}', function (string $locale) {
     // `back()` přebírá hlavičku Referer a umožnilo by open redirect na cizí web.
     return redirect(url()->previousPath());
 })->name('lang.switch');
+
+// SEO: robots.txt + sitemap.xml generované dynamicky (správná doména z requestu).
+Route::get('/robots.txt', [SitemapController::class, 'robots'])->name('robots');
+Route::get('/sitemap.xml', [SitemapController::class, 'sitemap'])->name('sitemap');
 
 // Výchozí stránka = úvodní obrazovka.
 Route::get('/', [HomeController::class, 'index'])->name('home');

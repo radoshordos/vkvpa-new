@@ -17,10 +17,24 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="{{ __('app.meta_description') }}">
-    <meta name="keywords" content="HAMradio, OK, Activity contest, VKV, EDI, závod">
+    {{-- Titulek, popis a canonical – sjednoceně z volitelných sekcí stránky.
+         Title: „<sekce> · <značka>"; bez sekce jen značka. Popis/canonical mají
+         per-page override (@section('meta_description') / @section('canonical'))
+         s rozumným fallbackem. --}}
+    @php
+        $siteTitle = __('app.site_title');
+        $sectionTitle = trim($__env->yieldContent('title'));
+        $pageTitle = $sectionTitle !== '' ? $sectionTitle.' · '.$siteTitle : $siteTitle;
+        $metaDesc = trim($__env->yieldContent('meta_description')) ?: __('app.meta_description');
+        $metaDescShort = trim($__env->yieldContent('meta_description')) ?: __('app.meta_description_short');
+        $canonical = trim($__env->yieldContent('canonical')) ?: url()->current();
+        $ogImage = asset('og-image.png');
+    @endphp
+    <meta name="description" content="{{ $metaDesc }}">
+    <meta name="keywords" content="HAMradio, OK, Activity contest, VKV, EDI, závod, provozní aktiv, radioamatér">
     <meta name="theme-color" content="#4338ca">
-    <title>@yield('title', 'VKV PA - provozní aktiv')</title>
+    <title>{{ $pageTitle }}</title>
+    <link rel="canonical" href="{{ $canonical }}">
 
     {{-- Ikony + PWA manifest --}}
     <link rel="icon" href="/favicon.ico" sizes="any">
@@ -29,17 +43,19 @@
     <link rel="manifest" href="/site.webmanifest">
 
     {{-- Open Graph / Twitter – náhled při sdílení --}}
-    @php $ogImage = asset('icon.svg'); @endphp
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="VKV provozní aktiv">
-    <meta property="og:title" content="@yield('title', 'VKV provozní aktiv')">
-    <meta property="og:description" content="{{ __('app.meta_description') }}">
-    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:site_name" content="{{ $siteTitle }}">
+    <meta property="og:title" content="{{ $pageTitle }}">
+    <meta property="og:description" content="{{ $metaDesc }}">
+    <meta property="og:url" content="{{ $canonical }}">
     <meta property="og:image" content="{{ $ogImage }}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="{{ $siteTitle }}">
     <meta property="og:locale" content="{{ $locale === 'en' ? 'en_US' : 'cs_CZ' }}">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="@yield('title', 'VKV provozní aktiv')">
-    <meta name="twitter:description" content="{{ __('app.meta_description_short') }}">
+    <meta name="twitter:title" content="{{ $pageTitle }}">
+    <meta name="twitter:description" content="{{ $metaDescShort }}">
     <meta name="twitter:image" content="{{ $ogImage }}">
 
     {{-- Tmavý režim bez probliknutí: nastav třídu .dark dřív, než se vykreslí tělo. --}}

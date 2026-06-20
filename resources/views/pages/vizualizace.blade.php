@@ -160,7 +160,7 @@ window.__vizConfig = {
 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 mb-4">
   <div class="relative rounded-lg border border-line bg-surface p-3">
     <button type="button" class="chart-png" data-chart-png="chartTimeline" data-nazev="timeline-nasobice" title="{{ __('pages.viz.chart_png_title') }}">⤓</button>
-    <canvas id="chartTimeline"></canvas>
+    <div class="h-72 sm:h-72"><canvas id="chartTimeline"></canvas></div>
   </div>
   <div class="relative rounded-lg border border-line bg-surface p-3">
     <button type="button" class="chart-png" data-chart-png="chartAzimuth" data-nazev="smery-qso" title="{{ __('pages.viz.chart_png_title') }}">⤓</button>
@@ -178,12 +178,12 @@ window.__vizConfig = {
 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 mb-4">
   <div class="relative rounded-lg border border-line bg-surface p-3">
     <button type="button" class="chart-png" data-chart-png="chartCtverce" data-nazev="body-ctverce" title="{{ __('pages.viz.chart_png_title') }}">⤓</button>
-    <canvas id="chartCtverce"></canvas>
+    <div class="h-72 sm:h-72"><canvas id="chartCtverce"></canvas></div>
   </div>
   <div class="relative rounded-lg border border-line bg-surface p-3">
     @if ($sezona !== null)
       <button type="button" class="chart-png" data-chart-png="chartSezona" data-nazev="sezona" title="{{ __('pages.viz.chart_png_title') }}">⤓</button>
-      <canvas id="chartSezona"></canvas>
+      <div class="h-72 sm:h-72"><canvas id="chartSezona"></canvas></div>
       <p class="text-xs text-muted mt-2">{{ __('pages.viz.sezona_caption', ['call' => $pcall]) }}</p>
     @else
       <p class="text-sm text-muted">{{ __('pages.viz.sezona_unavailable') }}</p>
@@ -194,7 +194,7 @@ window.__vizConfig = {
 {{-- ── Graf: histogram vzdáleností (skládaný podle druhu provozu) ───────── --}}
 <div class="relative rounded-lg border border-line bg-surface p-3 mb-5">
   <button type="button" class="chart-png" data-chart-png="chartDist" data-nazev="histogram-vzdalenosti" title="{{ __('pages.viz.chart_png_title') }}">⤓</button>
-  <canvas id="chartDist"></canvas>
+  <div class="h-72 sm:h-72"><canvas id="chartDist"></canvas></div>
 </div>
 
 {{-- ── TOP ODX ─────────────────────────────────────────────────────────── --}}

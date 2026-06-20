@@ -1,8 +1,15 @@
 @extends('layouts.app')
 
 @section('title', __('pages.home.title'))
+@section('meta_description', __('pages.home.meta'))
 
 @section('content')
+
+{{-- Hlavní nadpis stránky (H1) – tematický signál pro vyhledávače i návštěvníky. --}}
+<header class="mb-5">
+    <h1 class="text-xl font-bold text-heading sm:text-2xl">{{ __('pages.home.heading') }}</h1>
+    <p class="mt-1 text-sm text-muted">{{ __('pages.home.subtitle') }}</p>
+</header>
 
 {{-- ── Aktuální / nadcházející kolo ──────────────────────────────── --}}
 @if ($kolo)
@@ -158,6 +165,7 @@
                     <th class="num">{{ __('pages.hlaseni.col_mult') }}</th>
                     <th class="num">{{ __('pages.hlaseni.col_total') }}</th>
                     <th>{{ __('pages.hlaseni.col_name_note') }}</th>
+                    <th>{{ __('pages.vysledky.col_stats') }}</th>
                     <th>{{ __('pages.hlaseni.col_status') }}</th>
                 </tr>
             </thead>
@@ -171,6 +179,12 @@
                     <td class="num">{{ (int) $r->nasobice }}</td>
                     <td class="num font-bold">{{ (int) $r->body }}</td>
                     <td class="text-muted text-sm">{{ $r->jmeno }}@if ($r->poznamka) <i>({{ $r->poznamka }})</i>@endif</td>
+                    <td>
+                        @if ($r->edihead_id)
+                            {{-- Statistiky deníku – veřejné vždy --}}
+                            <x-vizualizace-odkaz :head="$r->edihead_id" target="_blank" />
+                        @endif
+                    </td>
                     <td>
                         @if ($r->schvaleno)
                             <x-badge variant="ok">{{ __('pages.hlaseni.status_ok') }}</x-badge>
