@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 return [
-    'site_title' => 'VHF Activity contest',
+    'site_title' => 'OK Activity contest',
     'open_menu' => 'Open menu',
     'close_menu' => 'Close menu',
     'toggle_theme' => 'Toggle dark mode',

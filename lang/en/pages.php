@@ -5,8 +5,8 @@ declare(strict_types=1);
 return [
 
     'home' => [
-        'title' => 'VKV Provozní aktiv',
-        'heading' => 'VKV Provozní aktiv',
+        'title' => 'OK Activity contest',
+        'heading' => 'OK Activity contest',
         'subtitle' => 'Electronic log submission for VKV PA contests',
         'state_upcoming' => 'Upcoming contest',
         'state_running' => 'Contest in progress',
