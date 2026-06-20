@@ -596,6 +596,43 @@ charts.push(new Chart(document.getElementById('chartCtverce'), {
     },
 }));
 
+// ── Chart.js: QSO podle zemí (DXCC) a podle prefixů (vodorovné sloupce) ─────
+// Náhrada za dva 3D koláče z legacy verze – seřazené vodorovné sloupce jsou
+// čitelnější pro dlouhý chvost (řada zemí/prefixů po 1 QSO).
+
+function countBarChart(canvasId, rows, labelKey, title) {
+    return new Chart(document.getElementById(canvasId), {
+        type: 'bar',
+        data: {
+            labels: rows.map((r) => r[labelKey]),
+            datasets: [{
+                label: t.qso_suffix,
+                data: rows.map((r) => r.pocet),
+                backgroundColor: 'rgba(139, 92, 246, 0.75)',
+                borderColor: 'rgba(139, 92, 246, 1)',
+                borderWidth: 1,
+                borderRadius: 3,
+            }],
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                title: { display: true, text: title, font: { size: 13 } },
+            },
+            scales: {
+                x: { beginAtZero: true, ticks: { stepSize: 1 } },
+                y: { grid: { display: false } },
+            },
+        },
+    });
+}
+
+charts.push(countBarChart('chartZeme', cfg.podleZemi, 'country', t.title_country));
+charts.push(countBarChart('chartPrefix', cfg.podlePrefixu, 'prefix', t.title_prefix));
+
 // ── Chart.js: Celoroční trend stanice (body + pořadí po kolech) ────────────
 
 if (cfg.sezona) {

@@ -228,6 +228,66 @@ class DenikStatistiky
     }
 
     /**
+     * Rozpad bodovaných QSO podle zemí (DXCC) přes číselník prefixů; značky
+     * bez známého prefixu spadnou do koše $ostatni. Seřazeno sestupně podle
+     * počtu, při shodě abecedně.
+     *
+     * @param  Collection<int, EnrichedQso>  $lines
+     * @return list<array{country: string, pocet: int}>
+     */
+    public function podleZemi(Collection $lines, PrefixResolver $resolver, string $ostatni = 'Ostatní'): array
+    {
+        /** @var array<string, int> $by */
+        $by = [];
+
+        foreach ($lines as $l) {
+            $r = $resolver->lookup($l->call);
+            $key = $r === null ? $ostatni : $r['country'];
+            $by[$key] = ($by[$key] ?? 0) + 1;
+        }
+
+        $out = [];
+
+        foreach ($by as $country => $pocet) {
+            $out[] = ['country' => (string) $country, 'pocet' => $pocet];
+        }
+
+        usort($out, fn (array $a, array $b): int => $b['pocet'] <=> $a['pocet'] ?: strcmp($a['country'], $b['country']));
+
+        return $out;
+    }
+
+    /**
+     * Rozpad bodovaných QSO podle prefixů (jemnější než podle zemí: OK i OL,
+     * DL i DK …). Značky bez známého prefixu spadnou do koše $ostatni.
+     * Seřazeno sestupně podle počtu, při shodě abecedně.
+     *
+     * @param  Collection<int, EnrichedQso>  $lines
+     * @return list<array{prefix: string, pocet: int}>
+     */
+    public function podlePrefixu(Collection $lines, PrefixResolver $resolver, string $ostatni = 'Ostatní'): array
+    {
+        /** @var array<string, int> $by */
+        $by = [];
+
+        foreach ($lines as $l) {
+            $r = $resolver->lookup($l->call);
+            $key = $r === null ? $ostatni : $r['prefix'];
+            $by[$key] = ($by[$key] ?? 0) + 1;
+        }
+
+        $out = [];
+
+        foreach ($by as $prefix => $pocet) {
+            $out[] = ['prefix' => (string) $prefix, 'pocet' => $pocet];
+        }
+
+        usort($out, fn (array $a, array $b): int => $b['pocet'] <=> $a['pocet'] ?: strcmp($a['prefix'], $b['prefix']));
+
+        return $out;
+    }
+
+    /**
      * TOP nejvzdálenější spojení (ODX). `idx` je pozice QSO v $lines –
      * klik na řádek tabulky podle ní najde špendlík na mapě.
      *

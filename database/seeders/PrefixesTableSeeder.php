@@ -8,7 +8,7 @@ class PrefixesTableSeeder extends JsonTableSeeder
 {
     protected string $table = 'prefixes';
 
-    protected ?int $autoIncrement = 533;
+    protected ?int $autoIncrement = 570;
 
     /**
      * Data jsou drobná a statická (volací prefixy → země), takže žijí přímo
@@ -133,7 +133,7 @@ class PrefixesTableSeeder extends JsonTableSeeder
             ['id' => 378, 'prefix' => 'GN', 'country' => 'Northern Ireland'],
             ['id' => 379, 'prefix' => 'GP', 'country' => 'Guernsey & Dependencies'],
             ['id' => 380, 'prefix' => 'GS', 'country' => 'Scotland'],
-            ['id' => 381, 'prefix' => 'GT', 'country' => 'Isle Of Man'],
+            ['id' => 381, 'prefix' => 'GT', 'country' => 'Isle of Man'],
             ['id' => 382, 'prefix' => 'GU', 'country' => 'Guernsey & Dependencies'],
             ['id' => 383, 'prefix' => 'GW', 'country' => 'Wales'],
             ['id' => 384, 'prefix' => 'GX', 'country' => 'England'],
@@ -148,7 +148,7 @@ class PrefixesTableSeeder extends JsonTableSeeder
             ['id' => 393, 'prefix' => 'HB7', 'country' => 'Switzerland'],
             ['id' => 394, 'prefix' => 'HB8', 'country' => 'Switzerland'],
             ['id' => 395, 'prefix' => 'HB9', 'country' => 'Switzerland'],
-            ['id' => 396, 'prefix' => 'HB0', 'country' => 'Lichtenstein'],
+            ['id' => 396, 'prefix' => 'HB0', 'country' => 'Liechtenstein'],
             ['id' => 397, 'prefix' => 'HE', 'country' => 'Switzerland'],
             ['id' => 398, 'prefix' => 'SA', 'country' => 'Sweden'],
             ['id' => 399, 'prefix' => 'SB', 'country' => 'Sweden'],
@@ -206,8 +206,8 @@ class PrefixesTableSeeder extends JsonTableSeeder
             ['id' => 451, 'prefix' => 'EM', 'country' => 'Ukraine'],
             ['id' => 452, 'prefix' => 'EN', 'country' => 'Ukraine'],
             ['id' => 453, 'prefix' => 'EO', 'country' => 'Ukraine'],
-            ['id' => 454, 'prefix' => 'LY', 'country' => 'Latvia'],
-            ['id' => 455, 'prefix' => 'YL', 'country' => 'Lithuania'],
+            ['id' => 454, 'prefix' => 'LY', 'country' => 'Lithuania'],
+            ['id' => 455, 'prefix' => 'YL', 'country' => 'Latvia'],
             ['id' => 456, 'prefix' => 'ES', 'country' => 'Estonia'],
             ['id' => 457, 'prefix' => 'OF', 'country' => 'Finland'],
             ['id' => 458, 'prefix' => 'OG', 'country' => 'Finland'],
@@ -225,14 +225,14 @@ class PrefixesTableSeeder extends JsonTableSeeder
             ['id' => 471, 'prefix' => 'MX', 'country' => 'England'],
             ['id' => 472, 'prefix' => 'MD', 'country' => 'Isle of Man'],
             ['id' => 473, 'prefix' => 'MT', 'country' => 'Isle of Man'],
-            ['id' => 474, 'prefix' => 'MI', 'country' => 'Northern Ireland GI'],
-            ['id' => 475, 'prefix' => 'MN', 'country' => 'Northern Ireland GI'],
+            ['id' => 474, 'prefix' => 'MI', 'country' => 'Northern Ireland'],
+            ['id' => 475, 'prefix' => 'MN', 'country' => 'Northern Ireland'],
             ['id' => 476, 'prefix' => 'MJ', 'country' => 'Jersey'],
             ['id' => 477, 'prefix' => 'MH', 'country' => 'Jersey'],
             ['id' => 478, 'prefix' => 'MM', 'country' => 'Scotland'],
             ['id' => 479, 'prefix' => 'MS', 'country' => 'Scotland'],
-            ['id' => 480, 'prefix' => 'MU', 'country' => 'Guernsey and Dependencies'],
-            ['id' => 481, 'prefix' => 'MP', 'country' => 'Guernsey and Dependencies'],
+            ['id' => 480, 'prefix' => 'MU', 'country' => 'Guernsey & Dependencies'],
+            ['id' => 481, 'prefix' => 'MP', 'country' => 'Guernsey & Dependencies'],
             ['id' => 482, 'prefix' => 'MW', 'country' => 'Wales'],
             ['id' => 483, 'prefix' => 'MC', 'country' => 'Wales'],
             ['id' => 484, 'prefix' => '2D', 'country' => 'Isle of Man'],
@@ -240,7 +240,7 @@ class PrefixesTableSeeder extends JsonTableSeeder
             ['id' => 486, 'prefix' => '2I', 'country' => 'Northern Ireland'],
             ['id' => 487, 'prefix' => '2J', 'country' => 'Jersey'],
             ['id' => 488, 'prefix' => '2M', 'country' => 'Scotland'],
-            ['id' => 489, 'prefix' => '2U', 'country' => 'Guernsey and Dependencies'],
+            ['id' => 489, 'prefix' => '2U', 'country' => 'Guernsey & Dependencies'],
             ['id' => 490, 'prefix' => '2W', 'country' => 'Wales'],
             ['id' => 491, 'prefix' => 'I1', 'country' => 'Italy'],
             ['id' => 492, 'prefix' => 'I2', 'country' => 'Italy'],
@@ -271,7 +271,6 @@ class PrefixesTableSeeder extends JsonTableSeeder
             ['id' => 518, 'prefix' => 'G7', 'country' => 'England'],
             ['id' => 519, 'prefix' => 'G8', 'country' => 'England'],
             ['id' => 520, 'prefix' => 'G9', 'country' => 'England'],
-            ['id' => 521, 'prefix' => 'G1', 'country' => 'England'],
             ['id' => 522, 'prefix' => 'M0', 'country' => 'England'],
             ['id' => 523, 'prefix' => 'M1', 'country' => 'England'],
             ['id' => 524, 'prefix' => 'M2', 'country' => 'England'],
@@ -282,7 +281,48 @@ class PrefixesTableSeeder extends JsonTableSeeder
             ['id' => 529, 'prefix' => 'M7', 'country' => 'England'],
             ['id' => 530, 'prefix' => 'M8', 'country' => 'England'],
             ['id' => 531, 'prefix' => 'M9', 'country' => 'England'],
-            ['id' => 532, 'prefix' => 'M1', 'country' => 'England'],
+
+            // Doplněno: chybějící evropské země reálně dosažitelné na VKV
+            // (viz migrace fix_and_extend_prefixes). Pro evropské Rusko jsou
+            // uvedeny jen evropské volací oblasti (1/3/4/6); region 2 zůstává
+            // Kaliningrad a díky longest-matchi vyhraje (UA2 > UA1 apod.).
+            ['id' => 533, 'prefix' => 'LA', 'country' => 'Norway'],
+            ['id' => 534, 'prefix' => 'LB', 'country' => 'Norway'],
+            ['id' => 535, 'prefix' => 'LC', 'country' => 'Norway'],
+            ['id' => 536, 'prefix' => 'LD', 'country' => 'Norway'],
+            ['id' => 537, 'prefix' => 'LE', 'country' => 'Norway'],
+            ['id' => 538, 'prefix' => 'LF', 'country' => 'Norway'],
+            ['id' => 539, 'prefix' => 'LG', 'country' => 'Norway'],
+            ['id' => 540, 'prefix' => 'LH', 'country' => 'Norway'],
+            ['id' => 541, 'prefix' => 'LI', 'country' => 'Norway'],
+            ['id' => 542, 'prefix' => 'LJ', 'country' => 'Norway'],
+            ['id' => 543, 'prefix' => 'LK', 'country' => 'Norway'],
+            ['id' => 544, 'prefix' => 'LM', 'country' => 'Norway'],
+            ['id' => 545, 'prefix' => 'LN', 'country' => 'Norway'],
+            ['id' => 546, 'prefix' => 'EU', 'country' => 'Belarus'],
+            ['id' => 547, 'prefix' => 'EV', 'country' => 'Belarus'],
+            ['id' => 548, 'prefix' => 'EW', 'country' => 'Belarus'],
+            ['id' => 549, 'prefix' => 'R1', 'country' => 'European Russia'],
+            ['id' => 550, 'prefix' => 'R3', 'country' => 'European Russia'],
+            ['id' => 551, 'prefix' => 'R4', 'country' => 'European Russia'],
+            ['id' => 552, 'prefix' => 'R6', 'country' => 'European Russia'],
+            ['id' => 553, 'prefix' => 'RA1', 'country' => 'European Russia'],
+            ['id' => 554, 'prefix' => 'RA3', 'country' => 'European Russia'],
+            ['id' => 555, 'prefix' => 'RA4', 'country' => 'European Russia'],
+            ['id' => 556, 'prefix' => 'RA6', 'country' => 'European Russia'],
+            ['id' => 557, 'prefix' => 'UA1', 'country' => 'European Russia'],
+            ['id' => 558, 'prefix' => 'UA3', 'country' => 'European Russia'],
+            ['id' => 559, 'prefix' => 'UA4', 'country' => 'European Russia'],
+            ['id' => 560, 'prefix' => 'UA6', 'country' => 'European Russia'],
+            ['id' => 561, 'prefix' => 'ER', 'country' => 'Moldova'],
+            ['id' => 562, 'prefix' => 'EI', 'country' => 'Ireland'],
+            ['id' => 563, 'prefix' => 'EJ', 'country' => 'Ireland'],
+            ['id' => 564, 'prefix' => 'SV', 'country' => 'Greece'],
+            ['id' => 565, 'prefix' => 'SW', 'country' => 'Greece'],
+            ['id' => 566, 'prefix' => 'SX', 'country' => 'Greece'],
+            ['id' => 567, 'prefix' => 'SY', 'country' => 'Greece'],
+            ['id' => 568, 'prefix' => 'SZ', 'country' => 'Greece'],
+            ['id' => 569, 'prefix' => 'J4', 'country' => 'Greece'],
         ];
     }
 }

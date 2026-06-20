@@ -47,6 +47,8 @@ window.__vizConfig = {
     timeline: @json($timeline),
     azimuth: @json($azimuth),
     squarePoints: @json($squarePoints),
+    podleZemi: @json($podleZemi),
+    podlePrefixu: @json($podlePrefixu),
     sezona: @json($sezona),
     distHistogram: @json($distHistogram),
     t: @json(__('pages.viz.js')),
@@ -188,6 +190,18 @@ window.__vizConfig = {
     @else
       <p class="text-sm text-muted">{{ __('pages.viz.sezona_unavailable') }}</p>
     @endif
+  </div>
+</div>
+
+{{-- ── Grafy: QSO podle zemí (DXCC) + podle prefixů ────────────────────── --}}
+<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 mb-4">
+  <div class="relative rounded-lg border border-line bg-surface p-3">
+    <button type="button" class="chart-png" data-chart-png="chartZeme" data-nazev="qso-zeme" title="{{ __('pages.viz.chart_png_title') }}">⤓</button>
+    <div class="h-72 sm:h-72"><canvas id="chartZeme"></canvas></div>
+  </div>
+  <div class="relative rounded-lg border border-line bg-surface p-3">
+    <button type="button" class="chart-png" data-chart-png="chartPrefix" data-nazev="qso-prefixy" title="{{ __('pages.viz.chart_png_title') }}">⤓</button>
+    <div class="h-72 sm:h-72"><canvas id="chartPrefix"></canvas></div>
   </div>
 </div>
 

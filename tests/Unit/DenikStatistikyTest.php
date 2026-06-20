@@ -7,6 +7,7 @@ namespace Tests\Unit;
 use App\Enums\QsoMode;
 use App\Services\Edi\DenikStatistiky;
 use App\Services\Edi\EnrichedQso;
+use App\Services\Edi\PrefixResolver;
 use Illuminate\Support\Collection;
 use PHPUnit\Framework\TestCase;
 
@@ -272,6 +273,68 @@ class DenikStatistikyTest extends TestCase
         $this->assertNotNull($cw);
         $this->assertSame(1, $cw['pocet']);
         $this->assertSame(0, $cw['avgDist']); // dist=null → 0
+    }
+
+    // ---- podleZemi / podlePrefixu ---------------------------------------
+
+    public function test_podle_zemi_aggregates_sorts_and_buckets_unknown(): void
+    {
+        $resolver = new PrefixResolver([
+            ['prefix' => 'OK', 'country' => 'Czech Rep'],
+            ['prefix' => 'OL', 'country' => 'Czech Rep'],
+            ['prefix' => '9A', 'country' => 'Croatia'],
+        ]);
+
+        $lines = new Collection([
+            $this->qso('OK1ABC', 'JN89', 3, 480),
+            $this->qso('OL2XYZ', 'JN79', 3, 481), // taky Czech Rep
+            $this->qso('9A1AA', 'JN95', 3, 482),
+            $this->qso('XYZ9', 'JO60', 3, 483),   // neznámý prefix → Ostatní
+        ]);
+
+        $result = $this->svc->podleZemi($lines, $resolver);
+
+        // Czech Rep 2 (OK+OL) první; Croatia 1 a Ostatní 1 mají shodu → abecedně.
+        $this->assertSame(
+            [
+                ['country' => 'Czech Rep', 'pocet' => 2],
+                ['country' => 'Croatia', 'pocet' => 1],
+                ['country' => 'Ostatní', 'pocet' => 1],
+            ],
+            $result,
+        );
+    }
+
+    public function test_podle_prefixu_keeps_prefix_granularity(): void
+    {
+        $resolver = new PrefixResolver([
+            ['prefix' => 'OK', 'country' => 'Czech Rep'],
+            ['prefix' => 'OL', 'country' => 'Czech Rep'],
+        ]);
+
+        $lines = new Collection([
+            $this->qso('OK1ABC', 'JN89', 3, 480),
+            $this->qso('OK2DEF', 'JN79', 3, 481),
+            $this->qso('OL3GHI', 'JN95', 3, 482),
+        ]);
+
+        $result = $this->svc->podlePrefixu($lines, $resolver);
+
+        // OK 2 první; OL 1 druhý (na rozdíl od podleZemi se OK a OL neslučují).
+        $this->assertSame(
+            [
+                ['prefix' => 'OK', 'pocet' => 2],
+                ['prefix' => 'OL', 'pocet' => 1],
+            ],
+            $result,
+        );
+    }
+
+    public function test_podle_zemi_empty_lines_returns_empty(): void
+    {
+        $resolver = new PrefixResolver([['prefix' => 'OK', 'country' => 'Czech Rep']]);
+
+        $this->assertSame([], $this->svc->podleZemi(new Collection, $resolver));
     }
 
     // ---- tempo ----------------------------------------------------------
