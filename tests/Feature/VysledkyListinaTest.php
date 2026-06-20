@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\Edihead;
 use App\Models\User;
 use App\Models\VkvpaData;
 use App\Models\VkvpaKategorie;
@@ -116,5 +117,58 @@ class VysledkyListinaTest extends TestCase
             ->get(route('vysledkova_listina', ['kolo' => $kolo->id]))
             ->assertOk()
             ->assertSee('OK1NEW');
+    }
+
+    /** Kolo s otevřeným upload oknem (závod proběhl, uzávěrka v budoucnu). */
+    private function aktivniKolo(): VkvpaKola
+    {
+        return VkvpaKola::create([
+            'datum_konani' => now()->subDay(),
+            'datum_uzaverky' => now()->addDay(),
+            'nazev' => '06/2026',
+            'poznamka' => '',
+        ]);
+    }
+
+    private function entryWithEdi(int $kolo, int $kat, string $znacka): VkvpaData
+    {
+        $head = Edihead::create([
+            'id_kola' => $kolo, 't_date' => '20260315;20260315', 'p_call' => $znacka,
+            'p_wwlo' => 'JN99AJ', 'p_sect' => '', 'p_band' => '', 'r_name' => 'X',
+            'r_phon' => '', 'r_emai' => '', 's_powe' => 100, 'src' => 'x',
+        ]);
+        $row = $this->entry($kolo, $kat, $znacka, 10, 5, 100, 1);
+        $row->update(['edihead_id' => $head->id]);
+
+        return $row;
+    }
+
+    /**
+     * Regrese: během otevřeného okna jednoho kola se hostovi NEsmí skrýt
+     * odkazy EDI u jiných (uzavřených) kol.
+     */
+    public function test_edi_links_visible_for_guest_on_closed_round_during_another_window(): void
+    {
+        $this->aktivniKolo();                       // jiné kolo má otevřené okno
+        $uzavrene = $this->kolo();                  // toto kolo je už uzavřené
+        $kat = $this->kat('144 MHz single op');
+        $this->entryWithEdi($uzavrene->id, $kat->id, 'OK1DOL');
+
+        $this->get(route('vysledkova_listina', ['kolo' => $uzavrene->id]))
+            ->assertOk()
+            ->assertSee('soubor-redukovany')         // odkazy EDI/EDIR se vykreslily
+            ->assertDontSee(__('app.edi_restricted_label'));
+    }
+
+    /** Na zobrazeném kole s otevřeným oknem se hostovi odkazy EDI skryjí. */
+    public function test_edi_links_hidden_for_guest_on_active_round(): void
+    {
+        $aktivni = $this->aktivniKolo();
+        $kat = $this->kat('144 MHz single op');
+        $this->entryWithEdi($aktivni->id, $kat->id, 'OK1DOL');
+
+        $this->get(route('vysledkova_listina', ['kolo' => $aktivni->id]))
+            ->assertOk()
+            ->assertSee(__('app.edi_restricted_label'));
     }
 }

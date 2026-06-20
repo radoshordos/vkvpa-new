@@ -23,7 +23,7 @@ class EdiZobrazeniTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function denik(): Edihead
+    private function denik(?int $idKola = null): Edihead
     {
         $raw = implode("\n", [
             '[REG1TEST;1]',
@@ -35,6 +35,7 @@ class EdiZobrazeniTest extends TestCase
         ])."\n";
 
         return Edihead::create([
+            'id_kola' => $idKola,
             't_date' => '20260315;20260315', 'p_call' => 'OK2KJT', 'p_wwlo' => 'JN99AJ',
             'p_sect' => '', 'p_band' => '', 'r_name' => 'X', 'r_phon' => '', 'r_emai' => '',
             's_powe' => 100, 'src' => $raw,
@@ -128,8 +129,8 @@ class EdiZobrazeniTest extends TestCase
 
     public function test_edi_blocked_during_upload_window_for_guest(): void
     {
-        $this->activeRound();
-        $head = $this->denik();
+        $kolo = $this->activeRound();
+        $head = $this->denik($kolo->id);
 
         $this->get(route('edi.soubor', ['head' => $head->id]))
             ->assertForbidden();
@@ -137,8 +138,8 @@ class EdiZobrazeniTest extends TestCase
 
     public function test_edi_blocked_during_upload_window_for_regular_user(): void
     {
-        $this->activeRound();
-        $head = $this->denik();
+        $kolo = $this->activeRound();
+        $head = $this->denik($kolo->id);
 
         $this->actingAs($this->regularUser())
             ->get(route('edi.soubor', ['head' => $head->id]))
@@ -147,18 +148,43 @@ class EdiZobrazeniTest extends TestCase
 
     public function test_edir_blocked_during_upload_window_for_regular_user(): void
     {
-        $this->activeRound();
-        $head = $this->denik();
+        $kolo = $this->activeRound();
+        $head = $this->denik($kolo->id);
 
         $this->actingAs($this->regularUser())
             ->get(route('edi.soubor.redukovany', ['head' => $head->id]))
             ->assertForbidden();
     }
 
-    public function test_admin_can_view_edi_during_upload_window(): void
+    /**
+     * Regrese: okno jednoho kola nesmí schovat deníky JINÝCH (uzavřených) kol.
+     * Veřejnost si i během příjmu hlášení smí prohlížet deníky starých kol.
+     */
+    public function test_edi_of_closed_round_stays_public_during_another_rounds_window(): void
+    {
+        $this->activeRound();                       // jiné kolo má otevřené okno
+        $stare = $this->closedRound();              // toto kolo je už uzavřené
+        $head = $this->denik($stare->id);
+
+        $this->get(route('edi.soubor', ['head' => $head->id]))
+            ->assertOk()
+            ->assertSee('OK1A');
+    }
+
+    /** Deník bez vazby na kolo (id_kola = null) se během okna neblokuje. */
+    public function test_edi_without_round_is_not_blocked(): void
     {
         $this->activeRound();
-        $head = $this->denik();
+        $head = $this->denik();                     // id_kola = null
+
+        $this->get(route('edi.soubor', ['head' => $head->id]))
+            ->assertOk();
+    }
+
+    public function test_admin_can_view_edi_during_upload_window(): void
+    {
+        $kolo = $this->activeRound();
+        $head = $this->denik($kolo->id);
 
         $this->actingAs($this->admin())
             ->get(route('edi.soubor', ['head' => $head->id]))
@@ -168,8 +194,8 @@ class EdiZobrazeniTest extends TestCase
 
     public function test_admin_can_view_edir_during_upload_window(): void
     {
-        $this->activeRound();
-        $head = $this->denik();
+        $kolo = $this->activeRound();
+        $head = $this->denik($kolo->id);
 
         $this->actingAs($this->admin())
             ->get(route('edi.soubor.redukovany', ['head' => $head->id]))
