@@ -6,6 +6,8 @@ import { addFullscreenControl } from './leaflet-fullscreen.js';
 Chart.register(...registerables);
 
 const cfg = window.__porovnaniConfig;
+// Lokalizované popisky (z lang/*/pages.php → porovnani.js), předané přes config.
+const t = cfg.t || {};
 
 const hhmm = (m) => String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
 
@@ -54,9 +56,9 @@ if (mapEl && cfg.compare) {
             + `<br><em>${owner}</em>`);
     }
 
-    cmp.both.forEach((s) => comparePin(s, bothCol, 'udělali oba').addTo(map));
-    cmp.onlyMine.forEach((s) => comparePin(s, mineCol, `jen ${cfg.pcall}`).addTo(map));
-    cmp.onlyRival.forEach((s) => comparePin(s, rivalCol, `jen ${cmp.rival}`).addTo(map));
+    cmp.both.forEach((s) => comparePin(s, bothCol, t.both).addTo(map));
+    cmp.onlyMine.forEach((s) => comparePin(s, mineCol, `${t.only} ${cfg.pcall}`).addTo(map));
+    cmp.onlyRival.forEach((s) => comparePin(s, rivalCol, `${t.only} ${cmp.rival}`).addTo(map));
 
     const legend = L.control({ position: 'bottomright' });
     legend.onAdd = function () {
@@ -64,9 +66,9 @@ if (mapEl && cfg.compare) {
         div.style.cssText = 'background:rgba(255,255,255,.9);padding:6px 10px;border-radius:6px;font-size:12px;line-height:1.7;box-shadow:0 1px 4px rgba(0,0,0,.2)';
         const dot = (c) => `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${c};margin-right:5px;vertical-align:middle"></span>`;
         div.innerHTML = `<strong style="display:block;margin-bottom:2px">${cfg.pcall} vs. ${cmp.rival}</strong>`
-            + dot(mineCol.fill) + `jen ${cfg.pcall} (${cmp.onlyMine.length})<br>`
-            + dot(rivalCol.fill) + `jen ${cmp.rival} (${cmp.onlyRival.length})<br>`
-            + dot(bothCol.fill) + `oba (${cmp.both.length})`;
+            + dot(mineCol.fill) + `${t.only} ${cfg.pcall} (${cmp.onlyMine.length})<br>`
+            + dot(rivalCol.fill) + `${t.only} ${cmp.rival} (${cmp.onlyRival.length})<br>`
+            + dot(bothCol.fill) + `${t.legend_both} (${cmp.both.length})`;
         return div;
     };
     legend.addTo(map);
@@ -118,7 +120,7 @@ if (prubehEl && cfg.compare && cfg.rivalCumulative) {
             maintainAspectRatio: false,
             plugins: {
                 legend: { display: true },
-                title: { display: true, text: 'Průběh skóre (body za spojení × násobiče)', font: { size: 13 } },
+                title: { display: true, text: t.title_score, font: { size: 13 } },
                 tooltip: { callbacks: { title: (its) => its.length ? hhmm(its[0].parsed.x) + ' UTC' : '' } },
             },
             scales: {
@@ -166,7 +168,7 @@ if (timelineEl && cfg.compare && cfg.timeline) {
             maintainAspectRatio: true,
             plugins: {
                 legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } },
-                title: { display: true, text: 'QSO v čase (15min intervaly)', font: { size: 13 } },
+                title: { display: true, text: t.title_timeline, font: { size: 13 } },
             },
             scales: {
                 y: { beginAtZero: true, ticks: { stepSize: 1 } },
@@ -209,7 +211,7 @@ if (azimuthEl && cfg.compare && cfg.azimuth) {
             maintainAspectRatio: true,
             plugins: {
                 legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } },
-                title: { display: true, text: 'Směry QSO (počet)', font: { size: 13 } },
+                title: { display: true, text: t.title_az, font: { size: 13 } },
             },
             scales: {
                 r: {

@@ -35,7 +35,7 @@
 <div class="card mb-4 border-gray-300 bg-white">
     <div class="flex items-center gap-3 border-b border-gray-200 px-5 py-3">
         <x-icon name="triangle-alert" class="h-5 w-5 flex-shrink-0 text-gray-500" />
-        <p class="text-sm font-semibold text-gray-700">Varování administrátora</p>
+        <p class="text-sm font-semibold text-gray-700">{{ __('pages.hlaseni.admin_warnings') }}</p>
     </div>
     <ul class="space-y-1 px-5 py-3 text-sm text-gray-800">
         @foreach ($adminWarnings as $w)
@@ -53,7 +53,7 @@
         <div class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-brand-soft">
             <x-icon name="file" class="h-5 w-5 text-brand" />
         </div>
-        <p class="text-sm font-semibold text-heading">Editace záznamu</p>
+        <p class="text-sm font-semibold text-heading">{{ __('pages.hlaseni.edit_heading') }}</p>
     </div>
     <div class="p-5">
     @csrf

@@ -1,7 +1,7 @@
 @extends('layouts.app')
-@section('title', 'Chyba serveru – VKV PA')
+@section('title', __('app.err_500_title'))
 @section('content')
-  <h1>500 – Chyba serveru</h1>
-  <p class="text-muted">Došlo k neočekávané chybě. Zkuste to prosím znovu za chvíli.</p>
-  <p class="mt-3"><a href="{{ url('/') }}">← Zpět na úvod</a></p>
+  <h1>{{ __('app.err_500_heading') }}</h1>
+  <p class="text-muted">{{ __('app.err_500_body') }}</p>
+  <p class="mt-3"><a href="{{ url('/') }}">← {{ __('app.back_home') }}</a></p>
 @endsection

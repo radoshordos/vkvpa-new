@@ -6,6 +6,8 @@ import { addFullscreenControl } from './leaflet-fullscreen.js';
 Chart.register(...registerables);
 
 const cfg = window.__vizConfig;
+// Lokalizované popisky (z lang/*/pages.php → viz.js), předané přes config.
+const t = cfg.t || {};
 
 const hhmm = (m) => String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
 
@@ -46,6 +48,9 @@ function modeColor(mode) {
     if (mode === 2) return { stroke: '#b45309', fill: '#fbbf24' }; // CW  – oranžová
     return { stroke: '#4b5563', fill: '#9ca3af' };                 // neznámý
 }
+// Zvýraznění nového násobiče – výrazná růžová/magenta, jasně odlišná od barev
+// druhu provozu (SSB modrá, CW jantarová, ostatní šedá), aby se nepletla se SSB.
+const NASOBIC = { stroke: '#be185d', fill: '#ec4899' };
 function modeLabel(mode) {
     if (mode === 1) return 'SSB';
     if (mode === 2) return 'CW';
@@ -102,13 +107,13 @@ cfg.points.forEach(function (p, idx) {
     }
     jezekMembers.push(L.circleMarker([p.lat, p.lon], {
         radius: 5, color: mc.stroke, fillColor: mc.fill, fillOpacity: 0.9, weight: 1.5,
-    }).bindPopup(`<strong>${p.call}</strong> <span style="font-size:.8em;opacity:.7">${modeLabel(p.mode)}</span><br>${p.wwl}<br>${p.points} b.`));
+    }).bindPopup(`<strong>${p.call}</strong> <span style="font-size:.8em;opacity:.7">${modeLabel(p.mode)}</span><br>${p.wwl}<br>${p.points} ${t.pts}`));
     addModeEntry(jezekLayer, p.mode, jezekMembers);
 
     // špendlíky – taktéž rozlišené barevně
     const popupSpend = `<strong>${p.call}</strong> <span style="font-size:.8em;opacity:.7">${modeLabel(p.mode)}</span><br>${p.wwl}`
         + (p.dist !== null ? `<br>${p.dist} km` : '')
-        + (p.azimut !== null ? `<br>azimut ${p.azimut}°` : '');
+        + (p.azimut !== null ? `<br>${t.azimuth} ${p.azimut}°` : '');
     const spendlik = L.circleMarker([p.lat, p.lon], {
         radius: 5, color: mc.stroke, fillColor: mc.fill, fillOpacity: 0.9, weight: 1.5,
     }).bindPopup(popupSpend);
@@ -124,13 +129,13 @@ cfg.points.forEach(function (p, idx) {
         }));
     }
     group.push(L.circleMarker([p.lat, p.lon], nn
-        ? { radius: 7, color: '#7c3aed', fillColor: '#a855f7', fillOpacity: 0.9, weight: 2 }
+        ? { radius: 7, color: NASOBIC.stroke, fillColor: NASOBIC.fill, fillOpacity: 0.9, weight: 2 }
         : { radius: 5, color: mc.stroke, fillColor: mc.fill, fillOpacity: 0.9, weight: 1.5 },
     ).bindPopup(`<strong>${p.call}</strong> <span style="font-size:.8em;opacity:.7">${modeLabel(p.mode)}</span><br>${p.wwl}<br>${hhmm(p.time)} UTC`
         + (p.dist !== null ? `<br>${p.dist} km` : '')
-        + (p.azimut !== null ? `<br>azimut ${p.azimut}°` : '')
-        + `<br>${p.points} b.`
-        + (nn ? `<br>🆕 nový násobič ${nn.square} (${nn.poradi}.)` : '')));
+        + (p.azimut !== null ? `<br>${t.azimuth} ${p.azimut}°` : '')
+        + `<br>${p.points} ${t.pts}`
+        + (nn ? `<br>🆕 ${t.new_mult} ${nn.square} (${nn.poradi}.)` : '')));
     playbackItems.push({ t: p.time, mode: modeGroup(p.mode), group, shown: false });
 });
 
@@ -140,7 +145,7 @@ cfg.squares.forEach(function (s) {
         radius: 14, color: '#7c3aed', fillColor: '#a855f7', fillOpacity: 0.65, weight: 2,
     }).addTo(lokatoryLayer)
         .bindTooltip(String(s.count), { permanent: true, direction: 'center', className: 'sq-label' })
-        .bindPopup(`<strong>${s.square}</strong><br>${s.count} protistanic`);
+        .bindPopup(`<strong>${s.square}</strong><br>${s.count} ${t.stations}`);
 });
 
 // ── Legenda – obsah podle aktivní vrstvy ───────────────────────────────────
@@ -153,14 +158,14 @@ function updateLegend(key) {
     if (key === 'lokatory') return; // vrstva nemá barvy podle provozu
 
     const rows = [['#60a5fa', 'SSB'], ['#fbbf24', 'CW']];
-    if (hasOtherMode) rows.push(['#9ca3af', 'Ostatní']);
-    if (key === 'playback') rows.push(['#a855f7', 'Nový násobič']);
+    if (hasOtherMode) rows.push(['#9ca3af', t.other]);
+    if (key === 'playback') rows.push([NASOBIC.fill, t.new_mult_legend]);
 
     legendCtl = L.control({ position: 'bottomright' });
     legendCtl.onAdd = function () {
         const div = L.DomUtil.create('div');
         div.style.cssText = 'background:rgba(255,255,255,.9);padding:6px 10px;border-radius:6px;font-size:12px;line-height:1.7;box-shadow:0 1px 4px rgba(0,0,0,.2);color:#333';
-        div.innerHTML = '<strong style="display:block;margin-bottom:2px">Legenda</strong>'
+        div.innerHTML = `<strong style="display:block;margin-bottom:2px">${t.legend}</strong>`
             + rows.map(([c, l]) => `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${c};margin-right:5px;vertical-align:middle"></span>${l}`).join('<br>');
         return div;
     };
@@ -194,7 +199,7 @@ cfg.points.forEach(function (p) {
     }
     const popup = `<strong>${p.call}</strong> <span style="font-size:.8em;opacity:.7">${modeLabel(p.mode)}</span><br>${p.wwl}`
         + (p.dist !== null ? `<br>${p.dist} km` : '')
-        + (p.azimut !== null ? `<br>azimut ${p.azimut}°` : '');
+        + (p.azimut !== null ? `<br>${t.azimuth} ${p.azimut}°` : '');
     members.push(L.circleMarker([p.lat, p.lon], {
         radius: 4, color: mc.stroke, fillColor: mc.fill, fillOpacity: 0.85, weight: 1.5,
     }).bindPopup(popup));
@@ -269,7 +274,7 @@ function applyTime(t) {
         if (c.t > t) break;
         last = c;
     }
-    skoreLabel.textContent = last ? `${last.body} b. · ${last.nasobice} nás.` : '0 b.';
+    skoreLabel.textContent = last ? `${last.body} ${t.score_pts} · ${last.nasobice} ${t.score_mult}` : `0 ${t.score_pts}`;
 }
 
 let timer = null;
@@ -277,7 +282,7 @@ const speedMs = 50; // ms na minutu závodu (pevná rychlost přehrávání 1×)
 
 function stopReplay() {
     if (timer !== null) { clearInterval(timer); timer = null; }
-    playBtn.textContent = '▶ Přehrát';
+    playBtn.textContent = t.play;
 }
 
 function tick() {
@@ -296,7 +301,7 @@ playBtn.addEventListener('click', function () {
     if (timer !== null) { stopReplay(); return; }
     let t = Number(slider.value);
     if (t >= cfg.window.to) t = cfg.window.from;
-    playBtn.textContent = '⏸ Pauza';
+    playBtn.textContent = t.pause;
     slider.value = String(t);
     applyTime(t);
     timer = setInterval(tick, speedMs);
@@ -433,7 +438,7 @@ const prubehChart = new Chart(document.getElementById('chartPrubeh'), {
         maintainAspectRatio: false,
         plugins: {
             legend: { display: false },
-            title: { display: true, text: 'Průběh skóre (body za spojení × násobiče)', font: { size: 13 } },
+            title: { display: true, text: t.title_prubeh, font: { size: 13 } },
             tooltip: { callbacks: { title: (its) => its.length ? hhmm(its[0].parsed.x) + ' UTC' : '' } },
         },
         scales: {
@@ -457,15 +462,15 @@ const timelineChart = new Chart(document.getElementById('chartTimeline'), {
         labels: cfg.timeline.labels,
         datasets: [
             {
-                label: 'QSO s novým násobičem',
+                label: t.ds_new_mult,
                 data: cfg.timeline.nove,
-                backgroundColor: 'rgba(168, 85, 247, 0.8)',
-                borderColor: 'rgba(168, 85, 247, 1)',
+                backgroundColor: 'rgba(236, 72, 153, 0.85)',
+                borderColor: 'rgba(236, 72, 153, 1)',
                 borderWidth: 1,
                 borderRadius: 3,
             },
             {
-                label: 'Ostatní QSO',
+                label: t.ds_other_qso,
                 data: cfg.timeline.celkem.map((c, i) => c - cfg.timeline.nove[i]),
                 backgroundColor: 'rgba(59, 130, 246, 0.6)',
                 borderColor: 'rgba(59, 130, 246, 1)',
@@ -479,7 +484,7 @@ const timelineChart = new Chart(document.getElementById('chartTimeline'), {
         maintainAspectRatio: true,
         plugins: {
             legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } },
-            title: { display: true, text: 'QSO v čase a nové násobiče (15min intervaly)', font: { size: 13 } },
+            title: { display: true, text: t.title_timeline, font: { size: 13 } },
         },
         scales: {
             y: { stacked: true, beginAtZero: true, ticks: { stepSize: 1 } },
@@ -516,7 +521,7 @@ syncHover(timelineChart, (px) => cfg.window.from + (timelineChart.scales.x.getVa
 // 16 sektorů po 22,5°; popisky směrů přímo u výsečí (legenda by byla nečitelná).
 
 const azColors = Array.from({ length: 16 }, (_, i) => `hsla(${Math.round(i * 22.5)}, 72%, 55%, .75)`);
-const azTitles = { pocet: 'Směry QSO (počet)', km: 'Směry QSO (součet km)', body: 'Směry QSO (součet bodů)' };
+const azTitles = { pocet: t.az_count, km: t.az_km, body: t.az_points };
 
 const azChart = new Chart(document.getElementById('chartAzimuth'), {
     type: 'polarArea',
@@ -567,7 +572,7 @@ charts.push(new Chart(document.getElementById('chartCtverce'), {
     data: {
         labels: cfg.squarePoints.map((s) => s.square),
         datasets: [{
-            label: 'Body',
+            label: t.ds_points,
             data: cfg.squarePoints.map((s) => s.body),
             backgroundColor: 'rgba(16, 185, 129, 0.75)',
             borderColor: 'rgba(16, 185, 129, 1)',
@@ -581,8 +586,8 @@ charts.push(new Chart(document.getElementById('chartCtverce'), {
         maintainAspectRatio: true,
         plugins: {
             legend: { display: false },
-            title: { display: true, text: 'Body za spojení podle velkých čtverců', font: { size: 13 } },
-            tooltip: { callbacks: { afterLabel: (it) => cfg.squarePoints[it.dataIndex].pocet + ' QSO' } },
+            title: { display: true, text: t.title_squares, font: { size: 13 } },
+            tooltip: { callbacks: { afterLabel: (it) => cfg.squarePoints[it.dataIndex].pocet + ' ' + t.qso_suffix } },
         },
         scales: {
             x: { beginAtZero: true, ticks: { stepSize: 1 } },
@@ -600,7 +605,7 @@ if (cfg.sezona) {
             labels: cfg.sezona.labels,
             datasets: [
                 {
-                    label: 'Body',
+                    label: t.ds_points,
                     data: cfg.sezona.body,
                     borderColor: 'rgba(59,130,246,1)',
                     backgroundColor: 'rgba(59,130,246,.4)',
@@ -609,7 +614,7 @@ if (cfg.sezona) {
                     yAxisID: 'y',
                 },
                 {
-                    label: 'Pořadí v kategorii',
+                    label: t.ds_rank,
                     data: cfg.sezona.poradi,
                     borderColor: 'rgba(245,158,11,1)',
                     backgroundColor: 'rgba(245,158,11,.4)',
@@ -625,12 +630,12 @@ if (cfg.sezona) {
             maintainAspectRatio: true,
             plugins: {
                 legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } },
-                title: { display: true, text: 'Sezóna ' + cfg.pcall + ' po kolech', font: { size: 13 } },
+                title: { display: true, text: (t.title_season || ':call').replace(':call', cfg.pcall), font: { size: 13 } },
             },
             scales: {
-                y: { beginAtZero: true, title: { display: true, text: 'Body' } },
+                y: { beginAtZero: true, title: { display: true, text: t.axis_points } },
                 // Pořadí: 1. místo nahoře.
-                y1: { position: 'right', reverse: true, suggestedMin: 1, ticks: { stepSize: 1 }, grid: { display: false }, title: { display: true, text: 'Pořadí' } },
+                y1: { position: 'right', reverse: true, suggestedMin: 1, ticks: { stepSize: 1 }, grid: { display: false }, title: { display: true, text: t.axis_rank } },
             },
         },
     }));
@@ -658,7 +663,7 @@ const distDatasets = [
 ];
 if (cfg.distHistogram.ostatni.some((v) => v > 0)) {
     distDatasets.push({
-        label: 'Ostatní',
+        label: t.ds_other,
         data: cfg.distHistogram.ostatni,
         backgroundColor: 'rgba(156, 163, 175, 0.75)',
         borderColor: 'rgba(75, 85, 99, 1)',
@@ -678,7 +683,7 @@ charts.push(new Chart(document.getElementById('chartDist'), {
         maintainAspectRatio: true,
         plugins: {
             legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } },
-            title: { display: true, text: 'Rozložení vzdáleností QSO podle druhu provozu', font: { size: 13 } },
+            title: { display: true, text: t.title_dist, font: { size: 13 } },
         },
         scales: {
             y: { stacked: true, beginAtZero: true, ticks: { stepSize: 1 } },
