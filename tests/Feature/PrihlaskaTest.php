@@ -246,7 +246,7 @@ class PrihlaskaTest extends TestCase
         $this->assertTrue((bool) VkvpaData::firstOrFail()->schvaleno);
     }
 
-    public function test_manual_missing_email_is_rejected(): void
+    public function test_manual_submission_without_email_is_accepted(): void
     {
         [$kolo, $kat] = $this->prepare();
 
@@ -256,10 +256,13 @@ class PrihlaskaTest extends TestCase
             ->set('kategorie', $kat->id)
             ->set('znacka', 'ok2kjt')
             ->set('locator', 'jn99aj')
+            ->set('jmeno', 'Jan Novák')
+            ->set('telefon', '+420 777 123 456')
             ->call('odeslat')
-            ->assertHasErrors('email');
+            ->assertHasNoErrors('email')
+            ->assertRedirect(route('pribezne_vysledky'));
 
-        $this->assertSame(0, VkvpaData::count());
+        $this->assertSame(1, VkvpaData::count());
     }
 
     public function test_manual_duplicate_is_rejected(): void
