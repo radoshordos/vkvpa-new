@@ -62,7 +62,7 @@
 
         <div class="rounded-xl border border-line bg-surface p-4">
             <div class="text-3xl font-bold text-heading">
-                {{ $avgBody > 0 ? number_format($avgBody, 0, ',', "\u{00a0}") : '—' }}
+                {{ $avgBody > 0 ? \Illuminate\Support\Number::format($avgBody, 0) : '—' }}
             </div>
             <div class="mt-1 text-xs text-muted">Průměrné body {{ $rok }}</div>
         </div>
@@ -178,7 +178,7 @@
                         <td class="mono font-bold">{{ $r->znacka }}</td>
                         <td>{{ $r->jmeno }}</td>
                         <td class="text-sm text-muted">{{ $kategorie->get($r->kategorie_id)?->nazev ?? '—' }}</td>
-                        <td class="num font-semibold">{{ number_format((int) $r->celkem, 0, ',', "\u{00a0}") }}</td>
+                        <td class="num font-semibold">{{ \Illuminate\Support\Number::format((int) $r->celkem, 0) }}</td>
                     </tr>
                 @endforeach
             </tbody>

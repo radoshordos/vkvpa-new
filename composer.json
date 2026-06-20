@@ -13,6 +13,7 @@
         "guzzlehttp/guzzle": "^7.12.1",
         "guzzlehttp/psr7": "^2.12.1",
         "laravel/framework": "^13.12",
+        "laravel/prompts": "^0.3",
         "laravel/tinker": "^3.0",
         "livewire/livewire": "^4.3",
         "mjaschen/phpgeo": "^6.0"
