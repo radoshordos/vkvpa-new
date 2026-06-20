@@ -25,9 +25,9 @@ use App\Services\Edi\EdiParser;
 use App\Services\Edi\EdiReducer;
 use App\Services\Edi\EdiValidator;
 use App\Services\Scoring\EdiScoreDebugger;
+use App\Support\VkvpaSettings;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
-use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
@@ -50,7 +50,6 @@ class Prihlaska extends Component
     /** choose | edi-review | manual */
     public string $mode = 'choose';
 
-    #[Validate('required|file|max:10240|extensions:edi,txt')]
     public mixed $upload = null;
 
     public string $errorMessage = '';
@@ -107,6 +106,21 @@ class Prihlaska extends Component
     public string $poznamka = '';
 
     public string $soapbox = '';
+
+    /**
+     * Pravidla pro nahraný soubor. Max velikost se odvozuje z konfigurace
+     * (vkvpa.edi_max_size_kb, default 500 KB) – sjednoceno s ostatními upload
+     * cestami (ZIP import, EDI debug), aby veřejné nahrání nebylo benevolentnější
+     * než admin. validateOnly('upload') v updatedUpload() z toho čerpá.
+     *
+     * @return array<string, mixed>
+     */
+    protected function rules(): array
+    {
+        return [
+            'upload' => ['required', 'file', 'max:'.VkvpaSettings::ediMaxSizeKb(), 'extensions:edi,txt'],
+        ];
+    }
 
     /** Po výběru souboru: naparsovat a obodovat v paměti, přejít do náhledu. */
     public function updatedUpload(): void
@@ -209,14 +223,35 @@ class Prihlaska extends Component
         $this->mode = 'edi-review';
     }
 
-    /** Naparsuje obsah dočasně nahraného souboru (bez DB). */
+    /** Memoizace naparsovaného deníku pro aktuální request ({@see parseUpload()}). */
+    private ?EdiLog $parsedUpload = null;
+
+    private ?string $parsedUploadKey = null;
+
+    /**
+     * Naparsuje obsah dočasně nahraného souboru (bez DB). Výsledek se v rámci
+     * jednoho requestu memoizuje podle cesty k dočasnému souboru: v edi-review
+     * režimu se komponenta překresluje opakovaně (odeslat()/render() volají
+     * parseUpload() vícekrát za request) a bez cache by se týž soubor pokaždé
+     * znovu četl, překódoval (iconv) a regexem rozparsoval. Privátní vlastnosti
+     * se mezi Livewire requesty neserializují, takže cache je vždy čerstvá.
+     */
     private function parseUpload(): EdiLog
     {
         /** @var TemporaryUploadedFile $file */
         $file = $this->upload;
-        $content = (string) file_get_contents($file->getRealPath());
+        $key = (string) $file->getRealPath();
 
-        return app(EdiParser::class)->parse($content);
+        if ($this->parsedUpload !== null && $this->parsedUploadKey === $key) {
+            return $this->parsedUpload;
+        }
+
+        $content = (string) file_get_contents($key);
+        $log = app(EdiParser::class)->parse($content);
+
+        $this->parsedUploadKey = $key;
+
+        return $this->parsedUpload = $log;
     }
 
     public function odeslat(): mixed
