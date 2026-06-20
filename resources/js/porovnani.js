@@ -165,7 +165,7 @@ if (timelineEl && cfg.compare && cfg.timeline) {
         },
         options: {
             responsive: true,
-            maintainAspectRatio: true,
+            maintainAspectRatio: false,
             plugins: {
                 legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } },
                 title: { display: true, text: t.title_timeline, font: { size: 13 } },

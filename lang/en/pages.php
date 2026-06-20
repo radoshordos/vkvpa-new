@@ -5,9 +5,10 @@ declare(strict_types=1);
 return [
 
     'home' => [
-        'title' => 'OK Activity contest',
+        'title' => 'VHF contest results and online log submission',
         'heading' => 'OK Activity contest',
         'subtitle' => 'Electronic log submission for VKV PA contests',
+        'meta' => 'OK Activity contest – online results for amateur VHF contests: EDI log upload, automatic scoring, interim and yearly result lists.',
         'state_upcoming' => 'Upcoming contest',
         'state_running' => 'Contest in progress',
         'state_deadline' => 'Log submission open',
@@ -68,6 +69,8 @@ return [
 
     'hlaseni' => [
         'title' => 'Log import – VKV PA',
+        'heading' => 'Submit your log and report',
+        'meta' => 'Submit your log to the VKV PA contest – upload an EDI file or fill in the report manually. Points are calculated automatically.',
         'heading_edi' => 'Import EDI file',
         'heading_manual' => 'No EDI file (fill in the report manually)',
         'error_line' => 'Invalid line',

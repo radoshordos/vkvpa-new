@@ -103,7 +103,7 @@ window.__porovnaniConfig = {
     {{-- ── Grafy: tempo obou stanic + směrová růžice ───────────────────── --}}
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 mb-4">
       <div class="rounded-lg border border-line bg-surface p-3">
-        <canvas id="chartTimeline"></canvas>
+        <div class="h-72 sm:h-72"><canvas id="chartTimeline"></canvas></div>
       </div>
       <div class="rounded-lg border border-line bg-surface p-3">
         <canvas id="chartAzimuth"></canvas>

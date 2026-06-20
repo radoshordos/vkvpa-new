@@ -5,9 +5,10 @@ declare(strict_types=1);
 return [
 
     'home' => [
-        'title' => 'VKV Provozní aktiv',
+        'title' => 'Výsledky a online hlášení VKV závodů',
         'heading' => 'VKV Provozní aktiv',
         'subtitle' => 'Elektronické hlášení výsledků závodů VKV PA',
+        'meta' => 'VKV Provozní aktiv – online hlášení výsledků amatérských VKV závodů: nahrávání EDI deníků, automatické bodování, průběžné a roční výsledkové listiny.',
         'state_upcoming' => 'Nadcházející kolo',
         'state_running' => 'Závod právě probíhá',
         'state_deadline' => 'Probíhá příjem hlášení',
@@ -68,6 +69,8 @@ return [
 
     'hlaseni' => [
         'title' => 'Hlášení – VKV PA',
+        'heading' => 'Odeslání deníku a hlášení výsledků',
+        'meta' => 'Odešlete svůj deník do závodu VKV PA – nahrajte EDI soubor nebo vyplňte hlášení ručně. Body se spočítají automaticky.',
         'tab_edi' => 'Import EDI',
         'tab_manual' => 'Ruční vložení',
         'heading_edi' => 'Načíst EDI soubor',
