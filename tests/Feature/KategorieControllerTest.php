@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Models\VkvpaData;
 use App\Models\VkvpaKategorie;
+use App\Models\VkvpaKola;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
@@ -36,6 +38,35 @@ class KategorieControllerTest extends TestCase
     {
         $this->get(route('kategorie.index'))
             ->assertRedirect(route('login'));
+    }
+
+    public function test_index_shows_usage_count_per_category_and_total(): void
+    {
+        $kolo = VkvpaKola::create([
+            'nazev' => '06/2026',
+            'poznamka' => '',
+            'vyhodnoceno' => null,
+            'datum_konani' => '2026-06-21 08:00:00',
+            'datum_uzaverky' => '2026-06-26 23:59:59',
+        ]);
+        $kat = VkvpaKategorie::create(['nazev' => '144 MHz SO', 'zkratka' => '144 SO', 'dxid' => 0]);
+        VkvpaKategorie::create(['nazev' => '432 MHz SO', 'zkratka' => '432 SO', 'dxid' => 0]);
+
+        foreach (['OK1AAA', 'OK1BBB', 'OK1CCC'] as $znacka) {
+            VkvpaData::create([
+                'id_kola' => $kolo->id,
+                'id_kategorie' => $kat->id,
+                'znacka' => $znacka,
+                'locator' => 'JN79XX',
+            ]);
+        }
+
+        $this->actingAs($this->admin())
+            ->get(route('kategorie.index'))
+            ->assertOk()
+            ->assertSee(__('admin.kategorie_col_count'))
+            ->assertSeeInOrder(['144 MHz SO', '144 SO', '0', '3'])
+            ->assertSee(__('admin.kategorie_total'));
     }
 
     // ------------------------------------------------------------------
