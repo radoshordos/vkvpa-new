@@ -122,6 +122,7 @@ return [
 
     'pribezne' => [
         'title' => 'Interim results – VKV PA',
+        'meta' => 'Live interim results of the current OK Activity (VKV PA) round – station standings in real time during log submission.',
         'heading' => 'Interim round results',
         'filter_round' => 'Round',
         'filter_category' => 'Category',
@@ -133,6 +134,7 @@ return [
 
     'vysledky' => [
         'title' => 'Results – VKV PA',
+        'meta' => 'Result lists of individual OK Activity (VKV PA) rounds – category standings, points, multipliers and QSOs, with links to logs and statistics.',
         'heading' => 'Results',
         'filter_round' => 'Round',
         'filter_search' => 'Search',
@@ -165,6 +167,7 @@ return [
 
     'rocni' => [
         'title' => 'Year results – VKV PA',
+        'meta' => 'Yearly overall results of the OK Activity (VKV PA) contest – overall station ranking for the year across all rounds.',
         'heading' => 'Year results',
         'filter_year' => 'Year',
         'filter_category' => 'Category',
@@ -181,6 +184,7 @@ return [
 
     'diskuse' => [
         'title' => 'Discussion – :round – VKV PA',
+        'meta' => 'Discussion for contest round :round – comments, stories and photos from OK Activity (VKV PA) participants.',
         'heading' => 'Discussion',
         'filter_round' => 'Round',
         'btn_go' => 'Go',
@@ -205,6 +209,7 @@ return [
 
     'viz' => [
         'title' => 'Visualization – :call – VKV PA',
+        'meta' => 'Visualization of station :call’s log – QSO map, charts and statistics from the OK Activity (VKV PA) contest.',
         'heading' => 'Log visualization :call',
         'subtitle_charts' => 'map and charts (Leaflet + Chart.js)',
         'compare_link' => '⚔️ Compare logs',
@@ -303,6 +308,7 @@ return [
 
     'porovnani' => [
         'title' => 'Log comparison – :call – VKV PA',
+        'meta' => 'Comparison of station :call’s log with opponents from the same OK Activity (VKV PA) round – worked-station differences and score progress.',
         'heading' => '⚔️ Log comparison – :call',
         'subtitle' => 'comparison with an opponent’s log from the same round and category',
         'viz_link' => 'visualization',

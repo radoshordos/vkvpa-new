@@ -58,6 +58,31 @@
     <meta name="twitter:description" content="{{ $metaDescShort }}">
     <meta name="twitter:image" content="{{ $ogImage }}">
 
+    {{-- Strukturovaná data (JSON-LD): web a organizace platí pro celý web,
+         per-page data (např. Event pro kolo) doplňuje sekce jsonld níže.
+         JSON se sestavuje v PHP bloku, jinak by se schema klíče braly jako
+         blade direktivy. --}}
+    @php
+        $jsonLdOptions = JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE;
+        $websiteLd = json_encode([
+            '@context' => 'https://schema.org',
+            '@type' => 'WebSite',
+            'name' => $siteTitle,
+            'url' => url('/'),
+            'inLanguage' => str_replace('_', '-', $locale),
+        ], $jsonLdOptions);
+        $organizationLd = json_encode([
+            '@context' => 'https://schema.org',
+            '@type' => 'Organization',
+            'name' => $siteTitle,
+            'url' => url('/'),
+            'logo' => $ogImage,
+        ], $jsonLdOptions);
+    @endphp
+    <script type="application/ld+json" @cspNonce>{!! $websiteLd !!}</script>
+    <script type="application/ld+json" @cspNonce>{!! $organizationLd !!}</script>
+    @yield('jsonld')
+
     {{-- Tmavý režim bez probliknutí: nastav třídu .dark dřív, než se vykreslí tělo. --}}
     <script @cspNonce>
       (function () {

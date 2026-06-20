@@ -24,9 +24,11 @@ class VysledkyController extends Controller
         private readonly SkokanService $skokan,
     ) {}
 
-    public function listina(Request $request): View
+    public function listina(Request $request, ?string $kolo = null): View
     {
-        $koloId = $request->integer('kolo');
+        // Kolo přijde z hezkého URL (/vysledky/{kolo}); ?kolo= ve query string
+        // zůstává podporované kvůli formuláři filtru a starým odkazům.
+        $koloId = $kolo !== null ? (int) $kolo : $request->integer('kolo');
         $kolo = $koloId !== 0
             ? VkvpaKola::find($koloId)
             : VkvpaKola::query()->where('datum_uzaverky', '<', now())->orderByDesc('datum_konani')->first();
@@ -80,8 +82,12 @@ class VysledkyController extends Controller
         ]);
     }
 
-    public function pribezne(Request $request): View
+    public function pribezne(Request $request, ?string $kolo = null): View
     {
+        // Veřejnost vidí vždy jen automaticky zvolené kolo; admin smí listovat
+        // přes hezké URL (/vysledky/pribezne/{kolo}) i staré ?kolo=.
+        $koloRouteId = $kolo !== null ? (int) $kolo : null;
+
         $isAdmin = (bool) $request->user()?->is_admin;
 
         // Veřejnost: vždy jen jedno kolo – nejstarší nevyhodnocené s otevřeným
@@ -93,7 +99,7 @@ class VysledkyController extends Controller
 
         $kolo = VkvpaKola::aktualniProPrubezne();
         if ($isAdmin) {
-            $zvolene = $request->integer('kolo');
+            $zvolene = $koloRouteId ?? $request->integer('kolo');
             $kolo = $zvolene !== 0
                 ? VkvpaKola::find($zvolene)
                 // Bez výběru: aktuální průběžné, jinak nejnovější kolo se záznamy.

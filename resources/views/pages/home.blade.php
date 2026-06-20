@@ -3,6 +3,16 @@
 @section('title', __('pages.home.title'))
 @section('meta_description', __('pages.home.meta'))
 
+{{-- Strukturovaná data: aktuální/nadcházející kolo + plánovaná kola jako Event. --}}
+@section('jsonld')
+    @if ($kolo)
+        @include('partials.jsonld-kolo', ['kolo' => $kolo])
+    @endif
+    @foreach ($upcomingRounds as $r)
+        @include('partials.jsonld-kolo', ['kolo' => $r])
+    @endforeach
+@endsection
+
 @section('content')
 
 {{-- Hlavní nadpis stránky (H1) – tematický signál pro vyhledávače i návštěvníky. --}}

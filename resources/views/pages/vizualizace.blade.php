@@ -7,6 +7,7 @@
 @extends('layouts.app')
 
 @section('title', __('pages.viz.title', ['call' => $pcall]))
+@section('meta_description', __('pages.viz.meta', ['call' => $pcall]))
 
 @push('head')
   <link rel="preconnect" href="https://tile.openstreetmap.org">
