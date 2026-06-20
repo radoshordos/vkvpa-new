@@ -36,6 +36,14 @@
 
 <h2>{{ __('pages.rocni.subheading', ['year' => $rok]) }}</h2>
 
+@if ($vysledky->isNotEmpty())
+  <p class="mb-3 flex flex-wrap items-center gap-3 text-xs text-muted">
+    <span>{{ __('pages.rocni.legend_label') }}</span>
+    <span class="inline-flex items-center gap-1"><span class="cell-qrp inline-block h-3 w-3 rounded-sm"></span> {{ __('pages.rocni.legend_qrp') }}</span>
+    <span class="inline-flex items-center gap-1"><span class="cell-lp inline-block h-3 w-3 rounded-sm"></span> {{ __('pages.rocni.legend_lp') }}</span>
+  </p>
+@endif
+
 @push('scripts')
 <script @cspNonce>
 (function () {
@@ -71,7 +79,10 @@
             <td class="mono font-semibold">{{ $r->znacka }}</td>
             @for ($m = 1; $m <= 12; $m++)
               @php($b = (int) $r->getAttribute('mesic_' . $m))
-              <td class="num text-muted">{{ $b > 0 ? $b : '—' }}</td>
+              @php($vk = $r->getAttribute('vykon_' . $m))
+              @php($vykon = is_string($vk) ? \App\Enums\Vykon::tryFrom($vk) : null)
+              @php($tint = $b > 0 && $vykon?->badgeVariant() ? 'cell-' . $vykon->badgeVariant() : null)
+              <td @class(['num', 'text-muted', $tint]) @if ($tint) title="{{ $vykon->label() }}" @endif>{{ $b > 0 ? $b : '—' }}</td>
             @endfor
             <td class="num font-semibold">{{ (int) $r->celkem }}</td>
           </tr>

@@ -69,6 +69,23 @@ document.addEventListener('change', (e) => {
     if (el && el.form) el.form.submit();
 });
 
+// Výkonové checkboxy QRP/LP: zakliknutím jednoho se druhý ve stejné skupině
+// odznačí (vzájemně se vylučují). Skupina = nejbližší [data-power-group],
+// členové = [data-power-exclusive]. Po odznačení vyšleme „input", aby se
+// případný Livewire wire:model synchronizoval.
+document.addEventListener('change', (e) => {
+    const el = e.target instanceof HTMLInputElement ? e.target.closest('[data-power-exclusive]') : null;
+    if (!el || !el.checked) return;
+    const group = el.closest('[data-power-group]');
+    if (!group) return;
+    group.querySelectorAll('[data-power-exclusive]').forEach((other) => {
+        if (other !== el && other.checked) {
+            other.checked = false;
+            other.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+    });
+});
+
 // <input type=file data-file-zone="id" data-file-name="id"> – zvýrazní
 // drop-zónu a ukáže jméno vybraného souboru.
 function refreshFileZone(input) {

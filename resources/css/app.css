@@ -330,6 +330,24 @@
         background-color: var(--ok-soft);
         color: var(--ok);
     }
+    /* Podbarvení buňky ročních výsledků dle výkonu měsíce – odlišné tóny, ať
+       jdou QRP a LP rozeznat na první pohled. color-mix drží tint čitelný
+       v light i dark režimu (jantar je světlejší, proto vyšší poměr).
+       Tint jde přes background-image (gradient), aby se vykreslil NAD
+       background-color – jinak by zebrování sudých řádků (vyšší specificita
+       `tr:nth-child(even) td`) podbarvení přebilo. */
+    .cell-qrp {
+        background-image: linear-gradient(
+            color-mix(in oklab, var(--ok) 22%, transparent),
+            color-mix(in oklab, var(--ok) 22%, transparent)
+        );
+    }
+    .cell-lp {
+        background-image: linear-gradient(
+            color-mix(in oklab, var(--warn) 30%, transparent),
+            color-mix(in oklab, var(--warn) 30%, transparent)
+        );
+    }
     .badge-brand {
         background-color: var(--brand-soft);
         color: var(--brand);

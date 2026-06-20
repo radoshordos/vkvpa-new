@@ -159,6 +159,30 @@ class VysledkyRocniTest extends TestCase
             ->assertDontSee('OK1FULL');
     }
 
+    public function test_rocni_tints_monthly_cell_by_power(): void
+    {
+        $kat = $this->kat('144 MHz single op');
+        $kolo1 = $this->kolo('2026'); // 01/2026 – QRP
+        $kolo4 = VkvpaKola::create([
+            'datum_konani' => '2026-04-19',
+            'datum_uzaverky' => '2026-05-03',
+            'nazev' => '04/2026',
+            'poznamka' => '',
+        ]);
+
+        // Stanice jede 01 QRP a 04 na plný výkon – obarvit se má jen lednová buňka.
+        $this->entry($kolo1, $kat, 'OK1MIX', 200, qrp: true);
+        $this->entry($kolo4, $kat, 'OK1MIX', 500);
+
+        // QRP měsíc dostane podbarvení i title; plný výkon zůstává bez příznaku.
+        // (cell-qrp/cell-lp jsou i v legendě, proto kontrolujeme title buňky.)
+        $this->get(route('rocni_vysledky', ['rok' => 2026]))
+            ->assertOk()
+            ->assertSee('cell-qrp', escape: false)
+            ->assertSee('title="QRP"', escape: false)
+            ->assertDontSee('title="LP"', escape: false);
+    }
+
     public function test_rocni_groups_by_category(): void
     {
         $kat144 = $this->kat('144 MHz single op');
