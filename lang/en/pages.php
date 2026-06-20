@@ -253,6 +253,7 @@ return [
         'sezona_caption' => 'Points and ranking of :call across the rounds of the year (from the public results).',
         'sezona_unavailable' => 'Season trend is not available yet – the log has no assigned round or the station has no approved entries.',
         'chart_png_title' => 'Download chart as PNG',
+        'country_other' => 'Other',
 
         'odx_heading' => 'TOP ODX – longest QSOs',
         'odx_empty' => 'No QSOs with a computed distance.',
@@ -295,6 +296,8 @@ return [
             'axis_rank' => 'Rank',
             'ds_other' => 'Other',
             'title_dist' => 'QSO distance distribution by mode',
+            'title_country' => 'QSOs by country (DXCC)',
+            'title_prefix' => 'QSOs by prefix',
         ],
     ],
 

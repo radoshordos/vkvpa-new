@@ -9,6 +9,7 @@ use App\Models\Edihead;
 use App\Services\Edi\DenikStatistiky;
 use App\Services\Edi\EnrichedQso;
 use App\Services\Edi\PorovnaniRivals;
+use App\Services\Edi\PrefixResolver;
 use App\Services\Edi\QsoGeometry;
 use App\Support\ContestWindow;
 use App\Support\Maidenhead;
@@ -45,6 +46,11 @@ class EdiVizualizaceController extends Controller
 
         $nasobice = $this->statistiky->noveNasobice($enriched, $homeSq);
 
+        // Rozpad QSO podle zemí/prefixů (číselník prefixes); koš pro neznámé
+        // značky lokalizovaně.
+        $prefixy = PrefixResolver::fromDatabase();
+        $ostatni = (string) __('pages.viz.country_other');
+
         return view('pages.vizualizace', [
             'active' => '',
             'head' => $head,
@@ -73,6 +79,8 @@ class EdiVizualizaceController extends Controller
             'timeline' => $this->statistiky->timeline($enriched, $nasobice, $fromMin, $toMin),
             'azimuth' => $this->statistiky->azimuthRose($enriched),
             'squarePoints' => $this->statistiky->bodyPodleCtvercu($enriched),
+            'podleZemi' => $this->statistiky->podleZemi($enriched, $prefixy, $ostatni),
+            'podlePrefixu' => $this->statistiky->podlePrefixu($enriched, $prefixy, $ostatni),
             'sezona' => $this->statistiky->sezona($head),
             'tempo' => $this->statistiky->tempo($enriched, $fromMin, $toMin),
             'modeStats' => $this->statistiky->modeStats($enriched),

@@ -255,6 +255,7 @@ return [
         'sezona_caption' => 'Body a pořadí stanice :call v kolech roku (z veřejné výsledkové listiny).',
         'sezona_unavailable' => 'Celoroční trend zatím není k dispozici – deník nemá přiřazené kolo nebo stanice nemá schválené záznamy.',
         'chart_png_title' => 'Stáhnout graf jako PNG',
+        'country_other' => 'Ostatní',
 
         'odx_heading' => 'TOP ODX – nejvzdálenější spojení',
         'odx_empty' => 'Žádná spojení se spočítanou vzdáleností.',
@@ -297,6 +298,8 @@ return [
             'axis_rank' => 'Pořadí',
             'ds_other' => 'Ostatní',
             'title_dist' => 'Rozložení vzdáleností QSO podle druhu provozu',
+            'title_country' => 'QSO podle zemí (DXCC)',
+            'title_prefix' => 'QSO podle prefixů',
         ],
     ],
 
