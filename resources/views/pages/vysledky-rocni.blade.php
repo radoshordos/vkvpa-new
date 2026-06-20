@@ -54,6 +54,9 @@
         <tr>
           <th class="num" style="width:60px;">{{ __('pages.rocni.col_pos') }}</th>
           <th>{{ __('pages.rocni.col_callsign') }}</th>
+          @foreach ($kola as $kolo)
+            <th class="num" title="{{ $kolo->nazev }}">{{ $kolo->datum_konani->format('m') }}</th>
+          @endforeach
           <th class="num">{{ __('pages.rocni.col_total') }}</th>
         </tr>
       </thead>
@@ -62,7 +65,11 @@
           <tr>
             <td class="num">{{ $i + 1 }}.</td>
             <td class="mono font-semibold">{{ $r->znacka }}</td>
-            <td class="num">{{ (int) $r->celkem }}</td>
+            @foreach ($kola as $kolo)
+              @php($b = (int) $r->getAttribute('kolo_' . $kolo->id))
+              <td class="num text-muted">{{ $b > 0 ? $b : '—' }}</td>
+            @endforeach
+            <td class="num font-semibold">{{ (int) $r->celkem }}</td>
           </tr>
         @endforeach
       </tbody>

@@ -145,6 +145,8 @@ class VysledkyController extends Controller
             'katId' => $katId,
             'kategorie' => VkvpaKategorie::query()->orderBy('id')->get()->keyBy('id'),
             'vysledky' => $vysledky,
+            // Sloupce měsíčního přehledu – kola roku v chronologickém pořadí.
+            'kola' => $this->scoring->yearlyKola($rok),
         ]);
     }
 }

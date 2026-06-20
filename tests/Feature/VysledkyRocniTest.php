@@ -88,6 +88,31 @@ class VysledkyRocniTest extends TestCase
             ->assertSee('1500');
     }
 
+    public function test_rocni_shows_per_round_monthly_breakdown(): void
+    {
+        $kat = $this->kat('144 MHz single op');
+        $kolo1 = $this->kolo('2026'); // 01/2026
+        $kolo2 = VkvpaKola::create([
+            'datum_konani' => '2026-04-19',
+            'datum_uzaverky' => '2026-05-03',
+            'nazev' => '04/2026',
+            'poznamka' => '',
+        ]);
+
+        $this->entry($kolo1, $kat, 'OK1DOL', 1000);
+        $this->entry($kolo2, $kat, 'OK1DOL', 500);
+        // Stanice jen v jednom kole – druhý sloupec musí mít prázdnou (—) hodnotu,
+        // nikoli spadnout na chybějícím atributu (strict mód modelu).
+        $this->entry($kolo1, $kat, 'OK2ONE', 700);
+
+        // Sloupce za jednotlivá kola (měsíce 01 a 04) i celkový součet.
+        $this->get(route('rocni_vysledky', ['rok' => 2026]))
+            ->assertOk()
+            ->assertSee('OK2ONE')
+            ->assertSeeInOrder(['01', '04'])
+            ->assertSeeInOrder(['1000', '500', '1500']);
+    }
+
     public function test_rocni_excludes_results_from_other_year(): void
     {
         $kat = $this->kat('144 MHz single op');
