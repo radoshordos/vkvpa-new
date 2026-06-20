@@ -17,8 +17,8 @@
                 <th class="num">ID</th>
                 <th>{{ __('admin.kategorie_col_name') }}</th>
                 <th>{{ __('admin.kategorie_col_abbr') }}</th>
-                <th class="cq-hide-narrow">{{ __('admin.kategorie_col_desc') }}</th>
                 <th class="num">dxid</th>
+                <th class="num">{{ __('admin.kategorie_col_count') }}</th>
                 <th>{{ __('admin.kategorie_col_actions') }}</th>
             </tr>
         </thead>
@@ -28,8 +28,8 @@
                     <td class="num text-muted">{{ $k->id }}</td>
                     <td class="font-bold">{{ $k->nazev }}</td>
                     <td class="mono">{{ $k->zkratka }}</td>
-                    <td class="text-sm text-muted cq-hide-narrow">{{ $k->popis ?: '—' }}</td>
                     <td class="num">{{ $k->dxid }}</td>
+                    <td class="num">{{ $k->hlaseni_count }}</td>
                     <td>
                         <a href="{{ route('kategorie.edit', $k->id) }}" class="icon-btn icon-btn-u" title="{{ __('admin.kategorie_btn_edit') }}">
                             <x-icon name="pencil" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
@@ -42,6 +42,16 @@
                 </tr>
             @endforelse
         </tbody>
+        @if ($kategorie->isNotEmpty())
+            <tfoot>
+                <tr class="font-bold">
+                    <td colspan="3" class="text-right">{{ __('admin.kategorie_total') }}</td>
+                    <td></td>
+                    <td class="num">{{ $kategorie->sum('hlaseni_count') }}</td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        @endif
     </table>
 </div>
 

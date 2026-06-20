@@ -32,7 +32,7 @@ class VysledkyListinaTest extends TestCase
 
     private function kat(string $nazev): VkvpaKategorie
     {
-        return VkvpaKategorie::create(['nazev' => $nazev, 'popis' => '', 'zkratka' => $nazev, 'dxid' => 0]);
+        return VkvpaKategorie::create(['nazev' => $nazev, 'zkratka' => $nazev, 'dxid' => 0]);
     }
 
     private function entry(int $kolo, int $kat, string $znacka, int $pocet, int $nas, int $body, int $poradi): VkvpaData

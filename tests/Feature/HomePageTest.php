@@ -45,7 +45,7 @@ class HomePageTest extends TestCase
             'id_kola' => $kolo->id,
             'id_kategorie' => VkvpaKategorie::firstOrCreate(
                 ['nazev' => '144 MHz SO'],
-                ['popis' => '', 'zkratka' => '144SO', 'dxid' => 0],
+                ['zkratka' => '144SO', 'dxid' => 0],
             )->id,
             'znacka' => $znacka,
             'locator' => 'JN79XX',

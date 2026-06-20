@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Models\VkvpaData;
 use App\Models\VkvpaKategorie;
+use App\Models\VkvpaKola;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
@@ -24,7 +26,7 @@ class KategorieControllerTest extends TestCase
 
     public function test_index_renders_for_admin(): void
     {
-        VkvpaKategorie::create(['nazev' => '144 MHz single op', 'popis' => '', 'zkratka' => '144 SO', 'dxid' => 0]);
+        VkvpaKategorie::create(['nazev' => '144 MHz single op', 'zkratka' => '144 SO', 'dxid' => 0]);
 
         $this->actingAs($this->admin())
             ->get(route('kategorie.index'))
@@ -38,6 +40,35 @@ class KategorieControllerTest extends TestCase
             ->assertRedirect(route('login'));
     }
 
+    public function test_index_shows_usage_count_per_category_and_total(): void
+    {
+        $kolo = VkvpaKola::create([
+            'nazev' => '06/2026',
+            'poznamka' => '',
+            'vyhodnoceno' => null,
+            'datum_konani' => '2026-06-21 08:00:00',
+            'datum_uzaverky' => '2026-06-26 23:59:59',
+        ]);
+        $kat = VkvpaKategorie::create(['nazev' => '144 MHz SO', 'zkratka' => '144 SO', 'dxid' => 0]);
+        VkvpaKategorie::create(['nazev' => '432 MHz SO', 'zkratka' => '432 SO', 'dxid' => 0]);
+
+        foreach (['OK1AAA', 'OK1BBB', 'OK1CCC'] as $znacka) {
+            VkvpaData::create([
+                'id_kola' => $kolo->id,
+                'id_kategorie' => $kat->id,
+                'znacka' => $znacka,
+                'locator' => 'JN79XX',
+            ]);
+        }
+
+        $this->actingAs($this->admin())
+            ->get(route('kategorie.index'))
+            ->assertOk()
+            ->assertSee(__('admin.kategorie_col_count'))
+            ->assertSeeInOrder(['144 MHz SO', '144 SO', '0', '3'])
+            ->assertSee(__('admin.kategorie_total'));
+    }
+
     // ------------------------------------------------------------------
     // store – úspěšné vytvoření
 
@@ -46,7 +77,6 @@ class KategorieControllerTest extends TestCase
         $this->actingAs($this->admin())
             ->post(route('kategorie.store'), [
                 'nazev' => '144 MHz single op',
-                'popis' => 'Popis kategorie',
                 'zkratka' => '144 SO',
                 'dxid' => 0,
             ])
@@ -62,12 +92,11 @@ class KategorieControllerTest extends TestCase
 
     public function test_store_creates_dx_kategorie_with_nonzero_dxid(): void
     {
-        $domestic = VkvpaKategorie::create(['nazev' => '144 MHz single op', 'popis' => '', 'zkratka' => '144 SO', 'dxid' => 0]);
+        $domestic = VkvpaKategorie::create(['nazev' => '144 MHz single op', 'zkratka' => '144 SO', 'dxid' => 0]);
 
         $this->actingAs($this->admin())
             ->post(route('kategorie.store'), [
                 'nazev' => '144 MHz single DX',
-                'popis' => '',
                 'zkratka' => '144 SO DX',
                 'dxid' => $domestic->id,
             ])
@@ -79,20 +108,6 @@ class KategorieControllerTest extends TestCase
         ]);
     }
 
-    public function test_store_allows_empty_popis(): void
-    {
-        $this->actingAs($this->admin())
-            ->post(route('kategorie.store'), [
-                'nazev' => 'Test',
-                'popis' => '',
-                'zkratka' => 'T',
-                'dxid' => 0,
-            ])
-            ->assertRedirect(route('kategorie.index'));
-
-        $this->assertDatabaseHas('vkvpa_kategorie', ['nazev' => 'Test']);
-    }
-
     // ------------------------------------------------------------------
     // store – validace
 
@@ -100,7 +115,6 @@ class KategorieControllerTest extends TestCase
     {
         $this->actingAs($this->admin())
             ->post(route('kategorie.store'), [
-                'popis' => '',
                 'zkratka' => 'X',
                 'dxid' => 0,
             ])
@@ -112,7 +126,6 @@ class KategorieControllerTest extends TestCase
         $this->actingAs($this->admin())
             ->post(route('kategorie.store'), [
                 'nazev' => 'Test',
-                'popis' => '',
                 'dxid' => 0,
             ])
             ->assertSessionHasErrors('zkratka');
@@ -123,7 +136,6 @@ class KategorieControllerTest extends TestCase
         $this->actingAs($this->admin())
             ->post(route('kategorie.store'), [
                 'nazev' => 'Test',
-                'popis' => '',
                 'zkratka' => 'T',
             ])
             ->assertSessionHasErrors('dxid');
@@ -134,7 +146,6 @@ class KategorieControllerTest extends TestCase
         $this->actingAs($this->admin())
             ->post(route('kategorie.store'), [
                 'nazev' => 'Test',
-                'popis' => '',
                 'zkratka' => 'T',
                 'dxid' => -1,
             ])
@@ -146,7 +157,6 @@ class KategorieControllerTest extends TestCase
         $this->actingAs($this->admin())
             ->post(route('kategorie.store'), [
                 'nazev' => str_repeat('A', 51),
-                'popis' => '',
                 'zkratka' => 'T',
                 'dxid' => 0,
             ])
@@ -157,7 +167,6 @@ class KategorieControllerTest extends TestCase
     {
         $this->post(route('kategorie.store'), [
             'nazev' => 'Test',
-            'popis' => '',
             'zkratka' => 'T',
             'dxid' => 0,
         ])->assertRedirect(route('login'));
@@ -170,7 +179,7 @@ class KategorieControllerTest extends TestCase
 
     public function test_edit_renders_form_with_existing_data(): void
     {
-        $kat = VkvpaKategorie::create(['nazev' => '144 MHz SO', 'popis' => 'Popis', 'zkratka' => '144SO', 'dxid' => 0]);
+        $kat = VkvpaKategorie::create(['nazev' => '144 MHz SO', 'zkratka' => '144SO', 'dxid' => 0]);
 
         $this->actingAs($this->admin())
             ->get(route('kategorie.edit', $kat->id))
@@ -181,7 +190,7 @@ class KategorieControllerTest extends TestCase
 
     public function test_edit_requires_admin(): void
     {
-        $kat = VkvpaKategorie::create(['nazev' => '144 MHz SO', 'popis' => '', 'zkratka' => '144SO', 'dxid' => 0]);
+        $kat = VkvpaKategorie::create(['nazev' => '144 MHz SO', 'zkratka' => '144SO', 'dxid' => 0]);
 
         $this->get(route('kategorie.edit', $kat->id))
             ->assertRedirect(route('login'));
@@ -189,12 +198,11 @@ class KategorieControllerTest extends TestCase
 
     public function test_update_saves_changes(): void
     {
-        $kat = VkvpaKategorie::create(['nazev' => 'Stary nazev', 'popis' => '', 'zkratka' => 'OLD', 'dxid' => 0]);
+        $kat = VkvpaKategorie::create(['nazev' => 'Stary nazev', 'zkratka' => 'OLD', 'dxid' => 0]);
 
         $this->actingAs($this->admin())
             ->patch(route('kategorie.update', $kat->id), [
                 'nazev' => 'Nový název',
-                'popis' => 'Nový popis',
                 'zkratka' => 'NEW',
                 'dxid' => 0,
             ])
@@ -210,11 +218,10 @@ class KategorieControllerTest extends TestCase
 
     public function test_update_requires_admin(): void
     {
-        $kat = VkvpaKategorie::create(['nazev' => 'Test', 'popis' => '', 'zkratka' => 'T', 'dxid' => 0]);
+        $kat = VkvpaKategorie::create(['nazev' => 'Test', 'zkratka' => 'T', 'dxid' => 0]);
 
         $this->patch(route('kategorie.update', $kat->id), [
             'nazev' => 'Zmeneno',
-            'popis' => '',
             'zkratka' => 'Z',
             'dxid' => 0,
         ])->assertRedirect(route('login'));
@@ -224,7 +231,7 @@ class KategorieControllerTest extends TestCase
 
     public function test_update_validates_required_fields(): void
     {
-        $kat = VkvpaKategorie::create(['nazev' => 'Test', 'popis' => '', 'zkratka' => 'T', 'dxid' => 0]);
+        $kat = VkvpaKategorie::create(['nazev' => 'Test', 'zkratka' => 'T', 'dxid' => 0]);
 
         $this->actingAs($this->admin())
             ->patch(route('kategorie.update', $kat->id), [

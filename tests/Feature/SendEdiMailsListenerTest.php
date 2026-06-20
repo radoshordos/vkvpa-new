@@ -38,7 +38,7 @@ class SendEdiMailsListenerTest extends TestCase
             'nazev' => 'Testovací kolo',
             'poznamka' => '',
         ]);
-        $kat = VkvpaKategorie::create(['nazev' => '144 MHz', 'popis' => '', 'zkratka' => 'A', 'dxid' => 0]);
+        $kat = VkvpaKategorie::create(['nazev' => '144 MHz', 'zkratka' => 'A', 'dxid' => 0]);
 
         $this->data = VkvpaData::create([
             'id_kola' => $kolo->id,

@@ -25,7 +25,7 @@ class HlaseniTest extends TestCase
             'nazev' => 'Testovací kolo',
             'poznamka' => '',
         ]);
-        $kat = VkvpaKategorie::create(['nazev' => '144 MHz', 'popis' => '', 'zkratka' => 'A', 'dxid' => 0]);
+        $kat = VkvpaKategorie::create(['nazev' => '144 MHz', 'zkratka' => 'A', 'dxid' => 0]);
 
         return [$kolo, $kat];
     }
@@ -197,7 +197,7 @@ class HlaseniTest extends TestCase
             'nazev' => 'Nadcházející kolo',
             'poznamka' => '',
         ]);
-        $kat = VkvpaKategorie::create(['nazev' => 'A', 'popis' => '', 'zkratka' => 'A', 'dxid' => 0]);
+        $kat = VkvpaKategorie::create(['nazev' => 'A', 'zkratka' => 'A', 'dxid' => 0]);
 
         $this->post('/hlaseni', $this->payload($kolo->id, $kat->id))
             ->assertSessionHasErrors('kolo');

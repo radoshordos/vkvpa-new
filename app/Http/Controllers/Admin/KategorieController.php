@@ -17,7 +17,10 @@ class KategorieController extends Controller
 {
     public function index(): View
     {
-        $kategorie = VkvpaKategorie::query()->orderBy('id')->get();
+        $kategorie = VkvpaKategorie::query()
+            ->withCount('hlaseni')
+            ->orderBy('id')
+            ->get();
 
         return view('pages.admin.kategorie', [
             'active' => 'kategorie.index',

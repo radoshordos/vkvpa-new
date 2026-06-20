@@ -16,7 +16,6 @@ return new class extends Migration
 
             $table->integer('id', true);
             $table->string('nazev', 50);
-            $table->string('popis', 250);
             // CategoryResolver mapuje sekci z EDI hlavičky na kategorii přes
             // zkratku; duplicitní zkratka by párování učinila nedeterministickým.
             $table->string('zkratka', 20);

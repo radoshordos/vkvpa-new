@@ -50,13 +50,13 @@ return [
     'kategorie_edit' => 'Upravit kategorii',
     'kategorie_col_name' => 'Název',
     'kategorie_col_abbr' => 'Zkratka',
-    'kategorie_col_desc' => 'Popis',
+    'kategorie_col_count' => 'Počet hlášení',
     'kategorie_col_actions' => 'Akce',
+    'kategorie_total' => 'Celkem hlášení',
     'kategorie_btn_edit' => 'Upravit',
     'kategorie_btn_save' => 'Uložit',
     'field_name' => 'Název',
     'field_abbr' => 'Zkratka',
-    'field_desc' => 'Popis',
 
     // Společné
     'btn_cancel' => 'Zrušit',

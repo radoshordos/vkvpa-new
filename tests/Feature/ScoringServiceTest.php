@@ -34,7 +34,7 @@ class ScoringServiceTest extends TestCase
 
     private function kategorie(): VkvpaKategorie
     {
-        return VkvpaKategorie::create(['nazev' => 'A', 'popis' => '', 'zkratka' => 'A', 'dxid' => 0]);
+        return VkvpaKategorie::create(['nazev' => 'A', 'zkratka' => 'A', 'dxid' => 0]);
     }
 
     private function entry(int $kolo, int $kat, string $znacka, int $body): VkvpaData

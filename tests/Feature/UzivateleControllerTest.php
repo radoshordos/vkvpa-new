@@ -39,7 +39,7 @@ class UzivateleControllerTest extends TestCase
             'nazev' => '05/2026',
             'poznamka' => '',
         ]);
-        $kat = VkvpaKategorie::create(['nazev' => '144 MHz single op '.$this->koloSeq, 'popis' => '', 'zkratka' => 'A'.$this->koloSeq, 'dxid' => 0]);
+        $kat = VkvpaKategorie::create(['nazev' => '144 MHz single op '.$this->koloSeq, 'zkratka' => 'A'.$this->koloSeq, 'dxid' => 0]);
 
         return VkvpaData::create(array_merge([
             'id_kola' => $kolo->id, 'id_kategorie' => $kat->id, 'znacka' => 'OK1TEST',

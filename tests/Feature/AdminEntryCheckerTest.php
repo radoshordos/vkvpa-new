@@ -38,7 +38,7 @@ class AdminEntryCheckerTest extends TestCase
 
     private function kat(): VkvpaKategorie
     {
-        return VkvpaKategorie::create(['nazev' => '144 MHz', 'popis' => '', 'zkratka' => 'A', 'dxid' => 0]);
+        return VkvpaKategorie::create(['nazev' => '144 MHz', 'zkratka' => 'A', 'dxid' => 0]);
     }
 
     /** @param array<string, mixed> $overrides */

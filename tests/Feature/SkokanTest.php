@@ -28,7 +28,7 @@ class SkokanTest extends TestCase
     {
         parent::setUp();
 
-        $this->kat = VkvpaKategorie::create(['nazev' => '144 MHz single op', 'popis' => '', 'zkratka' => 'A', 'dxid' => 0]);
+        $this->kat = VkvpaKategorie::create(['nazev' => '144 MHz single op', 'zkratka' => 'A', 'dxid' => 0]);
         $this->r1 = VkvpaKola::create(['datum_konani' => '2026-05-17', 'datum_uzaverky' => '2026-05-22 23:59:59', 'nazev' => '05/2026', 'poznamka' => '', 'vyhodnoceno' => '2026-05-23 10:00:00']);
         $this->r2 = VkvpaKola::create(['datum_konani' => '2026-06-21', 'datum_uzaverky' => '2026-06-26 23:59:59', 'nazev' => '06/2026', 'poznamka' => '']);
     }
@@ -81,7 +81,7 @@ class SkokanTest extends TestCase
 
     public function test_different_category_is_not_compared(): void
     {
-        $kat2 = VkvpaKategorie::create(['nazev' => '432 MHz single op', 'popis' => '', 'zkratka' => 'B', 'dxid' => 0]);
+        $kat2 = VkvpaKategorie::create(['nazev' => '432 MHz single op', 'zkratka' => 'B', 'dxid' => 0]);
         // Předchozí start v jiné kategorii se nezapočítá.
         VkvpaData::create([
             'id_kola' => $this->r1->id, 'id_kategorie' => $kat2->id, 'znacka' => 'OK1A',

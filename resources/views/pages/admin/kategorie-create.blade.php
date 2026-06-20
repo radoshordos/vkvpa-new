@@ -20,9 +20,6 @@
                      wrapper="mb-0 w-24" :value="old('dxid', '0')" min="0" />
         </div>
 
-        <x-field name="popis" :label="__('admin.field_desc')"
-                 wrapper="mb-0" :value="old('popis')" maxlength="250" />
-
         <div class="flex justify-end gap-3">
             <a href="{{ route('kategorie.index') }}" class="btn btn-ghost">{{ __('admin.btn_cancel') }}</a>
             <button type="submit" class="btn btn-primary">{{ __('admin.kategorie_add') }}</button>

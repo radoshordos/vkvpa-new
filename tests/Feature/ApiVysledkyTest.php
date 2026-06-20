@@ -33,7 +33,6 @@ class ApiVysledkyTest extends TestCase
         return VkvpaKategorie::create([
             'nazev' => '2m SSB',
             'zkratka' => 'SSB',
-            'popis' => '',
             'dxid' => 1,
         ]);
     }
