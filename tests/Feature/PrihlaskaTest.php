@@ -250,7 +250,7 @@ class PrihlaskaTest extends TestCase
     {
         [$kolo, $kat] = $this->prepare();
 
-        Livewire::test(Prihlaska::class)
+        $component = Livewire::test(Prihlaska::class)
             ->call('rucne')
             ->set('kolo', $kolo->id)
             ->set('kategorie', $kat->id)
@@ -258,9 +258,10 @@ class PrihlaskaTest extends TestCase
             ->set('locator', 'jn99aj')
             ->set('jmeno', 'Jan Novák')
             ->set('telefon', '+420 777 123 456')
-            ->call('odeslat')
-            ->assertHasNoErrors('email')
-            ->assertRedirect(route('pribezne_vysledky'));
+            ->call('odeslat');
+
+        $component->assertHasNoErrors('email');
+        $component->assertRedirect(route('pribezne_vysledky'));
 
         $this->assertSame(1, VkvpaData::count());
     }

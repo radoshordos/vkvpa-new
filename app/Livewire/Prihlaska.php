@@ -125,8 +125,10 @@ class Prihlaska extends Component
         // a selektor kola nezobrazujeme (výběr má jen admin pro backfill).
         if (! $this->isAdmin()) {
             $aktualni = VkvpaKola::aktualniProPrubezne();
-            $this->kolo = $aktualni?->id ?? 0;
-            $this->koloNazev = $aktualni?->nazev ?? '';
+            if ($aktualni !== null) {
+                $this->kolo = $aktualni->id;
+                $this->koloNazev = $aktualni->nazev;
+            }
         }
     }
 

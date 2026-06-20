@@ -44,7 +44,8 @@ class HesloControllerTest extends TestCase
             ->assertRedirect(route('heslo.edit'))
             ->assertSessionHas('announcement');
 
-        $this->assertTrue(Hash::check('novehesloheslo', $admin->fresh()->password));
+        $admin->refresh();
+        $this->assertTrue(Hash::check('novehesloheslo', $admin->password));
     }
 
     public function test_update_rejects_wrong_current_password(): void
@@ -59,7 +60,8 @@ class HesloControllerTest extends TestCase
             ])
             ->assertSessionHasErrors('soucasne_heslo');
 
-        $this->assertTrue(Hash::check('staresloheslo', $admin->fresh()->password));
+        $admin->refresh();
+        $this->assertTrue(Hash::check('staresloheslo', $admin->password));
     }
 
     public function test_update_requires_matching_confirmation(): void
@@ -74,6 +76,7 @@ class HesloControllerTest extends TestCase
             ])
             ->assertSessionHasErrors('heslo');
 
-        $this->assertTrue(Hash::check('staresloheslo', $admin->fresh()->password));
+        $admin->refresh();
+        $this->assertTrue(Hash::check('staresloheslo', $admin->password));
     }
 }
