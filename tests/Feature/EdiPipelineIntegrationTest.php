@@ -199,7 +199,7 @@ class EdiPipelineIntegrationTest extends TestCase
     public function test_entry_hidden_before_approval_visible_after(): void
     {
         $kolo = $this->koloProBrezen2026();
-        DB::table('vkvpa_kategorie')->insert(['id' => 2, 'nazev' => '144 MHz MO', 'popis' => '', 'zkratka' => '144 MO', 'dxid' => 0]);
+        DB::table('vkvpa_kategorie')->insert(['id' => 2, 'nazev' => '144 MHz MO', 'zkratka' => '144 MO', 'dxid' => 0]);
 
         $this->odeslat();
 

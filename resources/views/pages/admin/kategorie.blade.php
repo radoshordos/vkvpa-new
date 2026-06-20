@@ -17,7 +17,6 @@
                 <th class="num">ID</th>
                 <th>{{ __('admin.kategorie_col_name') }}</th>
                 <th>{{ __('admin.kategorie_col_abbr') }}</th>
-                <th class="cq-hide-narrow">{{ __('admin.kategorie_col_desc') }}</th>
                 <th class="num">dxid</th>
                 <th>{{ __('admin.kategorie_col_actions') }}</th>
             </tr>
@@ -28,7 +27,6 @@
                     <td class="num text-muted">{{ $k->id }}</td>
                     <td class="font-bold">{{ $k->nazev }}</td>
                     <td class="mono">{{ $k->zkratka }}</td>
-                    <td class="text-sm text-muted cq-hide-narrow">{{ $k->popis ?: '—' }}</td>
                     <td class="num">{{ $k->dxid }}</td>
                     <td>
                         <a href="{{ route('kategorie.edit', $k->id) }}" class="icon-btn icon-btn-u" title="{{ __('admin.kategorie_btn_edit') }}">
@@ -38,7 +36,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="6" class="italic text-muted">{{ __('admin.kategorie_empty') }}</td>
+                    <td colspan="5" class="italic text-muted">{{ __('admin.kategorie_empty') }}</td>
                 </tr>
             @endforelse
         </tbody>

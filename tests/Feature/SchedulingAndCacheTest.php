@@ -33,7 +33,7 @@ class SchedulingAndCacheTest extends TestCase
 
     public function test_yearly_results_are_cached_until_rank_round_invalidates(): void
     {
-        $kat = VkvpaKategorie::create(['nazev' => 'A', 'popis' => '', 'zkratka' => 'A', 'dxid' => 0]);
+        $kat = VkvpaKategorie::create(['nazev' => 'A', 'zkratka' => 'A', 'dxid' => 0]);
         $kolo = $this->kolo('1. kolo 2026', now()->addDay()->toDateTimeString());
 
         $row = VkvpaData::create([

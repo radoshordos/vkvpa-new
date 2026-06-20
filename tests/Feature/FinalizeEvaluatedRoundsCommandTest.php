@@ -38,7 +38,7 @@ class FinalizeEvaluatedRoundsCommandTest extends TestCase
     {
         $kat = VkvpaKategorie::firstOrCreate(
             ['zkratka' => 'A'],
-            ['nazev' => '144 MHz single op', 'popis' => '', 'dxid' => 0],
+            ['nazev' => '144 MHz single op', 'dxid' => 0],
         );
 
         return VkvpaData::create([

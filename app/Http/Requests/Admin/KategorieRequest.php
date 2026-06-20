@@ -26,7 +26,6 @@ class KategorieRequest extends FormRequest
     {
         return [
             'nazev' => ['required', 'string', 'max:50'],
-            'popis' => ['nullable', 'string', 'max:250'],
             // CategoryResolver páruje sekci z EDI hlavičky přes zkratku –
             // duplicitní zkratka by párování učinila nedeterministickým
             // (DB to jistí unikátním indexem, tady chceme hezkou hlášku).
@@ -61,7 +60,6 @@ class KategorieRequest extends FormRequest
     {
         return [
             'nazev' => $this->string('nazev')->value(),
-            'popis' => $this->string('popis')->value(),
             'zkratka' => $this->string('zkratka')->value(),
             'dxid' => $this->integer('dxid'),
         ];

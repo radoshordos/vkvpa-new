@@ -50,13 +50,11 @@ return [
     'kategorie_edit' => 'Edit category',
     'kategorie_col_name' => 'Name',
     'kategorie_col_abbr' => 'Abbreviation',
-    'kategorie_col_desc' => 'Description',
     'kategorie_col_actions' => 'Actions',
     'kategorie_btn_edit' => 'Edit',
     'kategorie_btn_save' => 'Save',
     'field_name' => 'Name',
     'field_abbr' => 'Abbreviation',
-    'field_desc' => 'Description',
 
     // Common
     'btn_cancel' => 'Cancel',

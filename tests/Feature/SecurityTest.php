@@ -68,7 +68,7 @@ class SecurityTest extends TestCase
     public function test_xss_in_vysledky_jmeno_is_escaped(): void
     {
         $kolo = $this->kolo();
-        $kat = VkvpaKategorie::create(['nazev' => '144 MHz', 'popis' => '', 'zkratka' => 'A', 'dxid' => 0]);
+        $kat = VkvpaKategorie::create(['nazev' => '144 MHz', 'zkratka' => 'A', 'dxid' => 0]);
 
         VkvpaData::create([
             'id_kola' => $kolo->id,
@@ -91,7 +91,7 @@ class SecurityTest extends TestCase
     public function test_xss_in_vysledky_soapbox_is_escaped(): void
     {
         $kolo = $this->kolo();
-        $kat = VkvpaKategorie::create(['nazev' => '144 MHz', 'popis' => '', 'zkratka' => 'A', 'dxid' => 0]);
+        $kat = VkvpaKategorie::create(['nazev' => '144 MHz', 'zkratka' => 'A', 'dxid' => 0]);
 
         VkvpaData::create([
             'id_kola' => $kolo->id,

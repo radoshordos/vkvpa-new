@@ -36,7 +36,7 @@ class AuthorizationEdgeCasesTest extends TestCase
             'nazev' => 'Testovací kolo',
             'poznamka' => '',
         ]);
-        $kat = VkvpaKategorie::create(['nazev' => '144 MHz SO', 'popis' => '', 'zkratka' => 'A', 'dxid' => 0]);
+        $kat = VkvpaKategorie::create(['nazev' => '144 MHz SO', 'zkratka' => 'A', 'dxid' => 0]);
 
         return VkvpaData::create([
             'id_kola' => $kolo->id,
@@ -168,7 +168,7 @@ class AuthorizationEdgeCasesTest extends TestCase
             'nazev' => 'Aktivní kolo',
             'poznamka' => '',
         ]);
-        $kat = VkvpaKategorie::create(['nazev' => 'A', 'popis' => '', 'zkratka' => 'A', 'dxid' => 0]);
+        $kat = VkvpaKategorie::create(['nazev' => 'A', 'zkratka' => 'A', 'dxid' => 0]);
 
         $this->post('/hlaseni', [
             'kolo' => $kolo->id,

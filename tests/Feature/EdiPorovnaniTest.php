@@ -160,8 +160,8 @@ class EdiPorovnaniTest extends TestCase
             'vyhodnoceno' => $otevrene ? null : '2026-03-21 10:00:00',
         ]);
 
-        $katA = VkvpaKategorie::create(['nazev' => '144 MHz', 'popis' => '', 'zkratka' => 'A', 'dxid' => 0]);
-        $katB = VkvpaKategorie::create(['nazev' => '432 MHz', 'popis' => '', 'zkratka' => 'B', 'dxid' => 0]);
+        $katA = VkvpaKategorie::create(['nazev' => '144 MHz', 'zkratka' => 'A', 'dxid' => 0]);
+        $katB = VkvpaKategorie::create(['nazev' => '432 MHz', 'zkratka' => 'B', 'dxid' => 0]);
 
         $head = $this->importSample();
         $head->update(['id_kola' => $kolo->id]);

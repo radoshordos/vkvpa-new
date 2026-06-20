@@ -22,7 +22,7 @@ class VysledkyRocniTest extends TestCase
 
     private function kat(string $nazev): VkvpaKategorie
     {
-        return VkvpaKategorie::create(['nazev' => $nazev, 'popis' => '', 'zkratka' => $nazev, 'dxid' => 0]);
+        return VkvpaKategorie::create(['nazev' => $nazev, 'zkratka' => $nazev, 'dxid' => 0]);
     }
 
     private function kolo(string $rok): VkvpaKola
