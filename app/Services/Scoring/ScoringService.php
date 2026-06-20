@@ -219,11 +219,18 @@ final class ScoringService
         return VkvpaData::query()->hydrate($rows);
     }
 
+    // Bodový výraz se započítáním pravidla NON_EDI_NULLIFY_FROM_KOLO (záznamy
+    // bez EDI deníku v novějších kolech se počítají jako 0). Sdílený celkovým
+    // součtem i měsíčním rozpadem; literal-string kvůli selectRaw na PHPStan L10.
+    private const BODY_EXPR = 'SUM(CASE WHEN vkvpa_data.edihead_id IS NULL AND vkvpa_data.id_kola >= ? THEN 0 ELSE vkvpa_data.body END)';
+
     /**
      * @return \Illuminate\Database\Eloquent\Collection<int, VkvpaData>
      */
     private function computeYearlyResults(int $year, bool $qrpOnly, bool $lpOnly): Collection
     {
+        $nullifyFrom = VkvpaSettings::nonEdiNullifyFromKolo();
+
         $query = VkvpaData::query()
             ->join('vkvpa_kola', 'vkvpa_data.id_kola', '=', 'vkvpa_kola.id')
             ->where('vkvpa_data.schvaleno', true)
@@ -232,10 +239,7 @@ final class ScoringService
             // MAX(jmeno): jméno se může mezi koly lišit, agregace potřebuje
             // deterministickou volbu přenositelnou na SQLite (testy).
             ->selectRaw('vkvpa_data.id_kategorie as kategorie_id, vkvpa_data.znacka, MAX(vkvpa_data.jmeno) as jmeno')
-            ->selectRaw(
-                'SUM(CASE WHEN vkvpa_data.edihead_id IS NULL AND vkvpa_data.id_kola >= ? THEN 0 ELSE vkvpa_data.body END) as celkem',
-                [VkvpaSettings::nonEdiNullifyFromKolo()],
-            )
+            ->selectRaw(self::BODY_EXPR.' as celkem', [$nullifyFrom])
             ->groupBy('vkvpa_data.id_kategorie', 'vkvpa_data.znacka')
             ->orderByDesc('celkem');
 
@@ -247,15 +251,87 @@ final class ScoringService
             $query->onlyLp();
         }
 
-        return $query->get();
+        /** @var \Illuminate\Database\Eloquent\Collection<int, VkvpaData> $rows */
+        $rows = $query->get();
+
+        $this->attachMonthlyBreakdown($rows, $year, $qrpOnly, $lpOnly, $nullifyFrom);
+
+        return $rows;
+    }
+
+    /**
+     * Doplní každému řádku ročních výsledků atributy `mesic_1`..`mesic_12` s body
+     * za jednotlivé měsíce roku (měsíční přehled). Sloupce jsou pevně 1–12, takže
+     * se rok ukazuje celý (i měsíce bez závodu / budoucí). Počítá se samostatným
+     * seskupením podle (kategorie, značka, kolo), aby se v hlavním dotazu nemusely
+     * tvořit dynamické SQL aliasy (PHPStan L10 vyžaduje literal-string v selectRaw);
+     * kolo se pak v PHP mapuje na svůj měsíc (víc kol v měsíci se sečte).
+     *
+     * @param  \Illuminate\Database\Eloquent\Collection<int, VkvpaData>  $rows
+     */
+    private function attachMonthlyBreakdown(Collection $rows, int $year, bool $qrpOnly, bool $lpOnly, int $nullifyFrom): void
+    {
+        // id_kola → číslo měsíce (1..12).
+        $koloMonth = [];
+        foreach (VkvpaKola::query()->whereYear('datum_konani', $year)->get(['id', 'datum_konani']) as $kolo) {
+            $koloMonth[$kolo->id] = (int) $kolo->datum_konani->format('n');
+        }
+
+        $breakdown = VkvpaData::query()
+            ->join('vkvpa_kola', 'vkvpa_data.id_kola', '=', 'vkvpa_kola.id')
+            ->where('vkvpa_data.schvaleno', true)
+            ->where('vkvpa_data.poradi', '<>', 0)
+            ->whereYear('vkvpa_kola.datum_konani', $year)
+            ->selectRaw('vkvpa_data.id_kategorie as kategorie_id, vkvpa_data.znacka, vkvpa_data.id_kola')
+            ->selectRaw(self::BODY_EXPR.' as body', [$nullifyFrom])
+            ->groupBy('vkvpa_data.id_kategorie', 'vkvpa_data.znacka', 'vkvpa_data.id_kola')
+            ->when($qrpOnly, fn ($q) => $q->onlyQrp())
+            ->when($lpOnly, fn ($q) => $q->onlyLp())
+            ->get();
+
+        // Mapa "kategorie|značka" => [měsíc => body] (víc kol v měsíci sečteno).
+        $map = [];
+        foreach ($breakdown as $b) {
+            $month = $koloMonth[self::intAttr($b, 'id_kola')] ?? null;
+            if ($month === null) {
+                continue;
+            }
+            $key = self::strAttr($b, 'kategorie_id').'|'.self::strAttr($b, 'znacka');
+            $map[$key][$month] = ($map[$key][$month] ?? 0) + self::intAttr($b, 'body');
+        }
+
+        foreach ($rows as $row) {
+            $perMonth = $map[self::strAttr($row, 'kategorie_id').'|'.self::strAttr($row, 'znacka')] ?? [];
+            // Pevně 12 měsíčních sloupců (i nulových) – ať je rok vidět celý a aby
+            // přístup ve view nespadl na chybějícím atributu (strict mód modelu).
+            for ($m = 1; $m <= 12; $m++) {
+                $row->setAttribute('mesic_'.$m, $perMonth[$m] ?? 0);
+            }
+        }
+    }
+
+    /** Atribut agregovaného řádku jako int (agregáty se vrací jako mixed). */
+    private static function intAttr(VkvpaData $model, string $key): int
+    {
+        $value = $model->getAttribute($key);
+
+        return is_numeric($value) ? (int) $value : 0;
+    }
+
+    /** Atribut agregovaného řádku jako string – složka klíče mapy. */
+    private static function strAttr(VkvpaData $model, string $key): string
+    {
+        $value = $model->getAttribute($key);
+
+        return is_scalar($value) ? (string) $value : '';
     }
 
     /** Klíč cache ročních výsledků pro daný rok a kombinaci výkonových filtrů. */
     private function yearlyCacheKey(int $year, bool $qrpOnly, bool $lpOnly): string
     {
-        // v3: řádky nově obsahují i agregované `jmeno` (v2 pole atributů bez něj,
-        // v1 serializovaná kolekce modelů).
-        return sprintf('vkvpa:yearly:v3:%d:%d:%d', $year, $qrpOnly ? 1 : 0, $lpOnly ? 1 : 0);
+        // v6: řádky nově nesou měsíční rozpad `mesic_1`..`mesic_12` (v3 přidalo
+        // agregované `jmeno`, v2 pole atributů bez něj, v1 serializovaná kolekce).
+        return sprintf('vkvpa:yearly:v6:%d:%d:%d', $year, $qrpOnly ? 1 : 0, $lpOnly ? 1 : 0);
     }
 
     /** Zahodí cache ročních výsledků daného roku (všechny kombinace výkonových filtrů). */

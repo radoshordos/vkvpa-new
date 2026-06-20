@@ -54,6 +54,9 @@
         <tr>
           <th class="num" style="width:60px;">{{ __('pages.rocni.col_pos') }}</th>
           <th>{{ __('pages.rocni.col_callsign') }}</th>
+          @for ($m = 1; $m <= 12; $m++)
+            <th class="num">{{ sprintf('%02d', $m) }}</th>
+          @endfor
           <th class="num">{{ __('pages.rocni.col_total') }}</th>
         </tr>
       </thead>
@@ -62,7 +65,11 @@
           <tr>
             <td class="num">{{ $i + 1 }}.</td>
             <td class="mono font-semibold">{{ $r->znacka }}</td>
-            <td class="num">{{ (int) $r->celkem }}</td>
+            @for ($m = 1; $m <= 12; $m++)
+              @php($b = (int) $r->getAttribute('mesic_' . $m))
+              <td class="num text-muted">{{ $b > 0 ? $b : '—' }}</td>
+            @endfor
+            <td class="num font-semibold">{{ (int) $r->celkem }}</td>
           </tr>
         @endforeach
       </tbody>

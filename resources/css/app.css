@@ -363,6 +363,11 @@
         background-color: var(--surface-2);
         color: var(--heading);
         text-align: left;
+    }
+    /* Číselné hlavičky zarovnat doprava, ať lícují s pravostranně zarovnanými
+       buňkami (jinak `thead th` přebije .num kvůli vyšší specificitě). */
+    table.data-table thead th.num {
+        text-align: right;
         font-weight: 600;
         font-size: 0.7rem;
         text-transform: uppercase;
