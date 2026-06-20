@@ -17,7 +17,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Elektronické hlášení výsledků závodů VKV PA – nahrávání EDI deníků, bodování a výsledkové listiny.">
+    <meta name="description" content="{{ __('app.meta_description') }}">
     <meta name="keywords" content="HAMradio, OK, Activity contest, VKV, EDI, závod">
     <meta name="theme-color" content="#4338ca">
     <title>@yield('title', 'VKV PA - provozní aktiv')</title>
@@ -33,13 +33,13 @@
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="VKV provozní aktiv">
     <meta property="og:title" content="@yield('title', 'VKV provozní aktiv')">
-    <meta property="og:description" content="Elektronické hlášení výsledků závodů VKV PA – nahrávání EDI deníků, bodování a výsledkové listiny.">
+    <meta property="og:description" content="{{ __('app.meta_description') }}">
     <meta property="og:url" content="{{ url()->current() }}">
     <meta property="og:image" content="{{ $ogImage }}">
     <meta property="og:locale" content="{{ $locale === 'en' ? 'en_US' : 'cs_CZ' }}">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="@yield('title', 'VKV provozní aktiv')">
-    <meta name="twitter:description" content="Elektronické hlášení výsledků závodů VKV PA.">
+    <meta name="twitter:description" content="{{ __('app.meta_description_short') }}">
     <meta name="twitter:image" content="{{ $ogImage }}">
 
     {{-- Tmavý režim bez probliknutí: nastav třídu .dark dřív, než se vykreslí tělo. --}}

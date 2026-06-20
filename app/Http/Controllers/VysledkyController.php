@@ -73,7 +73,10 @@ class VysledkyController extends Controller
             'skokani' => $skokani,
             'hledat' => $hledat,
             'limitReached' => $radky->count() >= $maxRows,
-            'uploadWindowOpen' => VkvpaKola::existujeUploadOkno(),
+            // Odkazy EDI/EDIR se neadminům skrývají jen u kola, jehož upload okno
+            // právě běží (aby během příjmu neunikaly deníky soupeřů) – ne globálně
+            // podle jiných kol. Deníky uzavřených kol zůstávají veřejné.
+            'uploadWindowOpen' => $kolo?->prijimaHlaseni() ?? false,
         ]);
     }
 

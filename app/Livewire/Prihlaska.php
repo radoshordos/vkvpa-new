@@ -120,6 +120,16 @@ class Prihlaska extends Component
     {
         $this->mode = 'manual';
         $this->resetEdiState();
+
+        // Veřejnost podává jen do aktuálního průběžného kola – předvyplníme je
+        // a selektor kola nezobrazujeme (výběr má jen admin pro backfill).
+        if (! $this->isAdmin()) {
+            $aktualni = VkvpaKola::aktualniProPrubezne();
+            if ($aktualni !== null) {
+                $this->kolo = $aktualni->id;
+                $this->koloNazev = $aktualni->nazev;
+            }
+        }
     }
 
     /** Zpět z náhledu/ručního formuláře na výběr. */
@@ -291,7 +301,8 @@ class Prihlaska extends Component
             'znacka' => ['required', 'string', 'max:10'],
             'locator' => ['required', 'string', 'max:6', new ValidMaidenhead],
             'jmeno' => ['required', 'string', 'max:60'],
-            'email' => ['required', 'email', 'max:250'],
+            // E-mail je u ručního hlášení nepovinný (EDI hlavička ho obvykle nese).
+            'email' => ['nullable', 'email', 'max:250'],
             'telefon' => ['required', 'string', 'max:20', new ValidPhone],
             'pocet' => ['nullable', 'integer', 'min:0'],
             'bodu_za_qso' => ['nullable', 'integer', 'min:0'],
@@ -395,6 +406,7 @@ class Prihlaska extends Component
         }
 
         return view('livewire.prihlaska', [
+            'isAdmin' => $this->isAdmin(),
             'kola' => VkvpaKola::query()->orderByDesc('datum_konani')->limit(36)->get(),
             'kategorieList' => VkvpaKategorie::query()->orderBy('id')->get(),
             'report' => $report,

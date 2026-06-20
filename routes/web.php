@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DenikyController;
 use App\Http\Controllers\Admin\EdiDebugController;
 use App\Http\Controllers\Admin\ExportController;
+use App\Http\Controllers\Admin\HesloController;
 use App\Http\Controllers\Admin\ImportController;
 use App\Http\Controllers\Admin\KategorieController;
 use App\Http\Controllers\Admin\KolaAdminController;
@@ -117,6 +118,11 @@ Route::middleware('admin')->group(function (): void {
     Route::get('/admin/export/{kolo}', [ExportController::class, 'download'])->name('export.download');
 
     Route::get('/admin/uzivatele', [UzivateleController::class, 'index'])->name('uzivatele.index');
+
+    // Změna vlastního hesla přihlášeného administrátora.
+    Route::get('/admin/heslo', [HesloController::class, 'edit'])->name('heslo.edit');
+    Route::patch('/admin/heslo', [HesloController::class, 'update'])->name('heslo.update');
+
     Route::get('/admin/kategorie', [KategorieController::class, 'index'])->name('kategorie.index');
     Route::get('/admin/kategorie/create', [KategorieController::class, 'create'])->name('kategorie.create');
     Route::post('/admin/kategorie', [KategorieController::class, 'store'])->name('kategorie.store');

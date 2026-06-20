@@ -24,12 +24,12 @@ class EdiController extends Controller
      *
      * Přístup:
      *   – admin: vždy povolen,
-     *   – otevřené upload window (aktivní kolo): 403 Omezeno,
-     *   – jinak (žádné aktivní kolo): povolen i nepřihlášeným.
+     *   – deník kola s právě otevřeným upload oknem: 403 Omezeno,
+     *   – jinak (uzavřená/vyhodnocená kola): povolen i nepřihlášeným.
      */
     public function zobrazit(Edihead $head): Response
     {
-        $this->assertEdiAccess();
+        $this->assertEdiAccess($head);
 
         return $this->ediResponse($head, (string) $head->src, $head->p_call, 'edi');
     }
@@ -40,7 +40,7 @@ class EdiController extends Controller
      */
     public function zobrazitRedukovany(Edihead $head): Response
     {
-        $this->assertEdiAccess();
+        $this->assertEdiAccess($head);
 
         $src = (string) $head->src;
         $reduced = $src === '' ? '' : $this->reducer->reduce($src);
@@ -50,12 +50,18 @@ class EdiController extends Controller
 
     /**
      * Admin má vždy přístup. Ostatní (včetně nepřihlášených) jsou blokováni
-     * (403) jen v době otevřeného upload window, aby během příjmu hlášení
-     * neunikaly deníky soupeřů.
+     * (403) jen u deníku kola, jehož upload okno právě běží – aby během příjmu
+     * hlášení neunikaly deníky soupeřů. Deníky uzavřených/vyhodnocených kol
+     * zůstávají veřejně přístupné i během okna jiného (probíhajícího) kola.
      */
-    private function assertEdiAccess(): void
+    private function assertEdiAccess(Edihead $head): void
     {
-        if (! auth()->user()?->is_admin && VkvpaKola::existujeUploadOkno()) {
+        if (auth()->user()?->is_admin) {
+            return;
+        }
+
+        $kolo = $head->id_kola !== null ? VkvpaKola::find($head->id_kola) : null;
+        if ($kolo?->prijimaHlaseni() === true) {
             abort(403);
         }
     }

@@ -7,7 +7,7 @@
     </div>
 
     <div class="field">
-        <label class="label" for="f-email">{{ __('pages.hlaseni.field_contact') }} *</label>
+        <label class="label" for="f-email">{{ __('pages.hlaseni.field_contact') }}@if ($emailRequired ?? true) *@endif</label>
         <input id="f-email" type="email" wire:model="email" @class(['input', 'input-err' => $errors->has('email')])>
         @error('email')<span class="field-error">{{ $message }}</span>@enderror
     </div>

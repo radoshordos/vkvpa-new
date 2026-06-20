@@ -15,6 +15,7 @@ return [
     'nav_export' => 'EDI export (ZIP)',
     'nav_users' => 'Entrant details',
     'nav_api_docs' => 'API documentation',
+    'nav_password' => 'Change password',
 
     // Login
     'login_title' => 'Login – VKV PA',
@@ -59,6 +60,15 @@ return [
 
     // Common
     'btn_cancel' => 'Cancel',
+
+    // Change password
+    'heslo_title' => 'Change password – VKV PA Admin',
+    'heslo_heading' => 'Change password',
+    'heslo_desc' => 'To change your password, enter your current password and the new one twice (at least 8 characters).',
+    'heslo_current' => 'Current password',
+    'heslo_new' => 'New password',
+    'heslo_confirm' => 'Repeat new password',
+    'heslo_btn_save' => 'Change password',
 
     // Deníky
     'deniky_title' => 'Uploaded EDI logs – VKV PA Admin',

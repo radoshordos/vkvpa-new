@@ -19,4 +19,30 @@ return [
     'edi_restricted_body' => 'Přístup k deníkům je omezen po dobu otevřeného příjmu hlášení, aby nebylo možné opisovat z cizích deníků. EDI soubory budou dostupné po uzavření kola.',
     'edi_restricted_label' => 'EDI Omezeno',
     'back_home' => 'Zpět na úvod',
+
+    // Odkazy na EDI / vizualizaci (sdílené komponenty)
+    'edi_link_original' => 'Zobrazit původní EDI soubor',
+    'edi_link_reduced' => 'Zobrazit redukovaný EDI deník (08–11 UTC)',
+    'viz_link_title' => 'Statistiky deníku – mapy a grafy',
+    'viz_link_aria' => 'Statistiky deníku',
+    'viz_link_label' => 'Statistiky',
+
+    // Akce nad záznamem (admin – partial zaznam-akce)
+    'act_takeover_blocked' => 'Po uzávěrce nelze vrátit převzetí – záznam lze jen upravit',
+    'act_untake' => 'Vrátit mezi nepřevzaté (odebrat převzetí)',
+    'act_take' => 'Převzít záznam (vyhodnocovatel viděl)',
+    'act_edit' => 'Upravit záznam',
+    'act_delete' => 'Smazat záznam',
+
+    // Chybové stránky
+    'err_404_title' => 'Stránka nenalezena – VKV PA',
+    'err_404_heading' => '404 – Stránka nenalezena',
+    'err_404_body' => 'Požadovaná stránka neexistuje nebo byla přesunuta.',
+    'err_500_title' => 'Chyba serveru – VKV PA',
+    'err_500_heading' => '500 – Chyba serveru',
+    'err_500_body' => 'Došlo k neočekávané chybě. Zkuste to prosím znovu za chvíli.',
+
+    // SEO meta popisky (layout)
+    'meta_description' => 'Elektronické hlášení výsledků závodů VKV PA – nahrávání EDI deníků, bodování a výsledkové listiny.',
+    'meta_description_short' => 'Elektronické hlášení výsledků závodů VKV PA.',
 ];

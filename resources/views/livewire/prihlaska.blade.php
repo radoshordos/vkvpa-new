@@ -38,7 +38,7 @@
                     <svg class="h-4 w-4 animate-spin text-brand" viewBox="0 0 24 24" fill="none">
                         <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-dasharray="32" stroke-dashoffset="10"/>
                     </svg>
-                    Zpracovávám deník…
+                    {{ __('pages.hlaseni.processing') }}
                 </div>
 
                 @error('upload')<span class="field-error mt-2 block">{{ $message }}</span>@enderror
@@ -60,7 +60,7 @@
                 <div class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-brand-soft">
                     <x-icon name="file" class="h-5 w-5 text-brand" />
                 </div>
-                <p class="text-sm font-semibold text-heading">Zkontrolujte načtený deník</p>
+                <p class="text-sm font-semibold text-heading">{{ __('pages.hlaseni.review_heading') }}</p>
             </div>
 
             <div class="p-5">
@@ -111,7 +111,7 @@
                 @if ($report)
                     <details class="mt-4 rounded-lg border border-line p-3">
                         <summary class="cursor-pointer text-sm font-semibold text-heading">
-                            Analýza spojení – co se započítalo a proč ({{ $report->pocet }}/{{ $report->parsedCount }} QSO)
+                            {{ __('pages.hlaseni.analysis_summary') }} ({{ $report->pocet }}/{{ $report->parsedCount }} QSO)
                         </summary>
                         <div class="mt-3">
                             @include('partials.edi-rozpad', ['report' => $report])
@@ -124,15 +124,15 @@
                     <div class="mt-3 grid gap-3 sm:grid-cols-2">
                         <details class="rounded-lg border border-line p-3">
                             <summary class="cursor-pointer text-sm font-semibold text-heading">
-                                EDI soubor
-                                <span class="ml-1 font-normal text-xs text-muted">(červeně řádky, které EDIR ořízne – mimo okno)</span>
+                                {{ __('pages.hlaseni.edi_file_summary') }}
+                                <span class="ml-1 font-normal text-xs text-muted">{{ __('pages.hlaseni.edir_dropped_hint') }}</span>
                             </summary>
                             <div class="mt-2 max-h-80 overflow-auto rounded bg-surface-2 p-2 font-mono text-xs leading-relaxed">
                                 @foreach ($ediLines as $l)<div class="whitespace-pre" style="{{ $l['dropped'] ? 'background-color:var(--danger-soft);color:var(--danger);text-decoration:line-through' : '' }}">{{ $l['text'] === '' ? ' ' : $l['text'] }}</div>@endforeach
                             </div>
                         </details>
                         <details class="rounded-lg border border-line p-3">
-                            <summary class="cursor-pointer text-sm font-semibold text-heading">EDIR – oříznutý na závodní okno (08:00–11:00 UTC)</summary>
+                            <summary class="cursor-pointer text-sm font-semibold text-heading">{{ __('pages.hlaseni.edir_summary') }}</summary>
                             <pre class="mt-2 max-h-80 overflow-auto rounded bg-surface-2 p-2 text-xs">{{ $ediReduced }}</pre>
                         </details>
                     </div>
@@ -177,12 +177,17 @@
                 <div class="grid gap-x-5 sm:grid-cols-2">
                     <div class="field">
                         <label class="label" for="f-kolo">{{ __('pages.hlaseni.field_period') }} *</label>
-                        <select id="f-kolo" wire:model="kolo" @class(['select', 'input-err' => $errors->has('kolo')])>
-                            <option value="0">{{ __('pages.hlaseni.select_period') }}</option>
-                            @foreach ($kola as $k)
-                                <option value="{{ $k->id }}">{{ $k->nazev }}</option>
-                            @endforeach
-                        </select>
+                        @if ($isAdmin)
+                            <select id="f-kolo" wire:model="kolo" @class(['select', 'input-err' => $errors->has('kolo')])>
+                                <option value="0">{{ __('pages.hlaseni.select_period') }}</option>
+                                @foreach ($kola as $k)
+                                    <option value="{{ $k->id }}">{{ $k->nazev }}</option>
+                                @endforeach
+                            </select>
+                        @else
+                            {{-- Veřejnost podává jen do aktuálního průběžného kola – jen ke čtení. --}}
+                            <div class="input flex items-center bg-surface-2 text-heading">{{ $koloNazev }}</div>
+                        @endif
                         @error('kolo')<span class="field-error">{{ $message }}</span>@enderror
                     </div>
 
@@ -237,7 +242,7 @@
                     </div>
                 </div>
 
-                @include('livewire.partials.prihlaska-kontakt')
+                @include('livewire.partials.prihlaska-kontakt', ['emailRequired' => false])
 
                 <div class="mt-4 flex items-center justify-between">
                     <button type="button" wire:click="zpet" class="text-sm">{{ __('pages.hlaseni.btn_clear') }}</button>

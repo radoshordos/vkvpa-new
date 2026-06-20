@@ -26,6 +26,7 @@ return [
                 ['key' => 'uzivatele.index',  'trans' => 'admin.nav_users',     'admin' => true],
                 ['key' => 'importy.index',    'trans' => 'admin.nav_imports',   'admin' => true],
                 ['key' => 'edi.debug.create', 'trans' => 'admin.nav_edi_debug', 'admin' => true],
+                ['key' => 'heslo.edit',       'trans' => 'admin.nav_password',  'admin' => true],
             ],
         ],
         [

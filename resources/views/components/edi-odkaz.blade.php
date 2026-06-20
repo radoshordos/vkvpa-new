@@ -4,7 +4,7 @@
      reduced = redukovaný deník oříznutý na závodní okno 08–11 UTC. --}}
 @php
     $route = $reduced ? 'edi.soubor.redukovany' : 'edi.soubor';
-    $title = $reduced ? 'Zobrazit redukovaný EDI deník (08–11 UTC)' : 'Zobrazit původní EDI soubor';
+    $title = $reduced ? __('app.edi_link_reduced') : __('app.edi_link_original');
 @endphp
 
 <a href="{{ route($route, ['head' => $head]) }}"
