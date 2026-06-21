@@ -1045,14 +1045,24 @@ bezpečnostní WARN. Ostatní (kód, `public/`) drž jen pro čtení.
 php artisan app:health-check
 ```
 
-Ověří APP_KEY, `APP_DEBUG`, HTTPS/session, připojení k DB, frontu (tabulka
-`jobs`), mail, kontaktní e-mail, symlink úložiště, **zapisovatelnost a oprávnění
-adresářů** (`storage`, `bootstrap/cache` – chybějící/nezapisovatelný adresář je
-FAIL, world-writable `777` je WARN; v detailu navrhne konkrétní `chown`),
-existenci admin účtu a ochranu Adminer. Vrací nenulový kód při blokujícím (FAIL)
-nálezu – proto je zařazen i jako poslední krok `composer deploy`. Cron a běžící
-worker je nutné ověřit na serveru zvlášť (zevnitř je health-check ověřit
-nedokáže).
+Ověří:
+
+- **PHP runtime** – verze (`>= 8.5`) a povinná/doporučená rozšíření (`gd`, `pdo`,
+  `mbstring`, `intl`, `zip`, `fileinfo`); chybějící `gd`/`pdo` je FAIL. Chytí i
+  rozdíl mezi CLI a web/FPM verzí PHP.
+- **APP_KEY**, `APP_DEBUG`, HTTPS/session, připojení k DB, frontu (tabulka `jobs`),
+  mail, kontaktní e-mail.
+- **Práva `.env`** – WARN, když je čitelný i pro skupinu/ostatní (obsahuje hesla).
+- **Symlink úložiště** – pozná i rozbitý symlink nebo *zkopírovaný* adresář
+  `public/storage` (FTP/hosting bez podpory symlinků).
+- **Zapisovatelnost a oprávnění adresářů** (`storage`, `bootstrap/cache`) –
+  reálným zápisem sondy (spolehlivější než `is_writable`); chybějící/nezapisovatelný
+  adresář je FAIL, world-writable `777` je WARN; v detailu navrhne konkrétní `chown`.
+- **Admin účet** a **ochranu Adminer**.
+
+Vrací nenulový kód při blokujícím (FAIL) nálezu – proto je zařazen i jako
+poslední krok `composer deploy`. Cron a běžící worker je nutné ověřit na serveru
+zvlášť (zevnitř je health-check ověřit nedokáže).
 
 ### Kontrolní seznam před prvním spuštěním
 

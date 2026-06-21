@@ -13,9 +13,9 @@ use Throwable;
 /**
  * Předspouštěcí kontrola produkční konfigurace.
  *
- * Ověří kritické předpoklady běhu (APP_KEY, debug, HTTPS/session, DB, fronta,
- * mail, symlink úložiště, oprávnění zapisovatelných adresářů, admin účet)
- * a vypíše přehlednou tabulku. Vrací
+ * Ověří kritické předpoklady běhu (PHP verze + rozšíření, APP_KEY, práva .env,
+ * debug, HTTPS/session, DB, fronta, mail, symlink úložiště, oprávnění
+ * zapisovatelných adresářů, admin účet) a vypíše přehlednou tabulku. Vrací
  * nenulový exit kód, pokud narazí na blokující (FAIL) nález – vhodné zařadit
  * do nasazovacího pipeline.
  *
@@ -40,7 +40,9 @@ final class HealthCheckCommand extends Command
     {
         $isProduction = $this->getLaravel()->environment('production');
 
+        $this->checkPhpRuntime();
         $this->checkAppKey();
+        $this->checkEnvFilePermissions();
         $this->checkDebug($isProduction);
         $this->checkAppUrl($isProduction);
         $this->checkSession($isProduction);
@@ -80,6 +82,69 @@ final class HealthCheckCommand extends Command
     private function add(string $name, string $status, string $detail): void
     {
         $this->rows[] = [$name, $status, $detail];
+    }
+
+    /**
+     * PHP runtime – verze a kritická rozšíření. Na hostingu se často liší CLI a
+     * web (FPM) verze, nebo chybí `gd` (generování obrázků: mailová adresa,
+     * OG náhled, zpracování fotek v diskusi). Bez `gd`/`pdo` aplikace nepoběží.
+     */
+    private function checkPhpRuntime(): void
+    {
+        $required = '8.5.0';
+        if (version_compare(PHP_VERSION, $required, '<')) {
+            $this->add('PHP', self::FAIL, sprintf('běží %s, aplikace vyžaduje >= %s (ověř, že CLI i web/FPM používají stejnou verzi)', PHP_VERSION, $required));
+        } else {
+            $this->add('PHP', self::OK, 'verze '.PHP_VERSION);
+        }
+
+        // Tvrdě vyžadovaná (composer.json: ext-gd, ext-pdo) vs. doporučená.
+        $hard = ['gd', 'pdo'];
+        $recommended = ['mbstring', 'intl', 'zip', 'fileinfo'];
+
+        $missingHard = array_values(array_filter($hard, static fn (string $e): bool => ! extension_loaded($e)));
+        $missingSoft = array_values(array_filter($recommended, static fn (string $e): bool => ! extension_loaded($e)));
+
+        if ($missingHard !== []) {
+            $this->add('PHP rozšíření', self::FAIL, 'chybí povinná: '.implode(', ', $missingHard).' – aplikace bez nich nepoběží (doinstaluj balíčky php-'.implode(', php-', $missingHard).')');
+
+            return;
+        }
+        if ($missingSoft !== []) {
+            $this->add('PHP rozšíření', self::WARN, 'chybí doporučená: '.implode(', ', $missingSoft).' – některé funkce (mime detekce uploadu, archivy) mohou selhat');
+
+            return;
+        }
+        $this->add('PHP rozšíření', self::OK, 'gd, pdo, mbstring, intl, zip, fileinfo načtena');
+    }
+
+    /**
+     * Práva souboru `.env` – obsahuje DB heslo, APP_KEY i SMTP přihlášení.
+     * Na sdíleném hostingu je čtení pro skupinu/ostatní únik citlivých údajů.
+     */
+    private function checkEnvFilePermissions(): void
+    {
+        $path = base_path('.env');
+        if (! is_file($path)) {
+            $this->add('.env práva', self::OK, '.env neexistuje – konfigurace z proměnných prostředí serveru');
+
+            return;
+        }
+
+        $perms = fileperms($path);
+        if ($perms === false) {
+            $this->add('.env práva', self::WARN, 'práva .env nelze zjistit');
+
+            return;
+        }
+
+        // 0o044 = čtení pro skupinu nebo ostatní.
+        if (($perms & 0o044) !== 0) {
+            $this->add('.env práva', self::WARN, sprintf('.env je čitelný i pro skupinu/ostatní (%s) – obsahuje hesla; nastav `chmod 640` (či 600)', $this->modeFromPerms($perms)));
+
+            return;
+        }
+        $this->add('.env práva', self::OK, '.env čte jen vlastník ('.$this->modeFromPerms($perms).')');
     }
 
     private function checkAppKey(): void
@@ -180,12 +245,30 @@ final class HealthCheckCommand extends Command
     private function checkStorageLink(): void
     {
         $link = public_path('storage');
-        if (is_link($link) || is_dir($link)) {
-            $this->add('Storage link', self::OK, 'public/storage existuje');
+
+        if (is_link($link)) {
+            // Symlink existuje – ověř, že cíl je dostupný (rozbitý odkaz = nefunkční).
+            $dest = readlink($link);
+            if (! is_dir($link)) {
+                $this->add('Storage link', self::WARN, 'public/storage je symlink na neexistující cíl ('.($dest !== false ? $dest : '?').') – spusť znovu `php artisan storage:link`');
+
+                return;
+            }
+            $this->add('Storage link', self::OK, 'symlink → '.($dest !== false ? $dest : storage_path('app/public')));
 
             return;
         }
-        $this->add('Storage link', self::WARN, 'public/storage chybí (php artisan storage:link) – nepůjdou fotky v diskusi');
+
+        if (is_dir($link)) {
+            // Obyčejný adresář místo symlinku: typicky FTP/sdílený hosting bez
+            // podpory symlinků zkopíroval cíl. Nově nahrané soubory se pak
+            // neprojeví, protože míří jinam než `storage/app/public`.
+            $this->add('Storage link', self::WARN, 'public/storage je obyčejný adresář, ne symlink – na hostingu bez symlinků se nově nahrané soubory neprojeví; vytvoř symlink (`php artisan storage:link`) nebo nastav alias ve web serveru');
+
+            return;
+        }
+
+        $this->add('Storage link', self::WARN, 'public/storage chybí (`php artisan storage:link`) – nepůjdou veřejné soubory v úložišti');
     }
 
     /**
@@ -217,7 +300,9 @@ final class HealthCheckCommand extends Command
 
                 continue;
             }
-            if (! is_writable($path)) {
+            // Reálný zápis je spolehlivější než is_writable() – odhalí read-only
+            // mount, plný disk, ACL i open_basedir, kde is_writable() vrací true.
+            if (! $this->canWriteInto($path)) {
                 $blocking[] = $label.' ('.$this->pathMode($path).', nezapisovatelný)';
 
                 continue;
@@ -256,11 +341,30 @@ final class HealthCheckCommand extends Command
         $this->add('Oprávnění adresářů', self::OK, count($paths).' adresářů zapisovatelných procesem „'.$owner.'“');
     }
 
+    /**
+     * Skutečně zapíše a smaže sondu – spolehlivější než is_writable() (to umí
+     * lhát u ACL, read-only mountu, plného disku nebo open_basedir).
+     */
+    private function canWriteInto(string $dir): bool
+    {
+        $probe = $dir.DIRECTORY_SEPARATOR.'.health-check-'.bin2hex(random_bytes(6));
+        $written = @file_put_contents($probe, '') !== false;
+        if ($written) {
+            @unlink($probe);
+        }
+
+        return $written;
+    }
+
     /** Práva adresáře jako oktalový řetězec (poslední 4 číslice), např. „0775“. */
     private function pathMode(string $path): string
     {
-        $perms = fileperms($path);
+        return $this->modeFromPerms(fileperms($path));
+    }
 
+    /** Oktalový řetězec práv (poslední 4 číslice) z hodnoty fileperms(). */
+    private function modeFromPerms(int|false $perms): string
+    {
         return $perms === false ? '????' : substr(sprintf('%04o', $perms), -4);
     }
 
