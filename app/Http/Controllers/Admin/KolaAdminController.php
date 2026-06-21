@@ -8,11 +8,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\KoloRequest;
 use App\Models\VkvpaKola;
 use App\Services\Scoring\ScoringService;
+use App\Support\AdminLogger;
 use App\Support\ContestCalendar;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 /**
@@ -52,10 +51,7 @@ class KolaAdminController extends Controller
             $year = (int) $target->format('Y');
             $month = (int) $target->format('n');
 
-            $exists = VkvpaKola::query()
-                ->whereYear('datum_konani', $year)
-                ->whereMonth('datum_konani', $month)
-                ->exists();
+            $exists = VkvpaKola::query()->inYearMonth($year, $month)->exists();
 
             if (! $exists) {
                 $start = ContestCalendar::roundStart($year, $month);
@@ -85,10 +81,9 @@ class KolaAdminController extends Controller
     {
         $kolo = VkvpaKola::create($request->toModel());
 
-        Log::info('admin.kolo.create', [
+        AdminLogger::log('admin.kolo.create', [
             'kolo_id' => $kolo->id,
             'nazev' => $kolo->nazev,
-            'admin' => Auth::user()?->name,
         ]);
 
         return redirect()
@@ -117,10 +112,9 @@ class KolaAdminController extends Controller
             $scoring->forgetYearlyCache($kolo->datum_konani->year);
         }
 
-        Log::info('admin.kolo.update', [
+        AdminLogger::log('admin.kolo.update', [
             'kolo_id' => $kolo->id,
             'nazev' => $kolo->nazev,
-            'admin' => Auth::user()?->name,
         ]);
 
         return redirect()

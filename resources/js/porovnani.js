@@ -1,7 +1,7 @@
 import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
 import { Chart, registerables } from 'chart.js';
-import { addFullscreenControl } from './leaflet-fullscreen.js';
+import { createOsmMap } from './leaflet-osm-map.js';
+import { applyChartTheme } from './chart-theme.js';
 
 Chart.register(...registerables);
 
@@ -24,12 +24,7 @@ if (mapEl && cfg.compare) {
     const rivalCol = { stroke: '#b91c1c', fill: '#f87171' }; // červená – jen soupeř
     const bothCol = { stroke: '#4b5563', fill: '#9ca3af' };  // šedá – oba
 
-    const map = L.map(mapEl);
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '&copy; OpenStreetMap',
-    }).addTo(map);
-    addFullscreenControl(map);
+    const map = createOsmMap(mapEl);
 
     const bounds = [];
 
@@ -80,12 +75,7 @@ if (mapEl && cfg.compare) {
     }
 }
 
-// ── Chart.js: barvy podle motivu (denní/noční) – shodné s vizualizace.js ──
-function applyChartTheme() {
-    const css = getComputedStyle(document.documentElement);
-    Chart.defaults.color = css.getPropertyValue('--muted').trim() || '#666';
-    Chart.defaults.borderColor = css.getPropertyValue('--line').trim() || 'rgba(0,0,0,.1)';
-}
+// ── Chart.js: barvy podle motivu (denní/noční) ─────────────────────────────
 applyChartTheme();
 
 const charts = [];

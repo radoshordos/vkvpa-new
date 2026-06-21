@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Models\Edihead;
 use App\Models\VkvpaKola;
 use App\Services\Edi\EdiReducer;
+use App\Support\FileName;
 use Illuminate\Http\Response;
 
 /**
@@ -85,10 +86,7 @@ class EdiController extends Controller
             $content = $this->redigovatOsobniUdaje($content);
         }
 
-        $base = $pcall !== '' ? $pcall : 'denik';
-        // Sanitize: keep only safe ASCII chars to prevent header injection.
-        $safe = preg_replace('/[^A-Za-z0-9\-]/', '_', $base) ?? 'denik';
-        $filename = sprintf('%s-%d-%s.edi', $safe, $head->id, $variant);
+        $filename = sprintf('%s-%d-%s.edi', FileName::sanitize($pcall), $head->id, $variant);
 
         return response($content, 200, [
             'Content-Type' => 'text/plain; charset=utf-8',

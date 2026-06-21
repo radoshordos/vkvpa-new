@@ -64,9 +64,6 @@ final class EnsureUpcomingRoundsCommand extends Command
 
     private function roundExists(int $year, int $month): bool
     {
-        return VkvpaKola::query()
-            ->whereYear('datum_konani', $year)
-            ->whereMonth('datum_konani', $month)
-            ->exists();
+        return VkvpaKola::query()->inYearMonth($year, $month)->exists();
     }
 }

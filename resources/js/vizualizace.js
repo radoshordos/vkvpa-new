@@ -1,7 +1,9 @@
 import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
 import { Chart, registerables } from 'chart.js';
-import { addFullscreenControl } from './leaflet-fullscreen.js';
+import { createOsmMap } from './leaflet-osm-map.js';
+import { modeColor, modeLabel } from './leaflet-mode-colors.js';
+import { applyChartTheme } from './chart-theme.js';
+import { redrawMaidenheadGrid } from './maidenhead-grid.js';
 
 Chart.register(...registerables);
 
@@ -13,12 +15,7 @@ const hhmm = (m) => String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m
 
 // ── Leaflet mapa s přepínatelnými vrstvami ─────────────────────────────────
 
-const map = L.map('viz-mapa');
-L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '&copy; OpenStreetMap',
-}).addTo(map);
-addFullscreenControl(map);
+const map = createOsmMap('viz-mapa');
 
 const bounds = [];
 
@@ -42,20 +39,9 @@ const crkLayer = L.layerGroup();
 // Vrstva: přehrávání deníku (paprsky + špendlíky řízené časem na slideru)
 const playbackLayer = L.layerGroup();
 
-// Barvy dle druhu provozu: 1=SSB (modrá), 2=CW (oranžová), ostatní (šedá)
-function modeColor(mode) {
-    if (mode === 1) return { stroke: '#1d4ed8', fill: '#60a5fa' }; // SSB – modrá
-    if (mode === 2) return { stroke: '#b45309', fill: '#fbbf24' }; // CW  – oranžová
-    return { stroke: '#4b5563', fill: '#9ca3af' };                 // neznámý
-}
 // Zvýraznění nového násobiče – výrazná růžová/magenta, jasně odlišná od barev
 // druhu provozu (SSB modrá, CW jantarová, ostatní šedá), aby se nepletla se SSB.
 const NASOBIC = { stroke: '#be185d', fill: '#ec4899' };
-function modeLabel(mode) {
-    if (mode === 1) return 'SSB';
-    if (mode === 2) return 'CW';
-    return '?';
-}
 
 // ── Filtr druhu provozu (SSB / CW / ostatní) napříč vrstvami ───────────────
 // Klíč skupiny: 1=SSB, 2=CW, 0=vše ostatní (shodně s tlačítky data-mode-filter).
@@ -210,42 +196,8 @@ cfg.points.forEach(function (p) {
 // dokud je vrstva CRK aktivní (viz přepínání vrstev níže).
 const crkGrid = L.layerGroup().addTo(crkLayer);
 
-function bigSquareName(lng, lat) {
-    const a = 'A'.charCodeAt(0);
-    const fieldLng = Math.floor((lng + 180) / 20);
-    const fieldLat = Math.floor((lat + 90) / 10);
-    const sqLng = Math.floor(((lng + 180) % 20) / 2);
-    const sqLat = Math.floor((lat + 90) % 10);
-    return String.fromCharCode(a + fieldLng) + String.fromCharCode(a + fieldLat) + sqLng + sqLat;
-}
-
 function redrawCrkGrid() {
-    crkGrid.clearLayers();
-    const b = map.getBounds();
-    const zoom = map.getZoom();
-    const west = Math.floor(b.getWest() / 2) * 2;
-    const east = Math.ceil(b.getEast() / 2) * 2;
-    const south = Math.floor(b.getSouth());
-    const north = Math.ceil(b.getNorth());
-
-    for (let lat = south; lat <= north; lat++) {
-        L.polyline([[lat, west], [lat, east]], { color: '#000', weight: 1, opacity: 0.3 }).addTo(crkGrid);
-    }
-    for (let lng = west; lng <= east; lng += 2) {
-        L.polyline([[south, lng], [north, lng]], { color: '#000', weight: 1, opacity: 0.3 }).addTo(crkGrid);
-    }
-
-    // Názvy velkých čtverců jen při rozumném přiblížení (jinak by se slily).
-    if (zoom >= 5 && zoom <= 9) {
-        for (let lng = west; lng < east; lng += 2) {
-            for (let lat = south; lat < north; lat++) {
-                L.marker([lat + 0.5, lng + 1], {
-                    icon: L.divIcon({ className: 'loc-label', html: bigSquareName(lng, lat), iconSize: null }),
-                    interactive: false,
-                }).addTo(crkGrid);
-            }
-        }
-    }
+    redrawMaidenheadGrid(map, crkGrid);
 }
 
 // ── Přehrávání deníku (vrstva „Přehrávání") ────────────────────────────────
@@ -381,14 +333,6 @@ const hashLayer = (location.hash.match(/^#mapa-([a-z]+)$/) || [])[1];
 showLayer(Object.hasOwn(layers, hashLayer) ? hashLayer : 'playback');
 
 // ── Chart.js: barvy podle motivu (denní/noční) ─────────────────────────────
-// Text i mřížku grafů bereme z CSS proměnných motivu (--muted, --line), takže
-// ladí s paletou a s přepnutím třídy .dark. Výchozí šedá Chart.js by byla
-// v nočním režimu nečitelná a mřížka neviditelná.
-function applyChartTheme() {
-    const css = getComputedStyle(document.documentElement);
-    Chart.defaults.color = css.getPropertyValue('--muted').trim() || '#666';
-    Chart.defaults.borderColor = css.getPropertyValue('--line').trim() || 'rgba(0,0,0,.1)';
-}
 applyChartTheme();
 
 const charts = [];

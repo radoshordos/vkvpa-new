@@ -9,8 +9,10 @@ use App\Services\Scoring\ScoringService;
 use App\Support\ContestWindow;
 use App\Support\VkvpaSettings;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -44,6 +46,20 @@ class VkvpaKola extends Model
     public function diskuse(): HasMany
     {
         return $this->hasMany(Prispevek::class, 'kolo_id', 'id');
+    }
+
+    /**
+     * Scope: kola konaná v daném roce a měsíci (dle `datum_konani`).
+     *
+     * @param  Builder<VkvpaKola>  $query
+     * @return Builder<VkvpaKola>
+     */
+    #[Scope]
+    protected function inYearMonth(Builder $query, int $year, int $month): Builder
+    {
+        return $query
+            ->whereYear('datum_konani', $year)
+            ->whereMonth('datum_konani', $month);
     }
 
     /**
