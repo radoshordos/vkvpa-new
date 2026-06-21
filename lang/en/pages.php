@@ -4,6 +4,38 @@ declare(strict_types=1);
 
 return [
 
+    'vizualizer' => [
+        'title' => 'EDI Visualizer – log contact map',
+        'meta' => 'Upload an EDI log and get a shareable map of your contacts – rays from your home QTH, distances, bearings and a summary.',
+        'heading' => 'EDI Visualizer',
+        'intro' => 'Upload your EDI log to get a permanent link with a map of all your contacts. Nothing is added to the contest – it is just for viewing and sharing your log.',
+        'upload_label' => 'EDI log (*.edi)',
+        'upload_hint' => 'Must be in EDI (REG1TEST) format, max :max kB.',
+        'submit' => 'Plot the map',
+        'err_required' => 'Select an EDI file.',
+        'err_ext' => 'The file must have a .edi or .txt extension.',
+        'err_max' => 'The file is too large (max :max kB).',
+        'err_not_found' => 'Map not found – the link is invalid or has expired.',
+        'share' => 'Permanent link to this map:',
+        'copy' => 'Copy',
+        'copied' => 'Copied',
+        'new' => 'Upload another log',
+        'sum_call' => 'Callsign',
+        'sum_loc' => 'Locator',
+        'sum_band' => 'Band',
+        'sum_qso' => 'Contacts (QSO)',
+        'sum_avg' => 'Average distance',
+        'sum_max' => 'Longest contact (ODX)',
+        'sum_loc_unique' => 'Unique locators',
+        'sum_sq_unique' => 'Unique big squares',
+        // Labels rendered in JS (vizualizer.js)
+        'js' => [
+            'pts' => 'pts',
+            'azimuth' => 'bearing',
+            'home' => 'home QTH',
+        ],
+    ],
+
     'home' => [
         'title' => 'VHF contest results and online log submission',
         'heading' => 'OK Activity contest',
@@ -33,9 +65,12 @@ return [
         'live_heading' => 'Interim results',
         'live_refresh_in' => 'Refresh in',
         'live_no_entries' => 'No logs received yet.',
-        'quick_links' => 'Sections',
+        'quick_links' => 'Results',
+        'section_edi' => 'EDI',
         'ql_submit' => 'Submit log',
         'ql_submit_desc' => 'Upload EDI file',
+        'ql_viz' => 'EDI Visualizer',
+        'ql_viz_desc' => 'Contact map from a log',
         'ql_interim' => 'Interim results',
         'ql_interim_desc' => 'Current standings',
         'ql_results' => 'Results',

@@ -10,6 +10,7 @@ return [
 
     'contest_periods' => 'Contest periods',
     'log_import' => 'Submit log',
+    'vizualizer' => 'EDI Visualizer',
     'interim_results' => 'Interim results',
     'results' => 'Results',
     'year_results' => 'Year results',
