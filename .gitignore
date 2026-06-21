@@ -6,6 +6,7 @@
 .env.production
 .phpactor.json
 .phpunit.result.cache
+/_opencontest_archive/
 /.codex
 /.cursor/
 /.idea
@@ -35,3 +36,4 @@ Thumbs.db
 /storage/logs/*.log
 /bootstrap/cache/*.php
 /digipa_zaloha.sql
+
