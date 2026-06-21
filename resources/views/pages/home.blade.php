@@ -216,14 +216,17 @@
 @endif
 
 {{-- ── EDI (odeslání deníku + vizualizace) ───────────────────────────── --}}
+{{-- Dlaždice pevné šířky zarovnané vlevo (flex-wrap): na mobilu 2 na řádek,
+     na sm+ pevných 13rem – stejná velikost napříč sekcemi, bez roztažených
+     prázdných sloupců na širokých monitorech. --}}
 <div class="section-head">{{ __('pages.home.section_edi') }}</div>
-<div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
-    <a href="{{ route('hlaseni.index') }}" class="card block p-4 text-center hover:border-brand hover:bg-surface-2 transition-colors">
+<div class="flex flex-wrap gap-3">
+    <a href="{{ route('hlaseni.index') }}" class="card block shrink-0 grow-0 basis-[calc(50%-0.375rem)] p-4 text-center transition-colors hover:border-brand hover:bg-surface-2 sm:basis-52">
         <div class="text-2xl mb-1">📋</div>
         <div class="text-sm font-semibold">{{ __('pages.home.ql_submit') }}</div>
         <div class="text-xs text-muted mt-0.5">{{ __('pages.home.ql_submit_desc') }}</div>
     </a>
-    <a href="{{ route('vizualizer.create') }}" class="card block p-4 text-center hover:border-brand hover:bg-surface-2 transition-colors">
+    <a href="{{ route('vizualizer.create') }}" class="card block shrink-0 grow-0 basis-[calc(50%-0.375rem)] p-4 text-center transition-colors hover:border-brand hover:bg-surface-2 sm:basis-52">
         <div class="text-2xl mb-1">🗺️</div>
         <div class="text-sm font-semibold">{{ __('pages.home.ql_viz') }}</div>
         <div class="text-xs text-muted mt-0.5">{{ __('pages.home.ql_viz_desc') }}</div>
@@ -232,18 +235,18 @@
 
 {{-- ── Výsledky ──────────────────────────────────────────────────────── --}}
 <div class="section-head">{{ __('pages.home.quick_links') }}</div>
-<div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
-    <a href="{{ route('pribezne_vysledky') }}" class="card block p-4 text-center hover:border-brand hover:bg-surface-2 transition-colors">
+<div class="flex flex-wrap gap-3">
+    <a href="{{ route('pribezne_vysledky') }}" class="card block shrink-0 grow-0 basis-[calc(50%-0.375rem)] p-4 text-center transition-colors hover:border-brand hover:bg-surface-2 sm:basis-52">
         <div class="text-2xl mb-1">📊</div>
         <div class="text-sm font-semibold">{{ __('pages.home.ql_interim') }}</div>
         <div class="text-xs text-muted mt-0.5">{{ __('pages.home.ql_interim_desc') }}</div>
     </a>
-    <a href="{{ route('vysledkova_listina') }}" class="card block p-4 text-center hover:border-brand hover:bg-surface-2 transition-colors">
+    <a href="{{ route('vysledkova_listina') }}" class="card block shrink-0 grow-0 basis-[calc(50%-0.375rem)] p-4 text-center transition-colors hover:border-brand hover:bg-surface-2 sm:basis-52">
         <div class="text-2xl mb-1">🏆</div>
         <div class="text-sm font-semibold">{{ __('pages.home.ql_results') }}</div>
         <div class="text-xs text-muted mt-0.5">{{ __('pages.home.ql_results_desc') }}</div>
     </a>
-    <a href="{{ route('rocni_vysledky') }}" class="card block p-4 text-center hover:border-brand hover:bg-surface-2 transition-colors">
+    <a href="{{ route('rocni_vysledky') }}" class="card block shrink-0 grow-0 basis-[calc(50%-0.375rem)] p-4 text-center transition-colors hover:border-brand hover:bg-surface-2 sm:basis-52">
         <div class="text-2xl mb-1">📅</div>
         <div class="text-sm font-semibold">{{ __('pages.home.ql_yearly') }}</div>
         <div class="text-xs text-muted mt-0.5">{{ __('pages.home.ql_yearly_desc') }}</div>
