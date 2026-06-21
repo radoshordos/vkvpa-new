@@ -25,6 +25,8 @@ Tests use SQLite in-memory (`DB_CONNECTION=sqlite`, `DB_DATABASE=:memory:`). No 
 
 Docker: `docker compose up -d` starts MySQL + web; then run `docker compose exec web composer setup`.
 
+Deploy is split so each step runs in the right environment: `composer deploy:assets` builds the frontend (needs Node — run on the host), `composer deploy:php` runs the artisan cache/migrate/queue steps (must run **inside the web container** so `config:cache`/`storage:link` bake the container's `DB_HOST=db` and `/var/www/html` paths, not the host's). `composer deploy` chains both and is only for a single-host (non-Docker) deploy. Under Docker: `composer deploy:assets` on the host, then `docker compose exec web composer deploy:php`.
+
 ## Architecture
 
 ### EDI Import Pipeline
