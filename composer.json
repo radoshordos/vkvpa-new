@@ -12,6 +12,7 @@
         "dg/adminer-custom": "^3.3",
         "guzzlehttp/guzzle": "^7.12.1",
         "guzzlehttp/psr7": "^2.12.1",
+        "intervention/image": "^3.0",
         "laravel/framework": "^13.12",
         "laravel/prompts": "^0.3",
         "laravel/tinker": "^3.0",

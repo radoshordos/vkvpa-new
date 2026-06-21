@@ -11,7 +11,6 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class DiskuseTest extends TestCase
@@ -162,20 +161,100 @@ class DiskuseTest extends TestCase
         $this->assertDatabaseHas('diskuse', ['znacka' => 'OK1A', 'jmeno' => 'Jan Novák']);
     }
 
-    public function test_store_saves_photo(): void
+    public function test_store_saves_photo_into_database(): void
     {
-        Storage::fake('public');
         $kolo = $this->kolo();
 
         $this->post(route('diskuse.store', $kolo->id), [
             'znacka' => 'OK1FOTO',
             'text' => 'Příspěvek s fotkou.',
-            'foto' => UploadedFile::fake()->image('foto.jpg', 200, 200),
+            'fotky' => [UploadedFile::fake()->image('foto.jpg', 1200, 800)],
         ])->assertRedirect();
 
         $prispevek = Prispevek::where('znacka', 'OK1FOTO')->firstOrFail();
-        $this->assertNotNull($prispevek->foto);
-        Storage::disk('public')->assertExists($prispevek->foto);
+        $this->assertCount(1, $prispevek->fotky);
+
+        $foto = $prispevek->fotky->first();
+        $this->assertNotNull($foto);
+        $this->assertSame('image/jpeg', $foto->mime);
+        $this->assertNotEmpty($foto->data);
+        $this->assertNotEmpty($foto->nahled);
+        $this->assertGreaterThan(0, $foto->sirka);
+        $this->assertGreaterThan(0, $foto->vyska);
+    }
+
+    public function test_store_saves_multiple_photos_in_order(): void
+    {
+        $kolo = $this->kolo();
+
+        $this->post(route('diskuse.store', $kolo->id), [
+            'znacka' => 'OK1MULTI',
+            'text' => 'Příspěvek s více fotkami.',
+            'fotky' => [
+                UploadedFile::fake()->image('a.jpg', 800, 600),
+                UploadedFile::fake()->image('b.jpg', 800, 600),
+                UploadedFile::fake()->image('c.jpg', 800, 600),
+            ],
+        ])->assertRedirect();
+
+        $prispevek = Prispevek::where('znacka', 'OK1MULTI')->firstOrFail();
+        $this->assertCount(3, $prispevek->fotky);
+        $this->assertSame([0, 1, 2], $prispevek->fotky->pluck('poradi')->all());
+    }
+
+    public function test_store_rejects_more_than_max_photos(): void
+    {
+        $kolo = $this->kolo();
+
+        $fotky = [];
+        for ($i = 0; $i < 6; $i++) {
+            $fotky[] = UploadedFile::fake()->image("f{$i}.jpg", 400, 400);
+        }
+
+        $this->post(route('diskuse.store', $kolo->id), [
+            'znacka' => 'OK1MAX',
+            'text' => 'Příliš mnoho fotek.',
+            'fotky' => $fotky,
+        ])->assertSessionHasErrors('fotky');
+
+        $this->assertDatabaseMissing('diskuse', ['znacka' => 'OK1MAX']);
+    }
+
+    public function test_store_downscales_large_photo(): void
+    {
+        $kolo = $this->kolo();
+
+        $this->post(route('diskuse.store', $kolo->id), [
+            'znacka' => 'OK1BIG',
+            'text' => 'Velká fotka se má zmenšit.',
+            'fotky' => [UploadedFile::fake()->image('big.jpg', 4000, 3000)],
+        ])->assertRedirect();
+
+        $foto = Prispevek::where('znacka', 'OK1BIG')->firstOrFail()->fotky->first();
+        $this->assertNotNull($foto);
+        $this->assertLessThanOrEqual(2000, $foto->sirka);
+        $this->assertLessThanOrEqual(2000, $foto->vyska);
+    }
+
+    public function test_foto_route_serves_image_from_db(): void
+    {
+        $kolo = $this->kolo();
+
+        $this->post(route('diskuse.store', $kolo->id), [
+            'znacka' => 'OK1SERVE',
+            'text' => 'Servírovaná fotka.',
+            'fotky' => [UploadedFile::fake()->image('s.jpg', 600, 600)],
+        ]);
+
+        $foto = Prispevek::where('znacka', 'OK1SERVE')->firstOrFail()->fotky->firstOrFail();
+
+        $this->get(route('diskuse.foto', $foto->id))
+            ->assertOk()
+            ->assertHeader('Content-Type', 'image/jpeg');
+
+        $this->get(route('diskuse.foto.nahled', $foto->id))
+            ->assertOk()
+            ->assertHeader('Content-Type', 'image/jpeg');
     }
 
     public function test_store_requires_znacka(): void
@@ -218,14 +297,13 @@ class DiskuseTest extends TestCase
 
     public function test_store_rejects_non_image_file(): void
     {
-        Storage::fake('public');
         $kolo = $this->kolo();
 
         $this->post(route('diskuse.store', $kolo->id), [
             'znacka' => 'OK1FILE',
             'text' => 'Příspěvek s neplatným souborem.',
-            'foto' => UploadedFile::fake()->create('dokument.pdf', 100, 'application/pdf'),
-        ])->assertSessionHasErrors('foto');
+            'fotky' => [UploadedFile::fake()->create('dokument.pdf', 100, 'application/pdf')],
+        ])->assertSessionHasErrors('fotky.*');
     }
 
     // ------------------------------------------------------------------
@@ -244,27 +322,24 @@ class DiskuseTest extends TestCase
         $this->assertDatabaseMissing('diskuse', ['id' => $p->id]);
     }
 
-    public function test_admin_delete_removes_photo_from_storage(): void
+    public function test_admin_delete_removes_photos_from_db(): void
     {
-        Storage::fake('public');
         $kolo = $this->kolo();
 
-        $fakeFile = UploadedFile::fake()->image('foto.jpg');
-        $path = $fakeFile->storeAs('diskuse/'.$kolo->id, 'foto.jpg', 'public');
-        $this->assertIsString($path);
-
-        $p = Prispevek::create([
-            'kolo_id' => $kolo->id,
+        $this->post(route('diskuse.store', $kolo->id), [
             'znacka' => 'OK1FOTO',
             'text' => 'Příspěvek s fotkou.',
-            'foto' => $path,
-            'ip' => '127.0.0.1',
+            'fotky' => [UploadedFile::fake()->image('foto.jpg', 600, 400)],
         ]);
+
+        $p = Prispevek::where('znacka', 'OK1FOTO')->firstOrFail();
+        $this->assertCount(1, $p->fotky);
 
         $this->actingAs($this->admin())
             ->delete(route('diskuse.destroy', $p->id));
 
-        Storage::disk('public')->assertMissing($path);
+        $this->assertDatabaseMissing('diskuse', ['id' => $p->id]);
+        $this->assertDatabaseMissing('diskuse_foto', ['prispevek_id' => $p->id]);
     }
 
     public function test_guest_cannot_delete_prispevek(): void
