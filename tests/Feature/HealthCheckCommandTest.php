@@ -65,6 +65,7 @@ class HealthCheckCommandTest extends TestCase
             ->expectsOutputToContain('PHP')
             ->expectsOutputToContain('rozšíření')
             ->expectsOutputToContain('Node.js')
+            ->expectsOutputToContain('npm')
             ->assertExitCode(0);
     }
 

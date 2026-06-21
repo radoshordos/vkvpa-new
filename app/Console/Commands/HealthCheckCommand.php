@@ -16,8 +16,8 @@ use Throwable;
  *
  * Ověří kritické předpoklady běhu (PHP verze + rozšíření, APP_KEY, práva .env,
  * debug, HTTPS/session, DB, fronta, mail, symlink úložiště, oprávnění
- * zapisovatelných adresářů, Node.js pro build, admin účet) a vypíše přehlednou
- * tabulku. Vrací
+ * zapisovatelných adresářů, Node.js/npm pro build, admin účet) a vypíše
+ * přehlednou tabulku. Vrací
  * nenulový exit kód, pokud narazí na blokující (FAIL) nález – vhodné zařadit
  * do nasazovacího pipeline.
  *
@@ -55,6 +55,7 @@ final class HealthCheckCommand extends Command
         $this->checkStorageLink();
         $this->checkWritablePaths();
         $this->checkNode();
+        $this->checkNpm();
         $this->checkAdminUser();
         $this->checkAdminer();
 
@@ -378,6 +379,41 @@ final class HealthCheckCommand extends Command
         }
 
         $this->add('Node.js', self::OK, 'verze '.$raw);
+    }
+
+    /**
+     * npm – `composer deploy` instaluje balíčky přes `npm ci` z commitnutého
+     * `package-lock.json` (lockfileVersion 3), což vyžaduje npm >= 7; Node 22
+     * standardně dodává npm 10. Stejně jako Node je nutný jen pro build, proto WARN.
+     */
+    private function checkNpm(): void
+    {
+        $required = 9;
+
+        try {
+            $result = Process::run('npm --version');
+        } catch (Throwable $e) {
+            $this->add('npm', self::WARN, 'nelze spustit npm: '.$e->getMessage().' – potřeba pro `npm ci` při `composer deploy`');
+
+            return;
+        }
+
+        if (! $result->successful()) {
+            $this->add('npm', self::WARN, 'npm nenalezen v PATH – potřeba (>= '.$required.') pro `npm ci` při `composer deploy`; za běhu aplikace nutný není');
+
+            return;
+        }
+
+        $raw = trim($result->output());
+        $major = (int) ltrim(explode('.', $raw)[0], 'vV');
+
+        if ($major < $required) {
+            $this->add('npm', self::WARN, sprintf('verze %s < %d – `npm ci` z lockfileVersion 3 vyžaduje novější npm; aktualizuj na >= %d', $raw, $required, $required));
+
+            return;
+        }
+
+        $this->add('npm', self::OK, 'verze '.$raw);
     }
 
     /**

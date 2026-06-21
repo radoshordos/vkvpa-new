@@ -1058,8 +1058,9 @@ Ověří:
 - **Zapisovatelnost a oprávnění adresářů** (`storage`, `bootstrap/cache`) –
   reálným zápisem sondy (spolehlivější než `is_writable`); chybějící/nezapisovatelný
   adresář je FAIL, world-writable `777` je WARN; v detailu navrhne konkrétní `chown`.
-- **Node.js** – verze `>= 22` (WARN), potřeba pro build frontendu při `composer
-  deploy` (`npm run build`); za běhu aplikace nutný není.
+- **Node.js / npm** – verze (`node >= 22`, `npm >= 9`; WARN), potřeba pro build
+  frontendu při `composer deploy` (`npm ci` + `npm run build`); za běhu aplikace
+  nutné nejsou.
 - **Admin účet** a **ochranu Adminer**.
 
 Vrací nenulový kód při blokujícím (FAIL) nálezu – proto je zařazen i jako
