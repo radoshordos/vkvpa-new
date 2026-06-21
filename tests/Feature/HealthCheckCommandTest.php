@@ -61,8 +61,10 @@ class HealthCheckCommandTest extends TestCase
         $command = $this->artisan('app:health-check');
         $this->assertInstanceOf(PendingCommand::class, $command);
 
+        // Pozn.: substringy nesmí padnout na stejný řádek tabulky – expectsOutputToContain
+        // páruje každý s jedním zápisem, takže např. „PHP“ + „rozšíření“ by se na řádku
+        // „PHP rozšíření“ navzájem požraly. Volíme proto nepřekrývající se řetězce.
         $command
-            ->expectsOutputToContain('PHP')
             ->expectsOutputToContain('rozšíření')
             ->expectsOutputToContain('Node.js')
             ->expectsOutputToContain('npm')

@@ -448,7 +448,7 @@ final class HealthCheckCommand extends Command
     {
         if (function_exists('posix_geteuid') && function_exists('posix_getpwuid')) {
             $info = posix_getpwuid(posix_geteuid());
-            if (is_array($info) && isset($info['name']) && is_string($info['name']) && $info['name'] !== '') {
+            if (is_array($info) && $info['name'] !== '') {
                 return $info['name'];
             }
         }
