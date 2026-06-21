@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Process;
 use Throwable;
 
 /**
@@ -15,7 +16,8 @@ use Throwable;
  *
  * Ověří kritické předpoklady běhu (PHP verze + rozšíření, APP_KEY, práva .env,
  * debug, HTTPS/session, DB, fronta, mail, symlink úložiště, oprávnění
- * zapisovatelných adresářů, admin účet) a vypíše přehlednou tabulku. Vrací
+ * zapisovatelných adresářů, Node.js pro build, admin účet) a vypíše přehlednou
+ * tabulku. Vrací
  * nenulový exit kód, pokud narazí na blokující (FAIL) nález – vhodné zařadit
  * do nasazovacího pipeline.
  *
@@ -52,6 +54,7 @@ final class HealthCheckCommand extends Command
         $this->checkContact();
         $this->checkStorageLink();
         $this->checkWritablePaths();
+        $this->checkNode();
         $this->checkAdminUser();
         $this->checkAdminer();
 
@@ -339,6 +342,42 @@ final class HealthCheckCommand extends Command
         }
 
         $this->add('Oprávnění adresářů', self::OK, count($paths).' adresářů zapisovatelných procesem „'.$owner.'“');
+    }
+
+    /**
+     * Node.js – `composer deploy` staví frontend přímo na serveru (`npm ci` +
+     * `npm run build`, vite), což vyžaduje Node >= 22. Za běhu aplikace Node
+     * nutný není, proto je nález jen WARN (neblokuje), ale upozorní na chybějící
+     * nebo zastaralou verzi, na které by build selhal.
+     */
+    private function checkNode(): void
+    {
+        $required = 22;
+
+        try {
+            $result = Process::run('node --version');
+        } catch (Throwable $e) {
+            $this->add('Node.js', self::WARN, 'nelze spustit node: '.$e->getMessage().' – potřeba pro build frontendu při `composer deploy`');
+
+            return;
+        }
+
+        if (! $result->successful()) {
+            $this->add('Node.js', self::WARN, 'node nenalezen v PATH – potřeba (>= '.$required.') pro build frontendu při `composer deploy` (`npm run build`); za běhu aplikace nutný není');
+
+            return;
+        }
+
+        $raw = trim($result->output());
+        $major = (int) ltrim(explode('.', $raw)[0], 'vV');
+
+        if ($major < $required) {
+            $this->add('Node.js', self::WARN, sprintf('verze %s < %d – `npm run build` (vite) může selhat; aktualizuj Node na >= %d', $raw, $required, $required));
+
+            return;
+        }
+
+        $this->add('Node.js', self::OK, 'verze '.$raw);
     }
 
     /**
