@@ -12,8 +12,8 @@
 <h1>{{ __('pages.vizualizer.heading') }}</h1>
 <p class="max-w-prose text-sm text-muted">{{ __('pages.vizualizer.intro') }}</p>
 
-{{-- Vysvětlení a nahrávací zóna pod sebou. --}}
-<div class="mt-4 max-w-2xl">
+{{-- Vysvětlení a nahrávací zóna pod sebou, na celou šířku stránky. --}}
+<div class="mt-4">
     {{-- Srozumitelné vysvětlení, co se s deníkem stane (před nahráním). --}}
     <x-alert type="info" class="mb-4">
         <strong class="block">{{ __('pages.vizualizer.info_title') }}</strong>
