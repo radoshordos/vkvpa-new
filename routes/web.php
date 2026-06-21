@@ -69,6 +69,9 @@ Route::get('/mail-image', [MailImageController::class, 'show'])->name('mail.imag
 
 // Diskuse k závodnímu kolu
 Route::get('/diskuse', [DiskuseController::class, 'index'])->name('diskuse.index');
+// Servírování fotek z DB (dvousegmentové cesty stojí před wildcard /diskuse/{kolo}).
+Route::get('/diskuse/foto/{foto}', [DiskuseController::class, 'foto'])->name('diskuse.foto');
+Route::get('/diskuse/foto/{foto}/nahled', [DiskuseController::class, 'nahled'])->name('diskuse.foto.nahled');
 Route::get('/diskuse/{kolo}', [DiskuseController::class, 'show'])->name('diskuse.show');
 Route::post('/diskuse/{kolo}', [DiskuseController::class, 'store'])->middleware('throttle:diskuse')->name('diskuse.store');
 

@@ -19,7 +19,9 @@ return new class extends Migration
             $table->string('znacka', 20);
             $table->string('jmeno', 100)->nullable();
             $table->text('text');
-            $table->string('foto', 255)->nullable();
+            // Fotografie už nejsou na disku jako jediná cesta v tomto sloupci –
+            // ukládají se binárně do podřízené tabulky `diskuse_foto` (1:N),
+            // takže jich může být víc na jeden příspěvek.
             $table->string('ip', 45)->nullable();
             $table->timestamp('created_at')->useCurrent();
 

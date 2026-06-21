@@ -6,8 +6,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use Override;
 
@@ -19,12 +21,12 @@ use Override;
  * @property string $znacka
  * @property string|null $jmeno
  * @property string $text
- * @property string|null $foto Cesta v disku 'public', např. diskuse/130/abc.jpg
  * @property string|null $ip
  * @property Carbon $created_at
  * @property-read VkvpaKola $kolo
+ * @property-read Collection<int, PrispevekFoto> $fotky
  */
-#[Fillable(['kolo_id', 'znacka', 'jmeno', 'text', 'foto', 'ip'])]
+#[Fillable(['kolo_id', 'znacka', 'jmeno', 'text', 'ip'])]
 #[Table(name: 'diskuse', key: 'id')]
 class Prispevek extends Model
 {
@@ -34,6 +36,12 @@ class Prispevek extends Model
     public function kolo(): BelongsTo
     {
         return $this->belongsTo(VkvpaKola::class, 'kolo_id');
+    }
+
+    /** @return HasMany<PrispevekFoto, $this> */
+    public function fotky(): HasMany
+    {
+        return $this->hasMany(PrispevekFoto::class, 'prispevek_id')->orderBy('poradi');
     }
 
     #[Override]

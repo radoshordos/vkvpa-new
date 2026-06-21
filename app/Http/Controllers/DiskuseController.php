@@ -6,11 +6,16 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StorePrispevekRequest;
 use App\Models\Prispevek;
+use App\Models\PrispevekFoto;
 use App\Models\VkvpaKola;
+use App\Support\ObrazekProcessor;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\Response;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use RuntimeException;
 
 class DiskuseController extends Controller
 {
@@ -31,6 +36,7 @@ class DiskuseController extends Controller
     public function show(VkvpaKola $kolo): View
     {
         $prispevky = Prispevek::where('kolo_id', $kolo->id)
+            ->with('fotky:id,prispevek_id,sirka,vyska,poradi') // bez BLOBů
             ->orderBy('created_at')
             ->get();
 
@@ -53,37 +59,87 @@ class DiskuseController extends Controller
 
     public function store(StorePrispevekRequest $request, VkvpaKola $kolo): RedirectResponse
     {
-        $foto = null;
-        if ($request->hasFile('foto') && $request->file('foto')?->isValid()) {
-            // Náhodný server-side název; přípona se odvodí z detekovaného obsahu,
-            // nikoli z klientem zaslaného jména souboru. Tím odpadá riziko vložení
-            // útočníkem zvolené přípony i lomítka ze značky do cesty.
-            $foto = $request->file('foto')->store('diskuse/'.$kolo->id, 'public');
+        /** @var array<int, UploadedFile> $soubory */
+        $soubory = array_values(array_filter(
+            $request->file('fotky', []),
+            static fn (UploadedFile $f): bool => $f->isValid(),
+        ));
+
+        $processor = ObrazekProcessor::create();
+
+        try {
+            $zpracovane = [];
+            foreach ($soubory as $poradi => $soubor) {
+                $path = $soubor->getRealPath();
+                if ($path === false) {
+                    continue;
+                }
+                $data = $processor->zpracuj($path);
+                $data['poradi'] = $poradi;
+                $zpracovane[] = $data;
+            }
+        } catch (RuntimeException) {
+            return back()
+                ->withInput($request->except('fotky'))
+                ->withErrors(['fotky' => 'Některý z obrázků se nepodařilo zpracovat. Zkuste prosím jiný soubor.']);
         }
 
-        Prispevek::create([
-            'kolo_id' => $kolo->id,
-            'znacka' => $request->string('znacka')->value(),
-            'jmeno' => $request->filled('jmeno') ? $request->string('jmeno')->trim()->value() : null,
-            'text' => $request->string('text')->trim()->value(),
-            'foto' => $foto,
-            'ip' => $request->ip(),
-        ]);
+        DB::transaction(function () use ($request, $kolo, $zpracovane): void {
+            $prispevek = Prispevek::create([
+                'kolo_id' => $kolo->id,
+                'znacka' => $request->string('znacka')->value(),
+                'jmeno' => $request->filled('jmeno') ? $request->string('jmeno')->trim()->value() : null,
+                'text' => $request->string('text')->trim()->value(),
+                'ip' => $request->ip(),
+            ]);
+
+            foreach ($zpracovane as $foto) {
+                $prispevek->fotky()->create($foto);
+            }
+        });
 
         return redirect()
             ->route('diskuse.show', $kolo->id)
             ->with('success', 'Příspěvek byl přidán.');
     }
 
+    /**
+     * Servíruje hlavní obrázek z DB. Obsah je neměnný (adresovaný ID), proto
+     * dlouhá cache.
+     */
+    public function foto(PrispevekFoto $foto): Response
+    {
+        return $this->obrazek($foto->mime, $foto->data);
+    }
+
+    /** Servíruje náhled (thumbnail) z DB. */
+    public function nahled(PrispevekFoto $foto): Response
+    {
+        return $this->obrazek($foto->mime, $foto->nahled);
+    }
+
+    private function obrazek(string $mime, string $data): Response
+    {
+        $etag = '"'.md5($data).'"';
+
+        return response($data, 200, [
+            'Content-Type' => $mime,
+            'Content-Length' => (string) strlen($data),
+            'Cache-Control' => 'public, max-age=31536000, immutable',
+            'ETag' => $etag,
+        ]);
+    }
+
     public function destroy(Prispevek $prispevek): RedirectResponse
     {
         $koloId = $prispevek->kolo_id;
 
-        if ($prispevek->foto) {
-            Storage::disk('public')->delete($prispevek->foto);
-        }
-
-        $prispevek->delete();
+        // Fotky v `diskuse_foto` zmizí přes FK cascade (a v testovacím SQLite,
+        // kde FK nejsou, je smaže relace ručně).
+        DB::transaction(function () use ($prispevek): void {
+            $prispevek->fotky()->delete();
+            $prispevek->delete();
+        });
 
         return redirect()
             ->route('diskuse.show', $koloId)

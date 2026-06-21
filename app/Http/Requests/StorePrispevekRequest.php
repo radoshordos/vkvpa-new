@@ -4,11 +4,18 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Support\ObrazekProcessor;
 use Illuminate\Foundation\Http\FormRequest;
 use Override;
 
 class StorePrispevekRequest extends FormRequest
 {
+    /** Maximální počet fotek na jeden příspěvek. */
+    public const MAX_FOTEK = 5;
+
+    /** Maximální velikost jednoho nahraného souboru v kB (před zmenšením). */
+    private const MAX_KB = 12288; // 12 MB
+
     public function authorize(): bool
     {
         return true;
@@ -27,13 +34,22 @@ class StorePrispevekRequest extends FormRequest
      */
     public function rules(): array
     {
+        // HEIC/HEIF zvládneme dekódovat jen s Imagickem – bez něj je do povolených
+        // formátů nezařazujeme, ať uživatel dostane srozumitelnou chybu hned.
+        $formaty = ['jpeg', 'jpg', 'png', 'gif', 'webp', 'avif'];
+        if (ObrazekProcessor::imagickKDispozici()) {
+            $formaty[] = 'heic';
+            $formaty[] = 'heif';
+        }
+
         return [
             'znacka' => ['required', 'string', 'max:20', 'regex:/^[A-Z0-9\/]+$/'],
             'jmeno' => ['nullable', 'string', 'max:100'],
             'text' => ['required', 'string', 'min:2', 'max:2000'],
-            // Pouze rastrové formáty – SVG záměrně vyloučeno (může nést JavaScript
-            // a z veřejného úložiště by představovalo uložené XSS).
-            'foto' => ['nullable', 'mimes:jpeg,png,gif,webp', 'max:4096'],
+            'fotky' => ['nullable', 'array', 'max:'.self::MAX_FOTEK],
+            // Rastrové formáty – SVG záměrně vyloučeno (může nést JavaScript).
+            // Obrázky se navíc vždy překódují, takže se neukládá původní soubor.
+            'fotky.*' => ['file', 'mimes:'.implode(',', $formaty), 'max:'.self::MAX_KB],
         ];
     }
 
@@ -45,8 +61,10 @@ class StorePrispevekRequest extends FormRequest
             'znacka.regex' => 'Volací znak smí obsahovat pouze písmena, číslice a lomítko.',
             'text.required' => 'Text příspěvku je povinný.',
             'text.min' => 'Text příspěvku musí mít alespoň 2 znaky.',
-            'foto.mimes' => 'Soubor musí být obrázek (JPEG, PNG, GIF nebo WebP).',
-            'foto.max' => 'Obrázek může mít nejvýše 4 MB.',
+            'fotky.max' => 'Najednou lze nahrát nejvýše '.self::MAX_FOTEK.' fotek.',
+            'fotky.*.mimes' => 'Soubor musí být obrázek (JPEG, PNG, GIF, WebP, AVIF nebo HEIC).',
+            'fotky.*.max' => 'Každá fotka může mít nejvýše 12 MB.',
+            'fotky.*.file' => 'Nahraný soubor není platný.',
         ];
     }
 }

@@ -64,11 +64,19 @@
                     @endif
                 </div>
                 <p class="mt-2 whitespace-pre-wrap break-words">{{ $p->text }}</p>
-                @if ($p->foto)
-                    <div class="mt-3">
-                        <img src="{{ Storage::url($p->foto) }}"
-                             alt="Fotografie od {{ $p->znacka }}"
-                             class="max-h-72 rounded-lg object-cover shadow-sm">
+                @if ($p->fotky->isNotEmpty())
+                    <div class="mt-3 flex flex-wrap gap-2">
+                        @foreach ($p->fotky as $f)
+                            <a href="{{ route('diskuse.foto', $f->id) }}"
+                               class="block overflow-hidden rounded-lg shadow-sm"
+                               data-lightbox
+                               aria-label="{{ __('pages.diskuse.photo_open') }}">
+                                <img src="{{ route('diskuse.foto.nahled', $f->id) }}"
+                                     alt="Fotografie od {{ $p->znacka }}"
+                                     loading="lazy"
+                                     class="h-28 w-28 object-cover transition hover:opacity-90 sm:h-32 sm:w-32">
+                            </a>
+                        @endforeach
                     </div>
                 @endif
             </div>
@@ -120,10 +128,18 @@
         </div>
 
         <div class="field mb-0">
-            <label class="label" for="foto">{{ __('pages.diskuse.field_photo') }}</label>
-            <input id="foto" name="foto" type="file" accept="image/*"
-                   class="input @error('foto') input-err @enderror">
-            @error('foto')
+            <label class="label" for="fotky">{{ __('pages.diskuse.field_photo') }}</label>
+            <input id="fotky" name="fotky[]" type="file"
+                   accept="image/jpeg,image/png,image/gif,image/webp,image/avif,image/heic,image/heif"
+                   multiple
+                   class="input @error('fotky') input-err @enderror @error('fotky.*') input-err @enderror"
+                   data-foto-input data-max="{{ \App\Http\Requests\StorePrispevekRequest::MAX_FOTEK }}">
+            <p class="mt-1 text-xs text-muted">{{ __('pages.diskuse.photo_hint') }}</p>
+            <div id="foto-preview" class="mt-2 flex flex-wrap gap-2"></div>
+            @error('fotky')
+                <span class="field-error">{{ $message }}</span>
+            @enderror
+            @error('fotky.*')
                 <span class="field-error">{{ $message }}</span>
             @enderror
         </div>
@@ -196,5 +212,79 @@
 </script>
 @endpush
 @endif
+
+{{-- Lightbox + náhled vybraných fotek (pro všechny návštěvníky) --}}
+<div id="lb-overlay" role="dialog" aria-modal="true"
+     class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 p-4">
+    <img id="lb-img" src="" alt="" class="max-h-[90vh] max-w-full rounded-lg shadow-lg">
+    <button type="button" id="lb-close" aria-label="{{ __('pages.diskuse.photo_close') }}"
+            class="absolute right-4 top-4 rounded-full bg-white/90 px-3 py-1 text-lg font-bold text-ink">&times;</button>
+</div>
+
+@push('scripts')
+<script @cspNonce>
+(function () {
+    // --- Lightbox ---
+    var overlay = document.getElementById('lb-overlay');
+    var lbImg   = document.getElementById('lb-img');
+    var lbClose = document.getElementById('lb-close');
+
+    function openLb(src) {
+        lbImg.setAttribute('src', src);
+        overlay.classList.remove('hidden');
+        overlay.classList.add('flex');
+    }
+    function closeLb() {
+        overlay.classList.add('hidden');
+        overlay.classList.remove('flex');
+        lbImg.setAttribute('src', '');
+    }
+
+    document.querySelectorAll('a[data-lightbox]').forEach(function (a) {
+        a.addEventListener('click', function (e) {
+            e.preventDefault();
+            openLb(a.getAttribute('href'));
+        });
+    });
+    lbClose.addEventListener('click', closeLb);
+    overlay.addEventListener('click', function (e) { if (e.target === overlay) closeLb(); });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && !overlay.classList.contains('hidden')) closeLb();
+    });
+
+    // --- Náhled vybraných souborů ---
+    var input   = document.querySelector('[data-foto-input]');
+    var preview = document.getElementById('foto-preview');
+    if (input && preview) {
+        var max = parseInt(input.getAttribute('data-max'), 10) || 5;
+        var tooMany = @js(__('pages.diskuse.photo_too_many', ['max' => ':max']));
+
+        input.addEventListener('change', function () {
+            preview.innerHTML = '';
+            var files = Array.prototype.slice.call(input.files || []);
+
+            if (files.length > max) {
+                var warn = document.createElement('p');
+                warn.className = 'field-error';
+                warn.textContent = tooMany.replace(':max', String(max));
+                preview.appendChild(warn);
+                input.value = '';
+                return;
+            }
+
+            files.forEach(function (file) {
+                if (!file.type.indexOf || file.type.indexOf('image/') !== 0) { return; }
+                var url = URL.createObjectURL(file);
+                var img = document.createElement('img');
+                img.src = url;
+                img.className = 'h-20 w-20 rounded-lg object-cover shadow-sm';
+                img.onload = function () { URL.revokeObjectURL(url); };
+                preview.appendChild(img);
+            });
+        });
+    }
+}());
+</script>
+@endpush
 
 @endsection
