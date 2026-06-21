@@ -9,6 +9,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Process;
+use Symfony\Component\Console\Helper\Table;
 use Throwable;
 
 /**
@@ -60,7 +61,7 @@ final class HealthCheckCommand extends Command
         $this->checkAdminer();
 
         $this->newLine();
-        $this->table(['Kontrola', 'Stav', 'Detail'], $this->rows);
+        $this->renderTable();
 
         $this->newLine();
         $this->line('Pozn.: cron scheduler (<comment>schedule:run</comment>) a běžící <comment>queue:work</comment> nelze ověřit zevnitř – zkontroluj je na serveru zvlášť (viz README, sekce Nasazení do produkce).');
@@ -86,6 +87,35 @@ final class HealthCheckCommand extends Command
     private function add(string $name, string $status, string $detail): void
     {
         $this->rows[] = [$name, $status, $detail];
+    }
+
+    /**
+     * Vykreslí přehledovou tabulku: stav obarvený podle závažnosti a dlouhé
+     * detaily zalomené uvnitř sloupce (rámeček se nerozpadne). Víceřádkové
+     * detaily (oddělené `\n`) se vykreslí jako odrážky pod sebou.
+     */
+    private function renderTable(): void
+    {
+        $table = new Table($this->output);
+        $table->setHeaders(['Kontrola', 'Stav', 'Detail']);
+        $table->setColumnMaxWidth(2, 72);
+
+        foreach ($this->rows as $row) {
+            $table->addRow([$row[0], $this->colorStatus($row[1]), $row[2]]);
+        }
+
+        $table->render();
+    }
+
+    /** Stav obarvený dle závažnosti pro snadné vizuální skenování tabulky. */
+    private function colorStatus(string $status): string
+    {
+        return match ($status) {
+            self::OK => '<fg=green;options=bold>OK</>',
+            self::WARN => '<fg=yellow;options=bold>WARN</>',
+            self::FAIL => '<fg=red;options=bold>FAIL</>',
+            default => $status,
+        };
     }
 
     /**
@@ -324,8 +354,10 @@ final class HealthCheckCommand extends Command
             $this->add(
                 'Oprávnění adresářů',
                 self::FAIL,
-                'nelze zapisovat: '.implode(', ', $blocking)
-                    .' – nastav vlastníka na uživatele web serveru a práva (např. `chown -R '.$owner.':'.$owner.' storage bootstrap/cache && chmod -R 775 storage bootstrap/cache`)',
+                'nelze zapisovat:'."\n".$this->bullets($blocking)."\n"
+                    .'→ nastav vlastníka na uživatele web serveru a práva (např.'."\n"
+                    .'  `chown -R '.$owner.':'.$owner.' storage bootstrap/cache`'."\n"
+                    .'  `chmod -R 775 storage bootstrap/cache`)',
             );
 
             return;
@@ -335,8 +367,9 @@ final class HealthCheckCommand extends Command
             $this->add(
                 'Oprávnění adresářů',
                 self::WARN,
-                'zapisovatelné, ale world-writable (riziko na sdíleném hostingu): '.implode(', ', $worldWritable)
-                    .' – zúži na 775 (adresáře) / 664 (soubory), nikdy 777',
+                'zapisovatelné, ale world-writable (riziko na sdíleném hostingu):'."\n"
+                    .$this->bullets($worldWritable)."\n"
+                    .'→ zúži na 775 (adresáře) / 664 (soubory), nikdy 777',
             );
 
             return;
@@ -429,6 +462,17 @@ final class HealthCheckCommand extends Command
         }
 
         return $written;
+    }
+
+    /**
+     * Seznam položek jako odrážky pod sebou (jedna na řádek) pro víceřádkovou
+     * buňku tabulky – čitelnější než dlouhý výčet oddělený čárkami.
+     *
+     * @param  list<string>  $items
+     */
+    private function bullets(array $items): string
+    {
+        return implode("\n", array_map(static fn (string $i): string => '  • '.$i, $items));
     }
 
     /** Práva adresáře jako oktalový řetězec (poslední 4 číslice), např. „0775“. */
