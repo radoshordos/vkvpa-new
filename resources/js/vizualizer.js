@@ -5,32 +5,16 @@
 // window.__vizMap; geometrie je předpočítaná v PHP (Maidenhead).
 
 import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-import { addFullscreenControl } from './leaflet-fullscreen.js';
+import { createOsmMap } from './leaflet-osm-map.js';
+import { modeColor, modeLabel } from './leaflet-mode-colors.js';
+import { redrawMaidenheadGrid } from './maidenhead-grid.js';
 
 const cfg = window.__vizMap || {};
 const t = cfg.t || {};
 
-// Barvy dle druhu provozu (shodně s vizualizace.js): 1=SSB modrá, 2=CW oranžová.
-function modeColor(mode) {
-    if (mode === 1) return { stroke: '#1d4ed8', fill: '#60a5fa' };
-    if (mode === 2) return { stroke: '#b45309', fill: '#fbbf24' };
-    return { stroke: '#4b5563', fill: '#9ca3af' };
-}
-function modeLabel(mode) {
-    if (mode === 1) return 'SSB';
-    if (mode === 2) return 'CW';
-    return '?';
-}
-
 const mapEl = document.getElementById('viz-map');
 if (mapEl) {
-    const map = L.map('viz-map');
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '&copy; OpenStreetMap',
-    }).addTo(map);
-    addFullscreenControl(map);
+    const map = createOsmMap('viz-map');
 
     const bounds = [];
 
@@ -74,41 +58,8 @@ if (mapEl) {
     // Překresluje se podle výřezu mapy; názvy čtverců jen při rozumném zoomu.
     const gridLayer = L.layerGroup().addTo(map);
 
-    function bigSquareName(lng, lat) {
-        const a = 'A'.charCodeAt(0);
-        const fieldLng = Math.floor((lng + 180) / 20);
-        const fieldLat = Math.floor((lat + 90) / 10);
-        const sqLng = Math.floor(((lng + 180) % 20) / 2);
-        const sqLat = Math.floor((lat + 90) % 10);
-        return String.fromCharCode(a + fieldLng) + String.fromCharCode(a + fieldLat) + sqLng + sqLat;
-    }
-
     function redrawGrid() {
-        gridLayer.clearLayers();
-        const b = map.getBounds();
-        const zoom = map.getZoom();
-        const west = Math.floor(b.getWest() / 2) * 2;
-        const east = Math.ceil(b.getEast() / 2) * 2;
-        const south = Math.floor(b.getSouth());
-        const north = Math.ceil(b.getNorth());
-
-        for (let lat = south; lat <= north; lat++) {
-            L.polyline([[lat, west], [lat, east]], { color: '#000', weight: 1, opacity: 0.3 }).addTo(gridLayer);
-        }
-        for (let lng = west; lng <= east; lng += 2) {
-            L.polyline([[south, lng], [north, lng]], { color: '#000', weight: 1, opacity: 0.3 }).addTo(gridLayer);
-        }
-
-        if (zoom >= 5 && zoom <= 9) {
-            for (let lng = west; lng < east; lng += 2) {
-                for (let lat = south; lat < north; lat++) {
-                    L.marker([lat + 0.5, lng + 1], {
-                        icon: L.divIcon({ className: 'loc-label', html: bigSquareName(lng, lat), iconSize: null }),
-                        interactive: false,
-                    }).addTo(gridLayer);
-                }
-            }
-        }
+        redrawMaidenheadGrid(map, gridLayer);
     }
 
     map.on('moveend zoomend', redrawGrid);

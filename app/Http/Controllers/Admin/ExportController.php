@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Edihead;
 use App\Models\VkvpaKola;
+use App\Support\FileName;
 use Illuminate\Http\Response;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -73,10 +74,8 @@ class ExportController extends Controller
         }
 
         foreach ($deniky as $d) {
-            $base = $d->p_call !== '' ? $d->p_call : 'denik';
-            $safe = preg_replace('/[^A-Za-z0-9\-]/', '_', $base) ?? 'denik';
             // ID v názvu zajišťuje unikátnost i při shodné značce.
-            $entry = sprintf('%s-%d.edi', $safe, $d->id);
+            $entry = sprintf('%s-%d.edi', FileName::sanitize($d->p_call), $d->id);
 
             $zip->addFromString($entry, (string) $d->src);
         }

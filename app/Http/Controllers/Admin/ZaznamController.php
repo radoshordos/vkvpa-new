@@ -8,9 +8,8 @@ use App\Http\Controllers\Controller;
 use App\Jobs\RankRoundJob;
 use App\Models\VkvpaData;
 use App\Services\Scoring\ScoringService;
+use App\Support\AdminLogger;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 
 /**
  * Admin akce nad jedním záznamem výsledkové listiny (řádkem hlášení `vkvpa_data`).
@@ -72,12 +71,11 @@ class ZaznamController extends Controller
             RankRoundJob::dispatchSync($idKola);
         }
 
-        Log::info($prevzato ? 'admin.zaznam.prevzit' : 'admin.zaznam.odebrat-prevzeti', [
+        AdminLogger::log($prevzato ? 'admin.zaznam.prevzit' : 'admin.zaznam.odebrat-prevzeti', [
             'zaznam_id' => $zaznam->id,
             'znacka' => $znacka,
             'kolo_id' => $idKola,
             'vyhodnoceno' => $vyhodnoceno,
-            'admin' => Auth::user()?->name,
         ]);
 
         $zprava = match (true) {
@@ -110,11 +108,10 @@ class ZaznamController extends Controller
         $zaznam->delete();
         RankRoundJob::dispatchSync($idKola);
 
-        Log::info('admin.zaznam.smazat', [
+        AdminLogger::log('admin.zaznam.smazat', [
             'zaznam_id' => $zaznam->id,
             'znacka' => $znacka,
             'kolo_id' => $idKola,
-            'admin' => Auth::user()?->name,
         ]);
 
         return redirect()

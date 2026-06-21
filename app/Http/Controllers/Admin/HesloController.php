@@ -7,8 +7,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\HesloRequest;
 use App\Models\User;
+use App\Support\AdminLogger;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 /** Administrace – změna vlastního hesla přihlášeného administrátora. */
@@ -29,7 +29,7 @@ class HesloController extends Controller
         // Cast 'password' => 'hashed' na modelu zajistí zahašování.
         $user->update(['password' => $request->string('heslo')->value()]);
 
-        Log::info('admin.heslo.update', ['user' => $user->name]);
+        AdminLogger::log('admin.heslo.update', ['user' => $user->name]);
 
         return redirect()
             ->route('heslo.edit')

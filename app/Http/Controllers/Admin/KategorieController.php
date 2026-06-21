@@ -7,9 +7,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\KategorieRequest;
 use App\Models\VkvpaKategorie;
+use App\Support\AdminLogger;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 /** Administrace – Kategorie. */
@@ -56,10 +55,9 @@ class KategorieController extends Controller
     {
         $kategorie->update($request->toModel());
 
-        Log::info('admin.kategorie.update', [
+        AdminLogger::log('admin.kategorie.update', [
             'kategorie_id' => $kategorie->id,
             'nazev' => $kategorie->nazev,
-            'admin' => Auth::user()?->name,
         ]);
 
         return redirect()

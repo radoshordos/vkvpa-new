@@ -185,8 +185,7 @@ final class ScoringService
         // Doménově existuje jen jedno kolo v měsíci (3. neděle); kdyby jich
         // omylem bylo víc, řazení zaručí deterministickou volbu nejstaršího.
         $id = VkvpaKola::query()
-            ->whereYear('datum_konani', $year)
-            ->whereMonth('datum_konani', $month)
+            ->inYearMonth($year, $month)
             ->orderBy('datum_konani')
             ->value('id');
 
