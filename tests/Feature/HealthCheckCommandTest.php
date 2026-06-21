@@ -55,6 +55,22 @@ class HealthCheckCommandTest extends TestCase
             ->assertExitCode(0);
     }
 
+    /** PHP runtime a rozšíření se reportují a na podporované verzi/rozšířeních neblokují. */
+    public function test_reports_php_runtime(): void
+    {
+        $command = $this->artisan('app:health-check');
+        $this->assertInstanceOf(PendingCommand::class, $command);
+
+        // Pozn.: substringy nesmí padnout na stejný řádek tabulky – expectsOutputToContain
+        // páruje každý s jedním zápisem, takže např. „PHP“ + „rozšíření“ by se na řádku
+        // „PHP rozšíření“ navzájem požraly. Volíme proto nepřekrývající se řetězce.
+        $command
+            ->expectsOutputToContain('rozšíření')
+            ->expectsOutputToContain('Node.js')
+            ->expectsOutputToContain('npm')
+            ->assertExitCode(0);
+    }
+
     /** Existující admin se v přehledu rozpozná. */
     public function test_reports_admin_account(): void
     {
