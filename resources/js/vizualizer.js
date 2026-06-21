@@ -144,3 +144,8 @@ document.addEventListener('click', function (e) {
         done();
     }
 });
+
+// Tap/klik do pole s odkazem označí celý text (na mobilu snadné zkopírování ručně).
+document.addEventListener('focusin', function (e) {
+    if (e.target.matches && e.target.matches('[data-share-url]')) e.target.select();
+});

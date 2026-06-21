@@ -63,13 +63,16 @@ window.__vizMap = {
     @endforeach
 </section>
 
-{{-- Trvalý sdílecí odkaz --}}
-<div class="card mt-4 flex flex-wrap items-center gap-3 p-3">
-    <span class="text-sm text-muted">{{ __('pages.vizualizer.share') }}</span>
-    <input type="text" readonly value="{{ route('vizualizer.show', ['token' => $token]) }}"
-           class="min-w-0 flex-1 rounded border border-line bg-surface px-2 py-1 text-sm" data-share-url>
-    <button type="button" class="btn" data-copy-share
-            data-copied="{{ __('pages.vizualizer.copied') }}">{{ __('pages.vizualizer.copy') }}</button>
+{{-- Trvalý sdílecí odkaz – mobile-first: popisek nad polem, vstup + tlačítko
+     vždy v jednom řádku (vstup se zužuje, tlačítko se nezalomí). --}}
+<div class="card mt-4 p-3">
+    <label for="viz-share" class="mb-1.5 block text-sm text-muted">{{ __('pages.vizualizer.share') }}</label>
+    <div class="flex items-center gap-2">
+        <input id="viz-share" type="text" readonly value="{{ route('vizualizer.show', ['token' => $token]) }}"
+               class="min-w-0 flex-1 rounded border border-line bg-surface px-2 py-1.5 text-sm" data-share-url>
+        <button type="button" class="btn shrink-0 whitespace-nowrap" data-copy-share
+                data-copied="{{ __('pages.vizualizer.copied') }}">{{ __('pages.vizualizer.copy') }}</button>
+    </div>
 </div>
 
 @endsection
