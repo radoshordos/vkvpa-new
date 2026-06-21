@@ -10,6 +10,7 @@ return [
 
     'contest_periods' => 'Kola závodu',
     'log_import' => 'Odeslat deník',
+    'vizualizer' => 'EDI Visualizer',
     'interim_results' => 'Průběžné výsledky',
     'results' => 'Výsledková listina',
     'year_results' => 'Roční výsledky',

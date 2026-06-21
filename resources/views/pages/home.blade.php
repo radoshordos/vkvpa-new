@@ -215,14 +215,24 @@
 </div>
 @endif
 
-{{-- ── Rychlé přístupy ────────────────────────────────────────────── --}}
-<div class="section-head">{{ __('pages.home.quick_links') }}</div>
+{{-- ── EDI (odeslání deníku + vizualizace) ───────────────────────────── --}}
+<div class="section-head">{{ __('pages.home.section_edi') }}</div>
 <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
     <a href="{{ route('hlaseni.index') }}" class="card block p-4 text-center hover:border-brand hover:bg-surface-2 transition-colors">
         <div class="text-2xl mb-1">📋</div>
         <div class="text-sm font-semibold">{{ __('pages.home.ql_submit') }}</div>
         <div class="text-xs text-muted mt-0.5">{{ __('pages.home.ql_submit_desc') }}</div>
     </a>
+    <a href="{{ route('vizualizer.create') }}" class="card block p-4 text-center hover:border-brand hover:bg-surface-2 transition-colors">
+        <div class="text-2xl mb-1">🗺️</div>
+        <div class="text-sm font-semibold">{{ __('pages.home.ql_viz') }}</div>
+        <div class="text-xs text-muted mt-0.5">{{ __('pages.home.ql_viz_desc') }}</div>
+    </a>
+</div>
+
+{{-- ── Výsledky ──────────────────────────────────────────────────────── --}}
+<div class="section-head">{{ __('pages.home.quick_links') }}</div>
+<div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
     <a href="{{ route('pribezne_vysledky') }}" class="card block p-4 text-center hover:border-brand hover:bg-surface-2 transition-colors">
         <div class="text-2xl mb-1">📊</div>
         <div class="text-sm font-semibold">{{ __('pages.home.ql_interim') }}</div>

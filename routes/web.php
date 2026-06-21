@@ -20,6 +20,7 @@ use App\Http\Controllers\HlaseniController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MailImageController;
 use App\Http\Controllers\SitemapController;
+use App\Http\Controllers\VizualizerController;
 use App\Http\Controllers\VysledkyController;
 use Illuminate\Support\Facades\Route;
 
@@ -89,6 +90,16 @@ Route::get('/edi/{head}/vizualizace', [EdiVizualizaceController::class, 'show'])
 // Porovnání dvou deníků (hráč vs. hráč) z téhož kola a téže kategorie –
 // mapa rozdílů v protistanicích + překryvný graf průběhu skóre.
 Route::get('/edi/{head}/porovnani', [EdiPorovnaniController::class, 'show'])->name('edi.porovnani');
+
+// Samostatný EDI Visualizer (veřejný) – kdokoli nahraje svůj EDI deník
+// a dostane trvalý sdílecí odkaz s mapou spojení (inspirováno původním
+// opencontest.org/edi). Nic se nepřidává do závodních dat – soubor se uloží
+// pod náhodným tokenem a při zobrazení se naparsuje znovu.
+// Nahrávání řeší Livewire komponenta App\Livewire\VizualizerUpload (drag-and-drop,
+// shodně s podáním hlášení) – samostatná POST routa proto není potřeba.
+Route::get('/vizualizer', [VizualizerController::class, 'create'])->name('vizualizer.create');
+Route::get('/vizualizer/{token}', [VizualizerController::class, 'show'])
+    ->where('token', '[A-Za-z0-9]{16}')->name('vizualizer.show');
 
 // --- Administrace (chráněno middleware z Fáze 4) ---
 Route::middleware('admin')->group(function (): void {

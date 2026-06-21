@@ -21,6 +21,7 @@ return [
             'heading' => 'nav.group_logs',
             'items' => [
                 ['key' => 'hlaseni.index',    'trans' => 'nav.log_import'],
+                ['key' => 'vizualizer.create', 'trans' => 'nav.vizualizer'],
                 ['key' => 'deniky.index',     'trans' => 'admin.nav_logs',      'admin' => true],
                 ['key' => 'export.index',     'trans' => 'admin.nav_export',    'admin' => true],
                 ['key' => 'uzivatele.index',  'trans' => 'admin.nav_users',     'admin' => true],

@@ -4,6 +4,38 @@ declare(strict_types=1);
 
 return [
 
+    'vizualizer' => [
+        'title' => 'EDI Visualizer – mapa spojení z deníku',
+        'meta' => 'Nahrajte EDI deník a získejte sdílecí mapu svých spojení – paprsky z domácího QTH, vzdálenosti, azimuty a souhrn.',
+        'heading' => 'EDI Visualizer',
+        'intro' => 'Nahrajte svůj EDI deník a získáte trvalý odkaz s mapou všech spojení. Nic se nepřidává do závodu – slouží jen k prohlížení a sdílení vašeho deníku.',
+        'upload_label' => 'EDI deník (*.edi)',
+        'upload_hint' => 'Musí být ve formátu EDI (REG1TEST), max. :max kB.',
+        'submit' => 'Vykreslit mapu',
+        'err_required' => 'Vyberte EDI soubor.',
+        'err_ext' => 'Soubor musí mít příponu .edi nebo .txt.',
+        'err_max' => 'Soubor je příliš velký (max. :max kB).',
+        'err_not_found' => 'Mapa nebyla nalezena – odkaz je neplatný nebo už vypršel.',
+        'share' => 'Trvalý odkaz na tuto mapu:',
+        'copy' => 'Kopírovat',
+        'copied' => 'Zkopírováno',
+        'new' => 'Nahrát další deník',
+        'sum_call' => 'Volačka',
+        'sum_loc' => 'Lokátor',
+        'sum_band' => 'Pásmo',
+        'sum_qso' => 'Spojení (QSO)',
+        'sum_avg' => 'Průměrná vzdálenost',
+        'sum_max' => 'Nejdelší spojení (ODX)',
+        'sum_loc_unique' => 'Unikátních lokátorů',
+        'sum_sq_unique' => 'Unikátních velkých čtverců',
+        // Popisky vykreslované v JS (vizualizer.js)
+        'js' => [
+            'pts' => 'b.',
+            'azimuth' => 'azimut',
+            'home' => 'domácí QTH',
+        ],
+    ],
+
     'home' => [
         'title' => 'Výsledky a online hlášení VKV závodů',
         'heading' => 'VKV Provozní aktiv',
@@ -33,9 +65,12 @@ return [
         'live_heading' => 'Průběžné výsledky',
         'live_refresh_in' => 'Aktualizace za',
         'live_no_entries' => 'Zatím nebyla přijata žádná hlášení.',
-        'quick_links' => 'Sekce',
+        'quick_links' => 'Výsledky',
+        'section_edi' => 'EDI',
         'ql_submit' => 'Odeslat deník',
         'ql_submit_desc' => 'Nahrát EDI soubor',
+        'ql_viz' => 'EDI Visualizer',
+        'ql_viz_desc' => 'Mapa spojení z deníku',
         'ql_interim' => 'Průběžné výsledky',
         'ql_interim_desc' => 'Aktuální pořadí v kole',
         'ql_results' => 'Výsledková listina',
