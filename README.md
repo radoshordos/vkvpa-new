@@ -30,6 +30,7 @@ Webový systém pro správu a vyhodnocování závodů v pásmu VKV (Very High F
 - [Emaily](#emaily)
 - [Plánované příkazy](#plánované-příkazy)
 - [Nasazení do produkce](#nasazení-do-produkce)
+- [Úložiště v produkci](#úložiště-v-produkci)
 - [PWA](#pwa)
 - [CI/CD](#cicd)
 
@@ -84,10 +85,13 @@ Webový systém pro správu a vyhodnocování závodů v pásmu VKV (Very High F
 - **Porovnání deníků** – samostatná stránka hráč vs. hráč (`/edi/{head}/porovnani`): mapa rozdílů v protistanicích, překryvný graf průběhu skóre, tempo obou stanic a směrová růžice; jen deníky z téhož kola a kategorie, soupeřův deník až po uzávěrce kola
 - **Diskuse** – komentáře k závodním kolům (throttle ochrana, moderace adminem)
 - **Admin dashboard** – statistiky sezóny, trend účasti, distribuce kategorií, top 10 stanic
-- **Admin rozhraní** – CRUD kol a kategorií, převzetí (schválení)/smazání záznamu (vyhodnocení kola probíhá automaticky), EDI debug, hromadný import
+- **Admin rozhraní** – CRUD kol a kategorií, převzetí (schválení)/smazání záznamu (vyhodnocení kola probíhá automaticky), EDI debug, hromadný import, změna vlastního hesla
+- **Export EDI deníků** – administrátorský přehled kol s počtem uložených deníků a stažení všech EDI deníků kola jako ZIP archiv
 - **Údaje závodníků** – administrátorský přehled kontaktních a osobních údajů (jméno, e-mail, telefon) z hlášení, s filtrem dle kola a fulltextovým hledáním; citlivá data přístupná jen adminovi
 - **EDI debug** – analýza bodování bez uložení (pro adminy)
+- **EDI Visualizer** – samostatný veřejný nástroj (`/vizualizer`, bez přihlášení): kdokoli nahraje EDI deník a dostane trvalý sdílecí odkaz s mapou spojení a souhrnem; nic se neukládá do závodních dat
 - **REST API** – veřejné JSON API s výsledky a OpenAPI/Swagger dokumentací
+- **SEO** – dynamicky generované `robots.txt` a `sitemap.xml` (správná doména z requestu)
 - **Přepínání jazyka** – čeština / angličtina (ukládáno do session)
 - **Emailové notifikace** – potvrzení závodníkovi + notifikace rozhodcům (odesílání přes frontu)
 - **Token přihlášení** – jednorázový odkaz s platností 5 dní
@@ -487,18 +491,24 @@ VkvpaKola ──► Prispevek[]
 | GET | `/vysledky/pribezne` | `VysledkyController@pribezne` | `pribezne_vysledky` |
 | GET | `/vysledky/rocni` | `VysledkyController@rocni` | `rocni_vysledky` |
 | GET | `/diskuse` | `DiskuseController@index` | `diskuse.index` |
+| GET | `/diskuse/foto/{foto}` | `DiskuseController@foto` | `diskuse.foto` |
+| GET | `/diskuse/foto/{foto}/nahled` | `DiskuseController@nahled` | `diskuse.foto.nahled` |
 | GET | `/diskuse/{kolo}` | `DiskuseController@show` | `diskuse.show` |
 | POST | `/diskuse/{kolo}` | `DiskuseController@store` | `diskuse.store` |
 | GET | `/edi/{head}/soubor` | `EdiController@zobrazit` | `edi.soubor` |
 | GET | `/edi/{head}/soubor-redukovany` | `EdiController@zobrazitRedukovany` | `edi.soubor.redukovany` |
 | GET | `/edi/{head}/vizualizace` | `EdiVizualizaceController@show` | `edi.vizualizace` |
 | GET | `/edi/{head}/porovnani` | `EdiPorovnaniController@show` | `edi.porovnani` |
+| GET | `/vizualizer` | `VizualizerController@create` | `vizualizer.create` |
+| GET | `/vizualizer/{token}` | `VizualizerController@show` | `vizualizer.show` |
 | GET | `/lang/{locale}` | closure | `lang.switch` |
 | GET | `/login` | `AuthController@showLoginForm` | `login` |
 | POST | `/login` | `AuthController@login` | – |
 | GET | `/login/token/{kod}` | `AuthController@loginViaToken` | `login.token` |
 | POST | `/logout` | `AuthController@logout` | `logout` |
 | GET | `/mail-image` | `MailImageController@show` | `mail.image` |
+| GET | `/robots.txt` | `SitemapController@robots` | `robots` |
+| GET | `/sitemap.xml` | `SitemapController@sitemap` | `sitemap` |
 
 ### Admin trasy (middleware: `admin`)
 
@@ -517,7 +527,11 @@ VkvpaKola ──► Prispevek[]
 | POST | `/admin/edi-debug` | `EdiDebugController@analyze` | `edi.debug.store` |
 | GET | `/admin/edi-debug/{head}` | `EdiDebugController@show` | `edi.debug.show` |
 | GET | `/admin/deniky` | `DenikyController@index` | `deniky.index` |
+| GET | `/admin/export` | `ExportController@index` | `export.index` |
+| GET | `/admin/export/{kolo}` | `ExportController@download` | `export.download` |
 | GET | `/admin/uzivatele` | `UzivateleController@index` | `uzivatele.index` |
+| GET | `/admin/heslo` | `HesloController@edit` | `heslo.edit` |
+| PATCH | `/admin/heslo` | `HesloController@update` | `heslo.update` |
 | GET | `/admin/kategorie` | `KategorieController@index` | `kategorie.index` |
 | GET | `/admin/kategorie/create` | `KategorieController@create` | `kategorie.create` |
 | POST | `/admin/kategorie` | `KategorieController@store` | `kategorie.store` |
@@ -1077,6 +1091,49 @@ zvlášť (zevnitř je health-check ověřit nedokáže).
 - [ ] `composer deploy` proběhl bez chyb (včetně `app:health-check`)
 - [ ] Adminer: vyplněné `ADMINER_AUTH_USER`/`ADMINER_AUTH_PASSWORD` (nebo Adminer z webrootu odstranit)
 - [ ] Smoke test: login → upload EDI → výsledková listina → mapy → kontrola doručeného e-mailu
+
+---
+
+## Úložiště v produkci
+
+### Disky a co se kam ukládá
+
+`config/filesystems.php` definuje dva lokální disky (S3 je jen šablona, v produkci nepoužitý):
+
+| Disk | Root | Veřejně dostupný? | Co se tam ukládá |
+|------|------|--------------------|-------------------|
+| `local` | `storage/app/private` | Ne (jen přes appku) | EDI deníky **EDI Visualizeru** (`vizualizer/{token}.edi`) – soubor nahraný kýmkoli na `/vizualizer` |
+| `public` | `storage/app/public` | Ano, přes symlink `public/storage` (`php artisan storage:link`) | Momentálně nic standardně neukládá appka sama; symlink musí existovat, jinak `app:health-check` nahlásí FAIL |
+
+EDI deníky **závodních hlášení** (`/hlaseni`) se neukládají jako soubory – jejich obsah jde přímo do sloupce `edihead.src` v databázi (proto je i export po kolech v `ExportController` realizován dotazem do DB, ne čtením ze `storage/`).
+
+Mimo `storage/app` appka píše ještě do:
+
+| Adresář | Obsah | Růst |
+|---------|-------|------|
+| `storage/logs` | denní log soubory (`LOG_CHANNEL=stack` → `daily`) | rotace po `LOG_DAILY_DAYS` (výchozí 14 dní) – staré soubory Laravel maže sám |
+| `storage/framework/views` | zkompilované Blade šablony | stabilizuje se, neroste neomezeně |
+| `storage/framework/sessions` | session soubory – **jen pokud `SESSION_DRIVER=file`** | doporučený produkční driver je `database` (viz `.env.example`), pak se zde nic neukládá |
+| `storage/framework/cache` | souborová cache – **jen pokud `CACHE_STORE=file`** | doporučený driver je `database` (`.env.example`), pak adresář zůstává prázdný |
+| `bootstrap/cache` | zkompilovaná konfigurace/routy/views (`composer deploy`) | stabilní, přepisuje se při každém nasazení |
+
+### Neomezený růst: `storage/app/private/vizualizer/`
+
+EDI Visualizer (`/vizualizer`) je **veřejný a bez přihlášení** – kdokoli nahraje EDI a appka uloží soubor pod náhodným 16místným tokenem navždy, beze smazání. Žádný plánovaný příkaz tento adresář nečistí (na rozdíl od logů, které Laravel sám rotuje). Pro produkci to znamená:
+
+- Sledovat velikost adresáře (`du -sh storage/app/private/vizualizer`), zejména pokud je nástroj veřejně inzerovaný/odkazovaný
+- Každý soubor je nanejvýš `EDI_MAX_SIZE_KB` (výchozí 500 KB) – i při tisících uploadů jde řádově o stovky MB, ale bez čištění poroste neomezeně
+- Pokud se ukáže potřeba retence, řešením je vlastní `php artisan schedule` příkaz mazající soubory starší než N dní (analogicky k `kola:finalize-evaluated`) – v repu zatím neexistuje
+
+### Zálohování
+
+Appka sama zálohy neřeší – na serveru je potřeba pokrýt:
+
+- **Databázi** (`vkvpa_*`, `edihead`/`edilines`, `users`) – obsahuje veškerá závodní data a je jediný zdroj pravdy pro EDI obsah hlášení (žádná kopie na disku)
+- **`storage/app/private/vizualizer`** – jediná uživatelská data mimo databázi; ztráta adresáře znamená nefunkční staré sdílecí odkazy Visualizeru (samotná appka tím nepřijde o nic důležitého)
+- `.env` (hesla, `APP_KEY`) zálohovat zvlášť a bezpečně – ztráta `APP_KEY` znehodnotí šifrovaná session data a zahashovaná pole
+
+`storage/logs`, `storage/framework/*`, `bootstrap/cache` zálohu nepotřebují – jde o odvozená/dočasná data, regenerují se sama (`composer deploy`, běh appky).
 
 ---
 
