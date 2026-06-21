@@ -1016,6 +1016,29 @@ kroku, nebo použij respawn řádek v `/etc/inittab`.
 * * * * * php /var/www/artisan schedule:run >> /dev/null 2>&1
 ```
 
+### 4. Oprávnění adresářů (jinak aplikace hodí 500 / „Permission denied“)
+
+Po nahrání na hosting (typicky přes FTP/SCP) skončí soubory pod vlastníkem
+nahrávajícího účtu, jenže zapisuje do nich **uživatel web serveru** (PHP-FPM /
+Apache, často `www-data`). Pokud se nesrovná vlastník a práva, Laravel
+nezaloží session, view cache ani log a stránka spadne na
+`failed to open stream: Permission denied`. Zapisovatelné musí být:
+
+- `storage/` (zejména `framework/{sessions,views,cache}`, `logs`, `app/{private,public}`)
+- `bootstrap/cache/`
+
+```bash
+# nastav vlastníka na uživatele web serveru a rozumná práva
+chown -R www-data:www-data storage bootstrap/cache
+find storage bootstrap/cache -type d -exec chmod 775 {} \;
+find storage bootstrap/cache -type f -exec chmod 664 {} \;
+```
+
+Na **sdíleném hostingu**, kde nelze měnit vlastníka, použij skupinová práva
+(`chmod -R g+rwX`, případně `setgid` bit na adresářích, aby nové soubory dědily
+skupinu). **Nikdy nepoužívej `chmod 777`** – `app:health-check` to hlásí jako
+bezpečnostní WARN. Ostatní (kód, `public/`) drž jen pro čtení.
+
 ### Předspouštěcí kontrola
 
 ```bash
@@ -1023,16 +1046,20 @@ php artisan app:health-check
 ```
 
 Ověří APP_KEY, `APP_DEBUG`, HTTPS/session, připojení k DB, frontu (tabulka
-`jobs`), mail, kontaktní e-mail, symlink úložiště, existenci admin účtu a
-ochranu Adminer. Vrací nenulový kód při blokujícím (FAIL) nálezu – proto je
-zařazen i jako poslední krok `composer deploy`. Cron a běžící worker je nutné
-ověřit na serveru zvlášť (zevnitř je health-check ověřit nedokáže).
+`jobs`), mail, kontaktní e-mail, symlink úložiště, **zapisovatelnost a oprávnění
+adresářů** (`storage`, `bootstrap/cache` – chybějící/nezapisovatelný adresář je
+FAIL, world-writable `777` je WARN; v detailu navrhne konkrétní `chown`),
+existenci admin účtu a ochranu Adminer. Vrací nenulový kód při blokujícím (FAIL)
+nálezu – proto je zařazen i jako poslední krok `composer deploy`. Cron a běžící
+worker je nutné ověřit na serveru zvlášť (zevnitř je health-check ověřit
+nedokáže).
 
 ### Kontrolní seznam před prvním spuštěním
 
 - [ ] `.env`: `APP_ENV=production`, `APP_DEBUG=false`, vygenerovaný `APP_KEY`, `APP_URL` na https doménu
 - [ ] DB přihlašovací údaje, silné `ADMIN_PASS`, SMTP (`MAIL_HOST/USERNAME/PASSWORD`), `CONTACT_MAIL`/`CONTACT_NAME`
 - [ ] HTTPS certifikát, `SESSION_SECURE_COOKIE=true`, `SESSION_ENCRYPT=true`
+- [ ] Zapisovatelné `storage/` a `bootstrap/cache/` pod uživatelem web serveru (`chown` + `chmod 775`, ne 777)
 - [ ] Běžící queue worker a cron `schedule:run`
 - [ ] `composer deploy` proběhl bez chyb (včetně `app:health-check`)
 - [ ] Adminer: vyplněné `ADMINER_AUTH_USER`/`ADMINER_AUTH_PASSWORD` (nebo Adminer z webrootu odstranit)
