@@ -12,6 +12,9 @@ use Illuminate\Support\Facades\Log;
  */
 final class AdminLogger
 {
+    /**
+     * @param  array<string, mixed>  $context
+     */
     public static function log(string $action, array $context = []): void
     {
         Log::info($action, [...$context, 'admin' => Auth::user()?->name]);
