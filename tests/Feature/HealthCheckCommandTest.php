@@ -44,6 +44,17 @@ class HealthCheckCommandTest extends TestCase
             ->assertExitCode(0);
     }
 
+    /** Kontrola oprávnění adresářů se objeví v přehledu a u zapisovatelného storage nehlásí blok. */
+    public function test_reports_directory_permissions(): void
+    {
+        $command = $this->artisan('app:health-check');
+        $this->assertInstanceOf(PendingCommand::class, $command);
+
+        $command
+            ->expectsOutputToContain('Oprávnění adresářů')
+            ->assertExitCode(0);
+    }
+
     /** Existující admin se v přehledu rozpozná. */
     public function test_reports_admin_account(): void
     {
