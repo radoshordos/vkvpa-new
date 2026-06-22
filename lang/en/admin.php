@@ -15,6 +15,7 @@ return [
     'nav_export' => 'EDI export (ZIP)',
     'nav_users' => 'Entrant details',
     'nav_api_docs' => 'API documentation',
+    'nav_logs_viewer' => 'Application logs',
     'nav_password' => 'Change password',
 
     // Login
@@ -166,6 +167,19 @@ return [
     'debug_tag_own' => 'own square',
     'debug_tag_new_mult' => '★ new multiplier',
     'debug_tag_dup' => 'duplicate',
+
+    // Application logs
+    'logy_title' => 'Application logs – VKV PA Admin',
+    'logy_heading' => 'Application logs',
+    'logy_desc' => 'Entries from the storage/logs directory. Pick a file and inspect individual entries including the stack trace.',
+    'logy_empty' => 'No log files exist yet.',
+    'logy_no_entries' => 'The selected log contains no entries.',
+    'logy_too_large' => 'The log is too large to display in the browser (download the file directly from the server).',
+    'logy_file' => 'File',
+    'logy_stack' => 'Show stack trace',
+    'logy_col_level' => 'Level',
+    'logy_col_date' => 'Time',
+    'logy_col_text' => 'Message',
 
     // Importy
     'importy_title' => 'Bulk import – VKV PA Admin',

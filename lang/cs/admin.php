@@ -15,6 +15,7 @@ return [
     'nav_export' => 'Export EDI (ZIP)',
     'nav_users' => 'Údaje závodníků',
     'nav_api_docs' => 'API dokumentace',
+    'nav_logs_viewer' => 'Logy aplikace',
     'nav_password' => 'Změna hesla',
 
     // Login
@@ -166,6 +167,19 @@ return [
     'debug_tag_own' => 'vlastní čtverec',
     'debug_tag_new_mult' => '★ nový násobič',
     'debug_tag_dup' => 'duplikát',
+
+    // Logy aplikace
+    'logy_title' => 'Logy aplikace – Administrace VKV PA',
+    'logy_heading' => 'Logy aplikace',
+    'logy_desc' => 'Záznamy z adresáře storage/logs. Vyber soubor a prohlédni si jednotlivé záznamy včetně stack trace.',
+    'logy_empty' => 'Zatím neexistují žádné log soubory.',
+    'logy_no_entries' => 'Vybraný log neobsahuje žádné záznamy.',
+    'logy_too_large' => 'Log je příliš velký na zobrazení v prohlížeči (stáhni soubor přímo ze serveru).',
+    'logy_file' => 'Soubor',
+    'logy_stack' => 'Zobrazit stack trace',
+    'logy_col_level' => 'Úroveň',
+    'logy_col_date' => 'Čas',
+    'logy_col_text' => 'Zpráva',
 
     // Importy
     'importy_title' => 'Hromadný import – Administrace VKV PA',

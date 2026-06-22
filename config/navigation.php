@@ -27,7 +27,6 @@ return [
                 ['key' => 'uzivatele.index',  'trans' => 'admin.nav_users',     'admin' => true],
                 ['key' => 'importy.index',    'trans' => 'admin.nav_imports',   'admin' => true],
                 ['key' => 'edi.debug.create', 'trans' => 'admin.nav_edi_debug', 'admin' => true],
-                ['key' => 'heslo.edit',       'trans' => 'admin.nav_password',  'admin' => true],
             ],
         ],
         [
@@ -46,6 +45,13 @@ return [
                 ['key' => 'kola.admin.index', 'trans' => 'admin.nav_rounds',     'admin' => true],
                 ['key' => 'kategorie.index',  'trans' => 'admin.nav_categories', 'admin' => true],
                 ['key' => 'diskuse.index',    'trans' => 'nav.discussion'],
+            ],
+        ],
+        [
+            'heading' => 'nav.group_admin',
+            'items' => [
+                ['key' => 'logy.index',  'trans' => 'admin.nav_logs_viewer', 'admin' => true],
+                ['key' => 'heslo.edit',  'trans' => 'admin.nav_password',    'admin' => true],
             ],
         ],
     ],
