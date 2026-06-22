@@ -31,6 +31,16 @@
             @endforeach
         </select>
     </div>
+    @if ($isAdmin)
+        <div class="field mb-0">
+            <label class="label" for="prevzeti">{{ __('pages.vysledky.filter_prevzeti') }}</label>
+            <select id="prevzeti" name="prevzeti" class="select w-auto">
+                <option value="all" @selected(($prevzeti ?? 'all') === 'all')>{{ __('pages.vysledky.prevzeti_all') }}</option>
+                <option value="yes" @selected(($prevzeti ?? 'all') === 'yes')>{{ __('pages.vysledky.prevzeti_yes') }}</option>
+                <option value="no" @selected(($prevzeti ?? 'all') === 'no')>{{ __('pages.vysledky.prevzeti_no') }}</option>
+            </select>
+        </div>
+    @endif
     <div class="field mb-0">
         <label class="label" for="hledat">{{ __('pages.vysledky.filter_search') }}</label>
         <input id="hledat" type="text" name="hledat" value="{{ $hledat }}" placeholder="Callsign / Locator…" class="input w-48">
@@ -156,6 +166,7 @@
         document.getElementById('kolo').addEventListener('change', function () { filterForm.submit(); });
         document.getElementById('qrp').addEventListener('change', function () { filterForm.submit(); });
         document.getElementById('lp').addEventListener('change', function () { filterForm.submit(); });
+        document.getElementById('prevzeti')?.addEventListener('change', function () { filterForm.submit(); });
     }
 }());
 </script>
