@@ -38,7 +38,15 @@ class VysledkyController extends Controller
 
         // Veřejnost vidí jen převzaté (schvaleno=1); admin vidí i nepřevzaté
         // (meruňkové) záznamy, aby je mohl tlačítkem „P" převzít.
-        $jenPrevzate = ! (bool) ($request->user()?->is_admin);
+        $isAdmin = (bool) ($request->user()?->is_admin);
+
+        // Admin si může filtrovat podle stavu převzetí: all / yes / no.
+        // Neadmin tento filtr nemá – vidí vždy jen převzaté.
+        $prevzeti = $isAdmin
+            ? (in_array($request->string('prevzeti')->value(), ['yes', 'no'], true)
+                ? $request->string('prevzeti')->value()
+                : 'all')
+            : 'yes';
 
         $maxRows = VkvpaSettings::listaMaxRows();
 
@@ -47,7 +55,8 @@ class VysledkyController extends Controller
         if ($kolo) {
             $radky = VkvpaData::query()
                 ->where('id_kola', $kolo->id)
-                ->when($jenPrevzate, fn ($q) => $q->where('schvaleno', true))
+                ->when($prevzeti === 'yes', fn ($q) => $q->where('schvaleno', true))
+                ->when($prevzeti === 'no', fn ($q) => $q->where('schvaleno', false))
                 ->when($request->boolean('qrp'), fn ($q) => $q->onlyQrp())
                 ->when($request->boolean('lp'), fn ($q) => $q->onlyLp())
                 ->when($hledat !== '', fn ($q) => $q->where(
@@ -74,6 +83,7 @@ class VysledkyController extends Controller
             'radky' => $radky,
             'skokani' => $skokani,
             'hledat' => $hledat,
+            'prevzeti' => $prevzeti,
             'limitReached' => $radky->count() >= $maxRows,
             // Odkazy EDI/EDIR se neadminům skrývají jen u kola, jehož upload okno
             // právě běží (aby během příjmu neunikaly deníky soupeřů) – ne globálně
