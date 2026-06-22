@@ -7,13 +7,23 @@ namespace Database\Seeders;
 use App\Models\Prispevek;
 use App\Models\PrispevekFoto;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Schema;
 
 class DiskuseSeeder extends Seeder
 {
     public function run(): void
     {
-        PrispevekFoto::query()->truncate();
-        Prispevek::query()->truncate();
+        // MySQL odmítne TRUNCATE tabulky, na kterou míří cizí klíč
+        // (diskuse_foto → diskuse), i když je potomek prázdný – ořezání dat
+        // constraint neruší. Vypneme proto FK kontroly (shodně s JsonTableSeeder).
+        Schema::disableForeignKeyConstraints();
+
+        try {
+            PrispevekFoto::query()->truncate();
+            Prispevek::query()->truncate();
+        } finally {
+            Schema::enableForeignKeyConstraints();
+        }
 
         $prispevky = [
             [
