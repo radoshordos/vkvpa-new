@@ -82,6 +82,8 @@ return [
         'ql_results_desc' => 'Uzavřená kola',
         'ql_yearly' => 'Roční výsledky',
         'ql_yearly_desc' => 'Přehled za rok',
+        'ql_stats' => 'Statistiky',
+        'ql_stats_desc' => 'Mapy a rekordy kol',
 
         // Upload window info strip
         'upload_window_label' => 'Upload okno',
@@ -383,6 +385,90 @@ return [
             'title_timeline' => 'QSO v čase (15min intervaly)',
             'title_az' => 'Směry QSO (počet)',
         ],
+    ],
+
+    'stat' => [
+        'index_title' => 'Statistiky závodů VKV PA',
+        'index_meta' => 'Souhrnné statistiky, mapy a žebříčky jednotlivých vyhodnocených kol VKV Provozního aktivu.',
+        'index_heading' => 'Statistiky kol',
+        'index_subtitle' => 'Souhrny, mapy a rekordy jednotlivých vyhodnocených kol.',
+        'empty' => 'Zatím není vyhodnoceno žádné kolo.',
+        'card_participants' => '{0} žádní účastníci|{1} :count účastník|[2,4] :count účastníci|[5,*] :count účastníků',
+
+        'kolo_title' => 'Statistiky kola :kolo',
+        'kolo_meta' => 'Souhrn, mapa stanic a obsazených čtverců a žebříčky kola :kolo VKV PA.',
+        'kolo_heading' => 'Statistiky kola :kolo',
+
+        'stat_stations' => 'Stanic',
+        'stat_entries' => 'Záznamů',
+        'stat_qso' => 'QSO celkem',
+        'stat_points' => 'Bodů celkem',
+        'stat_squares' => 'Velkých čtverců',
+        'stat_odx' => 'ODX kola',
+
+        'map' => 'Mapa',
+        'layer_stations' => 'Stanice kola',
+        'layer_squares' => 'Obsazené čtverce',
+
+        'odx_heading' => 'Nejdelší spojení kola (ODX)',
+        'odx_line' => ':home (:homeloc) → :call (:wwl) · :dist km',
+
+        'top_points' => 'TOP body',
+        'top_qso' => 'TOP počet QSO',
+        'top_mult' => 'TOP násobiče',
+        'unit_points' => 'b.',
+        'unit_mult' => 'násob.',
+
+        'layer_participants' => 'Účastníci',
+        'mode_ssb' => 'SSB',
+        'mode_cw' => 'CW',
+        'country_other' => 'Ostatní',
+        'js_stations' => 'Stanice',
+
+        'chart_timeline' => 'Aktivita v čase (počet QSO)',
+        'chart_mody' => 'Druhy provozu',
+        'chart_kategorie' => 'Kategorie',
+        'chart_zeme' => 'Země (TOP)',
+        'chart_prefix' => 'Prefixy (TOP)',
+        'chart_trend' => 'Trend posledních kol',
+
+        'badge_ucast' => 'Rekord účasti!',
+        'badge_skore' => 'Rekord skóre!',
+        'badge_qso' => 'Rekord QSO!',
+        'badge_nasobice' => 'Rekord násobičů!',
+
+        'fact_active_square' => 'Nejaktivnější čtverec: :square (:count QSO)',
+        'fact_winner_margin' => 'Náskok vítěze :call: :margin b. před druhým',
+        'fact_debutants' => 'Nováčků v kole: :count',
+
+        'hall_heading' => 'Síň slávy (all-time)',
+        'hall_note' => 'Rekordy napříč všemi vyhodnocenými koly.',
+        'rec_odx' => 'Nejdelší spojení (ODX)',
+        'rec_ucast' => 'Rekordní účast',
+        'rec_skore' => 'Nejvyšší skóre',
+        'rec_qso' => 'Nejvíc QSO',
+        'rec_nasobice' => 'Nejvíc násobičů',
+        'rec_in_round' => 'kolo :kolo',
+        'rec_stations_unit' => 'stanic',
+
+        'layer_tok' => 'Tok mezi čtverci',
+
+        'stanice_title' => 'Profil stanice :call',
+        'stanice_meta' => 'Historie stanice :call ve VKV PA: účast v :kola kolech, body a pořadí.',
+        'stanice_subtitle' => 'Historie a výsledky napříč vyhodnocenými koly.',
+        's_rounds' => 'Kol',
+        's_points' => 'Body celkem',
+        's_qso' => 'QSO celkem',
+        's_best' => 'Nejlepší pořadí',
+        's_topscore' => 'Nejvyšší skóre',
+        's_trend' => 'Trend bodů',
+        's_history' => 'Historie účastí',
+        's_log' => 'deník →',
+        'col_round' => 'Kolo',
+        'col_category' => 'Kategorie',
+        'col_mult' => 'Násob.',
+        'col_points' => 'Body',
+        'col_place' => 'Pořadí',
     ],
 
 ];

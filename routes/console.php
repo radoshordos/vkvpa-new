@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Console\Commands\EnsureUpcomingRoundsCommand;
 use App\Console\Commands\FinalizeEvaluatedRoundsCommand;
+use App\Console\Commands\PrecomputeOdxCommand;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -27,5 +28,12 @@ Schedule::command(EnsureUpcomingRoundsCommand::class)
 // Spouští se každý den; ručně: `php artisan kola:finalize-evaluated`.
 Schedule::command(FinalizeEvaluatedRoundsCommand::class)
     ->daily()
+    ->withoutOverlapping()
+    ->skip(fn (): bool => app()->runningUnitTests());
+
+// Předpočítá all-time ODX pro síň slávy (drahý sken deníků). Týdně stačí –
+// mění se jen vyhodnocením nového kola. Ručně: `php artisan statistiky:precompute-odx`.
+Schedule::command(PrecomputeOdxCommand::class)
+    ->weekly()
     ->withoutOverlapping()
     ->skip(fn (): bool => app()->runningUnitTests());

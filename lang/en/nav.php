@@ -14,6 +14,7 @@ return [
     'interim_results' => 'Interim results',
     'results' => 'Results',
     'year_results' => 'Year results',
+    'statistics' => 'Statistics',
     'discussion' => 'Discussion',
     'rules_cz' => 'Contest rules',
     'history' => 'Contest history',
