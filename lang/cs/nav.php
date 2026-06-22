@@ -7,6 +7,7 @@ return [
     'group_logs' => 'Deníky',
     'group_results' => 'Výsledky',
     'group_contest' => 'Závod',
+    'group_admin' => 'Administrace',
 
     'contest_periods' => 'Kola závodu',
     'log_import' => 'Odeslat deník',

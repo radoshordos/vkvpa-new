@@ -7,6 +7,7 @@ return [
     'group_logs' => 'Logs',
     'group_results' => 'Results',
     'group_contest' => 'Contest',
+    'group_admin' => 'Administration',
 
     'contest_periods' => 'Contest periods',
     'log_import' => 'Submit log',

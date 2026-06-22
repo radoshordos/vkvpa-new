@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\HesloController;
 use App\Http\Controllers\Admin\ImportController;
 use App\Http\Controllers\Admin\KategorieController;
 use App\Http\Controllers\Admin\KolaAdminController;
+use App\Http\Controllers\Admin\LogyController;
 use App\Http\Controllers\Admin\UzivateleController;
 use App\Http\Controllers\Admin\ZaznamController;
 use App\Http\Controllers\DiskuseController;
@@ -157,6 +158,10 @@ Route::middleware('admin')->group(function (): void {
     // Změna vlastního hesla přihlášeného administrátora.
     Route::get('/admin/heslo', [HesloController::class, 'edit'])->name('heslo.edit');
     Route::patch('/admin/heslo', [HesloController::class, 'update'])->name('heslo.update');
+
+    // Prohlížeč logů aplikace (storage/logs) – parsuje laravel-log-viewer,
+    // vykresluje vlastní šablona (kvůli CSP, viz LogyController).
+    Route::get('/admin/logy', [LogyController::class, 'index'])->name('logy.index');
 
     Route::get('/admin/kategorie', [KategorieController::class, 'index'])->name('kategorie.index');
     Route::get('/admin/kategorie/create', [KategorieController::class, 'create'])->name('kategorie.create');
