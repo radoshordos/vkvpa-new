@@ -14,6 +14,7 @@ return [
     'interim_results' => 'Průběžné výsledky',
     'results' => 'Výsledková listina',
     'year_results' => 'Roční výsledky',
+    'statistics' => 'Statistiky',
     'discussion' => 'Diskuse',
     'rules_cz' => 'Pravidla závodu',
     'history' => 'Historie závodu',

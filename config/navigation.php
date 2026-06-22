@@ -36,6 +36,7 @@ return [
                 ['key' => 'pribezne_vysledky',  'trans' => 'nav.interim_results'],
                 ['key' => 'vysledkova_listina', 'trans' => 'nav.results'],
                 ['key' => 'rocni_vysledky',     'trans' => 'nav.year_results'],
+                ['key' => 'statistiky.index',   'trans' => 'nav.statistics'],
                 ['key' => 'admin.dashboard',    'trans' => 'admin.nav_dashboard', 'admin' => true],
             ],
         ],

@@ -87,6 +87,8 @@
                         <td>
                             @if ($isAdmin)
                                 <a href="{{ route('uzivatele.index', ['kolo' => $r->id_kola, 'q' => $r->znacka]) }}" class="link mono font-bold" title="{{ __('pages.vysledky.link_contact') }}">{{ $r->znacka }}</a>
+                            @elseif (preg_match('/^[A-Za-z0-9]+$/', $r->znacka))
+                                <a href="{{ route('statistiky.stanice', ['znacka' => $r->znacka]) }}" class="link mono font-bold" title="{{ __('pages.stat.stanice_subtitle') }}">{{ $r->znacka }}</a>
                             @else
                                 <span class="mono font-bold">{{ $r->znacka }}</span>
                             @endif

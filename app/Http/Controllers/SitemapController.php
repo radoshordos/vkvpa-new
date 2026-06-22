@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Edihead;
+use App\Models\VkvpaData;
 use App\Models\VkvpaKola;
 use Illuminate\Http\Response;
 
@@ -40,6 +41,7 @@ class SitemapController extends Controller
         $urls[] = ['loc' => route('hlaseni.index'), 'lastmod' => null, 'priority' => '0.8'];
         $urls[] = ['loc' => route('pribezne_vysledky'), 'lastmod' => null, 'priority' => '0.6'];
         $urls[] = ['loc' => route('rocni_vysledky'), 'lastmod' => null, 'priority' => '0.7'];
+        $urls[] = ['loc' => route('statistiky.index'), 'lastmod' => null, 'priority' => '0.6'];
         $urls[] = ['loc' => route('diskuse.index'), 'lastmod' => null, 'priority' => '0.5'];
 
         $kola = VkvpaKola::query()
@@ -54,6 +56,16 @@ class SitemapController extends Controller
                     'loc' => route('vysledkova_listina', ['kolo' => $kolo->id]),
                     'lastmod' => ($kolo->vyhodnoceno ?? $kolo->datum_uzaverky)->toAtomString(),
                     'priority' => '0.7',
+                ];
+            }
+
+            // Statistiky kola – jen vyhodnocená (detail je jinak 404), bohatý
+            // unikátní obsah (mapy, grafy, rekordy).
+            if ($kolo->vyhodnoceno !== null) {
+                $urls[] = [
+                    'loc' => route('statistiky.kolo', ['kolo' => $kolo->id]),
+                    'lastmod' => $kolo->vyhodnoceno->toAtomString(),
+                    'priority' => '0.6',
                 ];
             }
 
@@ -81,6 +93,22 @@ class SitemapController extends Controller
                     $urls[] = ['loc' => route('edi.vizualizace', $head->id), 'lastmod' => null, 'priority' => '0.5'];
                     $urls[] = ['loc' => route('edi.porovnani', $head->id), 'lastmod' => null, 'priority' => '0.3'];
                 });
+        }
+
+        // Profily stanic – jedna URL na značku se záznamem ve vyhodnoceném kole
+        // (jen alfanumerické značky, shodně s routou statistiky.stanice).
+        $znacky = VkvpaData::query()
+            ->join('vkvpa_kola', 'vkvpa_data.id_kola', '=', 'vkvpa_kola.id')
+            ->where('vkvpa_data.schvaleno', true)
+            ->whereNotNull('vkvpa_kola.vyhodnoceno')
+            ->distinct()
+            ->pluck('vkvpa_data.znacka');
+
+        foreach ($znacky as $znacka) {
+            if (! is_string($znacka) || preg_match('/^[A-Za-z0-9]+$/', $znacka) !== 1) {
+                continue;
+            }
+            $urls[] = ['loc' => route('statistiky.stanice', ['znacka' => $znacka]), 'lastmod' => null, 'priority' => '0.4'];
         }
 
         $xml = '<?xml version="1.0" encoding="UTF-8"?>'."\n"

@@ -82,6 +82,8 @@ return [
         'ql_results_desc' => 'Closed contest rounds',
         'ql_yearly' => 'Yearly results',
         'ql_yearly_desc' => 'Annual overview',
+        'ql_stats' => 'Statistics',
+        'ql_stats_desc' => 'Round maps and records',
 
         // Upload window info strip
         'upload_window_label' => 'Upload window',
@@ -381,6 +383,90 @@ return [
             'title_timeline' => 'QSOs over time (15-min intervals)',
             'title_az' => 'QSO directions (count)',
         ],
+    ],
+
+    'stat' => [
+        'index_title' => 'VHF PA contest statistics',
+        'index_meta' => 'Summary statistics, maps and leaderboards for each evaluated VKV PA contest round.',
+        'index_heading' => 'Round statistics',
+        'index_subtitle' => 'Summaries, maps and records of individual evaluated rounds.',
+        'empty' => 'No round has been evaluated yet.',
+        'card_participants' => '{0} no entrants|{1} :count entrant|[2,*] :count entrants',
+
+        'kolo_title' => 'Round :kolo statistics',
+        'kolo_meta' => 'Summary, station and square maps and leaderboards of round :kolo of VKV PA.',
+        'kolo_heading' => 'Round :kolo statistics',
+
+        'stat_stations' => 'Stations',
+        'stat_entries' => 'Entries',
+        'stat_qso' => 'Total QSOs',
+        'stat_points' => 'Total points',
+        'stat_squares' => 'Large squares',
+        'stat_odx' => 'Round ODX',
+
+        'map' => 'Map',
+        'layer_stations' => 'Round stations',
+        'layer_squares' => 'Occupied squares',
+
+        'odx_heading' => 'Longest QSO of the round (ODX)',
+        'odx_line' => ':home (:homeloc) → :call (:wwl) · :dist km',
+
+        'top_points' => 'TOP points',
+        'top_qso' => 'TOP QSO count',
+        'top_mult' => 'TOP multipliers',
+        'unit_points' => 'pts',
+        'unit_mult' => 'mult.',
+
+        'layer_participants' => 'Participants',
+        'mode_ssb' => 'SSB',
+        'mode_cw' => 'CW',
+        'country_other' => 'Other',
+        'js_stations' => 'Stations',
+
+        'chart_timeline' => 'Activity over time (QSO count)',
+        'chart_mody' => 'Modes',
+        'chart_kategorie' => 'Categories',
+        'chart_zeme' => 'Countries (TOP)',
+        'chart_prefix' => 'Prefixes (TOP)',
+        'chart_trend' => 'Recent rounds trend',
+
+        'badge_ucast' => 'Attendance record!',
+        'badge_skore' => 'Score record!',
+        'badge_qso' => 'QSO record!',
+        'badge_nasobice' => 'Multiplier record!',
+
+        'fact_active_square' => 'Most active square: :square (:count QSOs)',
+        'fact_winner_margin' => 'Winner :call led by :margin pts',
+        'fact_debutants' => 'Debutants this round: :count',
+
+        'hall_heading' => 'Hall of fame (all-time)',
+        'hall_note' => 'Records across all evaluated rounds.',
+        'rec_odx' => 'Longest QSO (ODX)',
+        'rec_ucast' => 'Record attendance',
+        'rec_skore' => 'Highest score',
+        'rec_qso' => 'Most QSOs',
+        'rec_nasobice' => 'Most multipliers',
+        'rec_in_round' => 'round :kolo',
+        'rec_stations_unit' => 'stations',
+
+        'layer_tok' => 'Flow between squares',
+
+        'stanice_title' => ':call station profile',
+        'stanice_meta' => ':call history in VKV PA: :kola rounds, points and placement.',
+        'stanice_subtitle' => 'History and results across evaluated rounds.',
+        's_rounds' => 'Rounds',
+        's_points' => 'Total points',
+        's_qso' => 'Total QSOs',
+        's_best' => 'Best placement',
+        's_topscore' => 'Highest score',
+        's_trend' => 'Points trend',
+        's_history' => 'Participation history',
+        's_log' => 'log →',
+        'col_round' => 'Round',
+        'col_category' => 'Category',
+        'col_mult' => 'Mult.',
+        'col_points' => 'Points',
+        'col_place' => 'Place',
     ],
 
 ];

@@ -19,7 +19,9 @@ use App\Http\Controllers\EdiVizualizaceController;
 use App\Http\Controllers\HlaseniController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MailImageController;
+use App\Http\Controllers\OgImageController;
 use App\Http\Controllers\SitemapController;
+use App\Http\Controllers\StatistikyController;
 use App\Http\Controllers\VizualizerController;
 use App\Http\Controllers\VysledkyController;
 use Illuminate\Support\Facades\Route;
@@ -63,6 +65,16 @@ Route::redirect('/kola', '/admin/kola');
 Route::get('/vysledky/pribezne/{kolo?}', [VysledkyController::class, 'pribezne'])->name('pribezne_vysledky')->whereNumber('kolo');
 Route::get('/vysledky/rocni', [VysledkyController::class, 'rocni'])->name('rocni_vysledky');
 Route::get('/vysledky/{kolo?}', [VysledkyController::class, 'listina'])->name('vysledkova_listina')->whereNumber('kolo');
+
+// Veřejné statistiky kol (souhrn, mapy, žebříčky) – zveřejňují se jen
+// vyhodnocená kola (detail jinak vrací 404). /statistiky je rozcestník.
+Route::get('/statistiky', [StatistikyController::class, 'index'])->name('statistiky.index');
+// Literální segment „stanice" musí stát PŘED wildcard {kolo}.
+Route::get('/statistiky/stanice/{znacka}', [StatistikyController::class, 'stanice'])
+    ->where('znacka', '[A-Za-z0-9]+')->name('statistiky.stanice');
+Route::get('/statistiky/{kolo}', [StatistikyController::class, 'kolo'])->name('statistiky.kolo')->whereNumber('kolo');
+// Dynamický sdílecí náhled (OG image) detailu kola.
+Route::get('/statistiky/{kolo}/og.png', [OgImageController::class, 'kolo'])->name('statistiky.kolo.og')->whereNumber('kolo');
 
 // Obfuskovaný e-mail jako obrázek (footer) – nahrazuje mail.php
 Route::get('/mail-image', [MailImageController::class, 'show'])->name('mail.image');

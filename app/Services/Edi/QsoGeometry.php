@@ -171,6 +171,23 @@ final class QsoGeometry
     }
 
     /**
+     * Stanice (protistanice) z celého kola pro veřejnou statistiku kola
+     * ({@see KoloStatistiky}). Stejná agregace jako
+     * {@see roundStations()}, ale adresovaná přímo `id_kola`, bez férovostní
+     * brány a bez vlastní cache – disclosure hlídá controller (vydává jen
+     * vyhodnocená kola) a cachování řeší KoloStatistiky kolem celého přehledu.
+     *
+     * @return list<array{lat: float, lon: float, call: string, wwl: string, count: int}>
+     */
+    public function stationsForKolo(int $koloId, int $minQso = 1): array
+    {
+        return $this->computeRoundStations(
+            Edihead::query()->where('id_kola', $koloId)->pluck('id')->all(),
+            $minQso,
+        );
+    }
+
+    /**
      * Výpočet vrstvy „všechny stanice z kola" nad danými deníky.
      *
      * @param  array<mixed>  $headIds  id deníků (`edihead.id`)

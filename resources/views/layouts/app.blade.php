@@ -28,7 +28,8 @@
         $metaDesc = trim($__env->yieldContent('meta_description')) ?: __('app.meta_description');
         $metaDescShort = trim($__env->yieldContent('meta_description')) ?: __('app.meta_description_short');
         $canonical = trim($__env->yieldContent('canonical')) ?: url()->current();
-        $ogImage = asset('og-image.png');
+        // Per-page override OG obrázku (@section('og_image')); jinak výchozí.
+        $ogImage = trim($__env->yieldContent('og_image')) ?: asset('og-image.png');
     @endphp
     <meta name="description" content="{{ $metaDesc }}">
     <meta name="keywords" content="HAMradio, OK, Activity contest, VKV, EDI, závod, provozní aktiv, radioamatér">
