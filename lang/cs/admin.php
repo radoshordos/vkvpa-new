@@ -15,6 +15,7 @@ return [
     'nav_export' => 'Export EDI (ZIP)',
     'nav_users' => 'Údaje závodníků',
     'nav_api_docs' => 'API dokumentace',
+    'nav_backup' => 'Záloha DB (SQL)',
     'nav_logs_viewer' => 'Logy aplikace',
     'nav_password' => 'Změna hesla',
 
@@ -94,6 +95,20 @@ return [
     'export_col_date' => 'Datum závodu',
     'export_col_count' => 'Deníků',
     'export_btn_zip' => 'Stáhnout ZIP',
+
+    // SQL záloha závodních tabulek
+    'zaloha_title' => 'Záloha databáze – Administrace VKV PA',
+    'zaloha_heading' => 'SQL záloha závodních tabulek',
+    'zaloha_desc' => 'Vyberte tabulky a stáhněte jeden <code>.sql</code> soubor se schématem i daty (plná, samostatně obnovitelná záloha). Dump je v MySQL dialektu a obnovíte jej běžným importem (např. <code>mysql &lt; soubor.sql</code> nebo přes Adminer).',
+    'zaloha_col_table' => 'Tabulka',
+    'zaloha_col_rows' => 'Řádků',
+    'zaloha_group_edi' => 'EDI deníky',
+    'zaloha_group_vysledky' => 'Výsledky a kola',
+    'zaloha_group_ostatni' => 'Přihlášení a diskuse',
+    'zaloha_select_all' => 'Vybrat vše',
+    'zaloha_gzip' => 'Komprimovat (gzip, .sql.gz)',
+    'zaloha_btn_download' => 'Stáhnout SQL zálohu',
+    'zaloha_hint' => 'Záloha obsahuje kompletní obsah vybraných tabulek včetně osobních údajů – uchovávejte ji bezpečně.',
 
     // Údaje závodníků (kontaktní / osobní data z vkvpa_data)
     'uzivatele_title' => 'Údaje závodníků – Administrace VKV PA',
