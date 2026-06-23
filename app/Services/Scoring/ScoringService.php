@@ -114,6 +114,7 @@ final class ScoringService
 
         $squares = $head->lines()
             ->inContestWindow()
+            ->completeExchange()
             ->when($den !== null, fn ($q) => $q->whereDate('qso_at', $den))
             ->get(['received_wwl'])
             ->map(static fn ($l): string => Maidenhead::bigSquare($l->receivedWwl))
@@ -139,7 +140,7 @@ final class ScoringService
         $squares = [];
         foreach ($log->qsos as $qso) {
             $square = Maidenhead::bigSquare($qso->receivedWwl);
-            if (QsoCountStatus::classify($qso->time, $qso->date, $square, $den, $from, $to)->isCounted()) {
+            if (QsoCountStatus::classify($qso->receivedRst, $qso->receivedQsoNumber, $qso->time, $qso->date, $square, $den, $from, $to)->isCounted()) {
                 $squares[] = $square;
             }
         }

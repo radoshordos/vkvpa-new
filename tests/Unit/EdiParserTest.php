@@ -204,21 +204,41 @@ class EdiParserTest extends TestCase
         $this->assertSame([], $log->lineErrors);
     }
 
-    public function test_tolerates_qso_line_with_empty_received_rst(): void
+    public function test_imports_qso_without_received_rst_for_later_invalidation(): void
     {
-        // FM spojení bez přijatého RST/čísla (reálné v historických denících):
-        // platné datum i body → řádek se tolerantně přeskočí, ale je-li to jediné
-        // QSO, zůstane stávající chování (žádné platné spojení → výjimka).
+        // Spojení bez přijatého RST/čísla (reálné v historických denících) se
+        // nově NAIMPORTUJE – jako neplatné se vyhodnotí až při bodování
+        // (QsoCountStatus::IncompleteExchange). Parser ho tedy nezahazuje.
         $edi = "[REG1TEST;1]\nPCall=OK2BUB\n[QSORecords;2]\n"
             ."260118;0801;OK2TVP;6;59;001;;;;JN99EQ;2;;N;N;\n"
             ."260118;0802;OK2VIR;1;59;002;59;003;;JN99DU;2;;;;\n[END;]\n";
 
         $log = new EdiParser()->parse($edi);
 
-        // Druhé (úplné) QSO projde, první (bez přijatého RST) se přeskočí.
-        $this->assertSame(1, $log->qsoCount());
-        $this->assertSame('OK2VIR', $log->qsos[0]->callSign);
-        $this->assertCount(1, $log->ignoredLines);
+        // Obě QSO se naparsují; první má prázdný přijatý RST i číslo.
+        $this->assertSame(2, $log->qsoCount());
+        $this->assertSame('OK2TVP', $log->qsos[0]->callSign);
+        $this->assertSame('', $log->qsos[0]->receivedRst);
+        $this->assertSame('', $log->qsos[0]->receivedQsoNumber);
+        $this->assertSame([], $log->ignoredLines);
+        $this->assertSame([], $log->lineErrors);
+    }
+
+    public function test_imports_incomplete_record_without_time_or_locator(): void
+    {
+        // Reálný řádek z VUSC/ok1dje: prázdný čas i lokátor, 0 bodů. Dřív
+        // odmítal celý import; nově se naimportuje (a při bodování zneplatní),
+        // takže zbytek deníku projde.
+        $edi = "[REG1TEST;1]\nPCall=OK1DJE\n[QSORecords;2]\n"
+            ."260117;;OK2BQZ;2;;030;;;;;0;;;;\n"
+            ."260117;0815;OK1ABC;1;59;002;59;003;;JN79AB;3;;;;\n[END;]\n";
+
+        $log = new EdiParser()->parse($edi);
+
+        $this->assertSame(2, $log->qsoCount());
+        $this->assertSame('', $log->qsos[0]->time);
+        $this->assertSame('', $log->qsos[0]->receivedWwl);
+        $this->assertSame([], $log->ignoredLines);
     }
 
     public function test_rejects_import_when_date_has_four_digit_year(): void

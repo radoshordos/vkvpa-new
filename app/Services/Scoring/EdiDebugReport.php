@@ -39,6 +39,7 @@ final readonly class EdiDebugReport
         public int $boduZaQso,
         public int $nasobice,
         public int $body,
+        public int $excludedIncomplete,
         public int $excludedOutOfWindow,
         public int $excludedWrongDate,
         public int $ownSquareCount,

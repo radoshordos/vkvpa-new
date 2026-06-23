@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\QsoCountStatus;
 use App\Enums\QsoMode;
 use App\Support\ContestWindow;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -108,6 +109,23 @@ class Ediline extends Model
         $query
             ->whereTime('qso_at', '>=', ContestWindow::fromSqlTime())
             ->whereTime('qso_at', '<=', ContestWindow::toSqlTime());
+    }
+
+    /**
+     * Scope: jen spojení s úplným přijatým kódem (přijatý RST i pořadové číslo).
+     * Spojení, kde stanice nepřijala report nebo soutěžní kód, je dle pravidel
+     * neplatné a do skóre se nezapočítává (shodně s
+     * {@see QsoCountStatus::IncompleteExchange}).
+     *
+     * @param  Builder<Ediline>  $query
+     */
+    #[Scope]
+    protected function completeExchange(Builder $query): void
+    {
+        $query
+            ->whereNotNull('received_qso_number')
+            ->whereNotNull('received_rst')
+            ->where('received_rst', '!=', '');
     }
 
     #[Override]

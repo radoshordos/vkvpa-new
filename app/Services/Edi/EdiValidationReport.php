@@ -28,6 +28,7 @@ final readonly class EdiValidationReport
         public array $duplicateCalls,
         public array $invalidLocators,
         public int $emptyLocators,
+        public int $incompleteExchange,
         public int $outOfWindow,
         public int $wrongDate,
         public int $declaredTotal,
@@ -48,6 +49,7 @@ final readonly class EdiValidationReport
         /** @var list<string> $invalid */
         $invalid = [];
         $empty = 0;
+        $incomplete = 0;
         $outOfWindow = 0;
         $wrongDate = 0;
 
@@ -62,9 +64,11 @@ final readonly class EdiValidationReport
                 $invalid[] = ($call !== '' ? $call : '?').': '.$wwl;
             }
 
-            // Stejné pořadí vyloučení jako ve scoreEdi: okno → den → prázdný WWL.
+            // Stejné pořadí vyloučení jako ve scoreEdi: neúplný příjem → okno →
+            // den → prázdný WWL.
             $square = Maidenhead::bigSquare($wwl);
-            match (QsoCountStatus::classify($qso->time, $qso->date, $square, $den, $from, $to)) {
+            match (QsoCountStatus::classify($qso->receivedRst, $qso->receivedQsoNumber, $qso->time, $qso->date, $square, $den, $from, $to)) {
+                QsoCountStatus::IncompleteExchange => $incomplete++,
                 QsoCountStatus::OutOfWindow => $outOfWindow++,
                 QsoCountStatus::WrongDate => $wrongDate++,
                 QsoCountStatus::EmptyWwl => $empty++,
@@ -81,6 +85,7 @@ final readonly class EdiValidationReport
             duplicateCalls: $duplicates,
             invalidLocators: $invalid,
             emptyLocators: $empty,
+            incompleteExchange: $incomplete,
             outOfWindow: $outOfWindow,
             wrongDate: $wrongDate,
             declaredTotal: $log->declaredTotal,
@@ -132,6 +137,10 @@ final readonly class EdiValidationReport
         if ($this->invalidLocators !== []) {
             $more = count($this->invalidLocators) >= 8 ? ' …' : '';
             $m[] = 'Neplatný WWL lokátor u spojení: '.implode(', ', $this->invalidLocators).$more.'. Zkontroluj deník – chybný lokátor zkresluje body i násobiče.';
+        }
+
+        if ($this->incompleteExchange > 0) {
+            $m[] = $this->incompleteExchange.' spojení bez přijatého reportu nebo pořadového čísla – podle pravidel jde o neplatná spojení (závodník nepřijal celý soutěžní kód), proto se nezapočítávají.';
         }
 
         if ($this->emptyLocators > 0) {
