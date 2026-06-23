@@ -115,8 +115,11 @@
 
     <div class="grid gap-x-5 sm:grid-cols-2">
         <x-field name="jmeno" :label="__('pages.hlaseni.field_name')" :value="$val('jmeno', $e->jmeno ?? '')" required />
-        <x-field name="email" :label="__('pages.hlaseni.field_contact')" :value="$val('email', $e->mail ?? '')" :required="(int) $val('edihead_id', $e->edihead_id ?? 0, 0) > 0" />
-        <x-field name="telefon" :label="__('pages.hlaseni.field_phone')" :value="$val('telefon', $e->telefon ?? '')" required />
+        {{-- U podání s EDI deníkem stačí vyplnit jeden kontakt (telefon NEBO
+             e-mail) – „alespoň jeden" hlídá server, proto tu žádné z polí není
+             jednotlivě required. U ručního podání zůstává telefon povinný. --}}
+        <x-field name="email" :label="__('pages.hlaseni.field_contact')" :value="$val('email', $e->mail ?? '')" />
+        <x-field name="telefon" :label="__('pages.hlaseni.field_phone')" :value="$val('telefon', $e->telefon ?? '')" :required="(int) $val('edihead_id', $e->edihead_id ?? 0, 0) === 0" />
     </div>
 
     <x-field name="poznamka" :label="__('pages.hlaseni.field_note')">

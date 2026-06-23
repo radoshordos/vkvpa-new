@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\Edihead;
 use App\Models\User;
 use App\Models\VkvpaData;
 use App\Models\VkvpaKategorie;
@@ -152,6 +153,55 @@ class HlaseniTest extends TestCase
         [$kolo, $kat] = $this->prepare();
         $payload = $this->payload($kolo->id, $kat->id);
         $payload['telefon'] = 'abc';
+
+        $this->post('/hlaseni', $payload)->assertSessionHasErrors('telefon');
+        $this->assertSame(0, VkvpaData::count());
+    }
+
+    /** Vytvoří EDI hlavičku navázanou na kolo (pro testy podání s deníkem). */
+    private function edihead(int $kolo): Edihead
+    {
+        return Edihead::create([
+            'id_kola' => $kolo, 't_date' => '20260315', 'p_call' => 'OK2KJT',
+            'p_wwlo' => 'JN99', 'p_band' => '144 MHz', 'r_name' => 'Jan',
+            'r_emai' => 'a@a.cz', 's_powe' => 100,
+        ]);
+    }
+
+    public function test_edi_report_with_only_phone_is_accepted(): void
+    {
+        [$kolo, $kat] = $this->prepare();
+        $payload = $this->payload($kolo->id, $kat->id);
+        $payload['edihead_id'] = $this->edihead($kolo->id)->id;
+        unset($payload['email']);
+
+        $this->post('/hlaseni', $payload)
+            ->assertRedirect(route('vysledkova_listina', ['kolo' => $kolo->id]));
+
+        $this->assertSame(1, VkvpaData::count());
+        $this->assertSame('', VkvpaData::firstOrFail()->mail);
+    }
+
+    public function test_edi_report_with_only_email_is_accepted(): void
+    {
+        [$kolo, $kat] = $this->prepare();
+        $payload = $this->payload($kolo->id, $kat->id);
+        $payload['edihead_id'] = $this->edihead($kolo->id)->id;
+        unset($payload['telefon']);
+
+        $this->post('/hlaseni', $payload)
+            ->assertRedirect(route('vysledkova_listina', ['kolo' => $kolo->id]));
+
+        $this->assertSame(1, VkvpaData::count());
+        $this->assertSame('', VkvpaData::firstOrFail()->telefon);
+    }
+
+    public function test_edi_report_without_any_contact_is_rejected(): void
+    {
+        [$kolo, $kat] = $this->prepare();
+        $payload = $this->payload($kolo->id, $kat->id);
+        $payload['edihead_id'] = $this->edihead($kolo->id)->id;
+        unset($payload['email'], $payload['telefon']);
 
         $this->post('/hlaseni', $payload)->assertSessionHasErrors('telefon');
         $this->assertSame(0, VkvpaData::count());

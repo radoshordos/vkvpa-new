@@ -342,16 +342,25 @@ class EdiGenerator extends Component
         $this->pcall = strtoupper(trim($this->pcall));
         $this->pwwlo = strtoupper(trim($this->pwwlo));
         $this->rname = trim($this->rname);
+        $this->rhbbs = trim($this->rhbbs);
         $this->rphon = trim($this->rphon);
 
-        $this->validate([
+        // U podání EDI deníku stačí jeden kontakt (telefon NEBO e-mail) – formát
+        // se ověřuje jen u vyplněného pole, „alespoň jeden" se kontroluje níže.
+        $rules = [
             'pcall' => ['required', 'string', 'max:10'],
             'pwwlo' => ['required', 'string', 'max:6', new ValidMaidenhead],
             'tdate' => ['required', 'date'],
             'rname' => ['required', 'string', 'max:60'],
-            'rhbbs' => ['required', 'email', 'max:250'],
-            'rphon' => ['required', 'string', 'max:20', new ValidPhone],
-        ], attributes: [
+        ];
+        if ($this->rhbbs !== '') {
+            $rules['rhbbs'] = ['email', 'max:250'];
+        }
+        if ($this->rphon !== '') {
+            $rules['rphon'] = ['string', 'max:20', new ValidPhone];
+        }
+
+        $this->validate($rules, attributes: [
             'pcall' => 'volací značka',
             'pwwlo' => 'lokátor',
             'tdate' => 'datum závodu',
@@ -359,6 +368,12 @@ class EdiGenerator extends Component
             'rhbbs' => 'e-mail',
             'rphon' => 'telefon',
         ]);
+
+        if ($this->rhbbs === '' && $this->rphon === '') {
+            $this->addError('rphon', 'Vyplňte alespoň jeden kontakt – telefon, nebo e-mail.');
+
+            return null;
+        }
 
         if (! $this->isSubmittable()) {
             $this->errorMessage = 'Rovnou podat jako hlášení lze jen deník na pásmu 144 MHz. Pro ostatní pásma deník stáhněte a nahrajte přes Odeslat deník.';
