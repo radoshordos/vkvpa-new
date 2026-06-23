@@ -11,6 +11,7 @@ return [
 
     'contest_periods' => 'Contest periods',
     'log_import' => 'Submit log',
+    'generator' => 'Log generator',
     'vizualizer' => 'EDI Visualizer',
     'interim_results' => 'Interim results',
     'results' => 'Results',

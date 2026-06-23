@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\UzivateleController;
 use App\Http\Controllers\Admin\ZaznamController;
 use App\Http\Controllers\DiskuseController;
 use App\Http\Controllers\EdiController;
+use App\Http\Controllers\EdiGeneratorController;
 use App\Http\Controllers\EdiPorovnaniController;
 use App\Http\Controllers\EdiVizualizaceController;
 use App\Http\Controllers\HlaseniController;
@@ -113,6 +114,11 @@ Route::get('/edi/{head}/porovnani', [EdiPorovnaniController::class, 'show'])->na
 // pod náhodným tokenem a při zobrazení se naparsuje znovu.
 // Nahrávání řeší Livewire komponenta App\Livewire\VizualizerUpload (drag-and-drop,
 // shodně s podáním hlášení) – samostatná POST routa proto není potřeba.
+// Ruční generátor EDI deníku (veřejný) – závodník zapíše hlavičku a spojení
+// ručně, vidí živý .edi text, skóre a mapu, a deník stáhne nebo (na 144 MHz)
+// rovnou podá jako hlášení. Inspirováno ok2kjt.net/edi.
+Route::get('/edi-generator', [EdiGeneratorController::class, 'create'])->name('edi.generator');
+
 Route::get('/vizualizer', [VizualizerController::class, 'create'])->name('vizualizer.create');
 Route::get('/vizualizer/{token}', [VizualizerController::class, 'show'])
     ->where('token', '[A-Za-z0-9]{16}')->name('vizualizer.show');

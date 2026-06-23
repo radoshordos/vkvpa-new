@@ -7,6 +7,12 @@
       "runtimeExecutable": "php",
       "runtimeArgs": ["artisan", "serve"],
       "port": 8000
+    },
+    {
+      "name": "docker",
+      "runtimeExecutable": "docker",
+      "runtimeArgs": ["compose", "up", "-d"],
+      "port": 8080
     }
   ]
 }
