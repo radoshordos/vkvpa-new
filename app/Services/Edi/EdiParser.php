@@ -44,6 +44,7 @@ final class EdiParser
         $qsos = [];
         $ignored = [];
         $lineErrors = [];
+        $dateTimeErrors = [];
         $declaredTotal = 0;
         $raw = '';
 
@@ -69,9 +70,17 @@ final class EdiParser
                         $ignored[] = $buf;
                     }
                 } elseif (preg_match(self::QSO_PATTERN, $upper, $m)) {
+                    // Datum a čas musí být přesně RRMMDD (6 číslic) a HHMM v UTC
+                    // (4 číslice). Jiný formát (typicky čtyřmístný rok RRRRMMDD) by
+                    // se jinak tiše naparsoval, spojení by spadlo mimo závodní okno
+                    // a obodovalo se nulou – proto raději celý import odmítneme.
+                    if (! self::hasValidDateTime($m[1], $m[2])) {
+                        $dateTimeErrors[] = 'QSO s '.$m[3].': datum „'.$m[1].'" / čas „'.$m[2]
+                            .'" není ve formátu RRMMDD / HHMM (UTC).';
+                    }
                     // Lokátor musí být platný Maidenhead: první 2 písmena A–R,
                     // číslice 0–9, subčtverec A–X. Jinak je QSO odmítnuto.
-                    if (preg_match('/^[A-R]{2}[0-9]{2}([A-X]{2})?$/', $m[10]) !== 1) {
+                    elseif (preg_match('/^[A-R]{2}[0-9]{2}([A-X]{2})?$/', $m[10]) !== 1) {
                         $lineErrors[] = 'QSO s '.$m[3].' odmítnuto: lokátor „'.$m[10]
                             .'" není platný Maidenhead (první 2 písmena musí být A–R, subčtverec A–X).';
                     } else {
@@ -96,6 +105,18 @@ final class EdiParser
                 $section = 'records';
                 $declaredTotal = (int) substr($buf, 12);
             }
+        }
+
+        // Datum/čas v nesprávném formátu → import odmítáme a vysvětlíme závodníkovi
+        // očekávaný tvar, ať deník opraví ve svém závodním programu.
+        if ($dateTimeErrors !== []) {
+            throw new EdiParseException(
+                'Datum nebo čas spojení není ve správném formátu. EDI deník musí mít u každého QSO '
+                .'datum ve tvaru RRMMDD (6 číslic, např. 240907 = 7. 9. 2024) a čas v UTC ve tvaru '
+                .'HHMM (4 číslice, např. 1445). Opravte deník ve svém závodním programu (častou '
+                .'příčinou je čtyřmístný rok ve tvaru RRRRMMDD) a nahrajte jej znovu.',
+                $dateTimeErrors,
+            );
         }
 
         // Žádné platné ani odmítnuté spojení, ač deník nějaká deklaruje → soubor
@@ -132,5 +153,23 @@ final class EdiParser
             lineErrors: $lineErrors,
             ignoredLines: $ignored,
         );
+    }
+
+    /**
+     * Datum musí být RRMMDD (6 číslic), čas HHMM v UTC (4 číslice) a dohromady
+     * musí dávat existující kalendářní datum a čas. Přetečení (13. měsíc, 25.
+     * hodina) {@see \DateTimeImmutable::createFromFormat()} tiše „převalí", proto
+     * navíc kontrolujeme getLastErrors(). Shodný formát používá EdiQso::combineDateTime().
+     */
+    private static function hasValidDateTime(string $date, string $time): bool
+    {
+        if (preg_match('/^[0-9]{6}$/', $date) !== 1 || preg_match('/^[0-9]{4}$/', $time) !== 1) {
+            return false;
+        }
+
+        \DateTimeImmutable::createFromFormat('!ymdHi', $date.$time, new \DateTimeZone('UTC'));
+        $errors = \DateTimeImmutable::getLastErrors();
+
+        return $errors === false || ($errors['warning_count'] === 0 && $errors['error_count'] === 0);
     }
 }

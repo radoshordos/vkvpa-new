@@ -44,7 +44,7 @@ enum QsoMode: int
             self::Mixed => 'SSB+CW',
             self::Am => 'AM',
             self::Fm => 'FM',
-            self::Mgm => 'MGM',
+            self::Mgm => 'RTTY/MGM',
             self::Sstv => 'SSTV',
             self::Atv => 'ATV',
             self::Other => '?',

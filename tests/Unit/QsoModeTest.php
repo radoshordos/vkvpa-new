@@ -37,7 +37,7 @@ class QsoModeTest extends TestCase
         $this->assertSame('SSB', QsoMode::Ssb->label());
         $this->assertSame('CW', QsoMode::Cw->label());
         $this->assertSame('FM', QsoMode::Fm->label());
-        $this->assertSame('MGM', QsoMode::Mgm->label());
+        $this->assertSame('RTTY/MGM', QsoMode::Mgm->label());
         $this->assertSame('?', QsoMode::Other->label());
     }
 }
