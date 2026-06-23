@@ -20,11 +20,13 @@ final class EdiParser
     private const int QSO_FIELD_SEPARATORS = 14;
 
     /**
-     * Regex jednoho QSO řádku – 15 skupin přesně dle původního read_edi.php.
+     * Regex jednoho QSO řádku – 15 skupin. Pole „body za QSO" (11. skupina) je
+     * volitelné ([0-9]*): některé programy (např. VUSC for Win) ho nechávají
+     * prázdné a my ho ve skóre stejně ignorujeme – body počítáme z lokátorů.
      */
     private const string QSO_PATTERN =
         '/^([0-9]+);([0-9]+);([0-9A-Z\/]+);([0-9]*);([0-9]+[AS]?);([0-9]+);'
-        .'([0-9]+[AS]?);([0-9]+);([0-9]*);([A-Z]{2}[0-9]{2}[A-Z]{2});([0-9]+);'
+        .'([0-9]+[AS]?);([0-9]+);([0-9]*);([A-Z]{2}[0-9]{2}[A-Z]{2});([0-9]*);'
         .'([A-Z0-9]*);([A-Z0-9]*);([A-Z0-9]*);([A-Z0-9]*)/';
 
     /**

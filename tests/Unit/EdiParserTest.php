@@ -188,6 +188,22 @@ class EdiParserTest extends TestCase
         }
     }
 
+    public function test_accepts_qso_with_empty_qso_points(): void
+    {
+        // VUSC for Win nechává pole „body za QSO" prázdné. Spojení je jinak
+        // kompletní → naimportuje se (body si stejně počítáme z lokátorů).
+        $edi = "[REG1TEST;1]\nPCall=OK2PKD\n[QSORecords;1]\n"
+            ."260621;1050;OK1FPC;2;599;001;599;007;;JN79NU;;;;;\n[END;]\n";
+
+        $log = new EdiParser()->parse($edi);
+
+        $this->assertSame(1, $log->qsoCount());
+        $this->assertSame('OK1FPC', $log->qsos[0]->callSign);
+        $this->assertSame('JN79NU', $log->qsos[0]->receivedWwl);
+        $this->assertSame('', $log->qsos[0]->qsoPoints);
+        $this->assertSame([], $log->lineErrors);
+    }
+
     public function test_tolerates_qso_line_with_empty_received_rst(): void
     {
         // FM spojení bez přijatého RST/čísla (reálné v historických denících):
