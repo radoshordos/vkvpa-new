@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // (event handler atribut nonce nést nemůže). Delegace na document funguje
 // i pro DOM přerenderovaný Livewirem.
 
-// <select data-autosubmit> – změna hodnoty odešle nejbližší formulář.
+// [data-autosubmit] – změna hodnoty odešle nejbližší formulář.
 document.addEventListener('change', (e) => {
     const el = e.target instanceof Element ? e.target.closest('[data-autosubmit]') : null;
     if (el && el.form) el.form.submit();

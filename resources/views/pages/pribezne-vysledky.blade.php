@@ -31,7 +31,7 @@
     </div>
     <div class="field mb-0">
         <label class="label" for="kategorie">{{ __('pages.pribezne.filter_category') }}</label>
-        <select id="kategorie" name="kategorie" class="select w-auto">
+        <select id="kategorie" name="kategorie" class="select w-auto" data-autosubmit>
             <option value="0" @selected($katId === 0)>{{ __('pages.pribezne.filter_all') }}</option>
             @foreach ($kategorie as $kat)
                 <option value="{{ $kat->id }}" @selected($katId === $kat->id)>{{ $kat->nazev }}</option>
@@ -103,9 +103,6 @@
     var kolo = document.getElementById('kolo');
     var form = (kategorie || kolo) ? (kategorie || kolo).closest('form') : null;
     if (!form) { return; }
-    if (kategorie) {
-        kategorie.addEventListener('change', function () { form.submit(); });
-    }
     if (kolo) {
         // Při změně kola vynulovat kategorii – ta z minulého kola v novém být nemusí.
         kolo.addEventListener('change', function () {

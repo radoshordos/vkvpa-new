@@ -10,7 +10,7 @@
 <form method="get" action="{{ route('rocni_vysledky') }}" class="card mb-4 flex flex-wrap items-end gap-4 p-3">
   <div class="field mb-0">
     <label class="label" for="rok">{{ __('pages.rocni.filter_year') }}</label>
-    <select id="rok" name="rok" class="select w-auto">
+    <select id="rok" name="rok" class="select w-auto" data-autosubmit>
       @for ($y = (int) date('Y'); $y >= 2006; $y--)
         <option value="{{ $y }}" @selected($y === $rok)>{{ $y }}</option>
       @endfor
@@ -18,7 +18,7 @@
   </div>
   <div class="field mb-0">
     <label class="label" for="kategorie">{{ __('pages.rocni.filter_category') }}</label>
-    <select id="kategorie" name="kategorie" class="select w-auto">
+    <select id="kategorie" name="kategorie" class="select w-auto" data-autosubmit>
       <option value="0" @selected($katId === 0)>{{ __('pages.rocni.filter_all') }}</option>
       @foreach ($kategorie as $kat)
         <option value="{{ $kat->id }}" @selected($katId === $kat->id)>{{ $kat->nazev }}</option>
@@ -26,10 +26,10 @@
     </select>
   </div>
   <label class="flex items-center gap-2 pb-1 text-sm">
-    <input id="qrp-rocni" type="checkbox" name="qrp" value="1" @checked(request()->boolean('qrp'))> {{ __('pages.rocni.filter_qrp') }}
+    <input id="qrp-rocni" type="checkbox" name="qrp" value="1" data-autosubmit @checked(request()->boolean('qrp'))> {{ __('pages.rocni.filter_qrp') }}
   </label>
   <label class="flex items-center gap-2 pb-1 text-sm">
-    <input id="lp-rocni" type="checkbox" name="lp" value="1" @checked(request()->boolean('lp'))> {{ __('pages.rocni.filter_lp') }}
+    <input id="lp-rocni" type="checkbox" name="lp" value="1" data-autosubmit @checked(request()->boolean('lp'))> {{ __('pages.rocni.filter_lp') }}
   </label>
   <button type="submit" class="btn btn-primary">{{ __('pages.rocni.btn_show') }}</button>
 </form>
@@ -43,20 +43,6 @@
     <span class="inline-flex items-center gap-1"><span class="cell-lp inline-block h-3 w-3 rounded-sm"></span> {{ __('pages.rocni.legend_lp') }}</span>
   </p>
 @endif
-
-@push('scripts')
-<script @cspNonce>
-(function () {
-    var form = document.getElementById('rok')?.closest('form');
-    if (form) {
-        document.getElementById('rok').addEventListener('change', function () { form.submit(); });
-        document.getElementById('kategorie').addEventListener('change', function () { form.submit(); });
-        document.getElementById('qrp-rocni').addEventListener('change', function () { form.submit(); });
-        document.getElementById('lp-rocni').addEventListener('change', function () { form.submit(); });
-    }
-}());
-</script>
-@endpush
 
 @forelse ($vysledky as $kategorieId => $radky)
   <div class="section-head">{{ $kategorie[$kategorieId]->nazev ?? ('Kategorie ' . $kategorieId) }}</div>

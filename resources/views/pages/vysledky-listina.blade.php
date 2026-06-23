@@ -25,7 +25,7 @@
 <form method="get" action="{{ route('vysledkova_listina') }}" class="card mb-4 flex flex-wrap items-end gap-4 p-3">
     <div class="field mb-0">
         <label class="label" for="kolo">{{ __('pages.vysledky.filter_round') }}</label>
-        <select id="kolo" name="kolo" class="select w-auto">
+        <select id="kolo" name="kolo" class="select w-auto" data-autosubmit>
             @foreach ($kola as $k)
                 <option value="{{ $k->id }}" @selected($kolo && $k->id === $kolo->id)>{{ $k->nazev }} ({{ $k->datum_konani?->format('j. n. Y') }})</option>
             @endforeach
@@ -34,7 +34,7 @@
     @if ($isAdmin)
         <div class="field mb-0">
             <label class="label" for="prevzeti">{{ __('pages.vysledky.filter_prevzeti') }}</label>
-            <select id="prevzeti" name="prevzeti" class="select w-auto">
+            <select id="prevzeti" name="prevzeti" class="select w-auto" data-autosubmit>
                 <option value="all" @selected(($prevzeti ?? 'all') === 'all')>{{ __('pages.vysledky.prevzeti_all') }}</option>
                 <option value="yes" @selected(($prevzeti ?? 'all') === 'yes')>{{ __('pages.vysledky.prevzeti_yes') }}</option>
                 <option value="no" @selected(($prevzeti ?? 'all') === 'no')>{{ __('pages.vysledky.prevzeti_no') }}</option>
@@ -46,10 +46,10 @@
         <input id="hledat" type="text" name="hledat" value="{{ $hledat }}" placeholder="Callsign / Locator…" class="input w-48">
     </div>
     <label class="flex items-center gap-2 pb-2 text-sm">
-        <input id="qrp" type="checkbox" name="qrp" value="1" @checked(request()->boolean('qrp'))> {{ __('pages.vysledky.filter_qrp') }}
+        <input id="qrp" type="checkbox" name="qrp" value="1" data-autosubmit @checked(request()->boolean('qrp'))> {{ __('pages.vysledky.filter_qrp') }}
     </label>
     <label class="flex items-center gap-2 pb-2 text-sm">
-        <input id="lp" type="checkbox" name="lp" value="1" @checked(request()->boolean('lp'))> {{ __('pages.vysledky.filter_lp') }}
+        <input id="lp" type="checkbox" name="lp" value="1" data-autosubmit @checked(request()->boolean('lp'))> {{ __('pages.vysledky.filter_lp') }}
     </label>
     <button type="submit" class="btn btn-primary">{{ __('pages.vysledky.btn_show') }}</button>
 </form>
@@ -158,17 +158,4 @@
     @include('partials.del-modal')
 @endif
 
-@push('scripts')
-<script @cspNonce>
-(function () {
-    var filterForm = document.getElementById('kolo')?.closest('form');
-    if (filterForm) {
-        document.getElementById('kolo').addEventListener('change', function () { filterForm.submit(); });
-        document.getElementById('qrp').addEventListener('change', function () { filterForm.submit(); });
-        document.getElementById('lp').addEventListener('change', function () { filterForm.submit(); });
-        document.getElementById('prevzeti')?.addEventListener('change', function () { filterForm.submit(); });
-    }
-}());
-</script>
-@endpush
 @endsection

@@ -8,8 +8,9 @@
     $label = $reduced ? 'EDIR' : 'EDI';
 @endphp
 
-<a href="{{ route($route, ['head' => $head]) }}"
-   @if ($target) target="{{ $target }}" @endif
-   {{ $attributes->merge(['class' => 'icon-btn icon-btn-ghost icon-btn-label']) }}
-   title="{{ $title }}"
-   aria-label="{{ $title }}">{{ $label }}</a>
+<x-result-link
+    :href="route($route, ['head' => $head])"
+    :title="$title"
+    :target="$target"
+    {{ $attributes }}
+>{{ $label }}</x-result-link>
