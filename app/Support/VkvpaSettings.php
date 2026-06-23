@@ -85,6 +85,29 @@ final class VkvpaSettings
         return Config::array('vkvpa.mail_image_allowlist', []);
     }
 
+    /**
+     * Tabulky povolené pro SQL zálohu, seskupené (klíč skupiny → seznam tabulek).
+     *
+     * @return array<string, list<string>>
+     */
+    public static function dbBackupTableGroups(): array
+    {
+        /** @var array<string, list<string>> */
+        return Config::array('vkvpa.db_backup_table_groups', []);
+    }
+
+    /**
+     * Plochý seznam všech tabulek povolených pro SQL zálohu (allowlist).
+     *
+     * @return list<string>
+     */
+    public static function dbBackupTables(): array
+    {
+        $groups = array_values(self::dbBackupTableGroups());
+
+        return $groups === [] ? [] : array_merge(...$groups);
+    }
+
     public static function contestWindowFrom(): string
     {
         return once(fn (): string => Config::string('vkvpa.contest_window.from', '0800'));

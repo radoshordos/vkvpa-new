@@ -51,6 +51,7 @@ return [
         [
             'heading' => 'nav.group_admin',
             'items' => [
+                ['key' => 'zaloha.index', 'trans' => 'admin.nav_backup',      'admin' => true],
                 ['key' => 'logy.index',  'trans' => 'admin.nav_logs_viewer', 'admin' => true],
                 ['key' => 'heslo.edit',  'trans' => 'admin.nav_password',    'admin' => true],
             ],

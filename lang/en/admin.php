@@ -15,6 +15,7 @@ return [
     'nav_export' => 'EDI export (ZIP)',
     'nav_users' => 'Entrant details',
     'nav_api_docs' => 'API documentation',
+    'nav_backup' => 'DB backup (SQL)',
     'nav_logs_viewer' => 'Application logs',
     'nav_password' => 'Change password',
 
@@ -94,6 +95,20 @@ return [
     'export_col_date' => 'Contest date',
     'export_col_count' => 'Logs',
     'export_btn_zip' => 'Download ZIP',
+
+    // SQL backup of contest tables
+    'zaloha_title' => 'Database backup – VKV PA Administration',
+    'zaloha_heading' => 'SQL backup of contest tables',
+    'zaloha_desc' => 'Pick tables and download a single <code>.sql</code> file with schema and data (a full, self-restorable backup). The dump uses the MySQL dialect and can be restored with a normal import (e.g. <code>mysql &lt; file.sql</code> or via Adminer).',
+    'zaloha_col_table' => 'Table',
+    'zaloha_col_rows' => 'Rows',
+    'zaloha_group_edi' => 'EDI logs',
+    'zaloha_group_vysledky' => 'Results and rounds',
+    'zaloha_group_ostatni' => 'Entries and discussion',
+    'zaloha_select_all' => 'Select all',
+    'zaloha_gzip' => 'Compress (gzip, .sql.gz)',
+    'zaloha_btn_download' => 'Download SQL backup',
+    'zaloha_hint' => 'The backup contains the full contents of the selected tables including personal data – store it securely.',
 
     // Entrant details (contact / personal data from vkvpa_data)
     'uzivatele_title' => 'Entrant details – VKV PA Administration',

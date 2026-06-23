@@ -86,6 +86,16 @@ document.addEventListener('change', (e) => {
     });
 });
 
+// <input type=checkbox data-check-all> – zaškrtne/odškrtne všechny
+// [data-check-item] ve stejném formuláři (hromadný výběr tabulek pro zálohu).
+document.addEventListener('change', (e) => {
+    const el = e.target instanceof HTMLInputElement ? e.target.closest('[data-check-all]') : null;
+    if (!el || !el.form) return;
+    el.form.querySelectorAll('[data-check-item]').forEach((item) => {
+        item.checked = el.checked;
+    });
+});
+
 // <input type=file data-file-zone="id" data-file-name="id"> – zvýrazní
 // drop-zónu a ukáže jméno vybraného souboru.
 function refreshFileZone(input) {

@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\KategorieController;
 use App\Http\Controllers\Admin\KolaAdminController;
 use App\Http\Controllers\Admin\LogyController;
 use App\Http\Controllers\Admin\UzivateleController;
+use App\Http\Controllers\Admin\ZalohaController;
 use App\Http\Controllers\Admin\ZaznamController;
 use App\Http\Controllers\DiskuseController;
 use App\Http\Controllers\EdiController;
@@ -158,6 +159,10 @@ Route::middleware('admin')->group(function (): void {
     // Export EDI deníků po kolech (ZIP archiv).
     Route::get('/admin/export', [ExportController::class, 'index'])->name('export.index');
     Route::get('/admin/export/{kolo}', [ExportController::class, 'download'])->name('export.download');
+
+    // SQL záloha závodních tabulek (schéma + data, jeden .sql soubor).
+    Route::get('/admin/zaloha', [ZalohaController::class, 'index'])->name('zaloha.index');
+    Route::post('/admin/zaloha', [ZalohaController::class, 'download'])->name('zaloha.download');
 
     Route::get('/admin/uzivatele', [UzivateleController::class, 'index'])->name('uzivatele.index');
 
