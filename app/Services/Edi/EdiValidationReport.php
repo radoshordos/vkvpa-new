@@ -6,6 +6,7 @@ namespace App\Services\Edi;
 
 use App\Actions\ImportEdiAction;
 use App\Enums\QsoCountStatus;
+use App\Enums\RstPropagation;
 use App\Support\ContestWindow;
 use App\Support\Maidenhead;
 
@@ -22,6 +23,7 @@ final readonly class EdiValidationReport
      * @param  array<string, int>  $duplicateCalls  značka → počet výskytů (jen >1)
      * @param  list<string>  $invalidLocators  ukázka „ZNAČKA: WWL" s vadným lokátorem
      * @param  list<string>  $lineErrors  QSO odmítnutá parserem (neplatný Maidenhead)
+     * @param  list<string>  $invalidReports  ukázky reportů s neplatným tónovým znakem (formát ZNAČKA: REPORT)
      * @param  ?string  $invalidHomeLocator  neplatný PWWLo (null = v pořádku)
      */
     public function __construct(
@@ -35,6 +37,7 @@ final readonly class EdiValidationReport
         public int $parsedCount,
         public array $lineErrors,
         public int $ignoredLines,
+        public array $invalidReports = [],
         public ?string $invalidHomeLocator = null,
     ) {}
 
@@ -48,6 +51,8 @@ final readonly class EdiValidationReport
         $callCounts = [];
         /** @var list<string> $invalid */
         $invalid = [];
+        /** @var list<string> $invalidReports */
+        $invalidReports = [];
         $empty = 0;
         $incomplete = 0;
         $outOfWindow = 0;
@@ -62,6 +67,14 @@ final readonly class EdiValidationReport
             $wwl = trim($qso->receivedWwl);
             if ($wwl !== '' && ! Maidenhead::isValidLocator($wwl) && count($invalid) < 8) {
                 $invalid[] = ($call !== '' ? $call : '?').': '.$wwl;
+            }
+
+            // Třetí znak reportu smí být jen číslice nebo tónové písmeno A/S/M;
+            // jiný znak naimportované spojení nezneplatní, jen na něj upozorníme.
+            foreach ([$qso->sentRst, $qso->receivedRst] as $report) {
+                if (trim($report) !== '' && ! RstPropagation::isValidReport($report) && count($invalidReports) < 8) {
+                    $invalidReports[] = ($call !== '' ? $call : '?').': '.strtoupper(trim($report));
+                }
             }
 
             // Stejné pořadí vyloučení jako ve scoreEdi: neúplný příjem → okno →
@@ -92,6 +105,7 @@ final readonly class EdiValidationReport
             parsedCount: $log->qsoCount(),
             lineErrors: $log->lineErrors,
             ignoredLines: count($log->ignoredLines),
+            invalidReports: $invalidReports,
             invalidHomeLocator: Maidenhead::isValidLocator($pWWLo) ? null : $pWWLo,
         );
     }
@@ -137,6 +151,14 @@ final readonly class EdiValidationReport
         if ($this->invalidLocators !== []) {
             $more = count($this->invalidLocators) >= 8 ? ' …' : '';
             $m[] = 'Neplatný WWL lokátor u spojení: '.implode(', ', $this->invalidLocators).$more.'. Zkontroluj deník – chybný lokátor zkresluje body i násobiče.';
+        }
+
+        if ($this->invalidReports !== []) {
+            $more = count($this->invalidReports) >= 8 ? ' …' : '';
+            $m[] = 'Neplatný znak v reportu u spojení: '.implode(', ', $this->invalidReports).$more
+                .'. Třetí znak reportu smí být jen číslice nebo písmeno '
+                .implode('/', str_split(RstPropagation::letters()))
+                .' (aurora/scatter/multipath). Zkontroluj deník – spojení se naimportovalo beze změny.';
         }
 
         if ($this->incompleteExchange > 0) {

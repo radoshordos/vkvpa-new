@@ -26,10 +26,16 @@ final class EdiParser
      * vyhodnocení: čas, odeslaný/přijatý RST, přijaté pořadové číslo, přijatý
      * lokátor a body za QSO. Spojení bez přijatého RST nebo čísla se naimportuje,
      * ale ve skóre se nezapočítá ({@see QsoCountStatus::IncompleteExchange}).
+     *
+     * Report (odeslaný/přijatý) zachytáváme jako číslice s volitelným jedním
+     * koncovým písmenem ([A-Z]) – záměrně i písmeno mimo povolenou trojici, ať
+     * se spojení naimportuje a neplatný tónový znak jen vyvolá varování
+     * ({@see RstPropagation}, {@see EdiValidationReport}), místo aby se řádek
+     * tiše zahodil.
      */
     private const string QSO_PATTERN =
-        '/^([0-9]+);([0-9]*);([0-9A-Z\/]+);([0-9]*);([0-9]*[AS]?);([0-9]+);'
-        .'([0-9]*[AS]?);([0-9]*);([0-9]*);([A-Z]{2}[0-9]{2}[A-Z]{2})?;([0-9]*);'
+        '/^([0-9]+);([0-9]*);([0-9A-Z\/]+);([0-9]*);([0-9]*[A-Z]?);([0-9]+);'
+        .'([0-9]*[A-Z]?);([0-9]*);([0-9]*);([A-Z]{2}[0-9]{2}[A-Z]{2})?;([0-9]*);'
         .'([A-Z0-9]*);([A-Z0-9]*);([A-Z0-9]*);([A-Z0-9]*)/';
 
     /**

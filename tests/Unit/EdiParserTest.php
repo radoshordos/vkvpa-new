@@ -224,6 +224,25 @@ class EdiParserTest extends TestCase
         $this->assertSame([], $log->lineErrors);
     }
 
+    public function test_imports_report_with_tone_letter(): void
+    {
+        // Report s tónovým písmenem (CW při auroře/scatteru/multipath) je platný –
+        // třetí znak „599" se nahradí A/S/M. Dřív „59M" shazoval import.
+        $edi = "[REG1TEST;3]\nPCall=OK1ABC\n[QSORecords;3]\n"
+            ."260118;0830;OK1AUR;2;59A;001;59A;010;;JN79AB;2;;;;\n"
+            ."260118;0831;OK1SCA;2;59S;002;59S;011;;JN79CD;2;;;;\n"
+            ."260118;0832;OK1MUL;2;59M;003;59M;012;;JN79EF;2;;;;\n[END;]\n";
+
+        $log = new EdiParser()->parse($edi);
+
+        $this->assertSame(3, $log->qsoCount());
+        $this->assertSame('59A', $log->qsos[0]->receivedRst);
+        $this->assertSame('59S', $log->qsos[1]->receivedRst);
+        $this->assertSame('59M', $log->qsos[2]->receivedRst);
+        $this->assertSame([], $log->ignoredLines);
+        $this->assertSame([], $log->lineErrors);
+    }
+
     public function test_imports_incomplete_record_without_time_or_locator(): void
     {
         // Reálný řádek z VUSC/ok1dje: prázdný čas i lokátor, 0 bodů. Dřív
