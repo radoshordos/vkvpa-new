@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Edi;
 
+use App\Enums\RstPropagation;
 use App\Support\Maidenhead;
 
 /**
@@ -134,11 +135,11 @@ final class EdiComposer
         return $w === '' ? '' : $w.'W';
     }
 
-    /** RST jako číslice (případně s příponou A/S); default „59". */
+    /** RST jako číslice (případně s tónovým písmenem A/S/M dle {@see RstPropagation}); default „59". */
     private function rst(string $value): string
     {
         $v = strtoupper(trim($value));
-        if (preg_match('/^[0-9]+[AS]?$/', $v) === 1) {
+        if (preg_match('/^[0-9]+['.RstPropagation::letters().']?$/', $v) === 1) {
             return $v;
         }
 

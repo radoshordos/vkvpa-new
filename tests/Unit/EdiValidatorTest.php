@@ -142,6 +142,47 @@ class EdiValidatorTest extends TestCase
         $this->assertNull($report->invalidHomeLocator);
     }
 
+    public function test_detects_invalid_report_tone_letter(): void
+    {
+        $header = new EdiHeader([
+            'PCall' => 'OK1TEST', 'PWWLo' => 'JN99AJ', 'TDate' => '20260118;20260118',
+            'PBand' => '144 MHz', 'PSect' => 'SINGLE', 'SPowe' => '100',
+        ]);
+        $log = new EdiLog($header, [
+            new EdiQso(
+                date: '260118', time: '0830', callSign: 'OK1X', modeCode: '2',
+                sentRst: '59', sentQsoNumber: '001', receivedRst: '59X', receivedQsoNumber: '001',
+                receivedExchange: '', receivedWwl: 'JN89AA', qsoPoints: '1',
+                newExchange: '', newWwl: '', newDxcc: '', duplicate: '',
+            ),
+        ], '', 1);
+
+        $report = new EdiValidator()->validate($log);
+
+        $this->assertSame(['OK1X: 59X'], $report->invalidReports);
+        $this->assertStringContainsString('Neplatný znak v reportu', implode(' ', $report->messages()));
+    }
+
+    public function test_tone_letter_report_is_not_flagged(): void
+    {
+        $header = new EdiHeader([
+            'PCall' => 'OK1TEST', 'PWWLo' => 'JN99AJ', 'TDate' => '20260118;20260118',
+            'PBand' => '144 MHz', 'PSect' => 'SINGLE', 'SPowe' => '100',
+        ]);
+        $log = new EdiLog($header, [
+            new EdiQso(
+                date: '260118', time: '0830', callSign: 'OK1X', modeCode: '2',
+                sentRst: '59A', sentQsoNumber: '001', receivedRst: '59M', receivedQsoNumber: '001',
+                receivedExchange: '', receivedWwl: 'JN89AA', qsoPoints: '1',
+                newExchange: '', newWwl: '', newDxcc: '', duplicate: '',
+            ),
+        ], '', 1);
+
+        $report = new EdiValidator()->validate($log);
+
+        $this->assertSame([], $report->invalidReports);
+    }
+
     public function test_line_errors_from_parser_appear_in_messages(): void
     {
         $header = new EdiHeader([

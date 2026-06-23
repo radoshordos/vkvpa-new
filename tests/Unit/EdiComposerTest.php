@@ -63,6 +63,26 @@ class EdiComposerTest extends TestCase
         $this->assertSame('JN99BP', $log->qsos[0]->receivedWwl);
     }
 
+    public function test_keeps_tone_letter_and_replaces_invalid_report(): void
+    {
+        $composer = new EdiComposer;
+
+        $text = $composer->compose($this->header(), [
+            ['time' => '0800', 'call' => 'OK1AUR', 'mode' => 2, 'rst_s' => '59A', 'rst_r' => '59m', 'wwl' => 'JN99BP'],
+            ['time' => '0801', 'call' => 'OK1BAD', 'mode' => 2, 'rst_s' => '59X', 'rst_r' => '', 'wwl' => 'JN89PV'],
+        ]);
+
+        $log = new EdiParser()->parse($text);
+
+        $this->assertCount(2, $log->qsos);
+        // Platné tónové písmeno zůstane (vstup se uppercasuje).
+        $this->assertSame('59A', $log->qsos[0]->sentRst);
+        $this->assertSame('59M', $log->qsos[0]->receivedRst);
+        // Neplatný/prázdný report se nahradí defaultem „59".
+        $this->assertSame('59', $log->qsos[1]->sentRst);
+        $this->assertSame('59', $log->qsos[1]->receivedRst);
+    }
+
     public function test_empty_log_has_zero_records(): void
     {
         $composer = new EdiComposer;
