@@ -344,6 +344,7 @@ return [
         'layer_jezek' => 'Ježek',
         'layer_spendliky' => 'Špendlíky',
         'layer_lokatory' => 'Lokátory',
+        'layer_ctverce' => 'Obsazené čtverce',
         'mode_filter' => 'Provoz:',
         'mode_other_short' => 'Ostatní',
         'play' => '▶ Přehrát',

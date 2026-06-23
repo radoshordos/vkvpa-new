@@ -32,8 +32,11 @@ if (cfg.home) {
 const jezekLayer = L.layerGroup();
 // Vrstva: špendlíky
 const spendlikyLayer = L.layerGroup();
-// Vrstva: lokátory (velké čtverce)
+// Vrstva: lokátory (velké čtverce – číslované značky se počtem QSO)
 const lokatoryLayer = L.layerGroup();
+// Vrstva: obsazené čtverce (velké čtverce vykreslené jako vyplněné obdélníky,
+// barva podle počtu QSO – teplotní škála; přehled pokrytí mapy)
+const ctverceLayer = L.layerGroup();
 // Vrstva: CRK – kombinovaná mapa (paprsky + provoz + kružnice + mřížka + stanice z kola)
 const crkLayer = L.layerGroup();
 // Vrstva: přehrávání deníku (paprsky + špendlíky řízené časem na slideru)
@@ -125,12 +128,23 @@ cfg.points.forEach(function (p, idx) {
     playbackItems.push({ t: p.time, mode: modeGroup(p.mode), group, shown: false });
 });
 
+// Maximální počet QSO ve čtverci – pro normalizaci teplotní škály obsazených čtverců.
+const maxSquareCount = cfg.squares.reduce((m, s) => Math.max(m, s.count), 1);
+// Teplotní škála žlutá → červená (víc QSO = červenější), odmocnina kvůli rozprostření.
+const squareHeatColor = (count) => `hsl(${Math.round(60 - 60 * Math.sqrt(count / maxSquareCount))}, 90%, 50%)`;
+
 cfg.squares.forEach(function (s) {
     bounds.push([s.lat, s.lon]);
     L.circleMarker([s.lat, s.lon], {
         radius: 14, color: '#7c3aed', fillColor: '#a855f7', fillOpacity: 0.65, weight: 2,
     }).addTo(lokatoryLayer)
         .bindTooltip(String(s.count), { permanent: true, direction: 'center', className: 'sq-label' })
+        .bindPopup(`<strong>${s.square}</strong><br>${s.count} ${t.stations}`);
+
+    // Obsazené čtverce: velký čtverec = 2° délky × 1° šířky kolem středu.
+    L.rectangle([[s.lat - 0.5, s.lon - 1], [s.lat + 0.5, s.lon + 1]], {
+        color: '#b45309', weight: 1, fillColor: squareHeatColor(s.count), fillOpacity: 0.45,
+    }).addTo(ctverceLayer)
         .bindPopup(`<strong>${s.square}</strong><br>${s.count} ${t.stations}`);
 });
 
@@ -141,7 +155,7 @@ let legendCtl = null;
 
 function updateLegend(key) {
     if (legendCtl) { map.removeControl(legendCtl); legendCtl = null; }
-    if (key === 'lokatory') return; // vrstva nemá barvy podle provozu
+    if (aggregateLayer(key)) return; // vrstva nemá barvy podle provozu
 
     const rows = [['#60a5fa', 'SSB'], ['#fbbf24', 'CW']];
     if (hasOtherMode) rows.push(['#9ca3af', t.other]);
@@ -267,7 +281,11 @@ if (bounds.length > 0) {
 }
 
 // Přepínání vrstev přes tlačítka.
-const layers = { jezek: jezekLayer, spendliky: spendlikyLayer, lokatory: lokatoryLayer, crk: crkLayer, playback: playbackLayer };
+const layers = { jezek: jezekLayer, spendliky: spendlikyLayer, lokatory: lokatoryLayer, ctverce: ctverceLayer, crk: crkLayer, playback: playbackLayer };
+
+// Vrstvy agregující čtverce nemají barvy podle druhu provozu – skrývá se u nich
+// legenda i filtr provozu.
+const aggregateLayer = (key) => key === 'lokatory' || key === 'ctverce';
 
 function showLayer(key) {
     Object.values(layers).forEach((l) => map.removeLayer(l));
@@ -283,18 +301,17 @@ function showLayer(key) {
     }
     playbackControls.classList.toggle('hidden', key !== 'playback');
     playbackControls.classList.toggle('flex', key === 'playback');
-    // Filtr provozu nedává smysl na vrstvě Lokátory (agreguje čtverce).
-    document.getElementById('viz-mode-filter').classList.toggle('hidden', key === 'lokatory');
+    // Filtr provozu nedává smysl na vrstvách agregujících čtverce (Lokátory, Obsazené čtverce).
+    document.getElementById('viz-mode-filter').classList.toggle('hidden', aggregateLayer(key));
     updateLegend(key);
     if (homeMarker) homeMarker.addTo(map);
-    document.querySelectorAll('[data-map-layer]').forEach((b) => b.classList.toggle('active', b.dataset.mapLayer === key));
+    layerSelect.value = key;
     // Vrstva do URL (#mapa-…) – odkaz na konkrétní vrstvu jde sdílet.
     history.replaceState(null, '', '#mapa-' + key);
 }
 
-document.querySelectorAll('[data-map-layer]').forEach(function (btn) {
-    btn.addEventListener('click', () => showLayer(btn.dataset.mapLayer));
-});
+const layerSelect = document.getElementById('viz-layer-select');
+layerSelect.addEventListener('change', () => showLayer(layerSelect.value));
 
 // Filtr druhu provozu – přepínací tlačítka SSB / CW / Ostatní.
 document.querySelectorAll('[data-mode-filter]').forEach(function (btn) {

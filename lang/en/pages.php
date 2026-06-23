@@ -338,6 +338,7 @@ return [
         'layer_jezek' => 'Hedgehog',
         'layer_spendliky' => 'Pins',
         'layer_lokatory' => 'Squares',
+        'layer_ctverce' => 'Occupied squares',
         'mode_filter' => 'Mode:',
         'mode_other_short' => 'Other',
         'play' => '▶ Play',
