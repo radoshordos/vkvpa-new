@@ -16,7 +16,8 @@ class QsoModeTest extends TestCase
     {
         $this->assertSame(QsoMode::Ssb, QsoMode::fromCode(1));
         $this->assertSame(QsoMode::Cw, QsoMode::fromCode(2));
-        $this->assertSame(QsoMode::Mixed, QsoMode::fromCode(3));
+        $this->assertSame(QsoMode::SsbCw, QsoMode::fromCode(3));
+        $this->assertSame(QsoMode::CwSsb, QsoMode::fromCode(4));
         $this->assertSame(QsoMode::Am, QsoMode::fromCode(5));
         $this->assertSame(QsoMode::Fm, QsoMode::fromCode(6));
         $this->assertSame(QsoMode::Mgm, QsoMode::fromCode(7));
@@ -27,7 +28,6 @@ class QsoModeTest extends TestCase
     public function test_unknown_or_missing_code_maps_to_other(): void
     {
         $this->assertSame(QsoMode::Other, QsoMode::fromCode(0));
-        $this->assertSame(QsoMode::Other, QsoMode::fromCode(4)); // ve standardu nedefinováno
         $this->assertSame(QsoMode::Other, QsoMode::fromCode(59)); // rozhozený sloupec (RST)
         $this->assertSame(QsoMode::Other, QsoMode::fromCode(99));
     }
@@ -37,7 +37,9 @@ class QsoModeTest extends TestCase
         $this->assertSame('SSB', QsoMode::Ssb->label());
         $this->assertSame('CW', QsoMode::Cw->label());
         $this->assertSame('FM', QsoMode::Fm->label());
-        $this->assertSame('MGM', QsoMode::Mgm->label());
+        $this->assertSame('RTTY/MGM', QsoMode::Mgm->label());
+        $this->assertSame('SSB+CW', QsoMode::SsbCw->label());
+        $this->assertSame('SSB+CW', QsoMode::CwSsb->label());
         $this->assertSame('?', QsoMode::Other->label());
     }
 }

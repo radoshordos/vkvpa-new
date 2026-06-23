@@ -18,7 +18,8 @@ enum QsoMode: int
     case Other = 0;
     case Ssb = 1;
     case Cw = 2;
-    case Mixed = 3;
+    case SsbCw = 3; // křížový provoz: vysílá SSB, přijímá CW
+    case CwSsb = 4; // křížový provoz: vysílá CW, přijímá SSB
     case Am = 5;
     case Fm = 6;
     case Mgm = 7;
@@ -41,10 +42,10 @@ enum QsoMode: int
         return match ($this) {
             self::Ssb => 'SSB',
             self::Cw => 'CW',
-            self::Mixed => 'SSB+CW',
+            self::SsbCw, self::CwSsb => 'SSB+CW',
             self::Am => 'AM',
             self::Fm => 'FM',
-            self::Mgm => 'MGM',
+            self::Mgm => 'RTTY/MGM',
             self::Sstv => 'SSTV',
             self::Atv => 'ATV',
             self::Other => '?',
