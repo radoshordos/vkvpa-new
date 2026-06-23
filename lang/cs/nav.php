@@ -11,6 +11,7 @@ return [
 
     'contest_periods' => 'Kola závodu',
     'log_import' => 'Odeslat deník',
+    'generator' => 'Generátor deníku',
     'vizualizer' => 'EDI Visualizer',
     'interim_results' => 'Průběžné výsledky',
     'results' => 'Výsledková listina',
