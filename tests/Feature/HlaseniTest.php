@@ -129,9 +129,9 @@ class HlaseniTest extends TestCase
     {
         [$kolo, $kat] = $this->prepare();
         $payload = $this->payload($kolo->id, $kat->id);
-        unset($payload['jmeno'], $payload['telefon']);
+        unset($payload['jmeno']);
 
-        $this->post('/hlaseni', $payload)->assertSessionHasErrors(['jmeno', 'telefon']);
+        $this->post('/hlaseni', $payload)->assertSessionHasErrors('jmeno');
         $this->assertSame(0, VkvpaData::count());
     }
 
@@ -146,6 +146,30 @@ class HlaseniTest extends TestCase
 
         $this->assertSame(1, VkvpaData::count());
         $this->assertSame('', VkvpaData::firstOrFail()->mail);
+    }
+
+    public function test_manual_report_without_phone_accepted(): void
+    {
+        [$kolo, $kat] = $this->prepare();
+        $payload = $this->payload($kolo->id, $kat->id);
+        unset($payload['telefon']);
+
+        $this->post('/hlaseni', $payload)
+            ->assertRedirect(route('vysledkova_listina', ['kolo' => $kolo->id]));
+
+        $this->assertSame(1, VkvpaData::count());
+        $this->assertSame('', VkvpaData::firstOrFail()->telefon);
+    }
+
+    public function test_manual_report_without_any_contact_is_rejected(): void
+    {
+        [$kolo, $kat] = $this->prepare();
+        $payload = $this->payload($kolo->id, $kat->id);
+        unset($payload['email'], $payload['telefon']);
+
+        // Pravidlo „alespoň jeden kontakt" platí jednotně i pro ruční podání.
+        $this->post('/hlaseni', $payload)->assertSessionHasErrors('telefon');
+        $this->assertSame(0, VkvpaData::count());
     }
 
     public function test_invalid_phone_rejected(): void

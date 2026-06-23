@@ -15,6 +15,7 @@ use App\Exceptions\TDateNotContestDayException;
 use App\Exceptions\UnknownBandException;
 use App\Exceptions\UnknownSectionException;
 use App\Exceptions\UploadWindowClosedException;
+use App\Http\Requests\StoreHlaseniRequest;
 use App\Jobs\RankRoundJob;
 use App\Models\VkvpaKola;
 use App\Rules\ValidMaidenhead;
@@ -370,7 +371,7 @@ class EdiGenerator extends Component
         ]);
 
         if ($this->rhbbs === '' && $this->rphon === '') {
-            $this->addError('rphon', 'Vyplňte alespoň jeden kontakt – telefon, nebo e-mail.');
+            $this->addError('rphon', StoreHlaseniRequest::CHYBI_KONTAKT);
 
             return null;
         }

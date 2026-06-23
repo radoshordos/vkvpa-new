@@ -14,13 +14,16 @@ use Override;
 /**
  * Validace podání hlášení.
  *
- * Povinné: značka, kolo, lokátor, jméno. U podání s EDI deníkem je navíc
- * povinný alespoň jeden kontakt – telefon nebo e-mail (potvrzení o přijetí
- * se posílá na e-mail, telefon je záložní kontakt). U ručního podání zůstává
- * povinný telefon.
+ * Povinné: značka, kolo, lokátor, jméno a alespoň jeden kontakt – telefon
+ * nebo e-mail. Pravidlo „alespoň jeden kontakt" platí jednotně pro všechna
+ * podání (s EDI deníkem i ruční); potvrzení o přijetí se posílá na e-mail,
+ * telefon je záložní kontakt.
  */
 class StoreHlaseniRequest extends FormRequest
 {
+    /** Chybová hláška, když není vyplněn ani telefon, ani e-mail. */
+    public const string CHYBI_KONTAKT = 'Vyplňte prosím alespoň jeden kontakt – telefon, nebo e-mail. Pokud nechcete žádný kontakt uvést, zadejte neplatné telefonní číslo +420 999 999999. Děkujeme.';
+
     public function authorize(): bool
     {
         $idZaznamu = $this->integer('id_zaznamu');
@@ -39,15 +42,14 @@ class StoreHlaseniRequest extends FormRequest
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $v): void {
-            // U podání s EDI deníkem musí být vyplněn alespoň jeden kontakt
-            // (telefon nebo e-mail) – platí i pro dokončení vlastního
-            // rezervovaného řádku, proto se kontroluje před návratem níže.
-            if ($this->integer('edihead_id') > 0) {
-                $email = $this->string('email')->trim()->value();
-                $telefon = $this->string('telefon')->trim()->value();
-                if ($email === '' && $telefon === '') {
-                    $v->errors()->add('telefon', 'U podání s EDI deníkem vyplňte alespoň jeden kontakt – telefon, nebo e-mail.');
-                }
+            // Jednotně pro všechna podání (EDI i ruční) musí být vyplněn
+            // alespoň jeden kontakt – telefon nebo e-mail. Kontroluje se před
+            // návratem níže, aby platilo i pro dokončení vlastního
+            // rezervovaného řádku (EDI nahraný na poslední chvíli).
+            $email = $this->string('email')->trim()->value();
+            $telefon = $this->string('telefon')->trim()->value();
+            if ($email === '' && $telefon === '') {
+                $v->errors()->add('telefon', self::CHYBI_KONTAKT);
             }
 
             // Editace vlastního rezervovaného řádku (EDI nahraný na poslední
@@ -90,11 +92,10 @@ class StoreHlaseniRequest extends FormRequest
             'znacka' => ['required', 'string', 'max:10'],
             'locator' => ['required', 'string', 'max:6', new ValidMaidenhead],
             'jmeno' => ['required', 'string', 'max:60'],
-            // U podání s EDI deníkem stačí jeden kontakt (telefon NEBO e-mail) –
-            // „alespoň jeden" hlídá withValidator(). Jednotlivě tedy nejsou
-            // povinné. U ručního podání zůstává povinný telefon.
+            // Kontakt: jednotlivě nepovinný (telefon i e-mail), formát se ověří
+            // jen u vyplněného. Podmínku „alespoň jeden" hlídá withValidator().
             'email' => ['nullable', 'email', 'max:250'],
-            'telefon' => [$this->integer('edihead_id') > 0 ? 'nullable' : 'required', 'string', 'max:20', new ValidPhone],
+            'telefon' => ['nullable', 'string', 'max:20', new ValidPhone],
             'pocet' => ['nullable', 'integer', 'min:0'],
             'bodu_za_qso' => ['nullable', 'integer', 'min:0'],
             'nasobice' => ['nullable', 'integer', 'min:0'],
@@ -113,7 +114,6 @@ class StoreHlaseniRequest extends FormRequest
             'znacka.required' => 'Chybí povinná pole! (volací znak)',
             'kolo.required' => 'Chybí povinná pole! (kolo)',
             'jmeno.required' => 'Chybí povinná pole! (jméno)',
-            'telefon.required' => 'Chybí povinná pole! (telefon)',
             'locator.required' => 'Chybí povinná pole! (lokátor)',
         ];
     }
