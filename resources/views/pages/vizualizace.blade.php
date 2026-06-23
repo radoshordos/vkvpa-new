@@ -22,6 +22,12 @@
                border: 1px solid var(--color-line, #e2e8f0); background: var(--color-surface, #fff);
                color: var(--color-muted, #64748b); transition: background .15s, color .15s; }
     .map-tab.active, .map-tab:hover { background: var(--color-brand, #3b82f6); color: #fff; border-color: transparent; }
+    .map-select { padding: .25rem 1.75rem .25rem .75rem; border-radius: .375rem; font-size: .8rem; font-weight: 600; cursor: pointer;
+                  border: 1px solid var(--color-line, #e2e8f0); background: var(--color-surface, #fff); color: var(--color-heading, #0f172a);
+                  appearance: none;
+                  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%2364748b'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+                  background-repeat: no-repeat; background-position: right .4rem center; background-size: 1rem; }
+    .map-select:focus-visible { outline: 2px solid var(--color-brand, #3b82f6); outline-offset: 1px; }
     #viz-cas { accent-color: var(--color-brand, #3b82f6); }
     /* Tlačítko „stáhnout graf jako PNG" v rohu karty grafu. */
     .chart-png { position: absolute; top: .4rem; right: .5rem; z-index: 1; padding: .15rem .35rem; border: none;
@@ -123,12 +129,15 @@ window.__vizConfig = {
 {{-- ── Mapa s přepínatelnými vrstvami (vč. přehrávání deníku) ──────────── --}}
 <div class="rounded-lg border border-line bg-surface p-3 mb-5">
   <div class="flex items-center gap-2 mb-2 flex-wrap">
-    <span class="text-sm font-semibold text-heading">{{ __('pages.viz.map') }}</span>
-    <button class="map-tab active" data-map-layer="playback">{{ __('pages.viz.layer_playback') }}</button>
-    <button class="map-tab" data-map-layer="crk">{{ __('pages.viz.layer_crk') }}</button>
-    <button class="map-tab" data-map-layer="jezek">{{ __('pages.viz.layer_jezek') }}</button>
-    <button class="map-tab" data-map-layer="spendliky">{{ __('pages.viz.layer_spendliky') }}</button>
-    <button class="map-tab" data-map-layer="lokatory">{{ __('pages.viz.layer_lokatory') }}</button>
+    <label class="text-sm font-semibold text-heading" for="viz-layer-select">{{ __('pages.viz.map') }}</label>
+    <select id="viz-layer-select" class="map-select">
+      <option value="playback" data-map-layer="playback">{{ __('pages.viz.layer_playback') }}</option>
+      <option value="crk" data-map-layer="crk">{{ __('pages.viz.layer_crk') }}</option>
+      <option value="jezek" data-map-layer="jezek">{{ __('pages.viz.layer_jezek') }}</option>
+      <option value="spendliky" data-map-layer="spendliky">{{ __('pages.viz.layer_spendliky') }}</option>
+      <option value="lokatory" data-map-layer="lokatory">{{ __('pages.viz.layer_lokatory') }}</option>
+      <option value="ctverce" data-map-layer="ctverce">{{ __('pages.viz.layer_ctverce') }}</option>
+    </select>
     {{-- Filtr druhu provozu – platí pro vrstvy s QSO (skrývá ho JS na vrstvě Lokátory). --}}
     <span id="viz-mode-filter" class="inline-flex items-center gap-2 sm:ml-auto">
       <span class="text-xs text-muted">{{ __('pages.viz.mode_filter') }}</span>

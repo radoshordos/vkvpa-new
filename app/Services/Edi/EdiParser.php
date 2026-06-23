@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Edi;
 
+use App\Enums\QsoCountStatus;
 use App\Exceptions\EdiParseException;
 use Illuminate\Support\Facades\Log;
 
@@ -20,13 +21,15 @@ final class EdiParser
     private const int QSO_FIELD_SEPARATORS = 14;
 
     /**
-     * Regex jednoho QSO řádku – 15 skupin. Pole „body za QSO" (11. skupina) je
-     * volitelné ([0-9]*): některé programy (např. VUSC for Win) ho nechávají
-     * prázdné a my ho ve skóre stejně ignorujeme – body počítáme z lokátorů.
+     * Regex jednoho QSO řádku – 15 skupin. Volitelná (prázdná) jsou pole, jejichž
+     * chybění z QSO nedělá chybu formátu, jen ho případně zneplatní až při
+     * vyhodnocení: čas, odeslaný/přijatý RST, přijaté pořadové číslo, přijatý
+     * lokátor a body za QSO. Spojení bez přijatého RST nebo čísla se naimportuje,
+     * ale ve skóre se nezapočítá ({@see QsoCountStatus::IncompleteExchange}).
      */
     private const string QSO_PATTERN =
-        '/^([0-9]+);([0-9]+);([0-9A-Z\/]+);([0-9]*);([0-9]+[AS]?);([0-9]+);'
-        .'([0-9]+[AS]?);([0-9]+);([0-9]*);([A-Z]{2}[0-9]{2}[A-Z]{2});([0-9]*);'
+        '/^([0-9]+);([0-9]*);([0-9A-Z\/]+);([0-9]*);([0-9]*[AS]?);([0-9]+);'
+        .'([0-9]*[AS]?);([0-9]*);([0-9]*);([A-Z]{2}[0-9]{2}[A-Z]{2})?;([0-9]*);'
         .'([A-Z0-9]*);([A-Z0-9]*);([A-Z0-9]*);([A-Z0-9]*)/';
 
     /**
@@ -94,24 +97,25 @@ final class EdiParser
                             count($f) - 1,
                             self::QSO_FIELD_SEPARATORS,
                         );
-                    } elseif (! self::hasValidDateTime($f[0], $f[1])) {
-                        // Vadné datum/čas. Kontrolujeme i když celý regex neprojde
-                        // (jiné pole může být prázdné) – datum je jednoznačná chyba.
+                    } elseif (self::dateTimeFormatError($f[0], $f[1])) {
+                        // Datum/čas je VYPLNĚNÝ, ale ve špatném formátu (např. 9místné
+                        // datum, 3místný čas) – jednoznačná chyba. Prázdné pole sem
+                        // nespadá: to je neúplný záznam, zneplatní se až při vyhodnocení.
                         $dateTimeErrors[] = 'QSO s '.$f[2].': datum „'.$f[0].'" / čas „'.$f[1]
                             .'" není ve formátu RRMMDD / HHMM (UTC).';
                     } elseif (preg_match(self::QSO_PATTERN, $upper, $m)) {
-                        // Lokátor musí být platný Maidenhead: první 2 písmena A–R,
-                        // číslice 0–9, subčtverec A–X. Jinak je QSO odmítnuto.
-                        if (preg_match('/^[A-R]{2}[0-9]{2}([A-X]{2})?$/', $m[10]) !== 1) {
+                        // Je-li lokátor vyplněn, musí být platný Maidenhead (A–R,
+                        // číslice, subčtverec A–X); jinak QSO odmítneme. Prázdný
+                        // lokátor projde – spojení se naimportuje, ale nezapočítá.
+                        if ($m[10] !== '' && preg_match('/^[A-R]{2}[0-9]{2}([A-X]{2})?$/', $m[10]) !== 1) {
                             $lineErrors[] = 'QSO s '.$m[3].' odmítnuto: lokátor „'.$m[10]
                                 .'" není platný Maidenhead (první 2 písmena musí být A–R, subčtverec A–X).';
                         } else {
                             $qsos[] = EdiQso::fromMatch($m);
                         }
                     } else {
-                        // 15 polí i platné datum/čas, ale řádek nevyhověl formátu
-                        // (typicky chybí přijatý RST/číslo u FM spojení) – tolerantně
-                        // přeskočíme a importujeme zbytek deníku, jako dosud.
+                        // 15 polí i formálně správné datum/čas, ale řádek přesto
+                        // nevyhověl formátu (např. nestandardní znaky) – přeskočíme.
                         $ignored[] = $buf;
                     }
                 } elseif ($buf !== '') {
@@ -193,6 +197,27 @@ final class EdiParser
             lineErrors: $lineErrors,
             ignoredLines: $ignored,
         );
+    }
+
+    /**
+     * Vrací true, je-li datum nebo čas VYPLNĚNÝ, ale ve špatném formátu – takový
+     * deník odmítáme. Prázdné pole chybou formátu není (jde o neúplný záznam,
+     * který se zneplatní až při vyhodnocení), proto se sem nepočítá.
+     */
+    private static function dateTimeFormatError(string $date, string $time): bool
+    {
+        $dateBad = $date !== '' && preg_match('/^[0-9]{6}$/', $date) !== 1;
+        $timeBad = $time !== '' && preg_match('/^[0-9]{4}$/', $time) !== 1;
+        if ($dateBad || $timeBad) {
+            return true;
+        }
+
+        // Obě pole vyplněná a správné délky → ověřit i platnost kalendáře.
+        if ($date !== '' && $time !== '') {
+            return ! self::hasValidDateTime($date, $time);
+        }
+
+        return false;
     }
 
     /**

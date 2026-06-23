@@ -155,7 +155,9 @@ class EdiVizualizaceTest extends TestCase
         $this->assertStringContainsString('squarePoints', $html);
         $this->assertStringContainsString('chartPrubeh', $html);
         $this->assertStringContainsString('chartCtverce', $html);
-        $this->assertStringContainsString('data-map-layer="playback"', $html);
+        $this->assertStringContainsString('<select id="viz-layer-select"', $html);
+        $this->assertStringContainsString('value="playback"', $html);
+        $this->assertStringContainsString('value="ctverce"', $html);
         $this->assertStringContainsString('data-az-metric="km"', $html);
         $this->assertStringContainsString('TOP ODX', $html);
     }
@@ -202,7 +204,7 @@ class EdiVizualizaceTest extends TestCase
             ->getContent() ?: '';
 
         $this->assertStringContainsString(route('edi.porovnani', ['head' => $head->id]), $html);
-        $this->assertStringNotContainsString('data-map-layer="porovnani"', $html);
+        $this->assertStringNotContainsString('value="porovnani"', $html);
         $this->assertStringNotContainsString('Porovnat s', $html);
     }
 

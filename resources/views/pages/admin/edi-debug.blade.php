@@ -117,6 +117,7 @@
         <x-badge variant="brand">{{ __('admin.debug_badge_decl') }} <b>{{ $report->declaredTotal }}</b></x-badge>
         <x-badge variant="brand">{{ __('admin.debug_badge_parsed') }} <b>{{ $report->parsedCount }}</b></x-badge>
         <x-badge variant="ok">{{ __('admin.debug_badge_counted') }} <b>{{ $report->pocet }}</b></x-badge>
+        @if ($report->excludedIncomplete)<x-badge variant="danger">{{ __('admin.debug_badge_incomplete') }} <b>{{ $report->excludedIncomplete }}</b></x-badge>@endif
         @if ($report->excludedOutOfWindow)<x-badge variant="warn">{{ __('admin.debug_badge_window') }} <b>{{ $report->excludedOutOfWindow }}</b></x-badge>@endif
         @if ($report->excludedWrongDate)<x-badge variant="warn">{{ __('admin.debug_badge_date') }} <b>{{ $report->excludedWrongDate }}</b></x-badge>@endif
         @if ($report->ownSquareCount)<x-badge variant="ok">{{ __('admin.debug_badge_own') }} <b>{{ $report->ownSquareCount }}</b></x-badge>@endif
@@ -180,6 +181,7 @@
                         <td class="whitespace-nowrap">
                             @switch($row->reason)
                                 @case('counted')<x-badge variant="ok">{{ __('admin.debug_status_ok') }}</x-badge>@break
+                                @case('incomplete_exchange')<x-badge variant="danger">{{ __('admin.debug_status_incomplete') }}</x-badge>@break
                                 @case('out_of_window')<x-badge variant="warn">{{ __('admin.debug_status_window') }}</x-badge>@break
                                 @case('wrong_date')<x-badge variant="warn">{{ __('admin.debug_status_date') }}</x-badge>@break
                                 @default<x-badge variant="brand">{{ __('admin.debug_status_empty') }}</x-badge>

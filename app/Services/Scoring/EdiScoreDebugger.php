@@ -49,6 +49,7 @@ final class EdiScoreDebugger
 
         $pocet = 0;
         $boduZaQso = 0;
+        $incomplete = 0;
         $outOfWindow = 0;
         $wrongDate = 0;
         $ownSquare = 0;
@@ -76,8 +77,8 @@ final class EdiScoreDebugger
             }
 
             // Vítězný důvod (a tím i čítače) určuje kanonické pořadí ze sdíleného
-            // enumu – shodně se scoreEdi/scoreLog: nejdřív čas, pak den, pak WWL.
-            $status = QsoCountStatus::classify($time, $date, $square, $den, $from, $to);
+            // enumu – shodně se scoreEdi/scoreLog: neúplný příjem, čas, den, WWL.
+            $status = QsoCountStatus::classify($qso->receivedRst, $qso->receivedQsoNumber, $time, $date, $square, $den, $from, $to);
             $counted = $status->isCounted();
             $newMultiplier = false;
 
@@ -94,6 +95,7 @@ final class EdiScoreDebugger
                 }
             } else {
                 match ($status) {
+                    QsoCountStatus::IncompleteExchange => $incomplete++,
                     QsoCountStatus::OutOfWindow => $outOfWindow++,
                     QsoCountStatus::WrongDate => $wrongDate++,
                     QsoCountStatus::EmptyWwl => $emptyWwl++,
@@ -156,6 +158,7 @@ final class EdiScoreDebugger
             boduZaQso: $boduZaQso,
             nasobice: $nasobice,
             body: $boduZaQso * $nasobice,
+            excludedIncomplete: $incomplete,
             excludedOutOfWindow: $outOfWindow,
             excludedWrongDate: $wrongDate,
             ownSquareCount: $ownSquare,
