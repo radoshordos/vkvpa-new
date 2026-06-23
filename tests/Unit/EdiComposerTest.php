@@ -16,6 +16,7 @@ use Tests\TestCase;
  */
 class EdiComposerTest extends TestCase
 {
+    /** @return array<string, mixed> */
     private function header(): array
     {
         return [
