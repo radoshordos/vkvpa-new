@@ -13,6 +13,13 @@ use Illuminate\Support\Facades\Log;
 final class EdiParser
 {
     /**
+     * Počet oddělovačů (středníků) v jednom QSO záznamu. Formát REG1TEST má
+     * 15 polí, tedy přesně 14 středníků mezi nimi (viz VHF Handbook, sekce
+     * „QSO record definition": 61 znaků dat + 14 separátorů = max. 75 znaků).
+     */
+    private const int QSO_FIELD_SEPARATORS = 14;
+
+    /**
      * Regex jednoho QSO řádku – 15 skupin přesně dle původního read_edi.php.
      */
     private const string QSO_PATTERN =
@@ -45,6 +52,7 @@ final class EdiParser
         $ignored = [];
         $lineErrors = [];
         $dateTimeErrors = [];
+        $separatorErrors = [];
         $declaredTotal = 0;
         $raw = '';
 
@@ -69,6 +77,19 @@ final class EdiParser
                     if ($buf !== '') {
                         $ignored[] = $buf;
                     }
+                } elseif (preg_match('/^[0-9]/', $buf) === 1 && substr_count($buf, ';') !== self::QSO_FIELD_SEPARATORS) {
+                    // Řádek vypadá jako QSO záznam (začíná datem), ale nemá přesně
+                    // 15 polí oddělených 14 středníky. Chybějící/přebytečné pole je
+                    // strukturální chyba – import odmítáme. (Řádky nezačínající
+                    // číslicí necháváme propadnout dál: buď jde o úplně nevalidní
+                    // soubor, nebo o řádek se značkou ERROR řešený výše.)
+                    $separatorErrors[] = sprintf(
+                        'QSO řádek „%s" má %d oddělovačů (středníků), ale formát REG1TEST vyžaduje '
+                        .'přesně %d (15 polí oddělených středníkem).',
+                        $buf,
+                        substr_count($buf, ';'),
+                        self::QSO_FIELD_SEPARATORS,
+                    );
                 } elseif (preg_match(self::QSO_PATTERN, $upper, $m)) {
                     // Datum a čas musí být přesně RRMMDD (6 číslic) a HHMM v UTC
                     // (4 číslice). Jiný formát (typicky čtyřmístný rok RRRRMMDD) by
@@ -105,6 +126,19 @@ final class EdiParser
                 $section = 'records';
                 $declaredTotal = (int) substr($buf, 12);
             }
+        }
+
+        // Nesprávný počet oddělovačů → záznam nemá 15 polí. Strukturální chyba,
+        // import odmítáme s výpisem konkrétních vadných řádků.
+        if ($separatorErrors !== []) {
+            throw new EdiParseException(
+                'Některý QSO záznam nemá správný počet polí. Každé spojení musí mít přesně '
+                .'15 polí oddělených 14 středníky (;) dle formátu REG1TEST '
+                .'(Date;Time;Call;Mode;SentRST;SentNr;RcvdRST;RcvdNr;RcvdExch;RcvdWWL;'
+                .'QSO-Points;NewExch;NewWWL;NewDXCC;Duplicate). Opravte deník ve svém '
+                .'závodním programu a nahrajte jej znovu.',
+                $separatorErrors,
+            );
         }
 
         // Datum/čas v nesprávném formátu → import odmítáme a vysvětlíme závodníkovi

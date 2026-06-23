@@ -143,6 +143,32 @@ class EdiParserTest extends TestCase
         $this->assertSame([], $log->lineErrors);
     }
 
+    public function test_rejects_import_when_record_has_too_few_separators(): void
+    {
+        // Chybí jedno pole → jen 13 středníků místo 14 → strukturální chyba.
+        $edi = "[REG1TEST;1]\nPCall=OK1ABC\n[QSORecords;1]\n"
+            ."260315;0800;OK1XYZ;1;59;001;59;001;JN79AB;3;;;;\n[END;]\n";
+
+        $this->expectException(EdiParseException::class);
+        $this->expectExceptionMessage('15 polí');
+        new EdiParser()->parse($edi);
+    }
+
+    public function test_rejects_import_when_record_has_too_many_separators(): void
+    {
+        // Přebytečný středník navíc → 15 středníků místo 14.
+        $edi = "[REG1TEST;1]\nPCall=OK1ABC\n[QSORecords;1]\n"
+            ."260315;0800;OK1XYZ;1;59;001;59;001;;JN79AB;3;;;;;\n[END;]\n";
+
+        try {
+            new EdiParser()->parse($edi);
+            $this->fail('Očekávána EdiParseException.');
+        } catch (EdiParseException $e) {
+            $this->assertCount(1, $e->lineErrors);
+            $this->assertStringContainsString('15 oddělovačů', $e->lineErrors[0]);
+        }
+    }
+
     public function test_rejects_import_when_date_has_four_digit_year(): void
     {
         // Čtyřmístný rok (RRRRMMDD) místo RRMMDD → celý import se odmítne
