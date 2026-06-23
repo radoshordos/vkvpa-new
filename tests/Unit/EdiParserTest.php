@@ -169,6 +169,42 @@ class EdiParserTest extends TestCase
         }
     }
 
+    public function test_reports_bad_date_even_when_line_fails_full_pattern(): void
+    {
+        // Reálný případ: 9místné datum „202606021" a navíc prázdné pole bodů.
+        // Řádek neprojde QSO_PATTERN (prázdné body), ale datum musí dostat
+        // konkrétní hlášku, ne obecné „nevypadá jako platný EDI".
+        $edi = "[REG1TEST;1]\nPCall=OK2PKD\n[QSORecords;1]\n"
+            ."202606021;1050;OK1FPC;2;599;001;599;007;;JN79NU;;;;;\n[END;]\n";
+
+        try {
+            new EdiParser()->parse($edi);
+            $this->fail('Očekávána EdiParseException.');
+        } catch (EdiParseException $e) {
+            $this->assertCount(1, $e->lineErrors);
+            $this->assertStringContainsString('202606021', $e->lineErrors[0]);
+            $this->assertStringContainsString('OK1FPC', $e->lineErrors[0]);
+            $this->assertStringContainsString('RRMMDD', $e->getMessage());
+        }
+    }
+
+    public function test_tolerates_qso_line_with_empty_received_rst(): void
+    {
+        // FM spojení bez přijatého RST/čísla (reálné v historických denících):
+        // platné datum i body → řádek se tolerantně přeskočí, ale je-li to jediné
+        // QSO, zůstane stávající chování (žádné platné spojení → výjimka).
+        $edi = "[REG1TEST;1]\nPCall=OK2BUB\n[QSORecords;2]\n"
+            ."260118;0801;OK2TVP;6;59;001;;;;JN99EQ;2;;N;N;\n"
+            ."260118;0802;OK2VIR;1;59;002;59;003;;JN99DU;2;;;;\n[END;]\n";
+
+        $log = new EdiParser()->parse($edi);
+
+        // Druhé (úplné) QSO projde, první (bez přijatého RST) se přeskočí.
+        $this->assertSame(1, $log->qsoCount());
+        $this->assertSame('OK2VIR', $log->qsos[0]->callSign);
+        $this->assertCount(1, $log->ignoredLines);
+    }
+
     public function test_rejects_import_when_date_has_four_digit_year(): void
     {
         // Čtyřmístný rok (RRRRMMDD) místo RRMMDD → celý import se odmítne

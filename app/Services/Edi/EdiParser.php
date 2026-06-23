@@ -77,39 +77,43 @@ final class EdiParser
                     if ($buf !== '') {
                         $ignored[] = $buf;
                     }
-                } elseif (preg_match('/^[0-9]/', $buf) === 1 && substr_count($buf, ';') !== self::QSO_FIELD_SEPARATORS) {
-                    // Řádek vypadá jako QSO záznam (začíná datem), ale nemá přesně
-                    // 15 polí oddělených 14 středníky. Chybějící/přebytečné pole je
-                    // strukturální chyba – import odmítáme. (Řádky nezačínající
-                    // číslicí necháváme propadnout dál: buď jde o úplně nevalidní
-                    // soubor, nebo o řádek se značkou ERROR řešený výše.)
-                    $separatorErrors[] = sprintf(
-                        'QSO řádek „%s" má %d oddělovačů (středníků), ale formát REG1TEST vyžaduje '
-                        .'přesně %d (15 polí oddělených středníkem).',
-                        $buf,
-                        substr_count($buf, ';'),
-                        self::QSO_FIELD_SEPARATORS,
-                    );
-                } elseif (preg_match(self::QSO_PATTERN, $upper, $m)) {
-                    // Datum a čas musí být přesně RRMMDD (6 číslic) a HHMM v UTC
-                    // (4 číslice). Jiný formát (typicky čtyřmístný rok RRRRMMDD) by
-                    // se jinak tiše naparsoval, spojení by spadlo mimo závodní okno
-                    // a obodovalo se nulou – proto raději celý import odmítneme.
-                    if (! self::hasValidDateTime($m[1], $m[2])) {
-                        $dateTimeErrors[] = 'QSO s '.$m[3].': datum „'.$m[1].'" / čas „'.$m[2]
+                } elseif (preg_match('/^[0-9]/', $buf) === 1) {
+                    // Řádek vypadá jako QSO záznam (začíná datem). Validujeme ho po
+                    // krocích od nejzávažnější chyby, ať závodník dostane konkrétní
+                    // důvod, ne jen obecné „nevypadá jako platný EDI".
+                    $f = explode(';', $upper);
+
+                    if (count($f) - 1 !== self::QSO_FIELD_SEPARATORS) {
+                        // Chybějící/přebytečné pole – záznam nemá 15 polí.
+                        $separatorErrors[] = sprintf(
+                            'QSO řádek „%s" má %d oddělovačů (středníků), ale formát REG1TEST '
+                            .'vyžaduje přesně %d (15 polí oddělených středníkem).',
+                            $buf,
+                            count($f) - 1,
+                            self::QSO_FIELD_SEPARATORS,
+                        );
+                    } elseif (! self::hasValidDateTime($f[0], $f[1])) {
+                        // Vadné datum/čas. Kontrolujeme i když celý regex neprojde
+                        // (jiné pole může být prázdné) – datum je jednoznačná chyba.
+                        $dateTimeErrors[] = 'QSO s '.$f[2].': datum „'.$f[0].'" / čas „'.$f[1]
                             .'" není ve formátu RRMMDD / HHMM (UTC).';
-                    }
-                    // Lokátor musí být platný Maidenhead: první 2 písmena A–R,
-                    // číslice 0–9, subčtverec A–X. Jinak je QSO odmítnuto.
-                    elseif (preg_match('/^[A-R]{2}[0-9]{2}([A-X]{2})?$/', $m[10]) !== 1) {
-                        $lineErrors[] = 'QSO s '.$m[3].' odmítnuto: lokátor „'.$m[10]
-                            .'" není platný Maidenhead (první 2 písmena musí být A–R, subčtverec A–X).';
+                    } elseif (preg_match(self::QSO_PATTERN, $upper, $m)) {
+                        // Lokátor musí být platný Maidenhead: první 2 písmena A–R,
+                        // číslice 0–9, subčtverec A–X. Jinak je QSO odmítnuto.
+                        if (preg_match('/^[A-R]{2}[0-9]{2}([A-X]{2})?$/', $m[10]) !== 1) {
+                            $lineErrors[] = 'QSO s '.$m[3].' odmítnuto: lokátor „'.$m[10]
+                                .'" není platný Maidenhead (první 2 písmena musí být A–R, subčtverec A–X).';
+                        } else {
+                            $qsos[] = EdiQso::fromMatch($m);
+                        }
                     } else {
-                        $qsos[] = EdiQso::fromMatch($m);
+                        // 15 polí i platné datum/čas, ale řádek nevyhověl formátu
+                        // (typicky chybí přijatý RST/číslo u FM spojení) – tolerantně
+                        // přeskočíme a importujeme zbytek deníku, jako dosud.
+                        $ignored[] = $buf;
                     }
                 } elseif ($buf !== '') {
-                    // Neparsovatelný řádek (prázdná povinná pole apod.) –
-                    // přeskočíme a importujeme zbytek deníku.
+                    // Řádek nezačíná datem (úplně nevalidní soubor apod.) – přeskočíme.
                     $ignored[] = $buf;
                 }
             }
