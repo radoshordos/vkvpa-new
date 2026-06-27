@@ -25,6 +25,7 @@ use App\Services\Edi\EdiParser;
 use App\Services\Edi\EdiReducer;
 use App\Services\Edi\EdiValidator;
 use App\Services\Scoring\EdiScoreDebugger;
+use App\Services\Scoring\ScoringService;
 use App\Support\VkvpaSettings;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
@@ -218,9 +219,19 @@ class Prihlaska extends Component
         $this->telefon = $h->rPhon();
         $this->soapbox = $h->get('RSoap');
 
-        $this->warnings = app(EdiValidator::class)->validate($log)->messages();
+        $this->warnings = app(EdiValidator::class)->validate($log, $this->ediContestDay($log))->messages();
 
         $this->mode = 'edi-review';
+    }
+
+    /**
+     * Den závodu „YYMMDD" pro validaci/rozpad – datum konání kola dle TDate, aby
+     * počty QSO „mimo den" odpovídaly skutečnému skóre ({@see ScoringService::scoreEdi()}).
+     * Null, když kolo neznáme (validátor/debugger pak použijí den z TDate).
+     */
+    private function ediContestDay(EdiLog $log): ?string
+    {
+        return app(ScoringService::class)->contestDay(null, $log->header->tDate())?->format('ymd');
     }
 
     /** Memoizace naparsovaného deníku pro aktuální request ({@see parseUpload()}). */
@@ -431,7 +442,7 @@ class Prihlaska extends Component
             try {
                 $log = $this->parseUpload();
                 $reducer = app(EdiReducer::class);
-                $report = app(EdiScoreDebugger::class)->analyze($log);
+                $report = app(EdiScoreDebugger::class)->analyze($log, $this->ediContestDay($log));
                 // Řádky původního EDI s příznakem, zda je EDIR (ořez na okno) zahodí.
                 $ediLines = $reducer->annotate($log->rawSource);
                 $ediReduced = $reducer->reduce($log->rawSource);

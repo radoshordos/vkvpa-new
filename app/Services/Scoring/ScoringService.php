@@ -109,8 +109,12 @@ final class ScoringService
     public function scoreEdi(Edihead $head): EdiScore
     {
         $home = Maidenhead::bigSquare((string) $head->p_wwlo);
-        // Den závodu jako plné datum (Y-m-d) ze začátku t_date (YYYYMMDD;YYYYMMDD).
-        $den = ContestWindow::dateFromTDate((string) $head->t_date);
+        // Den závodu = datum konání kola, do kterého deník patří (autoritativní);
+        // fallback na den z TDate, když kolo neznáme. Bere se den konání, ne první
+        // token TDate – u dvoudenního TDate (RRRRMMDD;RRRRMMDD) by jinak QSO ze
+        // skutečného dne konání spadla jako „mimo den" a deník by dostal 0.
+        $den = $this->contestDay($head->id_kola, (string) $head->t_date)?->format('Y-m-d')
+            ?? ContestWindow::dateFromTDate((string) $head->t_date);
 
         $squares = $head->lines()
             ->inContestWindow()
@@ -133,7 +137,9 @@ final class ScoringService
     public function scoreLog(EdiLog $log): EdiScore
     {
         $home = Maidenhead::bigSquare($log->header->pWWLo());
-        $den = ContestWindow::dayFromTDate($log->header->tDate());
+        // Den závodu z kola dle TDate (shodně se scoreEdi); fallback na den z TDate.
+        $den = $this->contestDay(null, $log->header->tDate())?->format('ymd')
+            ?? ContestWindow::dayFromTDate($log->header->tDate());
         $from = ContestWindow::from();
         $to = ContestWindow::to();
 
@@ -191,6 +197,27 @@ final class ScoringService
             ->value('id');
 
         return is_numeric($id) ? (int) $id : null;
+    }
+
+    /**
+     * Autoritativní den závodu pro skórování: datum konání kola, do kterého deník
+     * patří. Přednost má předané `id_kola` (uložený deník), jinak se kolo dohledá
+     * podle TDate (rok+měsíc, {@see koloForTDate()}). Vrátí null, když odpovídající
+     * kolo neexistuje – pak volající použije den odvozený přímo z TDate (fallback).
+     *
+     * Řeší rozpor dvoudenního TDate (RRRRMMDD;RRRRMMDD): den se bere z kola, ne
+     * z prvního tokenu TDate, takže se započítají QSO ze skutečného dne konání.
+     */
+    public function contestDay(?int $idKola, ?string $tdate): ?Carbon
+    {
+        $id = $idKola ?? $this->koloForTDate($tdate);
+        if ($id === null) {
+            return null;
+        }
+
+        $den = VkvpaKola::query()->whereKey($id)->value('datum_konani');
+
+        return $den instanceof Carbon ? $den : null;
     }
 
     /**

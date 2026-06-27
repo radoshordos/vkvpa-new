@@ -176,6 +176,40 @@ class ScoringServiceTest extends TestCase
         $this->assertSame(16, $score->body);
     }
 
+    public function test_score_edi_uses_kolo_day_not_first_tdate_token(): void
+    {
+        // Dvoudenní TDate: první token (20.) ≠ den konání kola (21.). QSO jsou ze
+        // dne konání (21.) – musí se započítat. Dřív skóre bralo den z prvního
+        // tokenu TDate (20.), takže platná QSO z 21. padala jako „mimo den" → 0.
+        $kolo = VkvpaKola::create([
+            'datum_konani' => '2026-06-21 08:00:00',
+            'datum_uzaverky' => now()->addDays(5),
+            'nazev' => '06/2026',
+            'poznamka' => '',
+        ]);
+
+        $head = Edihead::create([
+            'id_kola' => $kolo->id,
+            't_date' => '20260620;20260621', 'p_call' => 'OK1TEST', 'p_wwlo' => 'JN99AJ',
+            'p_sect' => '', 'p_band' => '', 'r_name' => '', 'r_phon' => '', 'r_emai' => '', 's_powe' => 100,
+        ]);
+        Ediline::insert($this->withExchange([
+            // QSO ze dne konání (21.) v okně → započítá se.
+            ['edihead_id' => $head->id, 'qso_at' => '2026-06-21 08:30:00', 'call_sign' => 'A', 'received_wwl' => 'JN89AA', 'qso_points' => 0],
+            // QSO z prvního dne TDate (20.), který NENÍ den konání → mimo den, vyřazeno.
+            ['edihead_id' => $head->id, 'qso_at' => '2026-06-20 08:30:00', 'call_sign' => 'B', 'received_wwl' => 'JO70AA', 'qso_points' => 0],
+        ]));
+
+        $score = app(ScoringService::class)->scoreEdi($head);
+
+        // Jen QSO z 21. (JN89 soused = 3 b). pocet=1, nasobice = 1 cizí + 1 vlastní = 2,
+        // body = 3 × 2 = 6.
+        $this->assertSame(1, $score->pocet);
+        $this->assertSame(3, $score->boduZaQso);
+        $this->assertSame(2, $score->nasobice);
+        $this->assertSame(6, $score->body);
+    }
+
     public function test_yearly_results_nullifies_non_edi_for_kola_above_threshold(): void
     {
         config(['vkvpa.non_edi_nullify_from_kolo' => 2]); // práh = ID kola 2

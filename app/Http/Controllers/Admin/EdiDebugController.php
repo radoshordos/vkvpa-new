@@ -9,8 +9,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\EdiController;
 use App\Http\Requests\Admin\EdiDebugUploadRequest;
 use App\Models\Edihead;
+use App\Services\Edi\EdiLog;
 use App\Services\Edi\EdiParser;
 use App\Services\Scoring\EdiScoreDebugger;
+use App\Services\Scoring\ScoringService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
@@ -24,7 +26,14 @@ class EdiDebugController extends Controller
     public function __construct(
         private readonly EdiParser $parser,
         private readonly EdiScoreDebugger $debugger,
+        private readonly ScoringService $scoring,
     ) {}
+
+    /** Den závodu „YYMMDD" dle data konání kola (TDate); null = fallback na TDate. */
+    private function contestDay(EdiLog $log): ?string
+    {
+        return $this->scoring->contestDay(null, $log->header->tDate())?->format('ymd');
+    }
 
     /** Zobrazí prázdný formulář pro nahrání EDI. */
     public function create(): View
@@ -60,7 +69,7 @@ class EdiDebugController extends Controller
 
         return view('pages.admin.edi-debug', [
             'active' => 'edit_edi_debug',
-            'report' => $this->debugger->analyze($log),
+            'report' => $this->debugger->analyze($log, $this->contestDay($log)),
             'filename' => $head->p_call,
             'edihead' => $head,
             'zDatabaze' => true,
@@ -87,7 +96,7 @@ class EdiDebugController extends Controller
 
         return view('pages.admin.edi-debug', [
             'active' => 'edit_edi_debug',
-            'report' => $this->debugger->analyze($log),
+            'report' => $this->debugger->analyze($log, $this->contestDay($log)),
             'filename' => preg_replace('/[^A-Za-z0-9._\-]/', '_', basename((string) $request->file('upload')->getClientOriginalName())),
             'edihead' => $edihead,
             'zDatabaze' => false,

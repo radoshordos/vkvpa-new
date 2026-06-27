@@ -51,6 +51,22 @@ class EdiValidatorTest extends TestCase
         $this->assertSame([], $report->messages());
     }
 
+    public function test_contest_day_param_overrides_tdate_for_wrong_date(): void
+    {
+        $log = $this->log(2,
+            ['260118', '0830', 'OK1A', 'JN89AA'],
+            ['260118', '0930', 'OK1B', 'JO70BB'],
+        );
+
+        // Den konání předaný explicitně (17.) ≠ den QSO (18.) → obě „mimo den".
+        $report = new EdiValidator()->validate($log, '260117');
+        $this->assertStringContainsString('mimo den závodu', implode(' ', $report->messages()));
+
+        // Den konání = den QSO (18.) → žádné varování o dni.
+        $report = new EdiValidator()->validate($log, '260118');
+        $this->assertStringNotContainsString('mimo den závodu', implode(' ', $report->messages()));
+    }
+
     public function test_detects_duplicate_callsigns(): void
     {
         $report = new EdiValidator()->validate($this->log(0,

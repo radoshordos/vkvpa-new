@@ -41,9 +41,13 @@ final readonly class EdiValidationReport
         public ?string $invalidHomeLocator = null,
     ) {}
 
-    public static function fromLog(EdiLog $log): self
+    /**
+     * @param  ?string  $contestDay  den závodu „YYMMDD" (z data konání kola); když
+     *                               null, odvodí se z prvního dne TDate (fallback).
+     */
+    public static function fromLog(EdiLog $log, ?string $contestDay = null): self
     {
-        $den = ContestWindow::dayFromTDate($log->header->tDate());
+        $den = $contestDay ?? ContestWindow::dayFromTDate($log->header->tDate());
         $from = ContestWindow::from();
         $to = ContestWindow::to();
 

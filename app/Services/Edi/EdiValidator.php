@@ -15,8 +15,14 @@ namespace App\Services\Edi;
  */
 final class EdiValidator
 {
-    public function validate(EdiLog $log): EdiValidationReport
+    /**
+     * @param  ?string  $contestDay  den závodu „YYMMDD" (z data konání kola); když
+     *                               null, odvodí se z TDate (fallback). Volající,
+     *                               který zná kolo, ho předá, aby se počty QSO
+     *                               „mimo den" shodly se skutečným skóre.
+     */
+    public function validate(EdiLog $log, ?string $contestDay = null): EdiValidationReport
     {
-        return EdiValidationReport::fromLog($log);
+        return EdiValidationReport::fromLog($log, $contestDay);
     }
 }

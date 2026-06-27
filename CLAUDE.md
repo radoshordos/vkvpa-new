@@ -57,7 +57,7 @@ The large tables (`edi_head`, `edi_lines`, `vkvpa_data`) ship as gzipped newline
 ### Scoring Formula
 
 `ScoringService::scoreEdi()` implements the contest rules:
-- Count QSOs within the contest window (`ContestWindow::from()` = `'0800'`, `to()` = `'1100'` UTC) on the contest day taken from `TDate`; QSOs outside the window or day score 0
+- Count QSOs within the contest window (`ContestWindow::from()` = `'0800'`, `to()` = `'1100'` UTC) on the contest day; QSOs outside the window or day score 0. The contest day is the round's `datum_konani` (resolved by `ScoringService::contestDay()` from `edi_head.id_kola`, or the round matching `TDate`'s year+month), **not** the first token of `TDate` — so a two-day `TDate` (`YYYYMMDD;YYYYMMDD`) still scores QSOs on the real contest day instead of silently zeroing them. Only when no matching round exists does it fall back to `TDate`'s first day. `koloForTDate()` and the `assertTDate*` import guards already require `TDate` to contain the contest day and the QSOs to fall on a `TDate` day; `scoreLog()`/`EdiValidator`/`EdiScoreDebugger` take the same contest day so previews, warnings and the debug breakdown agree with the stored score
 - QSOs to the station's own big square (first 4 chars of `PWWLo`) **are** counted — `pocet` includes them
 - `boduZaQso` = sum of per-QSO points recomputed from locators via `Maidenhead::qsoPoints()` (own big square = 2 points, +1 for each further ring of big squares); the EDI `QSO-Points` column is ignored
 - `nasobice` = count of distinct big squares including the home square (home always counts, even if not worked)
