@@ -6,6 +6,7 @@ namespace Database\Seeders;
 
 use App\Services\Edi\EdiheadCategoryBackfiller;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Artisan;
 
 /**
  * Naplní DB ukázkovým datasetem (snapshot původního provozu → JSON v `seeders/data/`).
@@ -29,6 +30,10 @@ class SampleDatabaseSeeder extends Seeder
             VkvpaPrihlaseniTableSeeder::class,
             PrefixesTableSeeder::class,
         ]);
+
+        // Některá kola (01–03/2026) mají ve snapshotu prázdné p_band/p_sect,
+        // ale plný src – nejdřív sloupce doplníme přeparsováním hlavičky.
+        Artisan::call('vkvpa:repair-edihead-band-sect');
 
         // edi_head.edi_category_id snapshot nenese – dopočítáme ho (až po
         // naseedovaných vkvpa_data, na nichž závisí kroky 2–3):
