@@ -28,7 +28,8 @@ return new class extends Migration
             $table->unsignedSmallInteger('vyska')->default(0);
             $table->unsignedInteger('velikost')->default(0);
             $table->unsignedSmallInteger('poradi')->default(0);
-            $table->timestamp('created_at')->useCurrent();
+            // DATETIME (ne TIMESTAMP) – nezávislé na session time_zone serveru.
+            $table->dateTime('created_at')->useCurrent();
 
             $table->index(['prispevek_id', 'poradi']);
         });

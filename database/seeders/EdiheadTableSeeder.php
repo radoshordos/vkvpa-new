@@ -8,5 +8,5 @@ class EdiheadTableSeeder extends JsonTableSeeder
 {
     protected string $table = 'edihead';
 
-    protected ?int $autoIncrement = 23111;
+    protected ?int $autoIncrement = 23379;
 }

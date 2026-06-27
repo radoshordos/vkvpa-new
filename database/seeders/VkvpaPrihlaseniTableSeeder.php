@@ -11,7 +11,7 @@ class VkvpaPrihlaseniTableSeeder extends JsonTableSeeder
     protected ?int $autoIncrement = 12981;
 
     /**
-     * Snapshot ostré DB z 2026-06-10.
+     * Snapshot ostré DB z 2026-06-27 (čas v UTC, shodně s app.timezone).
      *
      * @return list<array<string, mixed>>
      */
@@ -429,8 +429,8 @@ class VkvpaPrihlaseniTableSeeder extends JsonTableSeeder
             ['id' => 8531, 'time' => null, 'kod' => '1716323243'],
             ['id' => 8532, 'time' => null, 'kod' => '1716360342'],
             ['id' => 8533, 'time' => null, 'kod' => '1716367594'],
-            ['id' => 12947, 'time' => '2025-12-08 13:28:44', 'kod' => '6a86748e34d07dd7a0a089c4d50da606'],
-            ['id' => 12948, 'time' => '2025-12-08 13:35:08', 'kod' => 'a378c539c300595df9f9bead6fa05186'],
+            ['id' => 12947, 'time' => '2025-12-08 12:28:44', 'kod' => '6a86748e34d07dd7a0a089c4d50da606'],
+            ['id' => 12948, 'time' => '2025-12-08 12:35:08', 'kod' => 'a378c539c300595df9f9bead6fa05186'],
         ];
     }
 }

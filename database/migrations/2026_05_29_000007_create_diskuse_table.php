@@ -23,7 +23,8 @@ return new class extends Migration
             // ukládají se binárně do podřízené tabulky `diskuse_foto` (1:N),
             // takže jich může být víc na jeden příspěvek.
             $table->string('ip', 45)->nullable();
-            $table->timestamp('created_at')->useCurrent();
+            // DATETIME (ne TIMESTAMP) – nezávislé na session time_zone serveru.
+            $table->dateTime('created_at')->useCurrent();
 
             $table->index('kolo_id');
         });

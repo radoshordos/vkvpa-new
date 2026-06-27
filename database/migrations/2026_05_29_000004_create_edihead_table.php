@@ -30,8 +30,10 @@ return new class extends Migration
             $table->string('s_ante', 100)->nullable();
             $table->mediumText('src')->nullable();
             $table->text('remarks')->nullable();
-            $table->timestamp('stamp')->useCurrent();
-            $table->timestamp('d_cas')->nullable()->useCurrent();
+            // DATETIME (ne TIMESTAMP) – časy jsou nezávislé na session time_zone
+            // serveru, takže se snapshoty/dumpy (v UTC) reprodukují 1:1.
+            $table->dateTime('stamp')->useCurrent();
+            $table->dateTime('d_cas')->nullable()->useCurrent();
             $table->longText('s_rcr')->nullable();
 
             $table->index('id_kola', 'edihead_id_kola_idx');

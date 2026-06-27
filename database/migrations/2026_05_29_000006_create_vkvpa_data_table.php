@@ -42,7 +42,8 @@ return new class extends Migration
             $table->boolean('schvaleno')->default(false);
             $table->boolean('odeslano')->default(false);
             $table->string('session_id', 255)->default('');
-            $table->timestamp('timestamp')->nullable()->useCurrent();
+            // DATETIME (ne TIMESTAMP) – nezávislé na session time_zone serveru.
+            $table->dateTime('timestamp')->nullable()->useCurrent();
 
             // Historická data mají jednu značku ve více kategoriích (pásmech)
             // v rámci jednoho kola – unikátnost platí až na úrovni kategorie.
