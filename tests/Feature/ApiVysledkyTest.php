@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\EdiCategory;
 use App\Models\VkvpaData;
-use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
@@ -28,12 +28,13 @@ class ApiVysledkyTest extends TestCase
         ]);
     }
 
-    private function kategorie(): VkvpaKategorie
+    private function kategorie(): EdiCategory
     {
-        return VkvpaKategorie::create([
-            'nazev' => '2m SSB',
-            'zkratka' => 'SSB',
-            'dxid' => 1,
+        return EdiCategory::create([
+            'name' => '2m SSB',
+            'band' => 'SSB',
+            'section' => 'SO',
+            'variant' => 'domestic',
         ]);
     }
 

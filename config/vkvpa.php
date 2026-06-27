@@ -70,8 +70,8 @@ return [
     // (např. `users`) tabulky podvržením POST dat. Pořadí v rámci skupin je
     // zvoleno tak, aby při obnově byly rodičovské tabulky před závislými.
     'db_backup_table_groups' => [
-        'edi' => ['edi_head', 'edi_lines'],
-        'vysledky' => ['vkvpa_kola', 'vkvpa_kategorie', 'vkvpa_data'],
+        'edi' => ['edi_category', 'edi_head', 'edi_lines'],
+        'vysledky' => ['vkvpa_kola', 'vkvpa_data'],
         'ostatni' => ['vkvpa_prihlaseni', 'diskuse', 'diskuse_foto'],
     ],
 ];

@@ -21,7 +21,6 @@ class SampleDatabaseSeeder extends Seeder
         // prefixes jsou bez závislostí.
         $this->call([
             VkvpaKolaTableSeeder::class,
-            VkvpaKategorieTableSeeder::class,
             EdiCategoryTableSeeder::class,
             EdiheadTableSeeder::class,
             EdilinesTableSeeder::class,

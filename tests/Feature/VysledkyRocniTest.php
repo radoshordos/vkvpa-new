@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Http\Controllers\VysledkyController;
+use App\Models\EdiCategory;
 use App\Models\VkvpaData;
-use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -20,9 +20,9 @@ class VysledkyRocniTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function kat(string $nazev): VkvpaKategorie
+    private function kat(string $nazev): EdiCategory
     {
-        return VkvpaKategorie::create(['nazev' => $nazev, 'zkratka' => $nazev, 'dxid' => 0]);
+        return EdiCategory::create(['name' => $nazev, 'band' => $nazev, 'section' => 'SO', 'variant' => 'domestic']);
     }
 
     private function kolo(string $rok): VkvpaKola
@@ -35,7 +35,7 @@ class VysledkyRocniTest extends TestCase
         ]);
     }
 
-    private function entry(VkvpaKola $kolo, VkvpaKategorie $kat, string $znacka, int $body, bool $qrp = false, bool $edi = true, bool $lp = false): VkvpaData
+    private function entry(VkvpaKola $kolo, EdiCategory $kat, string $znacka, int $body, bool $qrp = false, bool $edi = true, bool $lp = false): VkvpaData
     {
         return VkvpaData::create([
             'id_kola' => $kolo->id,

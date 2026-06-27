@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\EdiCategory;
 use App\Models\Edihead;
 use App\Models\Ediline;
 use App\Models\VkvpaData;
-use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
 use App\Services\Edi\EdiImportService;
 use App\Services\Edi\EdiParser;
@@ -32,9 +32,9 @@ class ScoringServiceTest extends TestCase
         ]);
     }
 
-    private function kategorie(): VkvpaKategorie
+    private function kategorie(): EdiCategory
     {
-        return VkvpaKategorie::create(['nazev' => 'A', 'zkratka' => 'A', 'dxid' => 0]);
+        return EdiCategory::create(['name' => 'A', 'band' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
     }
 
     /**

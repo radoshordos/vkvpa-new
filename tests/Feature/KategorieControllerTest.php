@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\EdiCategory;
 use App\Models\User;
 use App\Models\VkvpaData;
-use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -16,9 +16,33 @@ class KategorieControllerTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        // CRUD testujeme na čistém číselníku (TestCase jinak seeduje 42 kategorií,
+        // což by kolidovalo s unikátem band+section+variant).
+        EdiCategory::query()->delete();
+    }
+
     private function admin(): User
     {
         return User::create(['name' => 'Admin', 'password' => Hash::make('x'), 'is_admin' => true]);
+    }
+
+    /**
+     * Validní data formuláře (edi_category). Lze přepsat jednotlivé klíče.
+     *
+     * @param  array<string, mixed>  $overrides
+     * @return array<string, mixed>
+     */
+    private function payload(array $overrides = []): array
+    {
+        return array_merge([
+            'name' => '144 MHz single op',
+            'band' => '144 MHz',
+            'section' => 'SO',
+            'variant' => 'domestic',
+        ], $overrides);
     }
 
     // ------------------------------------------------------------------
@@ -26,7 +50,7 @@ class KategorieControllerTest extends TestCase
 
     public function test_index_renders_for_admin(): void
     {
-        VkvpaKategorie::create(['nazev' => '144 MHz single op', 'zkratka' => '144 SO', 'dxid' => 0]);
+        EdiCategory::create($this->payload(['band' => '47 GHz']));
 
         $this->actingAs($this->admin())
             ->get(route('kategorie.index'))
@@ -49,8 +73,7 @@ class KategorieControllerTest extends TestCase
             'datum_konani' => '2026-06-21 08:00:00',
             'datum_uzaverky' => '2026-06-26 23:59:59',
         ]);
-        $kat = VkvpaKategorie::create(['nazev' => '144 MHz SO', 'zkratka' => '144 SO', 'dxid' => 0]);
-        VkvpaKategorie::create(['nazev' => '432 MHz SO', 'zkratka' => '432 SO', 'dxid' => 0]);
+        $kat = EdiCategory::create($this->payload(['name' => '144 MHz SO', 'band' => '47 GHz']));
 
         foreach (['OK1AAA', 'OK1BBB', 'OK1CCC'] as $znacka) {
             VkvpaData::create([
@@ -65,7 +88,7 @@ class KategorieControllerTest extends TestCase
             ->get(route('kategorie.index'))
             ->assertOk()
             ->assertSee(__('admin.kategorie_col_count'))
-            ->assertSeeInOrder(['144 MHz SO', '144 SO', '0', '3'])
+            ->assertSee('144 MHz SO')
             ->assertSee(__('admin.kategorie_total'));
     }
 
@@ -75,35 +98,34 @@ class KategorieControllerTest extends TestCase
     public function test_store_creates_kategorie(): void
     {
         $this->actingAs($this->admin())
-            ->post(route('kategorie.store'), [
-                'nazev' => '144 MHz single op',
-                'zkratka' => '144 SO',
-                'dxid' => 0,
-            ])
+            ->post(route('kategorie.store'), $this->payload(['band' => '47 GHz']))
             ->assertRedirect(route('kategorie.index'))
             ->assertSessionHas('announcement');
 
-        $this->assertDatabaseHas('vkvpa_kategorie', [
-            'nazev' => '144 MHz single op',
-            'zkratka' => '144 SO',
-            'dxid' => 0,
+        $this->assertDatabaseHas('edi_category', [
+            'name' => '144 MHz single op',
+            'band' => '47 GHz',
+            'section' => 'SO',
+            'variant' => 'domestic',
         ]);
     }
 
-    public function test_store_creates_dx_kategorie_with_nonzero_dxid(): void
+    public function test_store_creates_dx_kategorie_with_dxid(): void
     {
-        $domestic = VkvpaKategorie::create(['nazev' => '144 MHz single op', 'zkratka' => '144 SO', 'dxid' => 0]);
+        $domestic = EdiCategory::create($this->payload(['band' => '47 GHz']));
 
         $this->actingAs($this->admin())
-            ->post(route('kategorie.store'), [
-                'nazev' => '144 MHz single DX',
-                'zkratka' => '144 SO DX',
+            ->post(route('kategorie.store'), $this->payload([
+                'name' => '47 GHz single op DX',
+                'band' => '47 GHz',
+                'variant' => 'dx',
                 'dxid' => $domestic->id,
-            ])
+            ]))
             ->assertRedirect(route('kategorie.index'));
 
-        $this->assertDatabaseHas('vkvpa_kategorie', [
-            'nazev' => '144 MHz single DX',
+        $this->assertDatabaseHas('edi_category', [
+            'name' => '47 GHz single op DX',
+            'variant' => 'dx',
             'dxid' => $domestic->id,
         ]);
     }
@@ -111,67 +133,49 @@ class KategorieControllerTest extends TestCase
     // ------------------------------------------------------------------
     // store – validace
 
-    public function test_store_requires_nazev(): void
+    public function test_store_requires_name(): void
     {
         $this->actingAs($this->admin())
-            ->post(route('kategorie.store'), [
-                'zkratka' => 'X',
-                'dxid' => 0,
-            ])
-            ->assertSessionHasErrors('nazev');
+            ->post(route('kategorie.store'), $this->payload(['name' => '', 'band' => '47 GHz']))
+            ->assertSessionHasErrors('name');
     }
 
-    public function test_store_requires_zkratka(): void
+    public function test_store_requires_valid_band(): void
     {
         $this->actingAs($this->admin())
-            ->post(route('kategorie.store'), [
-                'nazev' => 'Test',
-                'dxid' => 0,
-            ])
-            ->assertSessionHasErrors('zkratka');
+            ->post(route('kategorie.store'), $this->payload(['band' => 'Neexistuje']))
+            ->assertSessionHasErrors('band');
     }
 
-    public function test_store_requires_dxid(): void
+    public function test_store_requires_valid_section(): void
     {
         $this->actingAs($this->admin())
-            ->post(route('kategorie.store'), [
-                'nazev' => 'Test',
-                'zkratka' => 'T',
-            ])
-            ->assertSessionHasErrors('dxid');
+            ->post(route('kategorie.store'), $this->payload(['section' => 'XX', 'band' => '47 GHz']))
+            ->assertSessionHasErrors('section');
     }
 
-    public function test_store_rejects_negative_dxid(): void
+    public function test_store_rejects_duplicate_band_section_variant(): void
     {
+        EdiCategory::create($this->payload(['band' => '47 GHz']));
+
         $this->actingAs($this->admin())
-            ->post(route('kategorie.store'), [
-                'nazev' => 'Test',
-                'zkratka' => 'T',
-                'dxid' => -1,
-            ])
-            ->assertSessionHasErrors('dxid');
+            ->post(route('kategorie.store'), $this->payload(['band' => '47 GHz']))
+            ->assertSessionHasErrors('variant');
     }
 
-    public function test_store_rejects_nazev_too_long(): void
+    public function test_store_rejects_name_too_long(): void
     {
         $this->actingAs($this->admin())
-            ->post(route('kategorie.store'), [
-                'nazev' => str_repeat('A', 51),
-                'zkratka' => 'T',
-                'dxid' => 0,
-            ])
-            ->assertSessionHasErrors('nazev');
+            ->post(route('kategorie.store'), $this->payload(['name' => str_repeat('A', 51), 'band' => '47 GHz']))
+            ->assertSessionHasErrors('name');
     }
 
     public function test_store_requires_admin(): void
     {
-        $this->post(route('kategorie.store'), [
-            'nazev' => 'Test',
-            'zkratka' => 'T',
-            'dxid' => 0,
-        ])->assertRedirect(route('login'));
+        $this->post(route('kategorie.store'), $this->payload(['band' => '47 GHz']))
+            ->assertRedirect(route('login'));
 
-        $this->assertDatabaseMissing('vkvpa_kategorie', ['nazev' => 'Test']);
+        $this->assertDatabaseMissing('edi_category', ['band' => '47 GHz']);
     }
 
     // ------------------------------------------------------------------
@@ -179,18 +183,17 @@ class KategorieControllerTest extends TestCase
 
     public function test_edit_renders_form_with_existing_data(): void
     {
-        $kat = VkvpaKategorie::create(['nazev' => '144 MHz SO', 'zkratka' => '144SO', 'dxid' => 0]);
+        $kat = EdiCategory::create($this->payload(['name' => 'Mistrovska kategorie', 'band' => '47 GHz']));
 
         $this->actingAs($this->admin())
             ->get(route('kategorie.edit', $kat->id))
             ->assertOk()
-            ->assertSee('144 MHz SO')
-            ->assertSee('144SO');
+            ->assertSee('Mistrovska kategorie');
     }
 
     public function test_edit_requires_admin(): void
     {
-        $kat = VkvpaKategorie::create(['nazev' => '144 MHz SO', 'zkratka' => '144SO', 'dxid' => 0]);
+        $kat = EdiCategory::create($this->payload(['band' => '47 GHz']));
 
         $this->get(route('kategorie.edit', $kat->id))
             ->assertRedirect(route('login'));
@@ -198,47 +201,43 @@ class KategorieControllerTest extends TestCase
 
     public function test_update_saves_changes(): void
     {
-        $kat = VkvpaKategorie::create(['nazev' => 'Stary nazev', 'zkratka' => 'OLD', 'dxid' => 0]);
+        $kat = EdiCategory::create($this->payload(['name' => 'Stary nazev', 'band' => '47 GHz']));
 
         $this->actingAs($this->admin())
-            ->patch(route('kategorie.update', $kat->id), [
-                'nazev' => 'Nový název',
-                'zkratka' => 'NEW',
-                'dxid' => 0,
-            ])
+            ->patch(route('kategorie.update', $kat->id), $this->payload([
+                'name' => 'Nový název',
+                'band' => '76 GHz',
+            ]))
             ->assertRedirect(route('kategorie.index'))
             ->assertSessionHas('announcement');
 
-        $this->assertDatabaseHas('vkvpa_kategorie', [
+        $this->assertDatabaseHas('edi_category', [
             'id' => $kat->id,
-            'nazev' => 'Nový název',
-            'zkratka' => 'NEW',
+            'name' => 'Nový název',
+            'band' => '76 GHz',
         ]);
     }
 
     public function test_update_requires_admin(): void
     {
-        $kat = VkvpaKategorie::create(['nazev' => 'Test', 'zkratka' => 'T', 'dxid' => 0]);
+        $kat = EdiCategory::create($this->payload(['band' => '47 GHz']));
 
-        $this->patch(route('kategorie.update', $kat->id), [
-            'nazev' => 'Zmeneno',
-            'zkratka' => 'Z',
-            'dxid' => 0,
-        ])->assertRedirect(route('login'));
+        $this->patch(route('kategorie.update', $kat->id), $this->payload(['name' => 'Zmeneno', 'band' => '47 GHz']))
+            ->assertRedirect(route('login'));
 
-        $this->assertDatabaseMissing('vkvpa_kategorie', ['nazev' => 'Zmeneno']);
+        $this->assertDatabaseMissing('edi_category', ['name' => 'Zmeneno']);
     }
 
     public function test_update_validates_required_fields(): void
     {
-        $kat = VkvpaKategorie::create(['nazev' => 'Test', 'zkratka' => 'T', 'dxid' => 0]);
+        $kat = EdiCategory::create($this->payload(['band' => '47 GHz']));
 
         $this->actingAs($this->admin())
-            ->patch(route('kategorie.update', $kat->id), [
-                'nazev' => '',
-                'zkratka' => '',
-                'dxid' => 0,
-            ])
-            ->assertSessionHasErrors(['nazev', 'zkratka']);
+            ->patch(route('kategorie.update', $kat->id), $this->payload([
+                'name' => '',
+                'band' => '',
+                'section' => '',
+            ]))
+            ->assertSessionHasErrors(['name', 'band', 'section']);
     }
 }

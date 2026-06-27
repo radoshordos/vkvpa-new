@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Enums\KoloStav;
+use App\Models\EdiCategory;
 use App\Models\VkvpaData;
-use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
 use App\Services\Scoring\ScoringService;
 use App\Services\Scoring\SkokanService;
@@ -79,7 +79,7 @@ class VysledkyController extends Controller
                 ->reject(fn (VkvpaKola $k): bool => $k->stav() === KoloStav::Nadchazejici)
                 ->values(),
             'kolo' => $kolo,
-            'kategorie' => VkvpaKategorie::query()->orderBy('id')->get()->keyBy('id'),
+            'kategorie' => EdiCategory::query()->orderBy('id')->get()->keyBy('id'),
             'radky' => $radky,
             'skokani' => $skokani,
             'hledat' => $hledat,
@@ -132,7 +132,7 @@ class VysledkyController extends Controller
             'active' => 'pribezne_vysledky',
             'kolo' => $kolo,
             'kolaVyber' => $kolaVyber,
-            'kategorie' => VkvpaKategorie::query()->orderBy('id')->whereIn('id', $obsazeneKatIds)->get()->keyBy('id'),
+            'kategorie' => EdiCategory::query()->orderBy('id')->whereIn('id', $obsazeneKatIds)->get()->keyBy('id'),
             'katId' => $katId,
             'vysledky' => $vysledky,
         ]);
@@ -159,7 +159,7 @@ class VysledkyController extends Controller
             'active' => 'rocni_vysledky',
             'rok' => $rok,
             'katId' => $katId,
-            'kategorie' => VkvpaKategorie::query()->orderBy('id')->get()->keyBy('id'),
+            'kategorie' => EdiCategory::query()->orderBy('id')->get()->keyBy('id'),
             'vysledky' => $vysledky,
         ]);
     }

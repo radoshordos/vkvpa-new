@@ -6,6 +6,7 @@ namespace Tests\Feature;
 
 use App\Models\Edihead;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Artisan;
 use Tests\TestCase;
 
 /**
@@ -27,7 +28,7 @@ class RepairEdiheadBandSectTest extends TestCase
         $full = $this->makeHead(pBand: '432 MHz', pSect: 'SO', src: self::SRC);  // nedotkne se
         $noSrc = $this->makeHead(pBand: '', pSect: '', src: null);               // bez src → nezmění
 
-        $this->artisan('vkvpa:repair-edihead-band-sect')->assertSuccessful();
+        $this->assertSame(0, Artisan::call('vkvpa:repair-edihead-band-sect'));
 
         $empty->refresh();
         self::assertSame('144 MHz', $empty->p_band);

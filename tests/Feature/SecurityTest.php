@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\EdiCategory;
 use App\Models\Prispevek;
 use App\Models\VkvpaData;
-use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
 use App\Support\VkvpaSettings;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -68,7 +68,7 @@ class SecurityTest extends TestCase
     public function test_xss_in_vysledky_jmeno_is_escaped(): void
     {
         $kolo = $this->kolo();
-        $kat = VkvpaKategorie::create(['nazev' => '144 MHz', 'zkratka' => 'A', 'dxid' => 0]);
+        $kat = EdiCategory::create(['name' => '144 MHz', 'band' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
 
         VkvpaData::create([
             'id_kola' => $kolo->id,
@@ -91,7 +91,7 @@ class SecurityTest extends TestCase
     public function test_xss_in_vysledky_soapbox_is_escaped(): void
     {
         $kolo = $this->kolo();
-        $kat = VkvpaKategorie::create(['nazev' => '144 MHz', 'zkratka' => 'A', 'dxid' => 0]);
+        $kat = EdiCategory::create(['name' => '144 MHz', 'band' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
 
         VkvpaData::create([
             'id_kola' => $kolo->id,

@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Enums\KoloStav;
+use App\Models\EdiCategory;
 use App\Models\Prispevek;
 use App\Models\VkvpaData;
-use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
 use Illuminate\Support\Carbon;
 use Illuminate\View\View;
@@ -33,7 +33,7 @@ class HomeController extends Controller
         $countdownTarget = ($kolo && $state) ? $this->resolveCountdownTarget($kolo, $state) : null;
         $liveMode = in_array($state, ['running', 'deadline', 'evaluating'], true);
 
-        $kategorie = VkvpaKategorie::query()->orderBy('id')->get()->keyBy('id');
+        $kategorie = EdiCategory::query()->orderBy('id')->get()->keyBy('id');
         $vysledky = ($kolo && $liveMode)
             ? VkvpaData::prubezne($kolo->id)->get()
             : collect();

@@ -45,7 +45,7 @@ use Override;
  * @property string $session_id
  * @property Carbon|null $timestamp
  * @property-read VkvpaKola|null $kolo
- * @property-read VkvpaKategorie|null $kategorie
+ * @property-read EdiCategory|null $kategorie
  * @property-read Edihead|null $edihead
  *
  * Projekce z {@see ScoringService::yearlyResults()}:
@@ -71,10 +71,10 @@ class VkvpaData extends Model
         return $this->belongsTo(VkvpaKola::class, 'id_kola', 'id');
     }
 
-    /** @return BelongsTo<VkvpaKategorie, $this> */
+    /** @return BelongsTo<EdiCategory, $this> */
     public function kategorie(): BelongsTo
     {
-        return $this->belongsTo(VkvpaKategorie::class, 'id_kategorie', 'id');
+        return $this->belongsTo(EdiCategory::class, 'id_kategorie', 'id');
     }
 
     /** @return BelongsTo<Edihead, $this> */

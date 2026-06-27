@@ -6,7 +6,7 @@ namespace App\Services\Scoring;
 
 use App\Enums\QsoCountStatus;
 use App\Exceptions\UnknownBandException;
-use App\Models\VkvpaKategorie;
+use App\Models\EdiCategory;
 use App\Services\Edi\CategoryResolver;
 use App\Services\Edi\EdiLog;
 use App\Support\ContestWindow;
@@ -130,7 +130,7 @@ final class EdiScoreDebugger
                 $header->pBand(),
                 $header->pSect(),
             );
-            $found = $categoryId !== null ? VkvpaKategorie::find($categoryId) : null;
+            $found = $categoryId !== null ? EdiCategory::find($categoryId) : null;
             $categoryName = $found !== null ? (string) $found->nazev : null;
         } catch (UnknownBandException) {
             $categoryId = null;

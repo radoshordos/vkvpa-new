@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services\Edi;
 
+use App\Models\EdiCategory;
 use App\Models\VkvpaData;
-use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
 use App\Services\Scoring\RekordyService;
 use App\Support\ContestWindow;
@@ -269,7 +269,7 @@ final class KoloStatistiky
     private function vysledky(int $koloId): array
     {
         /** @var SupportCollection<int, string> $zkratky */
-        $zkratky = VkvpaKategorie::query()->pluck('zkratka', 'id');
+        $zkratky = EdiCategory::zkratkaMap();
 
         $entries = VkvpaData::query()
             ->where('id_kola', $koloId)
@@ -300,18 +300,20 @@ final class KoloStatistiky
     private function kategorie(int $koloId): array
     {
         $out = [];
+        $zkratky = EdiCategory::zkratkaMap();
+        $nazvy = EdiCategory::nazevMap();
         $rows = VkvpaData::query()
-            ->leftJoin('vkvpa_kategorie', 'vkvpa_data.id_kategorie', '=', 'vkvpa_kategorie.id')
             ->where('vkvpa_data.id_kola', $koloId)
             ->where('vkvpa_data.schvaleno', true)
-            ->groupBy('vkvpa_data.id_kategorie', 'vkvpa_kategorie.zkratka', 'vkvpa_kategorie.nazev')
-            ->selectRaw('vkvpa_kategorie.zkratka as zkratka, vkvpa_kategorie.nazev as nazev, COUNT(*) as pocet')
+            ->groupBy('vkvpa_data.id_kategorie')
+            ->selectRaw('vkvpa_data.id_kategorie as id_kategorie, COUNT(*) as pocet')
             ->get();
 
         foreach ($rows as $row) {
+            $katId = self::intAttr($row, 'id_kategorie');
             $out[] = [
-                'zkratka' => self::strAttr($row, 'zkratka') ?: '?',
-                'nazev' => self::strAttr($row, 'nazev') ?: '?',
+                'zkratka' => $zkratky->get($katId) ?: '?',
+                'nazev' => $nazvy->get($katId) ?: '?',
                 'pocet' => self::intAttr($row, 'pocet'),
             ];
         }
@@ -328,7 +330,7 @@ final class KoloStatistiky
      */
     private function ucastnici(int $koloId): array
     {
-        $zkratky = VkvpaKategorie::query()->pluck('zkratka', 'id');
+        $zkratky = EdiCategory::zkratkaMap();
 
         $out = [];
         $entries = VkvpaData::query()
@@ -532,13 +534,5 @@ final class KoloStatistiky
         $value = $model->getAttribute($key);
 
         return is_numeric($value) ? (int) $value : 0;
-    }
-
-    /** Atribut agregovaného řádku jako string (prázdný při null). */
-    private static function strAttr(Model $model, string $key): string
-    {
-        $value = $model->getAttribute($key);
-
-        return is_scalar($value) ? (string) $value : '';
     }
 }

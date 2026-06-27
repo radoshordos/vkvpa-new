@@ -15,8 +15,8 @@ use App\Exceptions\UnknownBandException;
 use App\Exceptions\UnknownSectionException;
 use App\Exceptions\UploadWindowClosedException;
 use App\Jobs\RankRoundJob;
+use App\Models\EdiCategory;
 use App\Models\VkvpaData;
-use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
 use App\Rules\ValidMaidenhead;
 use App\Rules\ValidPhone;
@@ -208,7 +208,7 @@ class Prihlaska extends Component
         // Název kola/kategorie je jen informativní popisek do náhledu – pokud
         // řádek chybí (kategorie může být statické id bez DB záznamu), necháme prázdno.
         $koloNazev = VkvpaKola::query()->whereKey($preview->idKola)->value('nazev');
-        $kategorieNazev = VkvpaKategorie::query()->whereKey($preview->idKategorie)->value('nazev');
+        $kategorieNazev = EdiCategory::query()->whereKey($preview->idKategorie)->value('name');
         $this->koloNazev = is_string($koloNazev) ? $koloNazev : '';
         $this->kategorieNazev = is_string($kategorieNazev) ? $kategorieNazev : '';
 
@@ -332,7 +332,7 @@ class Prihlaska extends Component
 
         $this->validate([
             'kolo' => ['required', 'integer', 'exists:vkvpa_kola,id'],
-            'kategorie' => ['required', 'integer', 'exists:vkvpa_kategorie,id'],
+            'kategorie' => ['required', 'integer', 'exists:edi_category,id'],
             'znacka' => ['required', 'string', 'max:10'],
             'locator' => ['required', 'string', 'max:6', new ValidMaidenhead],
             'jmeno' => ['required', 'string', 'max:60'],
@@ -443,7 +443,7 @@ class Prihlaska extends Component
         return view('livewire.prihlaska', [
             'isAdmin' => $this->isAdmin(),
             'kola' => VkvpaKola::query()->orderByDesc('datum_konani')->limit(36)->get(),
-            'kategorieList' => VkvpaKategorie::query()->orderBy('id')->get(),
+            'kategorieList' => EdiCategory::query()->orderBy('id')->get(),
             'report' => $report,
             'ediLines' => $ediLines,
             'ediReduced' => $ediReduced,

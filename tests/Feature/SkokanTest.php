@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\EdiCategory;
 use App\Models\VkvpaData;
-use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
 use App\Services\Scoring\SkokanService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -18,7 +18,7 @@ class SkokanTest extends TestCase
 {
     use RefreshDatabase;
 
-    private VkvpaKategorie $kat;
+    private EdiCategory $kat;
 
     private VkvpaKola $r1;
 
@@ -28,7 +28,7 @@ class SkokanTest extends TestCase
     {
         parent::setUp();
 
-        $this->kat = VkvpaKategorie::create(['nazev' => '144 MHz single op', 'zkratka' => 'A', 'dxid' => 0]);
+        $this->kat = EdiCategory::create(['name' => '144 MHz single op', 'band' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
         $this->r1 = VkvpaKola::create(['datum_konani' => '2026-05-17', 'datum_uzaverky' => '2026-05-22 23:59:59', 'nazev' => '05/2026', 'poznamka' => '', 'vyhodnoceno' => '2026-05-23 10:00:00']);
         $this->r2 = VkvpaKola::create(['datum_konani' => '2026-06-21', 'datum_uzaverky' => '2026-06-26 23:59:59', 'nazev' => '06/2026', 'poznamka' => '']);
     }
@@ -81,7 +81,7 @@ class SkokanTest extends TestCase
 
     public function test_different_category_is_not_compared(): void
     {
-        $kat2 = VkvpaKategorie::create(['nazev' => '432 MHz single op', 'zkratka' => 'B', 'dxid' => 0]);
+        $kat2 = EdiCategory::create(['name' => '432 MHz single op', 'band' => 'B', 'section' => 'SO', 'variant' => 'domestic']);
         // Předchozí start v jiné kategorii se nezapočítá.
         VkvpaData::create([
             'id_kola' => $this->r1->id, 'id_kategorie' => $kat2->id, 'znacka' => 'OK1A',

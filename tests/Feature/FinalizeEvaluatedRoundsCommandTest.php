@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Console\Commands\FinalizeEvaluatedRoundsCommand;
+use App\Models\EdiCategory;
 use App\Models\VkvpaData;
-use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
@@ -36,9 +36,9 @@ class FinalizeEvaluatedRoundsCommandTest extends TestCase
 
     private function zaznam(VkvpaKola $kolo, bool $schvaleno, int $body = 50): VkvpaData
     {
-        $kat = VkvpaKategorie::firstOrCreate(
-            ['zkratka' => 'A'],
-            ['nazev' => '144 MHz single op', 'dxid' => 0],
+        $kat = EdiCategory::firstOrCreate(
+            ['band' => 'A', 'section' => 'SO', 'variant' => 'domestic'],
+            ['name' => '144 MHz single op'],
         );
 
         return VkvpaData::create([
