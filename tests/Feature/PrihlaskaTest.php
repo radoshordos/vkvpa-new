@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Livewire\Prihlaska;
+use App\Models\EdiCategory;
 use App\Models\Edihead;
 use App\Models\User;
 use App\Models\VkvpaData;
-use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -40,7 +40,7 @@ class PrihlaskaTest extends TestCase
         ]);
     }
 
-    /** @return array{VkvpaKola, VkvpaKategorie} */
+    /** @return array{VkvpaKola, EdiCategory} */
     private function prepare(): array
     {
         $kolo = VkvpaKola::create([
@@ -49,7 +49,7 @@ class PrihlaskaTest extends TestCase
             'nazev' => 'Testovací kolo',
             'poznamka' => '',
         ]);
-        $kat = VkvpaKategorie::create(['nazev' => '144 MHz', 'zkratka' => 'A', 'dxid' => 0]);
+        $kat = EdiCategory::create(['name' => '144 MHz', 'band' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
 
         return [$kolo, $kat];
     }

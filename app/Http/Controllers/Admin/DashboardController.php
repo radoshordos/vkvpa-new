@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\EdiCategory;
 use App\Models\VkvpaData;
-use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
 use App\Services\Scoring\ScoringService;
 use Illuminate\Database\Eloquent\Builder;
@@ -65,7 +65,7 @@ final class DashboardController extends Controller
             ->groupBy('id_kategorie')
             ->get();
 
-        $kategorie = VkvpaKategorie::query()->orderBy('id')->get()->keyBy('id');
+        $kategorie = EdiCategory::query()->orderBy('id')->get()->keyBy('id');
 
         // 2. Přehled kol roku – počty přihlášených, schválených a čekajících
         $kolaRoku = VkvpaKola::whereYear('datum_konani', $rok)

@@ -6,9 +6,9 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreHlaseniRequest;
 use App\Jobs\RankRoundJob;
+use App\Models\EdiCategory;
 use App\Models\Edihead;
 use App\Models\VkvpaData;
-use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
 use App\Services\Admin\AdminEntryChecker;
 use Illuminate\Database\Eloquent\Builder;
@@ -67,7 +67,7 @@ class HlaseniController extends Controller
                 ->orderByDesc('datum_konani')
                 ->limit(36)
                 ->get(),
-            'kategorie' => VkvpaKategorie::query()->orderBy('id')->get(),
+            'kategorie' => EdiCategory::query()->orderBy('id')->get(),
             'edit' => $edit,
             'vysledky' => $vysledky,
             'adminWarnings' => $adminWarnings,

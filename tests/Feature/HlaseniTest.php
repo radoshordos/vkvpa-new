@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\EdiCategory;
 use App\Models\Edihead;
 use App\Models\User;
 use App\Models\VkvpaData;
-use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -17,7 +17,7 @@ class HlaseniTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @return array{VkvpaKola, VkvpaKategorie} */
+    /** @return array{VkvpaKola, EdiCategory} */
     private function prepare(): array
     {
         $kolo = VkvpaKola::create([
@@ -26,7 +26,7 @@ class HlaseniTest extends TestCase
             'nazev' => 'Testovací kolo',
             'poznamka' => '',
         ]);
-        $kat = VkvpaKategorie::create(['nazev' => '144 MHz', 'zkratka' => 'A', 'dxid' => 0]);
+        $kat = EdiCategory::create(['name' => '144 MHz', 'band' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
 
         return [$kolo, $kat];
     }
@@ -271,7 +271,7 @@ class HlaseniTest extends TestCase
             'nazev' => 'Nadcházející kolo',
             'poznamka' => '',
         ]);
-        $kat = VkvpaKategorie::create(['nazev' => 'A', 'zkratka' => 'A', 'dxid' => 0]);
+        $kat = EdiCategory::create(['name' => 'A', 'band' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
 
         $this->post('/hlaseni', $this->payload($kolo->id, $kat->id))
             ->assertSessionHasErrors('kolo');

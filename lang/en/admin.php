@@ -59,6 +59,9 @@ return [
     'kategorie_btn_save' => 'Save',
     'field_name' => 'Name',
     'field_abbr' => 'Abbreviation',
+    'field_band' => 'Band',
+    'field_section' => 'Section',
+    'field_variant' => 'Variant',
 
     // Common
     'btn_cancel' => 'Cancel',

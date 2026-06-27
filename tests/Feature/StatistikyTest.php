@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Http\Controllers\StatistikyController;
+use App\Models\EdiCategory;
 use App\Models\Edihead;
 use App\Models\Ediline;
 use App\Models\VkvpaData;
-use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
@@ -181,7 +181,7 @@ class StatistikyTest extends TestCase
             Ediline::create(['edihead_id' => $headB->id, 'qso_at' => '2026-03-15 '.substr($t, 0, 2).':'.substr($t, 2, 2).':00', 'call_sign' => 'OK5BIG', 'received_wwl' => 'JN99AA']);
         }
 
-        $kat = VkvpaKategorie::create(['nazev' => '144 MHz', 'zkratka' => 'A', 'dxid' => 0]);
+        $kat = EdiCategory::create(['name' => '144 MHz', 'band' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
 
         foreach ([['OK1AAA', 5, 4, 80], ['OK1BBB', 3, 3, 30]] as [$znacka, $pocet, $nasobice, $body]) {
             VkvpaData::create([

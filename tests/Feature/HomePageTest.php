@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\EdiCategory;
 use App\Models\Prispevek;
 use App\Models\VkvpaData;
-use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -43,9 +43,9 @@ class HomePageTest extends TestCase
     {
         return VkvpaData::create([
             'id_kola' => $kolo->id,
-            'id_kategorie' => VkvpaKategorie::firstOrCreate(
-                ['nazev' => '144 MHz SO'],
-                ['zkratka' => '144SO', 'dxid' => 0],
+            'id_kategorie' => EdiCategory::firstOrCreate(
+                ['band' => '144SO', 'section' => 'SO', 'variant' => 'domestic'],
+                ['name' => '144 MHz SO'],
             )->id,
             'znacka' => $znacka,
             'locator' => 'JN79XX',

@@ -13,7 +13,6 @@ use App\Models\VkvpaKola;
 use App\Services\Scoring\ScoringService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\Features\SupportTesting\Testable;
@@ -199,7 +198,7 @@ class EdiPipelineIntegrationTest extends TestCase
     public function test_entry_hidden_before_approval_visible_after(): void
     {
         $kolo = $this->koloProBrezen2026();
-        DB::table('vkvpa_kategorie')->insert(['id' => 2, 'nazev' => '144 MHz MO', 'zkratka' => '144 MO', 'dxid' => 0]);
+        // kategorie id 2 (144 MHz multi op) už je v edi_category naseedovaná (TestCase)
 
         $this->odeslat();
 

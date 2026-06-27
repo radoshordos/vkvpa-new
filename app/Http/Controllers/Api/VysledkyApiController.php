@@ -7,8 +7,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\KoloResource;
 use App\Http\Resources\Api\VysledkaResource;
+use App\Models\EdiCategory;
 use App\Models\VkvpaData;
-use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
 use App\Services\Scoring\ScoringService;
 use Illuminate\Http\JsonResponse;
@@ -67,7 +67,7 @@ final class VysledkyApiController extends Controller
     public function rocni(int $rok): JsonResponse
     {
         $vysledky = $this->scoring->yearlyResults($rok);
-        $kategorie = VkvpaKategorie::query()->pluck('nazev', 'id');
+        $kategorie = EdiCategory::nazevMap();
 
         $items = [];
         foreach ($vysledky as $row) {

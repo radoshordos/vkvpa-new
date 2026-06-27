@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Http\Controllers\Admin\UzivateleController;
+use App\Models\EdiCategory;
 use App\Models\User;
 use App\Models\VkvpaData;
-use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -39,7 +39,7 @@ class UzivateleControllerTest extends TestCase
             'nazev' => '05/2026',
             'poznamka' => '',
         ]);
-        $kat = VkvpaKategorie::create(['nazev' => '144 MHz single op '.$this->koloSeq, 'zkratka' => 'A'.$this->koloSeq, 'dxid' => 0]);
+        $kat = EdiCategory::create(['name' => '144 MHz single op '.$this->koloSeq, 'band' => 'A'.$this->koloSeq, 'section' => 'SO', 'variant' => 'domestic']);
 
         return VkvpaData::create(array_merge([
             'id_kola' => $kolo->id, 'id_kategorie' => $kat->id, 'znacka' => 'OK1TEST',

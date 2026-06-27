@@ -172,7 +172,7 @@ Hlášení se od běžných závodníků přijímají ve stavech `Aktivni` a `Pr
 
 **EDI schéma** (`edihead`, `edilines`): odvozeno z původního systému, ale plně normalizováno na `snake_case` názvy sloupců (`mode_code`, `received_wwl`, `qso_points`, `t_date`, `p_call` apod.) – přistupuje se k nim jako k běžným Eloquent atributům, žádný magický `$line->{'...'}` přístup ani potlačení `property.notFound`. Oba modely mají `#[WithoutTimestamps]` (vlastní časové sloupce `stamp`, `d_cas`). Model `Ediline` navíc nabízí **PHP 8.4 property hooks** (`$receivedWwl`, `$qsoPoints`, `$modeCode`, `$mode`, `$newWwl`), které surové sloupce normalizují/castují.
 
-**Aplikační schéma** (`vkvpa_*`): `VkvpaData` (závodní záznamy/výsledky), `VkvpaKola` (kola závodu), `VkvpaKategorie` (kategorie), `VkvpaPrihlaseni` (přihlašovací tokeny), `Prispevek` (diskuze ke kolům).
+**Aplikační schéma** (`vkvpa_*`): `VkvpaData` (závodní záznamy/výsledky), `VkvpaKola` (kola závodu), `VkvpaPrihlaseni` (přihlašovací tokeny), `Prispevek` (diskuze ke kolům). Kategorie je `edi_category` (model `EdiCategory`) – **jediný** číselník kategorií; `VkvpaData.id_kategorie` je FK na `edi_category.id` (původní duplicitní tabulka `vkvpa_kategorie` byla zrušena).
 
 ### Eloquent strict mode
 
@@ -196,7 +196,6 @@ app/
 │   ├── EnsureUpcomingRoundsCommand.php   # kola:ensure-upcoming – zakládání kol dle ContestCalendar
 │   ├── FinalizeEvaluatedRoundsCommand.php # kola:finalize-evaluated – automatické vyhodnocení kol
 │   ├── HealthCheckCommand.php            # app:health-check – předspouštěcí kontrola nasazení
-│   ├── ValidateCategoryMatrix.php        # vkvpa:validate-categories – parita edi_category ↔ vkvpa_kategorie
 │   └── BackfillEdilineQsoAt.php          # edilines:backfill-qso-at – doplnění času QSO (údržba)
 ├── Enums/
 │   ├── KoloStav.php        # Fáze kola (nadcházející / aktivní / příjem / uzavřené / vyhodnocené)
@@ -446,11 +445,10 @@ Jedna migrace na tabulku – každá `create_*` migrace nese finální schéma t
 | `create_jobs_table` | Laravel queue jobs |
 | `create_users_table` | Admin uživatelé |
 | `create_vkvpa_kola_table` | Kola závodu (`datum_konani` jako datetime = start závodu 08:00 UTC) |
-| `create_vkvpa_kategorie_table` | Kategorie závodů (původní plochý číselník) |
-| `create_edi_category_table` | Kategorie normalizovaně (pásmo × sekce × varianta); zdroj párování pro `CategoryResolver` |
 | `create_edihead_table` | Hlavičky EDI logů (EDI schéma, snake_case) |
 | `create_edilines_table` | QSO záznamy (EDI schéma; FK na `edihead` deklarovaný inline) |
-| `create_vkvpa_data_table` | Závodní záznamy / výsledky (FK na kolo, kategorii, edihead) |
+| `create_vkvpa_data_table` | Závodní záznamy / výsledky (FK na kolo, edihead; FK na kategorii se přidává v `create_edi_category_table`) |
+| `create_edi_category_table` | Jediný číselník kategorií (pásmo × sekce × varianta); přidává i FK `vkvpa_data.id_kategorie` → `edi_category` |
 | `create_diskuse_table` | Diskuzní příspěvky ke kolům |
 | `create_vkvpa_prihlaseni_table` | Dočasné přihlašovací tokeny |
 | `create_prefixes_table` | Mapování prefixů na země (DXCC) |
@@ -458,7 +456,7 @@ Jedna migrace na tabulku – každá `create_*` migrace nese finální schéma t
 ### Modely a vztahy
 
 ```
-VkvpaKola ──► VkvpaData ◄── VkvpaKategorie
+VkvpaKola ──► VkvpaData ◄── EdiCategory
                 │
                 └──► Edihead ──► Ediline[]
 
@@ -467,11 +465,11 @@ VkvpaKola ──► Prispevek[]
 
 | Model | Klíčové vztahy a atributy |
 |-------|---------------------------|
-| `VkvpaData` | `belongsTo(VkvpaKola, VkvpaKategorie, Edihead)` |
-| `Edihead` | `hasMany(Ediline)`, `#[WithoutTimestamps]` |
+| `VkvpaData` | `belongsTo(VkvpaKola, EdiCategory, Edihead)` |
+| `Edihead` | `hasMany(Ediline)`, `belongsTo(EdiCategory)`, `#[WithoutTimestamps]` |
 | `Ediline` | `belongsTo(Edihead)`, nestandardní názvy sloupců, `#[WithoutTimestamps]`; PHP 8.4 property hooks: `$receivedWwl`, `$qsoPoints`, `$modeCode`, `$mode`, `$newWwl` |
 | `VkvpaKola` | `hasMany(VkvpaData, Prispevek)`, `stav(): KoloStav`, `isActive()`, scope `active()` |
-| `VkvpaKategorie` | `hasMany(VkvpaData)` |
+| `EdiCategory` | `hasMany(VkvpaData)` (`hlaseni`), `domestic()`/`domesticCounterpart()`; jediný číselník kategorií, accessory `nazev`/`zkratka` |
 | `VkvpaPrihlaseni` | tokeny s TTL = `vkvpa.token_ttl_days` (výchozí: 5 dní) |
 | `Prispevek` | `belongsTo(VkvpaKola)` – diskuzní příspěvky |
 | `User` | přihlašování přes `name` (ne email), `is_admin` boolean |

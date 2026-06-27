@@ -8,7 +8,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * `edi_category` – normalizovaná obdoba `vkvpa_kategorie`.
+ * `edi_category` – jediný číselník kategorií aplikace (normalizovaný:
+ * pásmo × sekce × varianta). Nahradil původní plochou `vkvpa_kategorie`.
  *
  * Kategorie závodu je zde rozložená do tří explicitních os místo toho, aby
  * byly „zašifrované" v textovém názvu/zkratce:
@@ -49,11 +50,26 @@ return new class extends Migration
                     ->references('id')->on('edi_category')
                     ->nullOnDelete();
             });
+
+            // edi_category je jediný číselník kategorií (vkvpa_kategorie zrušena).
+            // FK vkvpa_data.id_kategorie sem patří až teď – vkvpa_data (000006)
+            // se vytváří dřív, ale edi_category až tady.
+            Schema::table('vkvpa_data', function (Blueprint $table): void {
+                $table->foreign('id_kategorie', 'vkvpa_data_id_kategorie_fk')
+                    ->references('id')->on('edi_category')
+                    ->restrictOnDelete();
+            });
         }
     }
 
     public function down(): void
     {
+        if (DB::getDriverName() !== 'sqlite') {
+            Schema::table('vkvpa_data', function (Blueprint $table): void {
+                $table->dropForeign('vkvpa_data_id_kategorie_fk');
+            });
+        }
+
         Schema::dropIfExists('edi_category');
     }
 };

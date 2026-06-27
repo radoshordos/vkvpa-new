@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Enums\Severity;
+use App\Models\EdiCategory;
 use App\Models\Edihead;
 use App\Models\Ediline;
 use App\Models\VkvpaData;
-use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
 use App\Services\Admin\AdminEntryChecker;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -36,13 +36,13 @@ class AdminEntryCheckerTest extends TestCase
         ]);
     }
 
-    private function kat(): VkvpaKategorie
+    private function kat(): EdiCategory
     {
-        return VkvpaKategorie::create(['nazev' => '144 MHz', 'zkratka' => 'A', 'dxid' => 0]);
+        return EdiCategory::create(['name' => '144 MHz', 'band' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
     }
 
     /** @param array<string, mixed> $overrides */
-    private function entry(VkvpaKola $kolo, VkvpaKategorie $kat, array $overrides = []): VkvpaData
+    private function entry(VkvpaKola $kolo, EdiCategory $kat, array $overrides = []): VkvpaData
     {
         return VkvpaData::create(array_merge([
             'id_kola' => $kolo->id,

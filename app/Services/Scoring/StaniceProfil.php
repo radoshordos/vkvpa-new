@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services\Scoring;
 
+use App\Models\EdiCategory;
 use App\Models\VkvpaData;
-use App\Models\VkvpaKategorie;
 use App\Support\VkvpaSettings;
 use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\Cache;
@@ -52,7 +52,7 @@ final class StaniceProfil
     private function compute(string $znacka): ?array
     {
         /** @var SupportCollection<int, string> $zkratky */
-        $zkratky = VkvpaKategorie::query()->pluck('zkratka', 'id');
+        $zkratky = EdiCategory::zkratkaMap();
 
         $entries = VkvpaData::query()
             ->join('vkvpa_kola', 'vkvpa_data.id_kola', '=', 'vkvpa_kola.id')

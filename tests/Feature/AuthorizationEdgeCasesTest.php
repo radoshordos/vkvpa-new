@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\EdiCategory;
 use App\Models\User;
 use App\Models\VkvpaData;
-use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -36,7 +36,7 @@ class AuthorizationEdgeCasesTest extends TestCase
             'nazev' => 'Testovací kolo',
             'poznamka' => '',
         ]);
-        $kat = VkvpaKategorie::create(['nazev' => '144 MHz SO', 'zkratka' => 'A', 'dxid' => 0]);
+        $kat = EdiCategory::create(['name' => '144 MHz SO', 'band' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
 
         return VkvpaData::create([
             'id_kola' => $kolo->id,
@@ -168,7 +168,7 @@ class AuthorizationEdgeCasesTest extends TestCase
             'nazev' => 'Aktivní kolo',
             'poznamka' => '',
         ]);
-        $kat = VkvpaKategorie::create(['nazev' => 'A', 'zkratka' => 'A', 'dxid' => 0]);
+        $kat = EdiCategory::create(['name' => 'A', 'band' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
 
         $this->post('/hlaseni', [
             'kolo' => $kolo->id,

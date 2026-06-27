@@ -22,8 +22,8 @@ use Illuminate\Support\Facades\Cache;
  *              stanice), použije se DX varianta kategorie.
  *
  * Výsledkem je id záznamu z tabulky `edi_category` (viz seed), nebo null,
- * když sekci/kombinaci nelze určit. (Id jsou 1:1 s `vkvpa_kategorie`, na kterou
- * stále míří `vkvpa_data.id_kategorie`.)
+ * když sekci/kombinaci nelze určit. `edi_category` je jediný číselník kategorií
+ * (na něj míří FK `vkvpa_data.id_kategorie`).
  */
 final class CategoryResolver
 {
@@ -50,7 +50,6 @@ final class CategoryResolver
 
     /**
      * Vrátí všechna id kategorií z tabulky `edi_category`.
-     * Slouží k ověření parity s `vkvpa_kategorie` (id zůstávají 1:1).
      *
      * @return list<int>
      */

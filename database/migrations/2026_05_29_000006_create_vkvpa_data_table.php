@@ -65,9 +65,8 @@ return new class extends Migration
             $table->foreign('id_kola', 'vkvpa_data_id_kola_fk')
                 ->references('id')->on('vkvpa_kola')
                 ->restrictOnDelete();
-            $table->foreign('id_kategorie', 'vkvpa_data_id_kategorie_fk')
-                ->references('id')->on('vkvpa_kategorie')
-                ->restrictOnDelete();
+            // FK id_kategorie → edi_category se přidává až v migraci, která
+            // edi_category vytváří (2026_06_27_000001) – ta tabulka tu ještě neexistuje.
             $table->foreign('edihead_id', 'vkvpa_data_edihead_id_fk')
                 ->references('id')->on('edi_head')
                 ->nullOnDelete();

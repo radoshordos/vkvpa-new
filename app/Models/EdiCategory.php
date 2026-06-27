@@ -7,16 +7,21 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 use Override;
 
 /**
- * Kategorie závodu, rozložená do os pásmo × sekce × varianta.
+ * Kategorie závodu, rozložená do os pásmo × sekce × varianta. Jediný číselník
+ * kategorií aplikace (dříve duplicitní `vkvpa_kategorie` byla zrušena).
  *
- * Normalizovaná obdoba {@see VkvpaKategorie}: místo textové zkratky/názvu nese
- * dotazovatelné sloupce. `dxid` váže DX řádek na tuzemský protějšek
- * (stejné band+section, variant='domestic'); u tuzemských řádků je NULL.
+ * Místo textové zkratky/názvu nese dotazovatelné sloupce; pro zpětnou
+ * kompatibilitu nabízí čtené atributy `nazev` (= `name`) a `zkratka`
+ * (generovaná z os). `dxid` váže DX řádek na tuzemský protějšek (stejné
+ * band+section, variant='domestic'); u tuzemských řádků je NULL.
  *
  * @property int $id
  * @property string $band pásmo s jednotkou ('144 MHz', '432 MHz', '1.3 GHz', … '122 GHz')
@@ -24,6 +29,8 @@ use Override;
  * @property string $variant 'domestic' (tuzemská OK/OL) | 'dx' (zahraniční)
  * @property string $name čitelný název pro UI
  * @property int|null $dxid id tuzemského protějšku DX řádku; NULL = tato kategorie JE tuzemská
+ * @property-read string $nazev alias pro `name` (zpětná kompatibilita)
+ * @property-read string $zkratka generovaná zkratka ('144 SO', '144 SO DX')
  */
 #[Fillable(['id', 'band', 'section', 'variant', 'name', 'dxid'])]
 #[Table(name: 'edi_category', key: 'id')]
@@ -38,6 +45,16 @@ class EdiCategory extends Model
     public function isMulti(): bool
     {
         return $this->section === 'MO';
+    }
+
+    /**
+     * Hlášení (záznamy listiny) v této kategorii.
+     *
+     * @return HasMany<VkvpaData, $this>
+     */
+    public function hlaseni(): HasMany
+    {
+        return $this->hasMany(VkvpaData::class, 'id_kategorie', 'id');
     }
 
     /**
@@ -61,6 +78,53 @@ class EdiCategory extends Model
         }
 
         return $this->dxid !== null ? self::find($this->dxid) : null;
+    }
+
+    /**
+     * Alias `name` pod historickým názvem `nazev`.
+     *
+     * @return Attribute<string, never>
+     */
+    protected function nazev(): Attribute
+    {
+        return Attribute::get(fn (): string => (string) $this->name);
+    }
+
+    /**
+     * Generovaná zkratka z os, např. '144 SO' / '144 SO DX'.
+     *
+     * @return Attribute<string, never>
+     */
+    protected function zkratka(): Attribute
+    {
+        return Attribute::get(function (): string {
+            $token = explode(' ', (string) $this->band)[0]; // '144 MHz' → '144', '1.3 GHz' → '1.3'
+            $dx = $this->variant === 'dx' ? ' DX' : '';
+
+            return trim("{$token} {$this->section}{$dx}");
+        });
+    }
+
+    /**
+     * Mapa id → zkratka (pro místa, kde generovaný atribut nejde plucknout v SQL).
+     *
+     * @return Collection<int, string>
+     */
+    public static function zkratkaMap(): Collection
+    {
+        return self::query()->get(['id', 'band', 'section', 'variant'])
+            ->mapWithKeys(static fn (self $c): array => [$c->id => $c->zkratka]);
+    }
+
+    /**
+     * Mapa id → název.
+     *
+     * @return Collection<int, string>
+     */
+    public static function nazevMap(): Collection
+    {
+        return self::query()->get(['id', 'name'])
+            ->mapWithKeys(static fn (self $c): array => [$c->id => (string) $c->name]);
     }
 
     #[Override]

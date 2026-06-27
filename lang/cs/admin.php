@@ -59,6 +59,9 @@ return [
     'kategorie_btn_save' => 'Uložit',
     'field_name' => 'Název',
     'field_abbr' => 'Zkratka',
+    'field_band' => 'Pásmo',
+    'field_section' => 'Sekce',
+    'field_variant' => 'Varianta',
 
     // Společné
     'btn_cancel' => 'Zrušit',

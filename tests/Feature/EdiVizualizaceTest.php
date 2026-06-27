@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Http\Controllers\EdiVizualizaceController;
+use App\Models\EdiCategory;
 use App\Models\Edihead;
 use App\Models\User;
 use App\Models\VkvpaData;
-use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
 use App\Services\Edi\EdiImportService;
 use App\Services\Edi\EdiParser;
@@ -244,7 +244,7 @@ class EdiVizualizaceTest extends TestCase
             'p_band' => '144 MHz', 'r_name' => 'B', 'r_emai' => 'b@b.cz', 's_powe' => 100,
         ]);
 
-        $kategorie = VkvpaKategorie::create(['nazev' => '144 MHz', 'zkratka' => 'A', 'dxid' => 0]);
+        $kategorie = EdiCategory::create(['name' => '144 MHz', 'band' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
 
         foreach ([[$head, 'OK2KJT'], [$rival, 'OK1BBB']] as [$h, $znacka]) {
             VkvpaData::create([

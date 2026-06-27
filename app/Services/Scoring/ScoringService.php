@@ -6,9 +6,9 @@ namespace App\Services\Scoring;
 
 use App\Enums\QsoCountStatus;
 use App\Enums\Vykon;
+use App\Models\EdiCategory;
 use App\Models\Edihead;
 use App\Models\VkvpaData;
-use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
 use App\Services\Edi\EdiLog;
 use App\Support\ContestWindow;
@@ -38,7 +38,7 @@ final class ScoringService
                 ->where('poradi', '<>', 0)
                 ->update(['poradi' => 0]);
 
-            foreach (VkvpaKategorie::query()->pluck('id') as $kategorieId) {
+            foreach (EdiCategory::query()->pluck('id') as $kategorieId) {
                 $entries = VkvpaData::query()
                     ->where('id_kola', $koloId)
                     ->approved()

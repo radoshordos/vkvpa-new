@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\EdiCategory;
 use App\Models\Edihead;
 use App\Models\User;
 use App\Models\VkvpaData;
-use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -30,9 +30,9 @@ class VysledkyListinaTest extends TestCase
         ]);
     }
 
-    private function kat(string $nazev): VkvpaKategorie
+    private function kat(string $nazev): EdiCategory
     {
-        return VkvpaKategorie::create(['nazev' => $nazev, 'zkratka' => $nazev, 'dxid' => 0]);
+        return EdiCategory::create(['name' => $nazev, 'band' => $nazev, 'section' => 'SO', 'variant' => 'domestic']);
     }
 
     private function entry(int $kolo, int $kat, string $znacka, int $pocet, int $nas, int $body, int $poradi): VkvpaData

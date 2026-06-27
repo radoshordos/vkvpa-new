@@ -8,8 +8,8 @@ use App\Events\EdiImported;
 use App\Listeners\SendEdiMailsListener;
 use App\Mail\HlaseniPrijato;
 use App\Mail\HlaseniProVyhodnocovatele;
+use App\Models\EdiCategory;
 use App\Models\VkvpaData;
-use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
 use App\Models\VkvpaPrihlaseni;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -38,7 +38,7 @@ class SendEdiMailsListenerTest extends TestCase
             'nazev' => 'Testovací kolo',
             'poznamka' => '',
         ]);
-        $kat = VkvpaKategorie::create(['nazev' => '144 MHz', 'zkratka' => 'A', 'dxid' => 0]);
+        $kat = EdiCategory::create(['name' => '144 MHz', 'band' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
 
         $this->data = VkvpaData::create([
             'id_kola' => $kolo->id,

@@ -6,17 +6,17 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\KategorieRequest;
-use App\Models\VkvpaKategorie;
+use App\Models\EdiCategory;
 use App\Support\AdminLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
-/** Administrace – Kategorie. */
+/** Administrace – Kategorie (`edi_category`). */
 class KategorieController extends Controller
 {
     public function index(): View
     {
-        $kategorie = VkvpaKategorie::query()
+        $kategorie = EdiCategory::query()
             ->withCount('hlaseni')
             ->orderBy('id')
             ->get();
@@ -36,14 +36,14 @@ class KategorieController extends Controller
 
     public function store(KategorieRequest $request): RedirectResponse
     {
-        VkvpaKategorie::create($request->toModel());
+        EdiCategory::create($request->toModel());
 
         return redirect()
             ->route('kategorie.index')
             ->with('announcement', 'Kategorie byla přidána.');
     }
 
-    public function edit(VkvpaKategorie $kategorie): View
+    public function edit(EdiCategory $kategorie): View
     {
         return view('pages.admin.kategorie-edit', [
             'active' => 'kategorie.index',
@@ -51,17 +51,17 @@ class KategorieController extends Controller
         ]);
     }
 
-    public function update(KategorieRequest $request, VkvpaKategorie $kategorie): RedirectResponse
+    public function update(KategorieRequest $request, EdiCategory $kategorie): RedirectResponse
     {
         $kategorie->update($request->toModel());
 
         AdminLogger::log('admin.kategorie.update', [
             'kategorie_id' => $kategorie->id,
-            'nazev' => $kategorie->nazev,
+            'nazev' => $kategorie->name,
         ]);
 
         return redirect()
             ->route('kategorie.index')
-            ->with('announcement', 'Kategorie „'.$kategorie->nazev.'" byla aktualizována.');
+            ->with('announcement', 'Kategorie „'.$kategorie->name.'" byla aktualizována.');
     }
 }

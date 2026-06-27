@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Http\Controllers\Admin\ZaznamController;
+use App\Models\EdiCategory;
 use App\Models\User;
 use App\Models\VkvpaData;
-use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -36,7 +36,7 @@ class ZaznamAdminTest extends TestCase
             'nazev' => '05/2026',
             'poznamka' => '',
         ]);
-        $kat = VkvpaKategorie::create(['nazev' => '144 MHz single op', 'zkratka' => 'A', 'dxid' => 0]);
+        $kat = EdiCategory::create(['name' => '144 MHz single op', 'band' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
 
         return VkvpaData::create([
             'id_kola' => $kolo->id, 'id_kategorie' => $kat->id, 'znacka' => 'OK1TEST',
@@ -108,7 +108,7 @@ class ZaznamAdminTest extends TestCase
     public function test_unapprove_resets_ranking_for_round(): void
     {
         $kolo = VkvpaKola::create(['datum_konani' => now()->subDays(2), 'datum_uzaverky' => now()->addDays(3), 'nazev' => '05/2026', 'poznamka' => '']);
-        $kat = VkvpaKategorie::create(['nazev' => '144 MHz single op', 'zkratka' => 'A', 'dxid' => 0]);
+        $kat = EdiCategory::create(['name' => '144 MHz single op', 'band' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
 
         $a = VkvpaData::create(['id_kola' => $kolo->id, 'id_kategorie' => $kat->id, 'znacka' => 'OK1A', 'locator' => 'JN99AJ', 'pocet' => 10, 'nasobice' => 5, 'body' => 100, 'bodu_za_qso' => 0, 'schvaleno' => true, 'odeslano' => false, 'poradi' => 1]);
         $b = VkvpaData::create(['id_kola' => $kolo->id, 'id_kategorie' => $kat->id, 'znacka' => 'OK1B', 'locator' => 'JN99AJ', 'pocet' => 5, 'nasobice' => 3, 'body' => 50, 'bodu_za_qso' => 0, 'schvaleno' => true, 'odeslano' => false, 'poradi' => 2]);
@@ -126,7 +126,7 @@ class ZaznamAdminTest extends TestCase
     public function test_prevzit_recalculates_ranking_for_round(): void
     {
         $kolo = VkvpaKola::create(['datum_konani' => now()->subDays(2), 'datum_uzaverky' => now()->addDays(3), 'nazev' => '05/2026', 'poznamka' => '']);
-        $kat = VkvpaKategorie::create(['nazev' => '144 MHz single op', 'zkratka' => 'A', 'dxid' => 0]);
+        $kat = EdiCategory::create(['name' => '144 MHz single op', 'band' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
 
         $a = VkvpaData::create(['id_kola' => $kolo->id, 'id_kategorie' => $kat->id, 'znacka' => 'OK1A', 'locator' => 'JN99AJ', 'pocet' => 10, 'nasobice' => 5, 'body' => 100, 'bodu_za_qso' => 0, 'schvaleno' => true, 'odeslano' => false, 'poradi' => 0]);
         $b = VkvpaData::create(['id_kola' => $kolo->id, 'id_kategorie' => $kat->id, 'znacka' => 'OK1B', 'locator' => 'JN99AJ', 'pocet' => 5, 'nasobice' => 3, 'body' => 50, 'bodu_za_qso' => 0, 'schvaleno' => false, 'odeslano' => false, 'poradi' => 0]);
@@ -143,7 +143,7 @@ class ZaznamAdminTest extends TestCase
     public function test_smazat_recalculates_ranking_after_deletion(): void
     {
         $kolo = VkvpaKola::create(['datum_konani' => now()->subDays(2), 'datum_uzaverky' => now()->addDays(3), 'nazev' => '05/2026', 'poznamka' => '']);
-        $kat = VkvpaKategorie::create(['nazev' => '144 MHz single op', 'zkratka' => 'A', 'dxid' => 0]);
+        $kat = EdiCategory::create(['name' => '144 MHz single op', 'band' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
 
         $a = VkvpaData::create(['id_kola' => $kolo->id, 'id_kategorie' => $kat->id, 'znacka' => 'OK1A', 'locator' => 'JN99AJ', 'pocet' => 10, 'nasobice' => 5, 'body' => 100, 'bodu_za_qso' => 0, 'schvaleno' => true, 'odeslano' => false, 'poradi' => 2]);
         $b = VkvpaData::create(['id_kola' => $kolo->id, 'id_kategorie' => $kat->id, 'znacka' => 'OK1B', 'locator' => 'JN99AJ', 'pocet' => 5, 'nasobice' => 3, 'body' => 200, 'bodu_za_qso' => 0, 'schvaleno' => true, 'odeslano' => false, 'poradi' => 1]);
@@ -161,7 +161,7 @@ class ZaznamAdminTest extends TestCase
     {
         // Kolo po uzávěrce (stav Zpracování) – převzetí už nelze vrátit.
         $kolo = VkvpaKola::create(['datum_konani' => now()->subDays(7), 'datum_uzaverky' => now()->subDay(), 'nazev' => '05/2026', 'poznamka' => '']);
-        $kat = VkvpaKategorie::create(['nazev' => '144 MHz single op', 'zkratka' => 'A', 'dxid' => 0]);
+        $kat = EdiCategory::create(['name' => '144 MHz single op', 'band' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
         $zaznam = VkvpaData::create([
             'id_kola' => $kolo->id, 'id_kategorie' => $kat->id, 'znacka' => 'OK1A', 'locator' => 'JN99AJ',
             'pocet' => 10, 'nasobice' => 5, 'body' => 50, 'bodu_za_qso' => 0, 'schvaleno' => true, 'odeslano' => false,
@@ -180,7 +180,7 @@ class ZaznamAdminTest extends TestCase
     {
         // Kolo po uzávěrce s jediným dosud nepřevzatým záznamem.
         $kolo = VkvpaKola::create(['datum_konani' => now()->subDays(7), 'datum_uzaverky' => now()->subDay(), 'nazev' => '05/2026', 'poznamka' => '']);
-        $kat = VkvpaKategorie::create(['nazev' => '144 MHz single op', 'zkratka' => 'A', 'dxid' => 0]);
+        $kat = EdiCategory::create(['name' => '144 MHz single op', 'band' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
         $zaznam = VkvpaData::create([
             'id_kola' => $kolo->id, 'id_kategorie' => $kat->id, 'znacka' => 'OK1A', 'locator' => 'JN99AJ',
             'pocet' => 10, 'nasobice' => 5, 'body' => 50, 'bodu_za_qso' => 0, 'schvaleno' => false, 'odeslano' => false,

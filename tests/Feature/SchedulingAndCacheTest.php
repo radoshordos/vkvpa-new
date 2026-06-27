@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\EdiCategory;
 use App\Models\VkvpaData;
-use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
 use App\Services\Scoring\ScoringService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -33,7 +33,7 @@ class SchedulingAndCacheTest extends TestCase
 
     public function test_yearly_results_are_cached_until_rank_round_invalidates(): void
     {
-        $kat = VkvpaKategorie::create(['nazev' => 'A', 'zkratka' => 'A', 'dxid' => 0]);
+        $kat = EdiCategory::create(['name' => 'A', 'band' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
         $kolo = $this->kolo('1. kolo 2026', now()->addDay()->toDateTimeString());
 
         $row = VkvpaData::create([

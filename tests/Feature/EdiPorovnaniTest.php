@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Http\Controllers\EdiPorovnaniController;
+use App\Models\EdiCategory;
 use App\Models\Edihead;
 use App\Models\Ediline;
 use App\Models\User;
 use App\Models\VkvpaData;
-use App\Models\VkvpaKategorie;
 use App\Models\VkvpaKola;
 use App\Services\Edi\EdiImportService;
 use App\Services\Edi\EdiParser;
@@ -160,8 +160,8 @@ class EdiPorovnaniTest extends TestCase
             'vyhodnoceno' => $otevrene ? null : '2026-03-21 10:00:00',
         ]);
 
-        $katA = VkvpaKategorie::create(['nazev' => '144 MHz', 'zkratka' => 'A', 'dxid' => 0]);
-        $katB = VkvpaKategorie::create(['nazev' => '432 MHz', 'zkratka' => 'B', 'dxid' => 0]);
+        $katA = EdiCategory::create(['name' => '144 MHz', 'band' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
+        $katB = EdiCategory::create(['name' => '432 MHz', 'band' => 'B', 'section' => 'SO', 'variant' => 'domestic']);
 
         $head = $this->importSample();
         $head->update(['id_kola' => $kolo->id]);
