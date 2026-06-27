@@ -34,7 +34,7 @@ Deploy is split so each step runs in the right environment: `composer deploy:ass
 The core flow for submitting a contest log:
 
 1. `EdiParser::parse(string)` → `EdiLog` (value object with `EdiHeader` + `EdiQso[]` + raw source)
-2. `EdiImportService::import(EdiLog)` → writes to `edihead` + `edilines` tables in one transaction
+2. `EdiImportService::import(EdiLog)` → writes to `edi_head` + `edi_lines` tables in one transaction
 3. `ScoringService::scoreEdi(Edihead)` → computes `EdiScore` (pocet × nasobice = body)
 4. `EdiController::store()` orchestrates steps 1–3, creates a `VkvpaData` row linked via `edihead_id` (nullable FK; `NULL` = entry without an EDI log)
 
@@ -42,17 +42,17 @@ EDI files may arrive as Windows-1250; `EdiParser` converts via `iconv` before pr
 
 ### Database: Two Schemas
 
-**EDI schema** (`edihead`, `edilines`): derived from the original system but fully normalized to `snake_case` column names (`mode_code`, `received_wwl`, `qso_points`, `t_date`, `p_call`, etc.) — accessed as ordinary Eloquent attributes, no magic-string `$line->{'...'}` access and no `property.notFound` suppressions. `Ediline` exposes a few PHP 8.4 property hooks (`receivedWwl`, `qsoPoints`, `modeCode`, `mode`, `newWwl`) that normalize/cast the raw columns. Both models carry `#[WithoutTimestamps]` since they have custom time columns (`stamp`, `d_cas`). The historical dataset now lives only as seeder snapshots (see *Seeding* below); the original Adminer SQL dumps were converted and removed.
+**EDI schema** (`edi_head`, `edi_lines`): derived from the original system but fully normalized to `snake_case` column names (`mode_code`, `received_wwl`, `qso_points`, `t_date`, `p_call`, etc.) — accessed as ordinary Eloquent attributes, no magic-string `$line->{'...'}` access and no `property.notFound` suppressions. `Ediline` exposes a few PHP 8.4 property hooks (`receivedWwl`, `qsoPoints`, `modeCode`, `mode`, `newWwl`) that normalize/cast the raw columns. Both models carry `#[WithoutTimestamps]` since they have custom time columns (`stamp`, `d_cas`). The historical dataset now lives only as seeder snapshots (see *Seeding* below); the original Adminer SQL dumps were converted and removed.
 
 **Application schema** (`vkvpa_*` tables): `VkvpaData` (contest entry/result row), `VkvpaKola` (contest round), `VkvpaKategorie` (category), `VkvpaPrihlaseni`, `Prispevek` (discussion).
 
-One migration per table: each `create_*` migration holds the table's final schema including its outgoing foreign keys, ordered so referenced tables are created first. FKs are added in a `DB::getDriverName() !== 'sqlite'` guard (SQLite can't `ALTER TABLE ADD FOREIGN KEY` and the test DB runs without them — integrity is enforced by the app + tests there); `edilines` is the exception, declaring its FK inline since it works in `CREATE TABLE`.
+One migration per table: each `create_*` migration holds the table's final schema including its outgoing foreign keys, ordered so referenced tables are created first. FKs are added in a `DB::getDriverName() !== 'sqlite'` guard (SQLite can't `ALTER TABLE ADD FOREIGN KEY` and the test DB runs without them — integrity is enforced by the app + tests there); `edi_lines` is the exception, declaring its FK inline since it works in `CREATE TABLE`.
 
 ### Seeding
 
 `DatabaseSeeder` → `SampleDatabaseSeeder` (historical snapshot) + `AdminUserSeeder` (admin from `ADMIN_USER`/`ADMIN_PASS` env, not from a file). Per-table seeders extend `JsonTableSeeder`, which truncates then bulk-inserts in chunks of 500.
 
-The large tables (`edihead`, `edilines`, `vkvpa_data`) ship as gzipped newline-delimited JSON snapshots in `database/seeders/data/{table}.jsonl.gz` — `JsonTableSeeder` streams them line by line via the `compress.zlib://` wrapper, so seeding stays low-memory regardless of size. Small/static tables either keep a plain `{table}.json` array (still supported as a fallback) or inline their rows directly in the seeder's `rows()` (e.g. `PrefixesTableSeeder`, `VkvpaKolaTableSeeder`). The former Adminer SQL dumps were one-off converted into these snapshots and deleted, along with the `legacy:import` command that imported them.
+The large tables (`edi_head`, `edi_lines`, `vkvpa_data`) ship as gzipped newline-delimited JSON snapshots in `database/seeders/data/{table}.jsonl.gz` — `JsonTableSeeder` streams them line by line via the `compress.zlib://` wrapper, so seeding stays low-memory regardless of size. Small/static tables either keep a plain `{table}.json` array (still supported as a fallback) or inline their rows directly in the seeder's `rows()` (e.g. `PrefixesTableSeeder`, `VkvpaKolaTableSeeder`). The former Adminer SQL dumps were one-off converted into these snapshots and deleted, along with the `legacy:import` command that imported them.
 
 ### Scoring Formula
 

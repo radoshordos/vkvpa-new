@@ -48,7 +48,7 @@ use Override;
     'new_exchange_n', 'new_wwl_n', 'new_dxcc_n',
     'duplicate_qso_d', 'sqr', 'lon', 'lat',
 ])]
-#[Table(name: 'edilines')]
+#[Table(name: 'edi_lines')]
 #[WithoutTimestamps]
 class Ediline extends Model
 {
