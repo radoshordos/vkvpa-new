@@ -14,7 +14,7 @@ services:
             - "8080:80"
         environment:
             DB_HOST: db
-            DB_DATABASE: ${DB_DATABASE:-digipa}
+            DB_DATABASE: ${DB_DATABASE:-vkvpab}
             DB_USERNAME: ${DB_USERNAME:-vkvpa}
             DB_PASSWORD: ${DB_PASSWORD:-secret}
             # Basic auth pro Adminer (public/adminer/). Bez vyplnění obou
@@ -31,7 +31,7 @@ services:
         # legacy dumpy v database/source_sql/ byly převedeny do seederů a smazány).
         command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
         environment:
-            MYSQL_DATABASE: ${DB_DATABASE:-digipa}
+            MYSQL_DATABASE: ${DB_DATABASE:-vkvpab}
             MYSQL_USER: ${DB_USERNAME:-vkvpa}
             MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
             MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootsecret}

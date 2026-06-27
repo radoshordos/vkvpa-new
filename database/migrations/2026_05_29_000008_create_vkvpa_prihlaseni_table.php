@@ -16,7 +16,8 @@ return new class extends Migration
             $table->collation = 'utf8mb4_unicode_ci';
 
             $table->integer('id', true);
-            $table->timestamp('time')->nullable()->useCurrent();
+            // DATETIME (ne TIMESTAMP) – nezávislé na session time_zone serveru.
+            $table->dateTime('time')->nullable()->useCurrent();
             // Přihlašovací kódy musí být unikátní – kolize tokenu by jinak
             // umožnila neoprávněné přihlášení. Šířka 64 pojme celý SHA-256 hash
             // (kratší sloupec by hash ořezal a token by se nikdy nenašel).

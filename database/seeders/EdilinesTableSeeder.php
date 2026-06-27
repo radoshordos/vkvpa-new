@@ -8,5 +8,5 @@ class EdilinesTableSeeder extends JsonTableSeeder
 {
     protected string $table = 'edilines';
 
-    protected ?int $autoIncrement = 887832;
+    protected ?int $autoIncrement = 897385;
 }

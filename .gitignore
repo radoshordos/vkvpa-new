@@ -29,11 +29,16 @@ Homestead.yaml
 Thumbs.db
 *.sqlite
 *.sqlite3
-/digipa
+/vkvpab
 /.env
 /.env.backup
 /.phpunit.result.cache
 /storage/logs/*.log
 /bootstrap/cache/*.php
-/digipa_zaloha.sql
+/vkvpab_zaloha.sql
+
+# Jednorázový produkční SQL dump (zdroj pro seedery, do repa nepatří – velký).
+/database/vkvpa.sql
+# Lokální phpMyAdmin pro přístup k DB (nástroj, ne součást aplikace).
+/public/db/
 

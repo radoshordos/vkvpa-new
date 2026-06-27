@@ -11,8 +11,8 @@ class VkvpaKolaTableSeeder extends JsonTableSeeder
     protected ?int $autoIncrement = 135;
 
     /**
-     * Snapshot ostré DB z 2026-06-13; `datum_konani` doplněno o start
-     * závodu 08:00 UTC (sloupec je od 2026-06 datetime).
+     * Snapshot ostré DB z 2026-06-27 (čas v UTC, shodně s app.timezone);
+     * `datum_konani` má start závodu 08:00 UTC.
      *
      * @return list<array<string, mixed>>
      */
@@ -150,7 +150,7 @@ class VkvpaKolaTableSeeder extends JsonTableSeeder
             ['id' => 129, 'datum_konani' => '2026-03-15 08:00:00', 'datum_uzaverky' => '2026-03-20 23:59:59', 'nazev' => '03/2026', 'vyhodnoceno' => '2026-05-17 17:11:29', 'poznamka' => ''],
             ['id' => 130, 'datum_konani' => '2026-04-19 08:00:00', 'datum_uzaverky' => '2026-04-24 23:59:59', 'nazev' => '04/2026', 'vyhodnoceno' => '2026-04-24 21:18:55', 'poznamka' => ''],
             ['id' => 131, 'datum_konani' => '2026-05-17 08:00:00', 'datum_uzaverky' => '2026-05-22 23:59:59', 'nazev' => '05/2026', 'vyhodnoceno' => '2026-05-19 18:48:29', 'poznamka' => ''],
-            ['id' => 132, 'datum_konani' => '2026-06-21 08:00:00', 'datum_uzaverky' => '2026-06-26 23:59:59', 'nazev' => '06/2026', 'vyhodnoceno' => null, 'poznamka' => ''],
+            ['id' => 132, 'datum_konani' => '2026-06-21 08:00:00', 'datum_uzaverky' => '2026-06-26 23:59:00', 'nazev' => '06/2026', 'vyhodnoceno' => '2026-06-27 08:21:00', 'poznamka' => ''],
             ['id' => 133, 'datum_konani' => '2026-07-19 08:00:00', 'datum_uzaverky' => '2026-07-24 23:59:59', 'nazev' => '07/2026', 'vyhodnoceno' => null, 'poznamka' => ''],
             ['id' => 134, 'datum_konani' => '2026-08-16 08:00:00', 'datum_uzaverky' => '2026-08-21 23:59:59', 'nazev' => '08/2026', 'vyhodnoceno' => null, 'poznamka' => ''],
         ];
