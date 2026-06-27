@@ -11,17 +11,19 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Ověřuje konzistenci matice CategoryResolver::CATEGORIES s databází.
+ * Ověřuje paritu id mezi `edi_category` (zdroj párování) a `vkvpa_kategorie`
+ * (na ni stále míří `vkvpa_data.id_kategorie`).
  *
- * Pokud tato sada selže, ID v matici neodpovídají seederu a CategoryResolver
- * tiše přiřazuje špatné kategorie.
+ * Pokud tato sada selže, id v obou tabulkách se rozešla a CategoryResolver by
+ * párováním ukazoval na neexistující/špatnou kategorii.
  */
 class CategoryResolverValidationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_all_category_matrix_ids_exist_in_database(): void
+    public function test_all_category_ids_exist_in_vkvpa_kategorie(): void
     {
+        // edi_category seeduje base TestCase; vkvpa_kategorie je proti ní parita
         $this->seed(VkvpaKategorieTableSeeder::class);
 
         $ids = CategoryResolver::allCategoryIds();
@@ -30,7 +32,7 @@ class CategoryResolverValidationTest extends TestCase
 
         $this->assertEmpty(
             $missing,
-            'CategoryResolver::CATEGORIES odkazuje na ID, která neexistují v tabulce vkvpa_kategorie: '
+            'edi_category odkazuje na id, která neexistují ve vkvpa_kategorie: '
             .implode(', ', $missing),
         );
     }
@@ -42,7 +44,7 @@ class CategoryResolverValidationTest extends TestCase
         $this->assertSame(
             count($ids),
             count(array_unique($ids)),
-            'CategoryResolver::CATEGORIES obsahuje duplicitní ID kategorií.',
+            'edi_category obsahuje duplicitní id kategorií.',
         );
     }
 }

@@ -16,19 +16,21 @@ use function Laravel\Prompts\table;
 use function Laravel\Prompts\warning;
 
 /**
- * Ověří, že všechna ID kategorií z CategoryResolver::CATEGORIES existují v tabulce vkvpa_kategorie.
+ * Ověří paritu id kategorií mezi `edi_category` a `vkvpa_kategorie`.
  *
- * Spouštět po každé změně CategoryResolver::CATEGORIES nebo po změně seederu.
+ * CategoryResolver páruje podle `edi_category`, ale `vkvpa_data.id_kategorie`
+ * stále míří na `vkvpa_kategorie`; id proto musí v obou tabulkách souhlasit.
+ * Spouštět po změně kteréhokoli z obou seederů.
  */
 class ValidateCategoryMatrix extends Command
 {
     protected $signature = 'vkvpa:validate-categories';
 
-    protected $description = 'Ověří konzistenci matice CategoryResolver vůči tabulce vkvpa_kategorie';
+    protected $description = 'Ověří paritu id kategorií edi_category ↔ vkvpa_kategorie';
 
     public function handle(): int
     {
-        intro('Validace matice kategorií CategoryResolver ↔ vkvpa_kategorie');
+        intro('Validace parity kategorií edi_category ↔ vkvpa_kategorie');
 
         $expected = CategoryResolver::allCategoryIds();
         sort($expected);
@@ -59,7 +61,7 @@ class ValidateCategoryMatrix extends Command
         }
 
         if ($missing !== []) {
-            error('Chybějící ID (jsou v matici, ale ne v DB):');
+            error('Chybějící ID (jsou v edi_category, ale ne ve vkvpa_kategorie):');
             $missing
                 |> array_values(...)
                 |> (fn ($x) => array_map(fn (int $id): array => [(string) $id, 'chybí v DB'], $x))
@@ -67,7 +69,7 @@ class ValidateCategoryMatrix extends Command
         }
 
         if ($extra !== []) {
-            warning('Navíc v DB (nejsou v matici):');
+            warning('Navíc ve vkvpa_kategorie (nejsou v edi_category):');
             $extra
                 |> array_values(...)
                 |> (fn ($x) => array_map(fn (int $id): array => [(string) $id, 'navíc v DB'], $x))

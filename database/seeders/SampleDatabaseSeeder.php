@@ -20,6 +20,7 @@ class SampleDatabaseSeeder extends Seeder
         $this->call([
             VkvpaKolaTableSeeder::class,
             VkvpaKategorieTableSeeder::class,
+            EdiCategoryTableSeeder::class,
             EdiheadTableSeeder::class,
             EdilinesTableSeeder::class,
             VkvpaDataTableSeeder::class,

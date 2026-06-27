@@ -6,15 +6,20 @@ namespace Tests\Unit;
 
 use App\Exceptions\UnknownBandException;
 use App\Services\Edi\CategoryResolver;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
  * Určení kategorie z hlavičky EDI: pásmo (PBand) + sekce (PSect) + DX (prefix PCall).
  *
+ * Resolver páruje id přes číselník `edi_category` (naseedovaný v base TestCase).
+ *
  * @see CategoryResolver
  */
 class CategoryResolverTest extends TestCase
 {
+    use RefreshDatabase;
+
     private CategoryResolver $resolver;
 
     protected function setUp(): void

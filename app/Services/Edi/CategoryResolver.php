@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Services\Edi;
 
 use App\Exceptions\UnknownBandException;
+use App\Models\EdiCategory;
 use App\Support\VkvpaSettings;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * Určení kategorie závodu z hlavičky EDI deníku.
@@ -19,11 +21,15 @@ use App\Support\VkvpaSettings;
  *   3. DX      podle prefixu značky `PCall` – nezačíná-li na „OK" ani „OL“ (= cizí
  *              stanice), použije se DX varianta kategorie.
  *
- * Výsledkem je id záznamu z tabulky `vkvpa_kategorie` (viz seed), nebo null,
- * když sekci/kombinaci nelze určit.
+ * Výsledkem je id záznamu z tabulky `edi_category` (viz seed), nebo null,
+ * když sekci/kombinaci nelze určit. (Id jsou 1:1 s `vkvpa_kategorie`, na kterou
+ * stále míří `vkvpa_data.id_kategorie`.)
  */
 final class CategoryResolver
 {
+    /** Cache klíč mapy „band|section|variant" → id (číselník je statický). */
+    private const string CACHE_KEY = 'edi_category_map';
+
     /**
      * Aliasy pásem (klíč = velkými písmeny, oříznuto) → kanonické pásmo.
      */
@@ -42,46 +48,26 @@ final class CategoryResolver
     ];
 
     /**
-     * Kanonické pásmo → sekce (SO/MO) → varianta (op/dx) → id kategorie ze seedu.
-     * (PHP převádí numerické klíče jako „144" na int, proto int|string.)
-     *
-     * ID odpovídají záznamům v `vkvpa_kategorie` – viz database/seeders/VkvpaKategorieTableSeeder.php.
-     * Při přidání nové kategorie: 1) přidej řádek do seederu, 2) doplň ID do této matice.
-     *
-     * @var array<int|string, array<string, array<string, int>>>
-     */
-    private const array CATEGORIES = [
-        '144' => ['SO' => ['op' => 1, 'dx' => 23], 'MO' => ['op' => 2, 'dx' => 24]],
-        '432' => ['SO' => ['op' => 3, 'dx' => 25], 'MO' => ['op' => 4, 'dx' => 26]],
-        '1.3' => ['SO' => ['op' => 5, 'dx' => 27], 'MO' => ['op' => 6, 'dx' => 28]],
-        '2.3' => ['SO' => ['op' => 7, 'dx' => 29], 'MO' => ['op' => 8, 'dx' => 30]],
-        '3.4' => ['SO' => ['op' => 9, 'dx' => 31], 'MO' => ['op' => 10, 'dx' => 32]],
-        '5.7' => ['SO' => ['op' => 11, 'dx' => 33], 'MO' => ['op' => 12, 'dx' => 34]],
-        '10' => ['SO' => ['op' => 13, 'dx' => 35], 'MO' => ['op' => 14, 'dx' => 36]],
-        '24' => ['SO' => ['op' => 15, 'dx' => 38], 'MO' => ['op' => 16, 'dx' => 39]],
-        '47' => ['SO' => ['op' => 17, 'dx' => 42], 'MO' => ['op' => 18, 'dx' => 43]],
-        '76' => ['SO' => ['op' => 19, 'dx' => 45], 'MO' => ['op' => 20, 'dx' => 44]],
-        '122' => ['SO' => ['op' => 21], 'MO' => ['op' => 22]], // 122 GHz nemá DX kategorii
-    ];
-
-    /**
-     * Vrátí všechna ID kategorií použitá v matici CATEGORIES.
-     * Slouží k ověření konzistence s tabulkou vkvpa_kategorie.
+     * Vrátí všechna id kategorií z tabulky `edi_category`.
+     * Slouží k ověření parity s `vkvpa_kategorie` (id zůstávají 1:1).
      *
      * @return list<int>
      */
     public static function allCategoryIds(): array
     {
-        $ids = [];
-        foreach (self::CATEGORIES as $sections) {
-            foreach ($sections as $variants) {
-                foreach ($variants as $id) {
-                    $ids[] = $id;
-                }
-            }
-        }
+        $ids = EdiCategory::query()
+            ->orderBy('id')
+            ->get(['id'])
+            ->map(static fn (EdiCategory $c): int => $c->id)
+            ->all();
 
-        return array_values(array_unique($ids));
+        return array_values($ids);
+    }
+
+    /** Zahodí cachovanou mapu kategorií (volat po reseedu/úpravě `edi_category`). */
+    public static function forgetCache(): void
+    {
+        Cache::forget(self::CACHE_KEY);
     }
 
     /**
@@ -101,9 +87,27 @@ final class CategoryResolver
             return null; // sekci nelze určit → kategorii doplní admin
         }
 
-        $variant = $this->isDx($pcall) ? 'dx' : 'op';
+        $variant = $this->isDx($pcall) ? 'dx' : 'domestic';
 
-        return self::CATEGORIES[$band][$section][$variant] ?? null;
+        return $this->categoryMap()["{$band}|{$section}|{$variant}"] ?? null;
+    }
+
+    /**
+     * Mapa „band|section|variant" → id z `edi_category`, cachovaná napořád
+     * (číselník je statický). Drží jen skaláry, takže projde i přes
+     * `cache.serializable_classes=false`.
+     *
+     * @return array<string, int>
+     */
+    private function categoryMap(): array
+    {
+        /** @var array<string, int> */
+        return Cache::rememberForever(self::CACHE_KEY, static fn (): array => EdiCategory::query()
+            ->get(['id', 'band', 'section', 'variant'])
+            ->mapWithKeys(static fn (EdiCategory $c): array => [
+                "{$c->band}|{$c->section}|{$c->variant}" => $c->id,
+            ])
+            ->all());
     }
 
     /** Normalizace pásma na kanonický klíč; nerozpoznané → výjimka. */

@@ -170,9 +170,11 @@ Důsledky:
   konfigurovatelná, dobře pokrytá testy.
 - **Cache ročních výsledků** – `Cache::flexible` s **cílenou** invalidací v
   `rankRound()`; korektní stale-while-revalidate.
-- **Vazba `CategoryResolver` na ID ze seederu** – hardcoded matice ID kategorií je
-  **hlídaná** příkazem `php artisan` `ValidateCategoryMatrix` a testem
-  `CategoryResolverValidationTest`, takže rozejití se seedem se odhalí.
+- **Kategorie `CategoryResolver`** – párují se z normalizovaného číselníku
+  `edi_category` (pásmo × sekce × varianta) přes cachovanou mapu, žádná hardcoded
+  matice ID v kódu. Parita id se starou `vkvpa_kategorie` (na ni stále míří
+  `vkvpa_data.id_kategorie`) je **hlídaná** příkazem `php artisan`
+  `vkvpa:validate-categories` a testem `CategoryResolverValidationTest`.
 - **Value objekty** EDI (`EdiLog`, `EdiHeader`, `EdiQso`) – neměnné, bez DB/IO.
 - **Bilingvní vrstva** `lang/cs` + `lang/en` – kompletní.
 - **Centralizovaná konfigurace** `config/vkvpa.php` + typový `VkvpaSettings`.
