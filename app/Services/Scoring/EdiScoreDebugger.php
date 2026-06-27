@@ -33,12 +33,18 @@ final class EdiScoreDebugger
 {
     public function __construct(private readonly CategoryResolver $categoryResolver) {}
 
-    public function analyze(EdiLog $log): EdiDebugReport
+    /**
+     * @param  ?string  $contestDay  den závodu „YYMMDD" (z data konání kola); když
+     *                               null, odvodí se z prvního dne TDate (fallback).
+     *                               Volající se znalostí kola ho předá, aby rozpad
+     *                               odpovídal skutečnému skóre ({@see ScoringService::scoreEdi()}).
+     */
+    public function analyze(EdiLog $log, ?string $contestDay = null): EdiDebugReport
     {
         $header = $log->header;
         $home = Maidenhead::bigSquare($header->pWWLo());
-        // Den závodu = YYMMDD ze začátku TDate (formát YYYYMMDD;YYYYMMDD).
-        $den = ContestWindow::dayFromTDate($header->tDate());
+        // Den závodu = datum konání kola (předané volajícím); fallback na den z TDate.
+        $den = $contestDay ?? ContestWindow::dayFromTDate($header->tDate());
         $from = ContestWindow::from();
         $to = ContestWindow::to();
 
