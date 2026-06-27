@@ -51,7 +51,7 @@ class ZalohaControllerTest extends TestCase
 
     public function test_download_requires_admin(): void
     {
-        $this->post(route('zaloha.download'), ['tables' => ['edihead']])
+        $this->post(route('zaloha.download'), ['tables' => ['edi_head']])
             ->assertRedirect(route('login'));
     }
 
@@ -62,7 +62,7 @@ class ZalohaControllerTest extends TestCase
         $this->actingAs($this->admin())
             ->get(route('zaloha.index'))
             ->assertOk()
-            ->assertSee('edihead')
+            ->assertSee('edi_head')
             ->assertSee('vkvpa_kola');
     }
 
@@ -71,7 +71,7 @@ class ZalohaControllerTest extends TestCase
         $this->seedKolo();
 
         $response = $this->actingAs($this->admin())
-            ->post(route('zaloha.download'), ['tables' => ['vkvpa_kola', 'edihead']]);
+            ->post(route('zaloha.download'), ['tables' => ['vkvpa_kola', 'edi_head']]);
 
         $response->assertOk();
         $response->assertHeader('content-type', 'application/sql; charset=utf-8');
@@ -79,9 +79,9 @@ class ZalohaControllerTest extends TestCase
 
         $sql = $response->streamedContent();
 
-        $this->assertStringContainsString('DROP TABLE IF EXISTS `edihead`;', $sql);
+        $this->assertStringContainsString('DROP TABLE IF EXISTS `edi_head`;', $sql);
         $this->assertStringContainsString('CREATE TABLE', $sql);
-        $this->assertStringContainsString('INSERT INTO `edihead`', $sql);
+        $this->assertStringContainsString('INSERT INTO `edi_head`', $sql);
         $this->assertStringContainsString('Testovací kolo', $sql);
         // Apostrof ve značce musí být bezpečně escapovaný (ne rozbít literál).
         $this->assertStringContainsString("OK1''ABC", $sql);

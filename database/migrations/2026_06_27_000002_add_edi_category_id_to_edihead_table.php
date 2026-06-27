@@ -18,7 +18,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('edihead', function (Blueprint $table): void {
+        Schema::table('edi_head', function (Blueprint $table): void {
             $table->integer('edi_category_id')->nullable()->after('id_kola');
             $table->index('edi_category_id', 'edihead_edi_category_id_idx');
         });
@@ -29,7 +29,7 @@ return new class extends Migration
             return;
         }
 
-        Schema::table('edihead', function (Blueprint $table): void {
+        Schema::table('edi_head', function (Blueprint $table): void {
             $table->foreign('edi_category_id', 'edihead_edi_category_id_fk')
                 ->references('id')->on('edi_category')
                 ->nullOnDelete();
@@ -38,7 +38,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('edihead', function (Blueprint $table): void {
+        Schema::table('edi_head', function (Blueprint $table): void {
             if (DB::getDriverName() !== 'sqlite') {
                 $table->dropForeign('edihead_edi_category_id_fk');
             }

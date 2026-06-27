@@ -11,7 +11,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('edihead', function (Blueprint $table): void {
+        Schema::create('edi_head', function (Blueprint $table): void {
             $table->charset = 'utf8mb4';
             $table->collation = 'utf8mb4_unicode_ci';
 
@@ -47,7 +47,7 @@ return new class extends Migration
         }
 
         // Kola se nikdy nemažou → RESTRICT brání tichému smazání navázaných deníků.
-        Schema::table('edihead', function (Blueprint $table): void {
+        Schema::table('edi_head', function (Blueprint $table): void {
             $table->foreign('id_kola', 'edihead_id_kola_fk')
                 ->references('id')->on('vkvpa_kola')
                 ->restrictOnDelete();
@@ -56,6 +56,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('edihead');
+        Schema::dropIfExists('edi_head');
     }
 };
