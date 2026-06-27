@@ -69,7 +69,7 @@ return new class extends Migration
                 ->references('id')->on('vkvpa_kategorie')
                 ->restrictOnDelete();
             $table->foreign('edihead_id', 'vkvpa_data_edihead_id_fk')
-                ->references('id')->on('edihead')
+                ->references('id')->on('edi_head')
                 ->nullOnDelete();
         });
     }

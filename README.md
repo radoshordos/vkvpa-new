@@ -170,7 +170,7 @@ Hlášení se od běžných závodníků přijímají ve stavech `Aktivni` a `Pr
 
 ### Dvě databázové schémata
 
-**EDI schéma** (`edihead`, `edilines`): odvozeno z původního systému, ale plně normalizováno na `snake_case` názvy sloupců (`mode_code`, `received_wwl`, `qso_points`, `t_date`, `p_call` apod.) – přistupuje se k nim jako k běžným Eloquent atributům, žádný magický `$line->{'...'}` přístup ani potlačení `property.notFound`. Oba modely mají `#[WithoutTimestamps]` (vlastní časové sloupce `stamp`, `d_cas`). Model `Ediline` navíc nabízí **PHP 8.4 property hooks** (`$receivedWwl`, `$qsoPoints`, `$modeCode`, `$mode`, `$newWwl`), které surové sloupce normalizují/castují.
+**EDI schéma** (`edi_head`, `edi_lines`): odvozeno z původního systému, ale plně normalizováno na `snake_case` názvy sloupců (`mode_code`, `received_wwl`, `qso_points`, `t_date`, `p_call` apod.) – přistupuje se k nim jako k běžným Eloquent atributům, žádný magický `$line->{'...'}` přístup ani potlačení `property.notFound`. Oba modely mají `#[WithoutTimestamps]` (vlastní časové sloupce `stamp`, `d_cas`). Model `Ediline` navíc nabízí **PHP 8.4 property hooks** (`$receivedWwl`, `$qsoPoints`, `$modeCode`, `$mode`, `$newWwl`), které surové sloupce normalizují/castují.
 
 **Aplikační schéma** (`vkvpa_*`): `VkvpaData` (závodní záznamy/výsledky), `VkvpaKola` (kola závodu), `VkvpaKategorie` (kategorie), `VkvpaPrihlaseni` (přihlašovací tokeny), `Prispevek` (diskuze ke kolům).
 
@@ -447,9 +447,9 @@ Jedna migrace na tabulku – každá `create_*` migrace nese finální schéma t
 | `create_users_table` | Admin uživatelé |
 | `create_vkvpa_kola_table` | Kola závodu (`datum_konani` jako datetime = start závodu 08:00 UTC) |
 | `create_vkvpa_kategorie_table` | Kategorie závodů |
-| `create_edihead_table` | Hlavičky EDI logů (EDI schéma, snake_case) |
-| `create_edilines_table` | QSO záznamy (EDI schéma; FK na `edihead` deklarovaný inline) |
-| `create_vkvpa_data_table` | Závodní záznamy / výsledky (FK na kolo, kategorii, edihead) |
+| `create_edi_head_table` | Hlavičky EDI logů (EDI schéma, snake_case) |
+| `create_edi_lines_table` | QSO záznamy (EDI schéma; FK na `edi_head` deklarovaný inline) |
+| `create_vkvpa_data_table` | Závodní záznamy / výsledky (FK na kolo, kategorii, edi_head) |
 | `create_diskuse_table` | Diskuzní příspěvky ke kolům |
 | `create_vkvpa_prihlaseni_table` | Dočasné přihlašovací tokeny |
 | `create_prefixes_table` | Mapování prefixů na země (DXCC) |
@@ -581,7 +581,7 @@ Podání hlášení (EDI i ruční) probíhá přes **Livewire komponentu** `Pri
 |-------|--------|-------------|
 | `EdiParser` | `app/Services/Edi/EdiParser.php` | Parsování EDI textu → `EdiLog` (value object) |
 | `EdiValidator` | `app/Services/Edi/EdiValidator.php` | Kontrola kvality deníku → `EdiValidationReport` (varování, neblokuje) |
-| `EdiImportService` | `app/Services/Edi/EdiImportService.php` | Uložení `EdiLog` → `edihead` + `edilines` v transakci |
+| `EdiImportService` | `app/Services/Edi/EdiImportService.php` | Uložení `EdiLog` → `edi_head` + `edi_lines` v transakci |
 | `EdiReducer` | `app/Services/Edi/EdiReducer.php` | Filtrování EDI na závodní okno (08:00–11:00 UTC) |
 | `CategoryResolver` | `app/Services/Edi/CategoryResolver.php` | Určení kategorie z hlavičky (pásmo + sekce + DX) |
 | `QsoGeometry` | `app/Services/Edi/QsoGeometry.php` | Výpočty souřadnic, vzdáleností, azimutů, průběhu skóre a porovnání deníků (sdíleno vizualizací i porovnáním) |
@@ -1129,7 +1129,7 @@ EDI Visualizer (`/vizualizer`) je **veřejný a bez přihlášení** – kdokoli
 
 Appka sama zálohy neřeší – na serveru je potřeba pokrýt:
 
-- **Databázi** (`vkvpa_*`, `edihead`/`edilines`, `users`) – obsahuje veškerá závodní data a je jediný zdroj pravdy pro EDI obsah hlášení (žádná kopie na disku)
+- **Databázi** (`vkvpa_*`, `edi_head`/`edi_lines`, `users`) – obsahuje veškerá závodní data a je jediný zdroj pravdy pro EDI obsah hlášení (žádná kopie na disku)
 - **`storage/app/private/vizualizer`** – jediná uživatelská data mimo databázi; ztráta adresáře znamená nefunkční staré sdílecí odkazy Visualizeru (samotná appka tím nepřijde o nic důležitého)
 - `.env` (hesla, `APP_KEY`) zálohovat zvlášť a bezpečně – ztráta `APP_KEY` znehodnotí šifrovaná session data a zahashovaná pole
 

@@ -95,7 +95,7 @@ class ZaznamController extends Controller
      * Endpoint: DELETE /admin/zaznamy/{zaznam}  (name: zaznam.destroy)
      * Vstup:    {zaznam} = id řádku vkvpa_data (route-model-binding)
      * Oprávnění: jen administrátor (middleware `admin`)
-     * Efekt:    odstraní řádek hlášení (EDI deník v `edihead`/`edilines`
+     * Efekt:    odstraní řádek hlášení (EDI deník v `edi_head`/`edi_lines`
      *           zůstává; maže se jen výsledkový řádek) a přepočítá pořadí kola.
      * Návrat:   redirect zpět na výsledkovou listinu kola + hláška.
      */

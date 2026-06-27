@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Cache;
  * All-time rekordy („síň slávy") napříč všemi vyhodnocenými koly – počítané
  * levně z výsledkové listiny (`vkvpa_data`): rekordní účast v kole, nejvyšší
  * skóre, nejvíc QSO a nejvíc násobičů jediného záznamu. ODX historie se zde
- * záměrně nepočítá (vyžadovalo by těžký sken všech `edilines`).
+ * záměrně nepočítá (vyžadovalo by těžký sken všech `edi_lines`).
  *
  * Mění se jen při vyhodnocení nového kola, proto stačí TTL cache.
  *

@@ -15,7 +15,7 @@ use PDO;
  * Generátor SQL zálohy vybraných tabulek (schéma + data) čistě v PHP.
  *
  * Výstup je proud řetězců (Generator) určený pro StreamedResponse, takže ani
- * velké tabulky (`edilines`) nedrží celý dump v paměti – řádky se čtou po
+ * velké tabulky (`edi_lines`) nedrží celý dump v paměti – řádky se čtou po
  * dávkách (`chunkById`) a rovnou zapisují jako vícehodnotové `INSERT`.
  *
  * Cílem obnovy je produkční MySQL, proto je rámec dumpu psán v MySQL dialektu

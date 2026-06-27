@@ -44,7 +44,7 @@ use Override;
     'r_name', 'r_emai', 'r_phon', 's_powe', 's_tx_eq', 's_ante',
     'src', 'remarks', 's_rcr',
 ])]
-#[Table(name: 'edihead')]
+#[Table(name: 'edi_head')]
 #[WithoutTimestamps]
 class Edihead extends Model
 {

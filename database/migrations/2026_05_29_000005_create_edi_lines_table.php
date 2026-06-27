@@ -10,7 +10,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('edilines', function (Blueprint $table): void {
+        Schema::create('edi_lines', function (Blueprint $table): void {
             $table->charset = 'utf8mb4';
             $table->collation = 'utf8mb4_unicode_ci';
 
@@ -38,13 +38,13 @@ return new class extends Migration
 
             $table->index('edihead_id', 'edihead_id');
             $table->index('received_wwl', 'received_wwl');
-            $table->index(['edihead_id', 'qso_at'], 'edilines_edihead_id_qso_at_idx');
-            $table->foreign('edihead_id', 'edilines_ibfk_1')->references('id')->on('edihead');
+            $table->index(['edihead_id', 'qso_at'], 'edi_lines_edihead_id_qso_at_idx');
+            $table->foreign('edihead_id', 'edi_lines_ibfk_1')->references('id')->on('edi_head');
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('edilines');
+        Schema::dropIfExists('edi_lines');
     }
 };

@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Souhrnné statistiky celého (vyhodnoceného) kola pro veřejnou stránku
- * Statistiky. Agreguje napříč všemi deníky kola (`edihead`/`edilines`)
+ * Statistiky. Agreguje napříč všemi deníky kola (`edi_head`/`edi_lines`)
  * a převzatými záznamy výsledkové listiny (`vkvpa_data`):
  *  - souhrn (stanice, QSO, body, čtverce, ODX),
  *  - mapová data (stanice kola, obsazené čtverce, účastníci),
@@ -139,20 +139,20 @@ final class KoloStatistiky
         /** @var StatOdx|null $odx */
         $odx = null;
 
-        $rows = DB::table('edilines')
-            ->join('edihead', 'edilines.edihead_id', '=', 'edihead.id')
-            ->where('edihead.id_kola', $koloId)
-            ->whereTime('edilines.qso_at', '>=', ContestWindow::fromSqlTime())
-            ->whereTime('edilines.qso_at', '<=', ContestWindow::toSqlTime())
+        $rows = DB::table('edi_lines')
+            ->join('edi_head', 'edi_lines.edihead_id', '=', 'edi_head.id')
+            ->where('edi_head.id_kola', $koloId)
+            ->whereTime('edi_lines.qso_at', '>=', ContestWindow::fromSqlTime())
+            ->whereTime('edi_lines.qso_at', '<=', ContestWindow::toSqlTime())
             ->get([
-                'edilines.received_wwl as wwl',
-                'edilines.lat as lat',
-                'edilines.lon as lon',
-                'edilines.call_sign as call_sign',
-                'edilines.mode_code as mode_code',
-                'edilines.qso_at as qso_at',
-                'edihead.p_wwlo as home_wwl',
-                'edihead.p_call as home_call',
+                'edi_lines.received_wwl as wwl',
+                'edi_lines.lat as lat',
+                'edi_lines.lon as lon',
+                'edi_lines.call_sign as call_sign',
+                'edi_lines.mode_code as mode_code',
+                'edi_lines.qso_at as qso_at',
+                'edi_head.p_wwlo as home_wwl',
+                'edi_head.p_call as home_call',
             ]);
 
         foreach ($rows as $r) {

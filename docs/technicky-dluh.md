@@ -136,7 +136,7 @@ aplikace hodnotu vždy nastavuje explicitně, default je bezvýznamný.
 
 ## P6 – Legacy schéma s nestandardními názvy sloupců ✅ vyřešeno
 
-Tabulky `edihead`/`edilines` jsou nově **plně normalizované na `snake_case`**
+Tabulky `edi_head`/`edi_lines` jsou nově **plně normalizované na `snake_case`**
 (`mode_code`, `received_wwl`, `qso_points`, `new_wwl_n`, `t_date`, `p_call`…).
 Magické dash-stringy (`Received-WWL`, `QSO-Points`, `New-WWL-(N)`, `Mode-code`,
 `Sent QSO number`) v aplikačním kódu **už nejsou** – přistupuje se k běžným

@@ -49,7 +49,7 @@ class ZalohaController extends Controller
      * Vygeneruje a stáhne SQL dump vybraných tabulek (schéma + data).
      *
      * Výstup je streamovaný; volitelně se průběžně komprimuje gzipem
-     * (`deflate_add`), takže ani u velkých tabulek (`edilines`) nedrží celý
+     * (`deflate_add`), takže ani u velkých tabulek (`edi_lines`) nedrží celý
      * dump v paměti. Časový limit běhu se pro generování vypíná.
      */
     public function download(SqlZalohaRequest $request): StreamedResponse
