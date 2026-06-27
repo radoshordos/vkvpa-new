@@ -32,18 +32,12 @@ class SampleDatabaseSeeder extends Seeder
         ]);
 
         // Některá kola (01–03/2026) mají ve snapshotu prázdné p_band/p_sect,
-        // ale plný src – nejdřív sloupce doplníme přeparsováním hlavičky.
+        // ale plný src – doplníme sloupce přeparsováním hlavičky (kvalita dat).
         Artisan::call('vkvpa:repair-edihead-band-sect');
 
-        // edi_head.edi_category_id snapshot nenese – dopočítáme ho (až po
-        // naseedovaných vkvpa_data, na nichž závisí kroky 2–3):
-        //   1. zařazení z hlavičky (shodně s importem),
-        //   2. u kol <2026 převzetí autoritativní kategorie příspěvku
-        //      (historické hlavičky jsou nespolehlivé),
-        //   3. vynulování zbylých rozdílů vůči vkvpa_data.id_kategorie.
-        $backfiller = app(EdiheadCategoryBackfiller::class);
-        $backfiller->backfill();
-        $backfiller->adoptVkvpaDataForOldRounds();
-        $backfiller->nullifyVkvpaDataConflicts();
+        // edi_head.edi_category_id snapshot nenese – nastavíme ho 1:1 z
+        // autoritativní kategorie příspěvku (vkvpa_data.id_kategorie); osiřelé
+        // i víceznačné deníky zůstávají NULL. Musí běžet až po vkvpa_data.
+        app(EdiheadCategoryBackfiller::class)->mirrorVkvpaDataCategory();
     }
 }
