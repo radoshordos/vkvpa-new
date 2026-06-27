@@ -196,7 +196,7 @@ app/
 │   ├── EnsureUpcomingRoundsCommand.php   # kola:ensure-upcoming – zakládání kol dle ContestCalendar
 │   ├── FinalizeEvaluatedRoundsCommand.php # kola:finalize-evaluated – automatické vyhodnocení kol
 │   ├── HealthCheckCommand.php            # app:health-check – předspouštěcí kontrola nasazení
-│   ├── ValidateCategoryMatrix.php        # vkvpa:validate-categories – kontrola matice kategorií
+│   ├── ValidateCategoryMatrix.php        # vkvpa:validate-categories – parita edi_category ↔ vkvpa_kategorie
 │   └── BackfillEdilineQsoAt.php          # edilines:backfill-qso-at – doplnění času QSO (údržba)
 ├── Enums/
 │   ├── KoloStav.php        # Fáze kola (nadcházející / aktivní / příjem / uzavřené / vyhodnocené)
@@ -446,7 +446,8 @@ Jedna migrace na tabulku – každá `create_*` migrace nese finální schéma t
 | `create_jobs_table` | Laravel queue jobs |
 | `create_users_table` | Admin uživatelé |
 | `create_vkvpa_kola_table` | Kola závodu (`datum_konani` jako datetime = start závodu 08:00 UTC) |
-| `create_vkvpa_kategorie_table` | Kategorie závodů |
+| `create_vkvpa_kategorie_table` | Kategorie závodů (původní plochý číselník) |
+| `create_edi_category_table` | Kategorie normalizovaně (pásmo × sekce × varianta); zdroj párování pro `CategoryResolver` |
 | `create_edihead_table` | Hlavičky EDI logů (EDI schéma, snake_case) |
 | `create_edilines_table` | QSO záznamy (EDI schéma; FK na `edihead` deklarovaný inline) |
 | `create_vkvpa_data_table` | Závodní záznamy / výsledky (FK na kolo, kategorii, edihead) |
@@ -612,7 +613,8 @@ Všechny enumy jsou v `app/Enums/`. Backed enumy nesou hodnotu (`value`), která
 
 ### Rozlišení kategorií
 
-`CategoryResolver::resolve(pcall, pBand, pSect)` určuje kategorii:
+`CategoryResolver::resolve(pcall, pBand, pSect)` určuje kategorii (id z číselníku
+`edi_category`, přes cachovanou mapu `band|section|variant`):
 
 - **Pásmo** – aliasy: `144`/`145 MHz → "144"`, `432`/`435 MHz → "432"`, atd.
 - **Sekce** – `MO` (multi operátor), `SO` (single), nebo `null`
