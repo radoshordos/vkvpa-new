@@ -31,20 +31,21 @@ final class CategoryResolver
     private const string CACHE_KEY = 'edi_category_map';
 
     /**
-     * Aliasy pásem (klíč = velkými písmeny, oříznuto) → kanonické pásmo.
+     * Aliasy pásem (klíč = velkými písmeny, oříznuto) → kanonické pásmo
+     * s jednotkou, shodné se sloupcem `edi_category.band`.
      */
     private const array BANDS = [
-        '144 MHZ' => '144', '145 MHZ' => '144', '144' => '144', '145' => '144',
-        '432 MHZ' => '432', '435 MHZ' => '432', '432' => '432', '435' => '432',
-        '1,3 GHZ' => '1.3', '1.3 GHZ' => '1.3',
-        '2,3 GHZ' => '2.3', '2.3 GHZ' => '2.3',
-        '3,4 GHZ' => '3.4', '3.4 GHZ' => '3.4',
-        '5,7 GHZ' => '5.7', '5.7 GHZ' => '5.7',
-        '10 GHZ' => '10',
-        '24 GHZ' => '24',
-        '47 GHZ' => '47',
-        '76 GHZ' => '76',
-        '122 GHZ' => '122',
+        '144 MHZ' => '144 MHz', '145 MHZ' => '144 MHz', '144' => '144 MHz', '145' => '144 MHz',
+        '432 MHZ' => '432 MHz', '435 MHZ' => '432 MHz', '432' => '432 MHz', '435' => '432 MHz',
+        '1,3 GHZ' => '1.3 GHz', '1.3 GHZ' => '1.3 GHz',
+        '2,3 GHZ' => '2.3 GHz', '2.3 GHZ' => '2.3 GHz',
+        '3,4 GHZ' => '3.4 GHz', '3.4 GHZ' => '3.4 GHz',
+        '5,7 GHZ' => '5.7 GHz', '5.7 GHZ' => '5.7 GHz',
+        '10 GHZ' => '10 GHz',
+        '24 GHZ' => '24 GHz',
+        '47 GHZ' => '47 GHz',
+        '76 GHZ' => '76 GHz',
+        '122 GHZ' => '122 GHz',
     ];
 
     /**
