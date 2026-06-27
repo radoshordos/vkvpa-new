@@ -86,6 +86,70 @@ final class EdiheadCategoryBackfiller
     }
 
     /**
+     * Den (včetně), od kterého se kategorie ještě odvozuje z hlavičky deníku.
+     * Kola konaná dřív (rok < 2026) mají kategorii dánu příspěvkem.
+     */
+    private const string HEADER_TRUSTED_FROM = '2026-01-01';
+
+    /**
+     * U kol konaných před {@see HEADER_TRUSTED_FROM} (historická data) převezme
+     * `edi_head.edi_category_id` z kategorie příspěvku (`vkvpa_data.id_kategorie`),
+     * která je tam autoritativní – EDI hlavička bývá u starých deníků prázdná,
+     * oříznutá nebo protiřečí skutečnému zařazení.
+     *
+     * Hlavička s JEDNOU kategorií příspěvku ji převezme; hlavička s víc příspěvky
+     * v různých kategoriích (jeden soubor počítaný do víc kategorií) se vynuluje –
+     * nejde reprezentovat jedinou kategorií. Idempotentní.
+     *
+     * @return int počet reálně změněných řádků (v dry-run kolik BY se změnilo)
+     */
+    public function adoptVkvpaDataForOldRounds(bool $dryRun = false): int
+    {
+        // hlavičky starých kol + jednoznačnost kategorie napříč jejich příspěvky
+        $candidates = DB::table('edi_head as h')
+            ->join('vkvpa_data as d', 'd.edihead_id', '=', 'h.id')
+            ->join('vkvpa_kola as k', 'k.id', '=', 'd.id_kola')
+            ->where('k.datum_konani', '<', self::HEADER_TRUSTED_FROM)
+            ->groupBy('h.id')
+            ->selectRaw('h.id AS head_id, MIN(d.id_kategorie) AS kat, MAX(h.edi_category_id) AS cur')
+            ->selectRaw('COUNT(DISTINCT d.id_kategorie) AS kat_count')
+            ->get();
+
+        $changed = 0;
+        /** @var array<int|string, list<int>> $updates  cílová kategorie (int) nebo 'null' => [head_id, …] */
+        $updates = [];
+
+        foreach ($candidates as $row) {
+            $cur = $row->cur === null ? null : self::toInt($row->cur);
+            // jednoznačné → kategorie příspěvku; víc kategorií → NULL (nelze určit)
+            $target = self::toInt($row->kat_count) === 1 ? self::toInt($row->kat) : null;
+
+            if ($cur === $target) {
+                continue; // už sedí
+            }
+
+            $changed++;
+            $updates[$target ?? 'null'][] = self::toInt($row->head_id);
+        }
+
+        if (! $dryRun) {
+            foreach ($updates as $key => $headIds) {
+                $value = $key === 'null' ? null : (int) $key;
+                foreach (array_chunk($headIds, self::CHUNK) as $batch) {
+                    DB::table('edi_head')->whereIn('id', $batch)->update(['edi_category_id' => $value]);
+                }
+            }
+        }
+
+        return $changed;
+    }
+
+    private static function toInt(mixed $value): int
+    {
+        return is_numeric($value) ? (int) $value : 0;
+    }
+
+    /**
      * Vynuluje `edi_head.edi_category_id` u propojených řádků, jejichž kategorie
      * (odvozená z hlavičky) se neshoduje s tím, v čem příspěvek reálně soutěží
      * (`vkvpa_data.id_kategorie`).

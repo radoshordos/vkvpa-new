@@ -6,6 +6,7 @@ namespace Tests\Feature;
 
 use App\Models\Edihead;
 use App\Models\VkvpaData;
+use App\Models\VkvpaKola;
 use App\Services\Edi\CategoryResolver;
 use App\Services\Edi\EdiheadCategoryBackfiller;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -104,10 +105,55 @@ class EdiheadCategoryBackfillTest extends TestCase
         self::assertSame(0, $backfiller->nullifyVkvpaDataConflicts());
     }
 
-    private function vkvpaData(int $edheadId, int $idKategorie): void
+    public function test_old_rounds_adopt_vkvpa_data_category_and_null_ambiguous(): void
+    {
+        $backfiller = app(EdiheadCategoryBackfiller::class);
+
+        $old = $this->kolo('2025-06-01');   // < 2026 → autoritativní je příspěvek
+        $new = $this->kolo('2026-06-01');   // >= 2026 → drží se hlavička
+
+        // staré kolo, hlavička říká SINGLE (kat 1), ale příspěvek je multi (kat 2)
+        $oldConflict = $this->makeHead('OK1A', '144 MHz', 'SINGLE');
+        // staré kolo, hlavička nezařaditelná, příspěvek = kat 5
+        $oldUnknown = $this->makeHead('OK1B', '1300 MHz', 'X');
+        // staré kolo, jeden soubor do dvou kategorií → nejednoznačné → NULL
+        $oldAmbiguous = $this->makeHead('OK1C', '144 MHz', 'SINGLE');
+        // nové kolo, hlavička SINGLE (kat 1), příspěvek multi (kat 2) → drží hlavičku
+        $newConflict = $this->makeHead('OK1D', '144 MHz', 'SINGLE');
+
+        $backfiller->backfill();
+
+        $this->vkvpaData($oldConflict->id, 2, $old->id);
+        $this->vkvpaData($oldUnknown->id, 5, $old->id);
+        $this->vkvpaData($oldAmbiguous->id, 1, $old->id);
+        $this->vkvpaData($oldAmbiguous->id, 2, $old->id);
+        $this->vkvpaData($newConflict->id, 2, $new->id);
+
+        $backfiller->adoptVkvpaDataForOldRounds();
+
+        self::assertSame(2, $oldConflict->refresh()->edi_category_id);   // převzato z příspěvku
+        self::assertSame(5, $oldUnknown->refresh()->edi_category_id);    // doplněno z příspěvku
+        self::assertNull($oldAmbiguous->refresh()->edi_category_id);     // nejednoznačné → NULL
+        self::assertSame(1, $newConflict->refresh()->edi_category_id);   // nové kolo → hlavička (kat 1)
+
+        // idempotence
+        self::assertSame(0, $backfiller->adoptVkvpaDataForOldRounds());
+    }
+
+    private function kolo(string $datumKonani): VkvpaKola
+    {
+        return VkvpaKola::create([
+            'datum_konani' => $datumKonani.' 08:00:00',
+            'datum_uzaverky' => $datumKonani.' 23:59:59',
+            'nazev' => 'Test '.$datumKonani,
+            'poznamka' => '',
+        ]);
+    }
+
+    private function vkvpaData(int $edheadId, int $idKategorie, int $idKola = 1): void
     {
         VkvpaData::create([
-            'id_kola' => 1,
+            'id_kola' => $idKola,
             'edihead_id' => $edheadId,
             'id_kategorie' => $idKategorie,
             'znacka' => 'OK'.$edheadId, // unikátní v rámci (id_kola, id_kategorie)

@@ -30,12 +30,15 @@ class SampleDatabaseSeeder extends Seeder
             PrefixesTableSeeder::class,
         ]);
 
-        // edi_head.edi_category_id snapshot nenese – dopočítáme ho. Nejdřív
-        // zařazení z hlavičky (shodně s importem), pak vynulování tam, kde se
-        // neshoduje s kategorií příspěvku (vkvpa_data.id_kategorie). Reconcile
-        // musí běžet až po naseedovaných vkvpa_data, proto je až tady.
+        // edi_head.edi_category_id snapshot nenese – dopočítáme ho (až po
+        // naseedovaných vkvpa_data, na nichž závisí kroky 2–3):
+        //   1. zařazení z hlavičky (shodně s importem),
+        //   2. u kol <2026 převzetí autoritativní kategorie příspěvku
+        //      (historické hlavičky jsou nespolehlivé),
+        //   3. vynulování zbylých rozdílů vůči vkvpa_data.id_kategorie.
         $backfiller = app(EdiheadCategoryBackfiller::class);
         $backfiller->backfill();
+        $backfiller->adoptVkvpaDataForOldRounds();
         $backfiller->nullifyVkvpaDataConflicts();
     }
 }
