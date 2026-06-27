@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use Override;
@@ -20,6 +21,7 @@ use Override;
  *
  * @property int $id
  * @property int|null $id_kola
+ * @property int|null $edi_category_id
  * @property string $t_date
  * @property string $p_call
  * @property string $p_wwlo
@@ -38,9 +40,10 @@ use Override;
  * @property Carbon|null $d_cas
  * @property-read Collection<int, Ediline> $lines
  * @property-read int $lines_count
+ * @property-read EdiCategory|null $category
  */
 #[Fillable([
-    'id_kola', 't_date', 'p_call', 'p_wwlo', 'p_sect', 'p_band',
+    'id_kola', 'edi_category_id', 't_date', 'p_call', 'p_wwlo', 'p_sect', 'p_band',
     'r_name', 'r_emai', 'r_phon', 's_powe', 's_tx_eq', 's_ante',
     'src', 'remarks', 's_rcr',
 ])]
@@ -58,11 +61,22 @@ class Edihead extends Model
         return $this->hasMany(Ediline::class, 'edihead_id');
     }
 
+    /**
+     * Normalizovaná kategorie deníku (band × section × variant).
+     *
+     * @return BelongsTo<EdiCategory, $this>
+     */
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(EdiCategory::class, 'edi_category_id', 'id');
+    }
+
     #[Override]
     protected function casts(): array
     {
         return [
             'id_kola' => 'integer',
+            'edi_category_id' => 'integer',
             's_powe' => 'integer',
             'stamp' => 'datetime',
             'd_cas' => 'datetime',
