@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
@@ -11,14 +12,15 @@ use Illuminate\Support\Facades\Schema;
  *
  * Kategorie závodu je zde rozložená do tří explicitních os místo toho, aby
  * byly „zašifrované" v textovém názvu/zkratce:
- *   band    – kanonický token pásma ('144', '432', '1.3', … '122'); shodný
- *             s výstupem CategoryResolver::band(), takže párování je triviální.
+ *   band    – pásmo včetně jednotky ('144 MHz', '432 MHz', '1.3 GHz', … '122 GHz');
+ *             shodné s výstupem CategoryResolver::band(), takže párování je triviální.
  *   section – sekce: 'SO' (single op) / 'MO' (multi op).
  *   variant – 'domestic' (tuzemská OK/OL) / 'dx' (zahraniční stanice).
  *
- * Dvojice DX → tuzemská kategorie se NEukládá (žádné `dxid`); odvodí se dotazem
- * na řádek se stejným band+section a variant='domestic'. Přirozený klíč
- * (band, section, variant) je unikátní – jedna kombinace = jedna kategorie.
+ * `dxid` váže DX řádek na jeho tuzemský protějšek (stejné band+section,
+ * variant='domestic'); u tuzemských řádků je NULL. Self-FK na `edi_category.id`.
+ * Přirozený klíč (band, section, variant) je unikátní – jedna kombinace =
+ * jedna kategorie.
  */
 return new class extends Migration
 {
@@ -29,13 +31,25 @@ return new class extends Migration
             $table->collation = 'utf8mb4_unicode_ci';
 
             $table->integer('id', true);
-            $table->string('band', 8);              // kanonický token pásma ('144', '1.3', …)
+            $table->string('band', 10);             // pásmo s jednotkou ('144 MHz', '1.3 GHz', …)
             $table->enum('section', ['SO', 'MO']);  // single op / multi op
             $table->enum('variant', ['domestic', 'dx']);
             $table->string('name', 50);             // čitelný název pro UI
+            $table->integer('dxid')->nullable();    // tuzemský protějšek DX řádku; NULL = je tuzemská
 
             $table->unique(['band', 'section', 'variant'], 'edi_category_band_section_variant_unique');
+            $table->index('dxid', 'edi_category_dxid_index');
         });
+
+        // Self-FK přidáváme až po CREATE (SQLite ALTER ADD FOREIGN KEY neumí –
+        // testovací DB jede bez ní, integritu tam hlídá aplikace + seed).
+        if (DB::getDriverName() !== 'sqlite') {
+            Schema::table('edi_category', function (Blueprint $table): void {
+                $table->foreign('dxid', 'edi_category_dxid_foreign')
+                    ->references('id')->on('edi_category')
+                    ->nullOnDelete();
+            });
+        }
     }
 
     public function down(): void

@@ -10,9 +10,10 @@ use App\Services\Edi\CategoryResolver;
  * Naplní `edi_category` přemapováním 42 řádků z `vkvpa_kategorie`.
  *
  * Původní `id` se zachovávají (včetně historických mezer 37/40/41), aby šlo
- * případné `vkvpa_data.id_kategorie` později přesměrovat 1:1. `name` se generuje
- * jednotně z os, takže odpadají historické překlepy ze starého číselníku
- * (např. „5.7 MHz multi op"). Pásmo 122 GHz nemá DX variantu.
+ * případné `vkvpa_data.id_kategorie` později přesměrovat 1:1. `band` nese
+ * jednotku ('144 MHz' / '1.3 GHz'), `name` se generuje jednotně z os (odpadají
+ * historické překlepy). `dxid` u DX řádků ukazuje na tuzemský protějšek se
+ * shodným band+section; u tuzemských řádků je NULL. Pásmo 122 GHz nemá DX.
  */
 class EdiCategoryTableSeeder extends JsonTableSeeder
 {
@@ -67,28 +68,36 @@ class EdiCategoryTableSeeder extends JsonTableSeeder
     ];
 
     /**
-     * @return list<array{id: int, band: string, section: string, variant: string, name: string}>
+     * @return list<array{id: int, band: string, section: string, variant: string, name: string, dxid: int|null}>
      */
     protected function rows(): array
     {
-        $rows = [];
+        // tuzemský protějšek pro DX řádek: "token|section" → id tuzemské kategorie
+        $domesticId = [];
+        foreach (self::MAP as $id => [$token, $section, $variant]) {
+            if ($variant === 'domestic') {
+                $domesticId["{$token}|{$section}"] = $id;
+            }
+        }
 
-        foreach (self::MAP as $id => [$band, $section, $variant]) {
+        $rows = [];
+        foreach (self::MAP as $id => [$token, $section, $variant]) {
             $rows[] = [
                 'id' => $id,
-                'band' => $band,
+                'band' => self::BAND_LABELS[$token],
                 'section' => $section,
                 'variant' => $variant,
-                'name' => $this->name($band, $section, $variant),
+                'name' => $this->name($token, $section, $variant),
+                'dxid' => $variant === 'dx' ? ($domesticId["{$token}|{$section}"] ?? null) : null,
             ];
         }
 
         return $rows;
     }
 
-    private function name(string $band, string $section, string $variant): string
+    private function name(string $token, string $section, string $variant): string
     {
-        $label = self::BAND_LABELS[$band];
+        $label = self::BAND_LABELS[$token];
         $sect = $section === 'MO' ? 'multi op' : 'single op';
         $dx = $variant === 'dx' ? ' DX' : '';
 
