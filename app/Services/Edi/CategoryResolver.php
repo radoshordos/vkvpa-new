@@ -94,6 +94,40 @@ final class CategoryResolver
     }
 
     /**
+     * Tolerantní varianta {@see resolve()} pro hromadné zařazení historických
+     * dat: nerozpoznané pásmo neodmítá deník výjimkou, jen vrátí null (řádek
+     * zůstane nezařazený). Výsledek je pro rozpoznatelné deníky shodný 1:1
+     * s {@see resolve()}, takže backfill nikdy nezařadí jinak než import.
+     */
+    public function tryResolve(string $pcall, string $pBand, string $pSect): ?int
+    {
+        try {
+            return $this->resolve($pcall, $pBand, $pSect);
+        } catch (UnknownBandException) {
+            return null;
+        }
+    }
+
+    /**
+     * Normalizované pásmo z hlavičky, nebo null když je nerozpoznané. Slouží
+     * k ověření, že zařazená kategorie sedí na sloupec `p_band` (band osu).
+     */
+    public function bandOrNull(string $pBand): ?string
+    {
+        try {
+            return $this->band($pBand);
+        } catch (UnknownBandException) {
+            return null;
+        }
+    }
+
+    /** Normalizovaná sekce ('SO'/'MO') z hlavičky, nebo null. Veřejné kvůli ověření shody s `p_sect`. */
+    public function sectionOrNull(string $pSect): ?string
+    {
+        return $this->section($pSect);
+    }
+
+    /**
      * Mapa „band|section|variant" → id z `edi_category`, cachovaná napořád
      * (číselník je statický). Drží jen skaláry, takže projde i přes
      * `cache.serializable_classes=false`.
