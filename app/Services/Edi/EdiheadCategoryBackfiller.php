@@ -6,6 +6,7 @@ namespace App\Services\Edi;
 
 use App\Models\EdiCategory;
 use App\Models\Edihead;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -82,5 +83,36 @@ final class EdiheadCategoryBackfiller
             });
 
         return $report;
+    }
+
+    /**
+     * Vynuluje `edi_head.edi_category_id` u propojených řádků, jejichž kategorie
+     * (odvozená z hlavičky) se neshoduje s tím, v čem příspěvek reálně soutěží
+     * (`vkvpa_data.id_kategorie`).
+     *
+     * Pravidlo: řádek se vynuluje, jen pokud JE propojený s nějakým `vkvpa_data`
+     * a zároveň se jeho kategorie nerovná ANI JEDNOMU z těch příspěvků (jedna
+     * hlavička může mít víc příspěvků). Osiřelé `edi_head` (bez příspěvku) se
+     * nedotýkají – nemají s čím porovnat. Idempotentní.
+     *
+     * @return int počet vynulovaných řádků (v dry-run kolik BY se vynulovalo)
+     */
+    public function nullifyVkvpaDataConflicts(bool $dryRun = false): int
+    {
+        $query = DB::table('edi_head')
+            ->whereNotNull('edi_head.edi_category_id')
+            // je propojený alespoň s jedním příspěvkem
+            ->whereExists(static fn (Builder $q): Builder => $q->from('vkvpa_data')
+                ->whereColumn('vkvpa_data.edihead_id', 'edi_head.id'))
+            // a žádný z těch příspěvků nemá shodnou kategorii
+            ->whereNotExists(static fn (Builder $q): Builder => $q->from('vkvpa_data')
+                ->whereColumn('vkvpa_data.edihead_id', 'edi_head.id')
+                ->whereColumn('vkvpa_data.id_kategorie', 'edi_head.edi_category_id'));
+
+        if ($dryRun) {
+            return $query->count();
+        }
+
+        return $query->update(['edi_category_id' => null]);
     }
 }

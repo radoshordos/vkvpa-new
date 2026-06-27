@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Services\Edi\EdiheadCategoryBackfiller;
 use Illuminate\Database\Seeder;
 
 /**
@@ -28,5 +29,13 @@ class SampleDatabaseSeeder extends Seeder
             VkvpaPrihlaseniTableSeeder::class,
             PrefixesTableSeeder::class,
         ]);
+
+        // edi_head.edi_category_id snapshot nenese – dopočítáme ho. Nejdřív
+        // zařazení z hlavičky (shodně s importem), pak vynulování tam, kde se
+        // neshoduje s kategorií příspěvku (vkvpa_data.id_kategorie). Reconcile
+        // musí běžet až po naseedovaných vkvpa_data, proto je až tady.
+        $backfiller = app(EdiheadCategoryBackfiller::class);
+        $backfiller->backfill();
+        $backfiller->nullifyVkvpaDataConflicts();
     }
 }

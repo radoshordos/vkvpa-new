@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Models\Edihead;
+use App\Models\VkvpaData;
 use App\Services\Edi\CategoryResolver;
 use App\Services\Edi\EdiheadCategoryBackfiller;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -69,6 +70,48 @@ class EdiheadCategoryBackfillTest extends TestCase
         $second = app(EdiheadCategoryBackfiller::class)->backfill();
         self::assertSame(0, $second->changed);
         self::assertSame(1, $second->resolved);
+    }
+
+    public function test_nullify_clears_only_linked_heads_that_match_no_vkvpa_data(): void
+    {
+        $backfiller = app(EdiheadCategoryBackfiller::class);
+
+        // hlavička 144 SO domestic = kategorie 1
+        $conflict = $this->makeHead('OK1A', '144 MHz', 'SINGLE');   // → 1
+        $match = $this->makeHead('OK1B', '144 MHz', 'SINGLE');      // → 1
+        $orphan = $this->makeHead('OK1C', '144 MHz', 'SINGLE');     // → 1, bez příspěvku
+        $multi = $this->makeHead('OK1D', '144 MHz', 'SINGLE');      // → 1, dva příspěvky (jeden sedí)
+
+        $backfiller->backfill();
+
+        // příspěvek s JINOU kategorií než hlavička (2 = 144 MO) → konflikt
+        $this->vkvpaData($conflict->id, 2);
+        // příspěvek se SHODNOU kategorií (1) → bez konfliktu
+        $this->vkvpaData($match->id, 1);
+        // dva příspěvky, jeden sedí (1) → hlavička se nemá nulovat
+        $this->vkvpaData($multi->id, 2);
+        $this->vkvpaData($multi->id, 1);
+
+        $nulled = $backfiller->nullifyVkvpaDataConflicts();
+
+        self::assertSame(1, $nulled);
+        self::assertNull($conflict->refresh()->edi_category_id);   // vynulováno
+        self::assertSame(1, $match->refresh()->edi_category_id);   // shoda → zůstává
+        self::assertSame(1, $orphan->refresh()->edi_category_id);  // osiřelá → zůstává
+        self::assertSame(1, $multi->refresh()->edi_category_id);   // jeden příspěvek sedí → zůstává
+
+        // idempotence
+        self::assertSame(0, $backfiller->nullifyVkvpaDataConflicts());
+    }
+
+    private function vkvpaData(int $edheadId, int $idKategorie): void
+    {
+        VkvpaData::create([
+            'id_kola' => 1,
+            'edihead_id' => $edheadId,
+            'id_kategorie' => $idKategorie,
+            'znacka' => 'OK'.$edheadId, // unikátní v rámci (id_kola, id_kategorie)
+        ]);
     }
 
     private function makeHead(string $pCall, string $pBand, string $pSect): Edihead
