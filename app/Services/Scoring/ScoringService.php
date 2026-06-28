@@ -311,7 +311,10 @@ final class ScoringService
             ->where('edi_entries.rank', '<>', 0)
             ->whereYear('edi_rounds.starts_at', $year)
             ->selectRaw('edi_entries.category_id as kategorie_id, edi_entries.callsign, edi_entries.round_id')
+            ->selectRaw('MAX(edi_rounds.name) as round_name, MAX(edi_rounds.starts_at) as starts_at')
             ->selectRaw(self::BODY_EXPR.' as body', [$nullifyFrom])
+            ->selectRaw('MAX(edi_entries.qso_count) as qso_count_any, MAX(edi_entries.qso_points) as qso_points_any')
+            ->selectRaw('MAX(edi_entries.multiplier) as multiplier_any, MAX(edi_entries.rank) as rank_any, MAX(edi_entries.edi_head_id) as edi_head_id_any')
             // Výkon za měsíc: v daném (kategorie, značka, kolo) je nejvýš jeden
             // záznam, MAX jen uspokojí GROUP BY (qrp/lp jsou 0/1). Aliasy záměrně
             // mimo názvy qrp/lp – ty model castuje na bool a intAttr() by je
@@ -327,6 +330,8 @@ final class ScoringService
         $map = [];
         /** @var array<string, array<int, Vykon>> $vykonMap */
         $vykonMap = [];
+        /** @var array<string, array<int, list<array<string, int|string|null>>>> $detailMap */
+        $detailMap = [];
         foreach ($breakdown as $b) {
             $month = $koloMonth[self::intAttr($b, 'round_id')] ?? null;
             if ($month === null) {
@@ -334,6 +339,17 @@ final class ScoringService
             }
             $key = self::strAttr($b, 'kategorie_id').'|'.self::strAttr($b, 'callsign');
             $map[$key][$month] = ($map[$key][$month] ?? 0) + self::intAttr($b, 'body');
+            $detailMap[$key][$month][] = [
+                'round_id' => self::intAttr($b, 'round_id'),
+                'round_name' => self::strAttr($b, 'round_name'),
+                'starts_at' => substr(self::strAttr($b, 'starts_at'), 0, 10),
+                'qso_count' => self::intAttr($b, 'qso_count_any'),
+                'qso_points' => self::intAttr($b, 'qso_points_any'),
+                'multiplier' => self::intAttr($b, 'multiplier_any'),
+                'points' => self::intAttr($b, 'body'),
+                'rank' => self::intAttr($b, 'rank_any'),
+                'edi_head_id' => self::intAttr($b, 'edi_head_id_any') ?: null,
+            ];
 
             $vykon = Vykon::fromFlags(self::intAttr($b, 'qrp_any') === 1, self::intAttr($b, 'lp_any') === 1);
             $prev = $vykonMap[$key][$month] ?? null;
@@ -346,10 +362,13 @@ final class ScoringService
             $rowKey = self::strAttr($row, 'kategorie_id').'|'.self::strAttr($row, 'callsign');
             $perMonth = $map[$rowKey] ?? [];
             $perVykon = $vykonMap[$rowKey] ?? [];
+            $perDetail = $detailMap[$rowKey] ?? [];
             // Pevně 12 měsíčních sloupců (i nulových) – ať je rok vidět celý a aby
             // přístup ve view nespadl na chybějícím atributu (strict mód modelu).
             for ($m = 1; $m <= 12; $m++) {
                 $row->setAttribute('mesic_'.$m, $perMonth[$m] ?? 0);
+                $monthDetails = $perDetail[$m] ?? [];
+                $row->setAttribute('detail_mesic_'.$m, $monthDetails);
                 // Jen redukovaný výkon (QRP/LP) má smysl značit; plný = null.
                 $v = $perVykon[$m] ?? null;
                 $row->setAttribute('vykon_'.$m, $v !== null && $v->isReduced() ? $v->value : null);
@@ -376,10 +395,9 @@ final class ScoringService
     /** Klíč cache ročních výsledků pro daný rok a kombinaci výkonových filtrů. */
     private function yearlyCacheKey(int $year, bool $qrpOnly, bool $lpOnly): string
     {
-        // v7: řádky nově nesou výkon za měsíc `vykon_1`..`vykon_12` (v6 přidalo
-        // měsíční rozpad `mesic_1`..`mesic_12`, v3 agregované `jmeno`, v2 pole
-        // atributů bez něj, v1 serializovaná kolekce).
-        return sprintf('vkvpa:yearly:v7:%d:%d:%d', $year, $qrpOnly ? 1 : 0, $lpOnly ? 1 : 0);
+        // v8: řádky nově nesou detail pro odkazy z měsíčních buněk
+        // (`detail_mesic_1`..`detail_mesic_12`).
+        return sprintf('vkvpa:yearly:v8:%d:%d:%d', $year, $qrpOnly ? 1 : 0, $lpOnly ? 1 : 0);
     }
 
     /** Zahodí cache ročních výsledků daného roku (všechny kombinace výkonových filtrů). */

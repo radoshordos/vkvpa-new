@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Enums\KoloStav;
+use App\Models\EdiBand;
 use App\Models\EdiCategory;
 use App\Models\EdiEntry;
 use App\Models\EdiRound;
@@ -144,13 +145,30 @@ class VysledkyController extends Controller
         $rok = max(2000, min($currentYear, $request->integer('rok', $currentYear)));
         $qrp = $request->boolean('qrp');
         $lp = $request->boolean('lp');
+        $bandId = $request->integer('band');
         $katId = $request->integer('kategorie');
+        $bands = EdiBand::query()->orderBy('id')->get()->keyBy('id');
+
+        if (! $bands->has($bandId)) {
+            $bandId = 0;
+        }
+
+        $kategorie = EdiCategory::query()
+            ->orderBy('id')
+            ->when($bandId !== 0, fn ($q) => $q->where('band_id', $bandId))
+            ->get()
+            ->keyBy('id');
+
+        if ($katId !== 0 && ! $kategorie->has($katId)) {
+            $katId = 0;
+        }
 
         // Volitelný filtr zúží výpis na jedinou kategorii (filtrujeme řádky před
         // seskupením – Eloquent\Collection::only() bere klíče jako PK modelů).
         // Kategorie řadíme podle id (jinak by pořadí sekcí určovalo první výskyt
         // v seřazení podle bodů).
         $vysledky = $this->scoring->yearlyResults($rok, $qrp, $lp)
+            ->when($bandId !== 0, fn ($c) => $c->whereIn('kategorie_id', $kategorie->keys()->all()))
             ->when($katId !== 0, fn ($c) => $c->where('kategorie_id', $katId))
             ->groupBy('kategorie_id')
             ->sortKeys();
@@ -158,8 +176,10 @@ class VysledkyController extends Controller
         return view('pages.vysledky-rocni', [
             'active' => 'rocni_vysledky',
             'rok' => $rok,
+            'bandId' => $bandId,
             'katId' => $katId,
-            'kategorie' => EdiCategory::query()->orderBy('id')->get()->keyBy('id'),
+            'bands' => $bands,
+            'kategorie' => $kategorie,
             'vysledky' => $vysledky,
         ]);
     }

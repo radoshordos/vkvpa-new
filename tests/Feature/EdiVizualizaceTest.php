@@ -77,6 +77,18 @@ class EdiVizualizaceTest extends TestCase
         $this->assertStringContainsString('JN89', $html);
     }
 
+    public function test_vizualizace_links_to_original_edi_file(): void
+    {
+        $head = $this->importSample();
+
+        $html = $this->actingAs($this->user())
+            ->get(route('edi.vizualizace', $head->id))
+            ->assertOk()
+            ->getContent() ?: '';
+
+        $this->assertStringContainsString(route('edi.soubor', ['head' => $head->id]), $html);
+    }
+
     public function test_active_round_does_not_block_non_admin(): void
     {
         // Vizualizace je veřejná i během otevřeného upload okna – ukazuje jen

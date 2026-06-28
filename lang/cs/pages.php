@@ -263,6 +263,7 @@ return [
         'meta' => 'Roční souhrnné výsledky VKV Provozního aktivu – celkové pořadí stanic za rok napříč všemi koly.',
         'heading' => 'Roční výsledky',
         'filter_year' => 'Rok',
+        'filter_band' => 'Pásmo',
         'filter_category' => 'Kategorie',
         'filter_all' => 'Vše',
         'filter_qrp' => 'jen QRP',
@@ -272,10 +273,12 @@ return [
         'col_pos' => 'Pořadí',
         'col_callsign' => 'Značka',
         'col_total' => 'Celkem',
+        'month_title' => ':round: :qso_points b. za QSO × :mult = :points b. (:qso QSO)',
         'no_results' => 'Pro tento rok nejsou žádné vyhodnocené výsledky.',
         'legend_label' => 'Výkon v měsíci:',
         'legend_qrp' => 'QRP (≤ 5 W)',
         'legend_lp' => 'LP (< 100 W)',
+        'month_link_hint' => 'Klikatelné body otevřou log nebo kolo.',
     ],
 
     'diskuse' => [
@@ -324,6 +327,14 @@ return [
         'stat_avgdist' => 'Průměr vzdálenost',
         'stat_avgdist_hint' => 'Průměrná vzdálenost přes všechna QSO se spočítanou vzdáleností.',
 
+        'station_power' => 'Výkon',
+        'station_antenna' => 'Anténa',
+        'station_trx' => 'TRX',
+        'station_operator' => 'Operátor',
+        'station_empty' => 'nevyplněno',
+        'station_soapbox' => 'Soapbox',
+        'station_note' => 'Poznámka',
+
         'tempo_peak_hint' => 'Nejvíce QSO v klouzavém 60minutovém okně.',
         'tempo_qso_per_hour' => 'QSO/hod',
         'tempo_peak' => 'Špička :when',
@@ -335,6 +346,7 @@ return [
         'tempo_uncounted_hint' => 'QSO mimo závodní okno či den závodu a QSO označená v deníku jako duplicitní (D).',
         'tempo_uncounted' => 'Nezapočítaná / označená QSO',
 
+        'mode_heading' => 'Souhrn po druzích provozu',
         'mode_other' => 'Ostatní druhy provozu',
         'mode_pts_per_qso' => 'b. za spojení',
 
