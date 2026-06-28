@@ -21,6 +21,7 @@ class SampleDatabaseSeeder extends Seeder
         // prefixes jsou bez závislostí.
         $this->call([
             EdiRoundTableSeeder::class,
+            EdiBandTableSeeder::class,
             EdiCategoryTableSeeder::class,
             EdiheadTableSeeder::class,
             EdilinesTableSeeder::class,

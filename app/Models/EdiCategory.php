@@ -23,16 +23,22 @@ use Override;
  * (generovaná z os). `dxid` váže DX řádek na tuzemský protějšek (stejné
  * band+section, variant='domestic'); u tuzemských řádků je NULL.
  *
+ * Pásmo je vedeno dvojicí: textový `band` ('144 MHz') pro čtení/zobrazení a
+ * normalizovaný `band_id` (FK → `edi_bands`, zdroj pravdy) pro reálné kategorie;
+ * u syntetických (testovacích) řádků s neznámým pásmem může být `band_id` NULL.
+ *
  * @property int $id
  * @property string $band pásmo s jednotkou ('144 MHz', '432 MHz', '1.3 GHz', … '122 GHz')
+ * @property int|null $band_id FK → edi_bands.id (číselník pásem); NULL u neznámého pásma
  * @property string $section 'SO' (single op) | 'MO' (multi op)
  * @property string $variant 'domestic' (tuzemská OK/OL) | 'dx' (zahraniční)
  * @property string $name čitelný název pro UI
  * @property int|null $dxid id tuzemského protějšku DX řádku; NULL = tato kategorie JE tuzemská
  * @property-read string $nazev alias pro `name` (zpětná kompatibilita)
  * @property-read string $zkratka generovaná zkratka ('144 SO', '144 SO DX')
+ * @property-read EdiBand|null $ediBand pásmo z číselníku (přes band_id)
  */
-#[Fillable(['id', 'band', 'section', 'variant', 'name', 'dxid'])]
+#[Fillable(['id', 'band', 'band_id', 'section', 'variant', 'name', 'dxid'])]
 #[Table(name: 'edi_category', key: 'id')]
 #[WithoutTimestamps]
 class EdiCategory extends Model
@@ -65,6 +71,16 @@ class EdiCategory extends Model
     public function domestic(): BelongsTo
     {
         return $this->belongsTo(self::class, 'dxid', 'id');
+    }
+
+    /**
+     * Pásmo kategorie z číselníku `edi_bands`.
+     *
+     * @return BelongsTo<EdiBand, $this>
+     */
+    public function ediBand(): BelongsTo
+    {
+        return $this->belongsTo(EdiBand::class, 'band_id', 'id');
     }
 
     /**
@@ -131,6 +147,7 @@ class EdiCategory extends Model
     protected function casts(): array
     {
         return [
+            'band_id' => 'integer',
             'dxid' => 'integer',
         ];
     }

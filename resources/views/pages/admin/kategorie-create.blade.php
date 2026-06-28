@@ -22,7 +22,7 @@
             <x-field name="band" :label="__('admin.field_band')" required wrapper="mb-0 w-40">
                 <x-slot:control>
                     <select id="f-band" name="band" @class(['select', 'input-err' => $errors->has('band')])>
-                        @foreach (\App\Http\Requests\Admin\KategorieRequest::BANDS as $b)
+                        @foreach (\App\Http\Requests\Admin\KategorieRequest::bands() as $b)
                             <option value="{{ $b }}" @selected(old('band') === $b)>{{ $b }}</option>
                         @endforeach
                     </select>
