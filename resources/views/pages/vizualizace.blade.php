@@ -66,6 +66,9 @@ window.__vizConfig = {
 <h1 class="text-xl font-bold text-heading">{{ __('pages.viz.heading', ['call' => $pcall]) }}</h1>
 <p class="text-sm text-muted mb-4">
   {{ $homeLoc }} · {{ __('pages.viz.subtitle_charts') }} ·
+  @if ($ediSouborDostupny)
+    <a href="{{ route('edi.soubor', ['head' => $head]) }}" class="underline hover:text-heading" title="{{ __('app.edi_link_original') }}">EDI</a> ·
+  @endif
   {{-- Odkaz na porovnání jen když existuje aspoň jeden soupeř z téhož kola
        a kategorie (a kolo už je uzavřené/vyhodnocené) – jinak by stránka
        porovnání neměla co nabídnout. --}}
@@ -77,6 +80,30 @@ window.__vizConfig = {
 @if ($roundDataPending)
   <p class="text-sm text-muted mb-4 -mt-3">{{ __('pages.viz.round_pending') }}</p>
 @endif
+
+{{-- ── Údaje o stanici z hlavičky EDI ──────────────────────────────────── --}}
+@php
+  // Výkon, anténa, TRX a operátor z hlavičky deníku; nevyplněná pole se
+  // zobrazí s popiskem „nevyplněno", aby řádek zůstal jednotný.
+  $stationInfo = [
+    ['label' => __('pages.viz.station_operator'), 'value' => trim((string) $head->r_name)],
+    ['label' => __('pages.viz.station_power'),    'value' => $head->s_powe > 0 ? $head->s_powe . ' W' : ''],
+    ['label' => __('pages.viz.station_antenna'),  'value' => trim((string) $head->s_ante)],
+    ['label' => __('pages.viz.station_trx'),      'value' => trim((string) $head->s_tx_eq)],
+  ];
+@endphp
+<div class="grid grid-cols-2 gap-3 sm:grid-cols-4 mb-3">
+  @foreach ($stationInfo as $info)
+  <div class="rounded-lg border border-line bg-surface p-3 text-center">
+    @if ($info['value'] !== '')
+      <div class="text-2xl font-bold text-heading break-words">{{ $info['value'] }}</div>
+    @else
+      <div class="text-2xl font-normal italic text-muted">{{ __('pages.viz.station_empty') }}</div>
+    @endif
+    <div class="text-xs text-muted mt-0.5">{{ $info['label'] }}</div>
+  </div>
+  @endforeach
+</div>
 
 {{-- ── Statistické karty ───────────────────────────────────────────────── --}}
 <div class="grid grid-cols-2 gap-3 sm:grid-cols-4 mb-3">
@@ -115,6 +142,7 @@ window.__vizConfig = {
 
 {{-- ── Souhrn po druzích provozu ───────────────────────────────────────── --}}
 @if ($modeStats !== [])
+<div class="section-head">{{ __('pages.viz.mode_heading') }}</div>
 <div class="grid grid-cols-1 gap-3 sm:grid-cols-{{ min(3, count($modeStats)) }} mb-5">
   @foreach ($modeStats as $m)
   <div class="rounded-lg border border-line bg-surface p-3">
@@ -126,6 +154,23 @@ window.__vizConfig = {
   @endforeach
 </div>
 @endif
+
+{{-- ── Soapbox a poznámka účastníka (dvojnásobně široké dlaždice) ───────── --}}
+<div class="grid grid-cols-1 gap-3 sm:grid-cols-2 mb-5">
+  @foreach ([
+    [__('pages.viz.station_soapbox'), $soapbox],
+    [__('pages.viz.station_note'),    $poznamka],
+  ] as [$label, $value])
+  <div class="rounded-lg border border-line bg-surface p-3 text-center">
+    @if (trim((string) $value) !== '')
+      <div class="text-base font-semibold text-heading break-words">{{ $value }}</div>
+    @else
+      <div class="text-base font-normal italic text-muted">{{ __('pages.viz.station_empty') }}</div>
+    @endif
+    <div class="text-xs text-muted mt-0.5">{{ $label }}</div>
+  </div>
+  @endforeach
+</div>
 
 {{-- ── Mapa s přepínatelnými vrstvami (vč. přehrávání deníku) ──────────── --}}
 <div class="rounded-lg border border-line bg-surface p-3 mb-5">

@@ -17,6 +17,15 @@
     </select>
   </div>
   <div class="field mb-0">
+    <label class="label" for="band">{{ __('pages.rocni.filter_band') }}</label>
+    <select id="band" name="band" class="select w-auto" data-autosubmit>
+      <option value="0" @selected($bandId === 0)>{{ __('pages.rocni.filter_all') }}</option>
+      @foreach ($bands as $band)
+        <option value="{{ $band->id }}" @selected($bandId === $band->id)>{{ $band->name }}</option>
+      @endforeach
+    </select>
+  </div>
+  <div class="field mb-0">
     <label class="label" for="kategorie">{{ __('pages.rocni.filter_category') }}</label>
     <select id="kategorie" name="kategorie" class="select w-auto" data-autosubmit>
       <option value="0" @selected($katId === 0)>{{ __('pages.rocni.filter_all') }}</option>
@@ -41,6 +50,7 @@
     <span>{{ __('pages.rocni.legend_label') }}</span>
     <span class="inline-flex items-center gap-1"><span class="cell-qrp inline-block h-3 w-3 rounded-sm"></span> {{ __('pages.rocni.legend_qrp') }}</span>
     <span class="inline-flex items-center gap-1"><span class="cell-lp inline-block h-3 w-3 rounded-sm"></span> {{ __('pages.rocni.legend_lp') }}</span>
+    <span>{{ __('pages.rocni.month_link_hint') }}</span>
   </p>
 @endif
 
@@ -68,7 +78,17 @@
               @php($vk = $r->getAttribute('vykon_' . $m))
               @php($vykon = is_string($vk) ? \App\Enums\Vykon::tryFrom($vk) : null)
               @php($tint = $b > 0 && $vykon?->badgeVariant() ? 'cell-' . $vykon->badgeVariant() : null)
-              <td @class(['num', 'text-muted', $tint]) @if ($tint) title="{{ $vykon->label() }}" @endif>{{ $b > 0 ? $b : '—' }}</td>
+              @php($details = $r->getAttribute('detail_mesic_' . $m))
+              @php($details = is_array($details) ? $details : [])
+              @php($single = count($details) === 1 ? $details[0] : null)
+              @php($title = $single !== null ? __('pages.rocni.month_title', ['round' => $single['round_name'], 'qso' => $single['qso_count'], 'qso_points' => $single['qso_points'], 'mult' => $single['multiplier'], 'points' => $single['points']]) : ($tint ? $vykon->label() : null))
+              <td @class(['num', 'text-muted', $tint, 'year-score-cell' => $b > 0 && $single !== null]) @if ($title) title="{{ $title }}" @endif>
+                @if ($b > 0 && $single !== null)
+                  <a class="year-score-link" href="{{ $single['edi_head_id'] ? route('edi.vizualizace', ['head' => $single['edi_head_id']]) : route('statistiky.kolo', ['kolo' => $single['round_id']]) }}" aria-label="{{ $title }}" @if ($single['edi_head_id']) target="_blank" rel="noopener" @endif>{{ $b }}</a>
+                @else
+                  {{ $b > 0 ? $b : '—' }}
+                @endif
+              </td>
             @endfor
             <td class="num font-semibold">{{ (int) $r->celkem }}</td>
           </tr>
