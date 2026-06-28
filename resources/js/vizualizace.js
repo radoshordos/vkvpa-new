@@ -46,11 +46,12 @@ const playbackLayer = L.layerGroup();
 // druhu provozu (SSB modrá, CW jantarová, ostatní šedá), aby se nepletla se SSB.
 const NASOBIC = { stroke: '#be185d', fill: '#ec4899' };
 
-// ── Filtr druhu provozu (SSB / CW / ostatní) napříč vrstvami ───────────────
-// Klíč skupiny: 1=SSB, 2=CW, 0=vše ostatní (shodně s tlačítky data-mode-filter).
+// ── Filtr druhu provozu napříč vrstvami ────────────────────────────────────
+// Klíč skupiny = kód módu: 1=SSB, 2=CW, 3=SSB/CW, 4=CW/SSB, 5=AM, 6=FM,
+// 0=Ostatní (shodně s tlačítky data-mode-filter a PHP enumem QsoMode).
 
-const modeGroup = (m) => (m === 1 || m === 2 ? m : 0);
-const modeFilter = { 0: true, 1: true, 2: true };
+const modeGroup = (m) => (m >= 1 && m <= 6 ? m : 0);
+const modeFilter = { 0: true, 1: true, 2: true, 3: true, 4: true, 5: true, 6: true };
 
 // Per-QSO prvky vrstev (mimo přehrávání – to filtruje applyTime): při změně
 // filtru se přidávají/odebírají z mateřské skupiny.
@@ -150,15 +151,23 @@ cfg.squares.forEach(function (s) {
 
 // ── Legenda – obsah podle aktivní vrstvy ───────────────────────────────────
 
-const hasOtherMode = cfg.points.some((p) => modeGroup(p.mode) === 0);
+// Druhy provozu skutečně přítomné v deníku, v kanonickém pořadí (Ostatní na
+// konec) – legenda i obarvení teček se řídí jen jimi.
+const presentModes = [...new Set(cfg.points.map((p) => modeGroup(p.mode)))]
+    .sort((a, b) => (a || 99) - (b || 99));
+
+// Obarvení teček druhu provozu v legendě souhrnu i ve filtru (z jediné palety).
+document.querySelectorAll('[data-mode-dot]').forEach(function (el) {
+    el.style.background = modeColor(Number(el.dataset.modeDot)).fill;
+});
+
 let legendCtl = null;
 
 function updateLegend(key) {
     if (legendCtl) { map.removeControl(legendCtl); legendCtl = null; }
     if (aggregateLayer(key)) return; // vrstva nemá barvy podle provozu
 
-    const rows = [['#60a5fa', 'SSB'], ['#fbbf24', 'CW']];
-    if (hasOtherMode) rows.push(['#9ca3af', t.other]);
+    const rows = presentModes.map((m) => [modeColor(m).fill, m === 0 ? t.other : modeLabel(m)]);
     if (key === 'playback') rows.push([NASOBIC.fill, t.new_mult_legend]);
 
     legendCtl = L.control({ position: 'bottomright' });

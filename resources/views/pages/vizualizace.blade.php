@@ -22,6 +22,11 @@
                border: 1px solid var(--color-line, #e2e8f0); background: var(--color-surface, #fff);
                color: var(--color-muted, #64748b); transition: background .15s, color .15s; }
     .map-tab.active, .map-tab:hover { background: var(--color-brand, #3b82f6); color: #fff; border-color: transparent; }
+    /* Barevná tečka druhu provozu (barvu nastavuje JS z palety leaflet-mode-colors). */
+    .mode-dot { display: inline-block; width: .7rem; height: .7rem; border-radius: 9999px; flex: 0 0 auto;
+                background: var(--color-muted, #9ca3af); box-shadow: 0 0 0 1px rgba(0,0,0,.15) inset; }
+    /* Na neaktivním filtru tečka vybledne, aby bylo poznat vypnutí. */
+    .map-tab:not(.active) .mode-dot { opacity: .35; }
     .map-select { padding: .25rem 1.75rem .25rem .75rem; border-radius: .375rem; font-size: .8rem; font-weight: 600; cursor: pointer;
                   border: 1px solid var(--color-line, #e2e8f0); background: var(--color-surface, #fff); color: var(--color-heading, #0f172a);
                   appearance: none;
@@ -143,10 +148,13 @@ window.__vizConfig = {
 {{-- ── Souhrn po druzích provozu ───────────────────────────────────────── --}}
 @if ($modeStats !== [])
 <div class="section-head">{{ __('pages.viz.mode_heading') }}</div>
-<div class="grid grid-cols-1 gap-3 sm:grid-cols-{{ min(3, count($modeStats)) }} mb-5">
+<div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 mb-5">
   @foreach ($modeStats as $m)
   <div class="rounded-lg border border-line bg-surface p-3">
-    <div class="text-sm font-semibold text-heading mb-1">{{ $m['label'] === '?' ? __('pages.viz.mode_other') : $m['label'] }}</div>
+    <div class="flex items-center gap-2 text-sm font-semibold text-heading mb-1">
+      <span class="mode-dot" data-mode-dot="{{ $m['mode'] }}"></span>
+      {{ $m['mode'] === 0 ? __('pages.viz.mode_other') : $m['label'] }}
+    </div>
     <div class="text-xs text-muted">
       {{ $m['pocet'] }} QSO · {{ $m['body'] }} {{ __('pages.viz.mode_pts_per_qso') }} · Ø {{ $m['avgDist'] }} km · max {{ $m['maxDist'] }} km
     </div>
@@ -184,14 +192,16 @@ window.__vizConfig = {
       <option value="lokatory" data-map-layer="lokatory">{{ __('pages.viz.layer_lokatory') }}</option>
       <option value="ctverce" data-map-layer="ctverce">{{ __('pages.viz.layer_ctverce') }}</option>
     </select>
-    {{-- Filtr druhu provozu – platí pro vrstvy s QSO (skrývá ho JS na vrstvě Lokátory). --}}
-    <span id="viz-mode-filter" class="inline-flex items-center gap-2 sm:ml-auto">
+    {{-- Filtr druhu provozu – platí pro vrstvy s QSO (skrývá ho JS na vrstvě Lokátory).
+         Tlačítka se generují jen pro druhy provozu, které se v deníku vyskytují. --}}
+    <span id="viz-mode-filter" class="inline-flex items-center gap-2 flex-wrap sm:ml-auto">
       <span class="text-xs text-muted">{{ __('pages.viz.mode_filter') }}</span>
-      <button type="button" class="map-tab active" data-mode-filter="1">SSB</button>
-      <button type="button" class="map-tab active" data-mode-filter="2">CW</button>
-      @if (collect($modeStats)->contains(fn (array $m): bool => $m['label'] === '?'))
-        <button type="button" class="map-tab active" data-mode-filter="0">{{ __('pages.viz.mode_other_short') }}</button>
-      @endif
+      @foreach ($modeStats as $m)
+      <button type="button" class="map-tab active inline-flex items-center gap-1.5" data-mode-filter="{{ $m['mode'] }}">
+        <span class="mode-dot" data-mode-dot="{{ $m['mode'] }}"></span>
+        {{ $m['mode'] === 0 ? __('pages.viz.mode_other_short') : $m['label'] }}
+      </button>
+      @endforeach
     </span>
   </div>
   {{-- Ovládání přehrávání – viditelné jen v režimu „Přehrávání" (řídí JS). --}}

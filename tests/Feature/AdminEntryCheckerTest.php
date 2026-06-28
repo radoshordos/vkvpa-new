@@ -77,13 +77,14 @@ class AdminEntryCheckerTest extends TestCase
         ]);
     }
 
-    private function ediline(Edihead $head, string $callSign, string $time = '0900'): Ediline
+    private function ediline(Edihead $head, string $callSign, string $time = '0900', int $modeCode = 1): Ediline
     {
         return Ediline::create([
             'edihead_id' => $head->id,
             'call_sign' => $callSign,
             'qso_at' => '2026-03-15 '.substr($time, 0, 2).':'.substr($time, 2, 2).':00',
             'received_wwl' => 'JN89QL',
+            'mode_code' => $modeCode,
         ]);
     }
 
@@ -320,6 +321,7 @@ class AdminEntryCheckerTest extends TestCase
             'call_sign' => 'OK2BAD',
             'qso_at' => '2026-03-15 09:00:00',
             'received_wwl' => 'ZZ99XX',  // neplatný Maidenhead
+            'mode_code' => 1,
         ]);
         $entry = $this->entry($kolo, $kat, ['edi_head_id' => $head->id]);
 
@@ -329,6 +331,42 @@ class AdminEntryCheckerTest extends TestCase
         $this->assertNotEmpty($found);
         $this->assertSame(Severity::Warning, array_values($found)[0]->severity);
         $this->assertStringContainsString('OK2BAD', array_values($found)[0]->message);
+    }
+
+    public function test_info_for_invalid_mode_codes(): void
+    {
+        $kolo = $this->round();
+        $kat = $this->kat();
+        $head = $this->ediHead($kolo);
+        $this->ediline($head, 'OK2XYZ', '0900', 1);    // SSB – ok
+        $this->ediline($head, 'OK3ABC', '0915', 59);   // rozhozený RST → chybný mód
+        $this->ediline($head, 'OK4DEF', '0930', 7);    // MGM – ve VKV PA nepovolený
+        $entry = $this->entry($kolo, $kat, ['edi_head_id' => $head->id]);
+
+        $warnings = $this->checker->warnings($entry);
+
+        $found = array_filter($warnings, static fn ($w): bool => str_contains($w->message, 'Chybný kód druhu provozu'));
+        $this->assertNotEmpty($found);
+        $w = array_values($found)[0];
+        $this->assertSame(Severity::Info, $w->severity);
+        $this->assertStringContainsString('2 QSO', $w->message);
+        $this->assertStringContainsString('OK3ABC: 59', $w->message);
+        $this->assertStringContainsString('OK4DEF: 7', $w->message);
+    }
+
+    public function test_no_invalid_mode_warning_when_all_official(): void
+    {
+        $kolo = $this->round();
+        $kat = $this->kat();
+        $head = $this->ediHead($kolo);
+        $this->ediline($head, 'OK2XYZ', '0900', 1);   // SSB
+        $this->ediline($head, 'OK3ABC', '0915', 6);   // FM – povolený
+        $entry = $this->entry($kolo, $kat, ['edi_head_id' => $head->id]);
+
+        $warnings = $this->checker->warnings($entry);
+
+        $invalid = array_filter($warnings, static fn ($w): bool => str_contains($w->message, 'Chybný kód druhu provozu'));
+        $this->assertEmpty($invalid);
     }
 
     public function test_info_for_out_of_window_qsos(): void
