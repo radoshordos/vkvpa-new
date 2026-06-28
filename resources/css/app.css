@@ -409,6 +409,33 @@
     table.data-table tr.row-pending td {
         background-color: var(--pending) !important;
     }
+    table.data-table td.year-score-cell {
+        cursor: pointer;
+    }
+    table.data-table td.year-score-cell:hover {
+        background-color: var(--brand-softer);
+    }
+    .year-score-link {
+        display: inline-flex;
+        min-width: 1.75rem;
+        align-items: center;
+        justify-content: center;
+        border-radius: 0.25rem;
+        padding: 0.05rem 0.25rem;
+        color: var(--brand);
+        font-weight: 700;
+        text-decoration: none;
+        transition: background-color 0.15s, color 0.15s, box-shadow 0.15s;
+    }
+    .year-score-link:hover,
+    .year-score-link:focus-visible {
+        background-color: var(--brand);
+        color: var(--brand-fg);
+        outline: none;
+    }
+    .year-score-link:focus-visible {
+        box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px color-mix(in oklab, var(--brand) 45%, transparent);
+    }
     .num {
         text-align: right;
         font-variant-numeric: tabular-nums;

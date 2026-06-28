@@ -10,8 +10,10 @@ use App\Models\EdiEntry;
 use App\Models\Edihead;
 use App\Models\Ediline;
 use App\Models\EdiRound;
+use App\Services\Scoring\RekordyService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 /**
@@ -23,11 +25,23 @@ class StatistikyTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_index_lists_only_evaluated_rounds(): void
+    public function test_index_lists_only_evaluated_rounds_with_participants(): void
     {
-        EdiRound::create([
+        $visibleRound = EdiRound::create([
             'starts_at' => '2026-03-15', 'closes_at' => '2026-03-20 23:59:59',
             'name' => '03/2026', 'note' => '', 'evaluated_at' => '2026-03-21 10:00:00',
+        ]);
+        $this->createApprovedEntry($visibleRound);
+
+        $previousYearRound = EdiRound::create([
+            'starts_at' => '2025-12-21', 'closes_at' => '2025-12-26 23:59:59',
+            'name' => '12/2025', 'note' => '', 'evaluated_at' => '2025-12-27 10:00:00',
+        ]);
+        $this->createApprovedEntry($previousYearRound, 'OK1BBB');
+
+        EdiRound::create([
+            'starts_at' => '2026-04-19', 'closes_at' => '2026-04-24 23:59:59',
+            'name' => '04/2026', 'note' => '', 'evaluated_at' => '2026-04-25 10:00:00',
         ]);
         // Nadcházející kolo (nevyhodnocené) se v rozcestníku zobrazit nesmí.
         EdiRound::create([
@@ -38,8 +52,20 @@ class StatistikyTest extends TestCase
 
         $this->get(route('statistiky.index'))
             ->assertOk()
+            ->assertSee(__('pages.stat.archive_heading'))
             ->assertSee('03/2026')
+            ->assertSee('href="#rok-2026"', false)
+            ->assertSee('id="rok-2026"', false)
+            ->assertSee('1 záznam')
+            ->assertSee(__('pages.stat.card_entries_label'))
+            ->assertSee(__('pages.stat.best_attendance_year'))
+            ->assertDontSee('04/2026')
             ->assertDontSee('07/2026');
+    }
+
+    public function test_index_uses_round_statistics_url(): void
+    {
+        $this->assertSame('/statistiky-kol', route('statistiky.index', [], false));
     }
 
     public function test_detail_returns_404_for_non_evaluated_round(): void
@@ -95,6 +121,17 @@ class StatistikyTest extends TestCase
             ->assertSee(__('pages.stat.hall_heading'))
             ->assertSee(__('pages.stat.rec_skore'))
             ->assertSee('OK1AAA'); // držitel nejvyššího skóre (80 b.)
+    }
+
+    public function test_hall_of_fame_qso_record_uses_qso_count(): void
+    {
+        Cache::forget('vkvpa:rekordy:v2');
+        $this->seedEvaluatedRound();
+
+        $rekordy = app(RekordyService::class)->vrcholy();
+
+        $this->assertNotNull($rekordy['qso']);
+        $this->assertSame(5, $rekordy['qso']['value']);
     }
 
     public function test_og_image_renders_png_for_evaluated_round(): void
@@ -195,5 +232,31 @@ class StatistikyTest extends TestCase
         }
 
         return $kolo;
+    }
+
+    private function createApprovedEntry(EdiRound $kolo, string $callsign = 'OK1AAA'): void
+    {
+        EdiEntry::create([
+            'round_id' => $kolo->id,
+            'category_id' => null,
+            'qrp' => false,
+            'lp' => false,
+            'callsign' => $callsign,
+            'locator' => 'JN79AA',
+            'qso_count' => 1,
+            'qso_points' => 1,
+            'multiplier' => 1,
+            'points' => 1,
+            'name' => 'Test',
+            'email' => 'test@example.test',
+            'phone' => '',
+            'note' => '',
+            'soapbox' => '',
+            'ip' => '',
+            'edi_head_id' => null,
+            'rank' => 1,
+            'approved' => true,
+            'session_id' => '',
+        ]);
     }
 }

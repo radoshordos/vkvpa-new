@@ -41,23 +41,61 @@
 </div>
 @endif
 
-<div class="section-head">{{ __('pages.stat.index_heading') }}</div>
+<div class="section-head">{{ __('pages.stat.archive_heading') }}</div>
 
-@if ($kola->isEmpty())
+@if ($kolaPodleRoku->isEmpty())
   <p class="text-muted">{{ __('pages.stat.empty') }}</p>
 @else
-<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-  @foreach ($kola as $k)
-  <a href="{{ route('statistiky.kolo', ['kolo' => $k->id]) }}"
-     class="card block p-4 transition-colors hover:border-brand hover:bg-surface-2">
-    <div class="flex items-baseline justify-between gap-2">
-      <span class="font-bold text-heading">{{ $k->name }}</span>
-      <span class="text-xs text-muted">{{ $k->starts_at->locale(app()->getLocale())->isoFormat('D. M. YYYY') }}</span>
+@if ($kolaPodleRoku->count() > 1)
+<nav class="mb-5 flex flex-wrap gap-2" aria-label="{{ __('pages.stat.year_nav') }}">
+  @foreach ($kolaPodleRoku->keys() as $rok)
+    <a href="#rok-{{ $rok }}" class="rounded-lg border border-line bg-surface px-3 py-1.5 text-sm font-semibold text-heading transition-colors hover:border-brand hover:bg-surface-2">{{ $rok }}</a>
+  @endforeach
+</nav>
+@endif
+
+<div class="space-y-6">
+  @foreach ($kolaPodleRoku as $rok => $rocniKola)
+  @php($souhrn = $rocniSouhrny[$rok] ?? ['pocetKol' => $rocniKola->count(), 'prumerUcast' => 0, 'maxUcast' => 0, 'minUcast' => 0, 'zaznamu' => 0])
+  <section id="rok-{{ $rok }}" class="scroll-mt-6" aria-labelledby="stat-year-{{ $rok }}">
+    <div class="mb-3 border-b border-line pb-3">
+      <h2 id="stat-year-{{ $rok }}" class="text-lg font-bold text-heading">{{ $rok }}</h2>
+      <div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted">
+        <span class="inline-flex items-center rounded-lg border border-line bg-surface px-2 py-1">{{ trans_choice('pages.stat.year_rounds', $souhrn['pocetKol'], ['count' => $souhrn['pocetKol']]) }}</span>
+        <span class="inline-flex items-center rounded-lg border border-line bg-surface px-2 py-1">{{ trans_choice('pages.stat.year_entries', $souhrn['zaznamu'], ['count' => $souhrn['zaznamu']]) }}</span>
+        <span class="inline-flex items-center rounded-lg border border-line bg-surface px-2 py-1">{{ __('pages.stat.year_avg_participants', ['count' => $souhrn['prumerUcast']]) }}</span>
+      </div>
     </div>
-    <div class="mt-2 text-sm text-muted">
-      {{ trans_choice('pages.stat.card_participants', (int) $k->ucastniku, ['count' => (int) $k->ucastniku]) }}
+
+    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      @foreach ($rocniKola as $k)
+      @php($nejvyssiUcast = (int) $k->ucastniku === $souhrn['maxUcast'])
+      <a href="{{ route('statistiky.kolo', ['kolo' => $k->id]) }}"
+         class="card flex gap-3 p-4 transition-colors hover:border-brand hover:bg-surface-2">
+        <span class="flex h-10 w-10 shrink-0 items-center justify-center text-2xl leading-none" aria-hidden="true">📅</span>
+        <span class="min-w-0 flex-1">
+          <span class="flex items-start justify-between gap-2">
+            <span class="font-bold text-heading">{{ $k->name }}</span>
+            @if ($nejvyssiUcast)
+              <span class="rounded-full bg-amber-100 px-2 py-0.5 text-[0.7rem] font-semibold text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">{{ __('pages.stat.best_attendance_year') }}</span>
+            @endif
+          </span>
+          <span class="mt-1 block text-xs text-muted">{{ $k->starts_at->locale(app()->getLocale())->isoFormat('D. M. YYYY') }}</span>
+          <span class="mt-3 grid grid-cols-2 gap-2">
+            <span>
+              <span class="block text-lg font-bold leading-tight text-heading">{{ (int) $k->ucastniku }}</span>
+              <span class="text-xs text-muted">{{ __('pages.stat.card_participants_label') }}</span>
+            </span>
+            <span>
+              <span class="block text-lg font-bold leading-tight text-heading">{{ (int) $k->zaznamu }}</span>
+              <span class="text-xs text-muted">{{ __('pages.stat.card_entries_label') }}</span>
+            </span>
+          </span>
+        </span>
+      </a>
+      @endforeach
     </div>
-  </a>
+  </section>
   @endforeach
 </div>
 @endif

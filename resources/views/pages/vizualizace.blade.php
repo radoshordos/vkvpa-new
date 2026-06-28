@@ -66,6 +66,9 @@ window.__vizConfig = {
 <h1 class="text-xl font-bold text-heading">{{ __('pages.viz.heading', ['call' => $pcall]) }}</h1>
 <p class="text-sm text-muted mb-4">
   {{ $homeLoc }} · {{ __('pages.viz.subtitle_charts') }} ·
+  @if ($ediSouborDostupny)
+    <a href="{{ route('edi.soubor', ['head' => $head]) }}" class="underline hover:text-heading" title="{{ __('app.edi_link_original') }}">EDI</a> ·
+  @endif
   {{-- Odkaz na porovnání jen když existuje aspoň jeden soupeř z téhož kola
        a kategorie (a kolo už je uzavřené/vyhodnocené) – jinak by stránka
        porovnání neměla co nabídnout. --}}

@@ -127,7 +127,7 @@ return [
         'ql_results_desc' => 'Uzavřená kola',
         'ql_yearly' => 'Roční výsledky',
         'ql_yearly_desc' => 'Přehled za rok',
-        'ql_stats' => 'Statistiky',
+        'ql_stats' => 'Statistiky kol',
         'ql_stats_desc' => 'Mapy a rekordy kol',
 
         // Upload window info strip
@@ -263,6 +263,7 @@ return [
         'meta' => 'Roční souhrnné výsledky VKV Provozního aktivu – celkové pořadí stanic za rok napříč všemi koly.',
         'heading' => 'Roční výsledky',
         'filter_year' => 'Rok',
+        'filter_band' => 'Pásmo',
         'filter_category' => 'Kategorie',
         'filter_all' => 'Vše',
         'filter_qrp' => 'jen QRP',
@@ -272,10 +273,12 @@ return [
         'col_pos' => 'Pořadí',
         'col_callsign' => 'Značka',
         'col_total' => 'Celkem',
+        'month_title' => ':round: :qso_points b. za QSO × :mult = :points b. (:qso QSO)',
         'no_results' => 'Pro tento rok nejsou žádné vyhodnocené výsledky.',
         'legend_label' => 'Výkon v měsíci:',
         'legend_qrp' => 'QRP (≤ 5 W)',
         'legend_lp' => 'LP (< 100 W)',
+        'month_link_hint' => 'Klikatelné body otevřou log nebo kolo.',
     ],
 
     'diskuse' => [
@@ -447,12 +450,21 @@ return [
     ],
 
     'stat' => [
-        'index_title' => 'Statistiky závodů VKV PA',
+        'index_title' => 'Statistiky kol VKV PA',
         'index_meta' => 'Souhrnné statistiky, mapy a žebříčky jednotlivých vyhodnocených kol VKV Provozního aktivu.',
         'index_heading' => 'Statistiky kol',
         'index_subtitle' => 'Souhrny, mapy a rekordy jednotlivých vyhodnocených kol.',
         'empty' => 'Zatím není vyhodnoceno žádné kolo.',
         'card_participants' => '{0} žádní účastníci|{1} :count účastník|[2,4] :count účastníci|[5,*] :count účastníků',
+        'card_entries' => '{0} žádné záznamy|{1} :count záznam|[2,4] :count záznamy|[5,*] :count záznamů',
+        'card_participants_label' => 'Účastníci',
+        'card_entries_label' => 'Záznamy',
+        'archive_heading' => 'Archiv kol podle roku',
+        'year_nav' => 'Rychlý výběr roku',
+        'year_rounds' => '{1} :count kolo|[2,4] :count kola|[5,*] :count kol',
+        'year_avg_participants' => 'průměr účasti :count',
+        'year_entries' => '{0} žádné záznamy|{1} :count záznam|[2,4] :count záznamy|[5,*] :count záznamů',
+        'best_attendance_year' => 'nejvyšší účast roku',
 
         'kolo_title' => 'Statistiky kola :kolo',
         'kolo_meta' => 'Souhrn, mapa stanic a obsazených čtverců a žebříčky kola :kolo VKV PA.',
@@ -500,7 +512,7 @@ return [
         'fact_winner_margin' => 'Náskok vítěze :call: :margin b. před druhým',
         'fact_debutants' => 'Nováčků v kole: :count',
 
-        'hall_heading' => 'Síň slávy (all-time)',
+        'hall_heading' => 'Historické rekordy',
         'hall_note' => 'Rekordy napříč všemi vyhodnocenými koly.',
         'rec_odx' => 'Nejdelší spojení (ODX)',
         'rec_ucast' => 'Rekordní účast',

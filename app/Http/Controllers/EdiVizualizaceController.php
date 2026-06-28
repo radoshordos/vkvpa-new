@@ -63,6 +63,7 @@ class EdiVizualizaceController extends Controller
             'homeLoc' => (string) $head->p_wwlo,
             'homeSq' => $homeSq,
             'home' => $home,
+            'ediSouborDostupny' => trim((string) $head->src) !== '',
             'soapbox' => $entry !== null ? $entry->soapbox : '',
             'poznamka' => $entry !== null ? $entry->note : '',
             'window' => ['from' => $fromMin, 'to' => $toMin],

@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Http\Controllers\VysledkyController;
+use App\Models\EdiBand;
 use App\Models\EdiCategory;
 use App\Models\EdiEntry;
+use App\Models\Edihead;
 use App\Models\EdiRound;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -175,11 +177,10 @@ class VysledkyRocniTest extends TestCase
         $this->entry($kolo4, $kat, 'OK1MIX', 500);
 
         // QRP měsíc dostane podbarvení i title; plný výkon zůstává bez příznaku.
-        // (cell-qrp/cell-lp jsou i v legendě, proto kontrolujeme title buňky.)
+        // (cell-qrp/cell-lp jsou i v legendě, proto hlídáme hlavně třídu a absenci LP buňky.)
         $this->get(route('rocni_vysledky', ['rok' => 2026]))
             ->assertOk()
             ->assertSee('cell-qrp', escape: false)
-            ->assertSee('title="QRP"', escape: false)
             ->assertDontSee('title="LP"', escape: false);
     }
 
@@ -213,5 +214,63 @@ class VysledkyRocniTest extends TestCase
             ->assertOk()
             ->assertSee('OK1UHF')
             ->assertDontSee('OK1VHF');
+    }
+
+    public function test_rocni_band_filter_narrows_to_categories_in_band(): void
+    {
+        $band144 = EdiBand::query()->where('token', '144')->firstOrFail();
+        $kat144 = EdiCategory::query()
+            ->where('band_id', $band144->id)
+            ->where('section', 'SO')
+            ->where('variant', 'domestic')
+            ->firstOrFail();
+        $kat432 = EdiCategory::query()
+            ->where('band_id', EdiBand::query()->where('token', '432')->firstOrFail()->id)
+            ->where('section', 'SO')
+            ->where('variant', 'domestic')
+            ->firstOrFail();
+        $kolo = $this->round('2026');
+
+        $this->entry($kolo, $kat144, 'OK1VHF', 1000);
+        $this->entry($kolo, $kat432, 'OK1UHF', 800);
+
+        $this->get(route('rocni_vysledky', ['rok' => 2026, 'band' => $band144->id]))
+            ->assertOk()
+            ->assertSee('OK1VHF')
+            ->assertDontSee('OK1UHF');
+    }
+
+    public function test_rocni_month_cell_links_to_log(): void
+    {
+        $kat = $this->kat('144 MHz single op');
+        $kolo = $this->round('2026');
+        $head = Edihead::create([
+            'round_id' => $kolo->id,
+            't_date' => '20260118',
+            'p_call' => 'OK1DOL',
+            'p_wwlo' => 'JN99AJ',
+            'p_band' => '144 MHz',
+            'r_name' => 'Test',
+            'r_emai' => 'test@example.com',
+            's_powe' => 0,
+        ]);
+
+        $entry = $this->entry($kolo, $kat, 'OK1DOL', 1000);
+        $entry->update([
+            'edi_head_id' => $head->id,
+            'qso_count' => 12,
+            'qso_points' => 200,
+            'multiplier' => 5,
+        ]);
+
+        $this->get(route('rocni_vysledky', ['rok' => 2026]))
+            ->assertOk()
+            ->assertSee('Klikatelné body otevřou log nebo kolo.')
+            ->assertSee('year-score-cell', escape: false)
+            ->assertSee('year-score-link', escape: false)
+            ->assertSee(route('edi.vizualizace', ['head' => $head->id]), escape: false)
+            ->assertDontSee('detail kol')
+            ->assertSee('aria-label="01/2026: 200 b. za QSO × 5 = 1000 b. (12 QSO)"', escape: false)
+            ->assertSee('01/2026: 200 b. za QSO × 5 = 1000 b. (12 QSO)', escape: false);
     }
 }

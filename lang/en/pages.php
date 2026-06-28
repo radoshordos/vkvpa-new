@@ -127,7 +127,7 @@ return [
         'ql_results_desc' => 'Closed contest rounds',
         'ql_yearly' => 'Yearly results',
         'ql_yearly_desc' => 'Annual overview',
-        'ql_stats' => 'Statistics',
+        'ql_stats' => 'Round statistics',
         'ql_stats_desc' => 'Round maps and records',
 
         // Upload window info strip
@@ -257,6 +257,7 @@ return [
         'meta' => 'Yearly overall results of the OK Activity (VKV PA) contest – overall station ranking for the year across all rounds.',
         'heading' => 'Year results',
         'filter_year' => 'Year',
+        'filter_band' => 'Band',
         'filter_category' => 'Category',
         'filter_all' => 'All',
         'filter_qrp' => 'QRP only',
@@ -266,10 +267,12 @@ return [
         'col_pos' => 'Rank',
         'col_callsign' => 'Callsign',
         'col_total' => 'Total',
+        'month_title' => ':round: :qso_points QSO pts × :mult = :points pts (:qso QSO)',
         'no_results' => 'No evaluated results for this year.',
         'legend_label' => 'Power per month:',
         'legend_qrp' => 'QRP (≤ 5 W)',
         'legend_lp' => 'LP (< 100 W)',
+        'month_link_hint' => 'Clickable scores open the log or round.',
     ],
 
     'diskuse' => [
@@ -441,12 +444,21 @@ return [
     ],
 
     'stat' => [
-        'index_title' => 'VHF PA contest statistics',
+        'index_title' => 'VHF PA round statistics',
         'index_meta' => 'Summary statistics, maps and leaderboards for each evaluated VKV PA contest round.',
         'index_heading' => 'Round statistics',
         'index_subtitle' => 'Summaries, maps and records of individual evaluated rounds.',
         'empty' => 'No round has been evaluated yet.',
         'card_participants' => '{0} no entrants|{1} :count entrant|[2,*] :count entrants',
+        'card_entries' => '{0} no entries|{1} :count entry|[2,*] :count entries',
+        'card_participants_label' => 'Entrants',
+        'card_entries_label' => 'Entries',
+        'archive_heading' => 'Round archive by year',
+        'year_nav' => 'Quick year selection',
+        'year_rounds' => '{1} :count round|[2,*] :count rounds',
+        'year_avg_participants' => 'avg entrants :count',
+        'year_entries' => '{0} no entries|{1} :count entry|[2,*] :count entries',
+        'best_attendance_year' => 'highest attendance this year',
 
         'kolo_title' => 'Round :kolo statistics',
         'kolo_meta' => 'Summary, station and square maps and leaderboards of round :kolo of VKV PA.',
@@ -494,7 +506,7 @@ return [
         'fact_winner_margin' => 'Winner :call led by :margin pts',
         'fact_debutants' => 'Debutants this round: :count',
 
-        'hall_heading' => 'Hall of fame (all-time)',
+        'hall_heading' => 'Historical records',
         'hall_note' => 'Records across all evaluated rounds.',
         'rec_odx' => 'Longest QSO (ODX)',
         'rec_ucast' => 'Record attendance',
