@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Enums\QsoMode;
+use App\Models\EdiEntry;
 use App\Models\Edihead;
 use App\Services\Edi\DenikStatistiky;
 use App\Services\Edi\EnrichedQso;
@@ -41,6 +42,10 @@ class EdiVizualizaceController extends Controller
 
         $enriched = $this->geometry->enrichedQsos($head, $home, 'qso_at');
 
+        // Soapbox a poznámka účastníka žijí na záznamu hlášení (EdiEntry),
+        // ne na hlavičce deníku – načteme je přes vazbu edi_head_id.
+        $entry = EdiEntry::query()->where('edi_head_id', $head->id)->first();
+
         $fromMin = DenikStatistiky::minutes(ContestWindow::from());
         $toMin = DenikStatistiky::minutes(ContestWindow::to());
 
@@ -58,6 +63,8 @@ class EdiVizualizaceController extends Controller
             'homeLoc' => (string) $head->p_wwlo,
             'homeSq' => $homeSq,
             'home' => $home,
+            'soapbox' => $entry !== null ? $entry->soapbox : '',
+            'poznamka' => $entry !== null ? $entry->note : '',
             'window' => ['from' => $fromMin, 'to' => $toMin],
             'mapPoints' => $enriched->map(fn (EnrichedQso $q): array => [
                 'lat' => $q->lat,

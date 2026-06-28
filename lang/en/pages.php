@@ -318,6 +318,14 @@ return [
         'stat_avgdist' => 'Avg. distance',
         'stat_avgdist_hint' => 'Average distance over all QSOs with a computed distance.',
 
+        'station_power' => 'Power',
+        'station_antenna' => 'Antenna',
+        'station_trx' => 'TRX',
+        'station_operator' => 'Operator',
+        'station_empty' => 'not specified',
+        'station_soapbox' => 'Soapbox',
+        'station_note' => 'Note',
+
         'tempo_peak_hint' => 'Most QSOs within a rolling 60-minute window.',
         'tempo_qso_per_hour' => 'QSO/h',
         'tempo_peak' => 'Peak :when',
@@ -329,6 +337,7 @@ return [
         'tempo_uncounted_hint' => 'QSOs outside the contest window or day and QSOs flagged as duplicate (D) in the log.',
         'tempo_uncounted' => 'Uncounted / flagged QSOs',
 
+        'mode_heading' => 'By mode of operation',
         'mode_other' => 'Other modes',
         'mode_pts_per_qso' => 'pts per QSO',
 
