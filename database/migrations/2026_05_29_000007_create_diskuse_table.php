@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('diskuse', function (Blueprint $table): void {
             $table->id();
-            // SIGNED INT kvůli shodě typu s vkvpa_kola.id (MySQL FK vyžaduje
+            // SIGNED INT kvůli shodě typu s edi_rounds.id (MySQL FK vyžaduje
             // shodné znaménko).
-            $table->integer('kolo_id');
+            $table->integer('round_id');
             $table->string('znacka', 20);
             $table->string('jmeno', 100)->nullable();
             $table->text('text');
@@ -26,7 +26,7 @@ return new class extends Migration
             // DATETIME (ne TIMESTAMP) – nezávislé na session time_zone serveru.
             $table->dateTime('created_at')->useCurrent();
 
-            $table->index('kolo_id');
+            $table->index('round_id');
         });
 
         // SQLite (testovací DB) neumí přidat cizí klíč přes ALTER TABLE; FK se
@@ -37,8 +37,8 @@ return new class extends Migration
 
         // Kola se nikdy nemažou → RESTRICT.
         Schema::table('diskuse', function (Blueprint $table): void {
-            $table->foreign('kolo_id', 'diskuse_kolo_id_fk')
-                ->references('id')->on('vkvpa_kola')
+            $table->foreign('round_id', 'diskuse_round_id_fk')
+                ->references('id')->on('edi_rounds')
                 ->restrictOnDelete();
         });
     }

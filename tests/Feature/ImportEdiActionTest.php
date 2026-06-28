@@ -13,10 +13,10 @@ use App\Exceptions\TDateMismatchException;
 use App\Exceptions\TDateNotContestDayException;
 use App\Exceptions\UnknownBandException;
 use App\Exceptions\UploadWindowClosedException;
+use App\Models\EdiEntry;
 use App\Models\Edihead;
 use App\Models\Ediline;
-use App\Models\VkvpaData;
-use App\Models\VkvpaKola;
+use App\Models\EdiRound;
 use App\Services\Edi\EdiLog;
 use App\Services\Edi\EdiParser;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -30,17 +30,17 @@ class ImportEdiActionTest extends TestCase
 {
     use RefreshDatabase;
 
-    private VkvpaKola $kolo;
+    private EdiRound $round;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->kolo = VkvpaKola::create([
-            'datum_konani' => '2026-03-15 08:00:00',
-            'datum_uzaverky' => now()->addDay(),
-            'nazev' => '1. kolo 2026',
-            'poznamka' => '',
+        $this->round = EdiRound::create([
+            'starts_at' => '2026-03-15 08:00:00',
+            'closes_at' => now()->addDay(),
+            'name' => '1. kolo 2026',
+            'note' => '',
         ]);
     }
 
@@ -58,7 +58,7 @@ class ImportEdiActionTest extends TestCase
         return (new EdiParser)->parse($edi);
     }
 
-    private function execute(EdiLog $log): VkvpaData
+    private function execute(EdiLog $log): EdiEntry
     {
         return $this->action()->execute($log, notify: false, enforceUploadWindow: false);
     }
@@ -74,18 +74,18 @@ class ImportEdiActionTest extends TestCase
 
     // ---- happy path -----------------------------------------------------
 
-    public function test_execute_creates_edihead_edilines_and_vkvpa_data(): void
+    public function test_execute_creates_edihead_edilines_and_edi_entries(): void
     {
         $data = $this->execute($this->sampleLog());
 
-        $this->assertInstanceOf(VkvpaData::class, $data);
-        $this->assertSame('OK2KJT', $data->znacka);
-        $this->assertSame($this->kolo->id, $data->id_kola);
-        $this->assertNotNull($data->edihead_id);
+        $this->assertInstanceOf(EdiEntry::class, $data);
+        $this->assertSame('OK2KJT', $data->callsign);
+        $this->assertSame($this->round->id, $data->round_id);
+        $this->assertNotNull($data->edi_head_id);
 
         $this->assertSame(1, Edihead::count());
         $this->assertSame(2, Ediline::count());
-        $this->assertSame(1, VkvpaData::count());
+        $this->assertSame(1, EdiEntry::count());
     }
 
     public function test_execute_computes_correct_score(): void
@@ -93,18 +93,18 @@ class ImportEdiActionTest extends TestCase
         $data = $this->execute($this->sampleLog());
 
         // sample.edi: home JN99, QSO do JN99BP (vlastní, 2 b.) + JN89PV (soused, 3 b.)
-        // pocet=2, boduZaQso=5, nasobice=2, body=10
-        $this->assertSame(2, $data->pocet);
-        $this->assertSame(5, $data->bodu_za_qso);
-        $this->assertSame(2, $data->nasobice);
-        $this->assertSame(10, $data->body);
+        // pocet=2, boduZaQso=5, multiplier=2, body=10
+        $this->assertSame(2, $data->qso_count);
+        $this->assertSame(5, $data->qso_points);
+        $this->assertSame(2, $data->multiplier);
+        $this->assertSame(10, $data->points);
     }
 
     public function test_execute_sets_schvaleno_false(): void
     {
         $data = $this->execute($this->sampleLog());
 
-        $this->assertFalse((bool) $data->schvaleno);
+        $this->assertFalse((bool) $data->approved);
     }
 
     public function test_execute_applies_overrides(): void
@@ -113,10 +113,10 @@ class ImportEdiActionTest extends TestCase
             $this->sampleLog(),
             notify: false,
             enforceUploadWindow: false,
-            overrides: ['mail' => 'override@example.com'],
+            overrides: ['email' => 'override@example.com'],
         );
 
-        $this->assertSame('override@example.com', $data->mail);
+        $this->assertSame('override@example.com', $data->email);
     }
 
     // ---- preview --------------------------------------------------------
@@ -126,11 +126,11 @@ class ImportEdiActionTest extends TestCase
         $preview = $this->action()->preview($this->sampleLog(), enforceUploadWindow: false);
 
         $this->assertInstanceOf(ImportEdiPreview::class, $preview);
-        $this->assertSame($this->kolo->id, $preview->idKola);
+        $this->assertSame($this->round->id, $preview->idKola);
         $this->assertGreaterThan(0, $preview->idKategorie);
 
         $this->assertSame(0, Edihead::count(), 'Náhled nesmí zapisovat do DB');
-        $this->assertSame(0, VkvpaData::count());
+        $this->assertSame(0, EdiEntry::count());
     }
 
     public function test_preview_score_matches_execute_score(): void
@@ -140,10 +140,10 @@ class ImportEdiActionTest extends TestCase
         $preview = $this->action()->preview($log, enforceUploadWindow: false);
         $data = $this->execute($log);
 
-        $this->assertSame($preview->score->pocet, $data->pocet);
-        $this->assertSame($preview->score->boduZaQso, $data->bodu_za_qso);
-        $this->assertSame($preview->score->nasobice, $data->nasobice);
-        $this->assertSame($preview->score->body, $data->body);
+        $this->assertSame($preview->score->qsoCount, $data->qso_count);
+        $this->assertSame($preview->score->qsoPoints, $data->qso_points);
+        $this->assertSame($preview->score->multiplier, $data->multiplier);
+        $this->assertSame($preview->score->points, $data->points);
     }
 
     // ---- výjimky --------------------------------------------------------
@@ -151,7 +151,7 @@ class ImportEdiActionTest extends TestCase
     public function test_throws_round_not_found_when_no_round_for_tdate(): void
     {
         // Přesuneme kolo na duben → pro TDate=20260315 (březen) žádné kolo neexistuje.
-        $this->kolo->update(['datum_konani' => '2026-04-20 08:00:00']);
+        $this->round->update(['starts_at' => '2026-04-20 08:00:00']);
 
         $this->expectException(RoundNotFoundException::class);
         $this->execute($this->sampleLog());
@@ -159,8 +159,8 @@ class ImportEdiActionTest extends TestCase
 
     public function test_throws_tdate_not_contest_day_when_round_date_differs(): void
     {
-        // Kolo je v březnu, ale jiný den – TDate=20260315, datum_konani=20260322.
-        $this->kolo->update(['datum_konani' => '2026-03-22 08:00:00']);
+        // Kolo je v březnu, ale jiný den – TDate=20260315, starts_at=20260322.
+        $this->round->update(['starts_at' => '2026-03-22 08:00:00']);
 
         $this->expectException(TDateNotContestDayException::class);
         $this->execute($this->sampleLog());
@@ -184,8 +184,8 @@ class ImportEdiActionTest extends TestCase
         // se hlídá na trojici kolo+značka+kategorie, takže druhý deník projde.
         $second = $action->execute($this->sampleLogOnBand('432 MHz'), notify: false, enforceUploadWindow: false);
 
-        $this->assertNotSame($first->id_kategorie, $second->id_kategorie);
-        $this->assertSame(2, VkvpaData::where('znacka', 'OK2KJT')->where('id_kola', $this->kolo->id)->count());
+        $this->assertNotSame($first->category_id, $second->category_id);
+        $this->assertSame(2, EdiEntry::where('callsign', 'OK2KJT')->where('round_id', $this->round->id)->count());
     }
 
     public function test_throws_tdate_mismatch_when_qso_date_differs_from_tdate(): void
@@ -234,7 +234,7 @@ class ImportEdiActionTest extends TestCase
 
     public function test_throws_upload_window_closed_for_evaluated_round(): void
     {
-        $this->kolo->update(['vyhodnoceno' => now()->subDay()]);
+        $this->round->update(['evaluated_at' => now()->subDay()]);
 
         $this->expectException(UploadWindowClosedException::class);
 

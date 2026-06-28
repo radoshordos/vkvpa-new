@@ -10,7 +10,7 @@ use App\Services\Edi\CategoryResolver;
  * Naplní `edi_category` přemapováním 42 řádků z `vkvpa_kategorie`.
  *
  * Původní `id` se zachovávají (včetně historických mezer 37/40/41), aby šlo
- * případné `vkvpa_data.id_kategorie` později přesměrovat 1:1. `band` nese
+ * případné `edi_entries.category_id` později přesměrovat 1:1. `band` nese
  * jednotku ('144 MHz' / '1.3 GHz'), `name` se generuje jednotně z os (odpadají
  * historické překlepy). `dxid` u DX řádků ukazuje na tuzemský protějšek se
  * shodným band+section; u tuzemských řádků je NULL. Pásmo 122 GHz nemá DX.

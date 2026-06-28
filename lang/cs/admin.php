@@ -113,10 +113,10 @@ return [
     'zaloha_btn_download' => 'Stáhnout SQL zálohu',
     'zaloha_hint' => 'Záloha obsahuje kompletní obsah vybraných tabulek včetně osobních údajů – uchovávejte ji bezpečně.',
 
-    // Údaje závodníků (kontaktní / osobní data z vkvpa_data)
+    // Údaje závodníků (kontaktní / osobní data z edi_entries)
     'uzivatele_title' => 'Údaje závodníků – Administrace VKV PA',
     'uzivatele_heading' => 'Kontaktní údaje závodníků',
-    'uzivatele_desc' => 'Osobní a kontaktní údaje (jméno, e-mail, telefon, IP) z hlášení v tabulce vkvpa_data. Citlivá data – přístupné pouze administrátorovi.',
+    'uzivatele_desc' => 'Osobní a kontaktní údaje (jméno, e-mail, telefon, IP) z hlášení v tabulce edi_entries. Citlivá data – přístupné pouze administrátorovi.',
     'uzivatele_filter_round' => 'Kolo',
     'uzivatele_filter_all_rounds' => '— všechna kola —',
     'uzivatele_filter_search' => 'Hledat',

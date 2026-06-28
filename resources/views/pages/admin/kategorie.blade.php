@@ -26,10 +26,10 @@
             @forelse ($kategorie as $k)
                 <tr>
                     <td class="num text-muted">{{ $k->id }}</td>
-                    <td class="font-bold">{{ $k->nazev }}</td>
+                    <td class="font-bold">{{ $k->name }}</td>
                     <td class="mono">{{ $k->zkratka }}</td>
                     <td class="num">{{ $k->dxid }}</td>
-                    <td class="num">{{ $k->hlaseni_count }}</td>
+                    <td class="num">{{ $k->entries_count }}</td>
                     <td>
                         <a href="{{ route('kategorie.edit', $k->id) }}" class="icon-btn icon-btn-u" title="{{ __('admin.kategorie_btn_edit') }}">
                             <x-icon name="pencil" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />

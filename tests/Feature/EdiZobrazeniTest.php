@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Http\Controllers\EdiController;
+use App\Models\EdiEntry;
 use App\Models\Edihead;
+use App\Models\EdiRound;
 use App\Models\User;
-use App\Models\VkvpaData;
-use App\Models\VkvpaKola;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
@@ -35,7 +35,7 @@ class EdiZobrazeniTest extends TestCase
         ])."\n";
 
         return Edihead::create([
-            'id_kola' => $idKola,
+            'round_id' => $idKola,
             't_date' => '20260315;20260315', 'p_call' => 'OK2KJT', 'p_wwlo' => 'JN99AJ',
             'p_sect' => '', 'p_band' => '', 'r_name' => 'X', 'r_phon' => '', 'r_emai' => '',
             's_powe' => 100, 'src' => $raw,
@@ -53,13 +53,13 @@ class EdiZobrazeniTest extends TestCase
     }
 
     /** Kolo s otevřeným upload oknem (závod proběhl, uzávěrka v budoucnu). */
-    private function activeRound(): VkvpaKola
+    private function activeRound(): EdiRound
     {
-        return VkvpaKola::create([
-            'nazev' => 'Test kolo',
-            'datum_konani' => now()->subDay(),
-            'datum_uzaverky' => now()->addDay(),
-            'poznamka' => '',
+        return EdiRound::create([
+            'name' => 'Test kolo',
+            'starts_at' => now()->subDay(),
+            'closes_at' => now()->addDay(),
+            'note' => '',
         ]);
     }
 
@@ -171,11 +171,11 @@ class EdiZobrazeniTest extends TestCase
             ->assertSee('OK1A');
     }
 
-    /** Deník bez vazby na kolo (id_kola = null) se během okna neblokuje. */
+    /** Deník bez vazby na kolo (round_id = null) se během okna neblokuje. */
     public function test_edi_without_round_is_not_blocked(): void
     {
         $this->activeRound();
-        $head = $this->denik();                     // id_kola = null
+        $head = $this->denik();                     // round_id = null
 
         $this->get(route('edi.soubor', ['head' => $head->id]))
             ->assertOk();
@@ -217,22 +217,22 @@ class EdiZobrazeniTest extends TestCase
             ->assertSee('OK1A');
     }
 
-    private function closedRound(): VkvpaKola
+    private function closedRound(): EdiRound
     {
-        return VkvpaKola::create([
-            'nazev' => 'Staré kolo',
-            'datum_konani' => now()->subDays(60),
-            'datum_uzaverky' => now()->subDays(50),
-            'poznamka' => '',
+        return EdiRound::create([
+            'name' => 'Staré kolo',
+            'starts_at' => now()->subDays(60),
+            'closes_at' => now()->subDays(50),
+            'note' => '',
         ]);
     }
 
-    private function unapprovedEntry(int $idKola): VkvpaData
+    private function unapprovedEntry(int $idKola): EdiEntry
     {
-        return VkvpaData::create([
-            'id_kola' => $idKola, 'znacka' => 'OK9ZAP', 'locator' => 'JN99AJ',
-            'pocet' => 0, 'bodu_za_qso' => 0, 'nasobice' => 0, 'body' => 0,
-            'schvaleno' => false, 'odeslano' => false,
+        return EdiEntry::create([
+            'round_id' => $idKola, 'callsign' => 'OK9ZAP', 'locator' => 'JN99AJ',
+            'qso_count' => 0, 'qso_points' => 0, 'multiplier' => 0, 'points' => 0,
+            'approved' => false, 'sent' => false,
         ]);
     }
 }

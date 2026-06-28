@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\VkvpaData;
-use App\Models\VkvpaKola;
+use App\Models\EdiEntry;
+use App\Models\EdiRound;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 /**
- * Administrace – kontaktní a osobní údaje závodníků z tabulky `vkvpa_data`.
+ * Administrace – kontaktní a osobní údaje závodníků z tabulky `edi_entries`.
  *
  * Citlivá data (jméno, e-mail, telefon, IP) – routa je za `admin` middleware.
  * Filtruje se volitelně podle kola (`kolo`) a fulltextově (`q` přes značku,
@@ -25,24 +25,24 @@ class UzivateleController extends Controller
         $koloId = $request->integer('kolo');
         $q = trim((string) $request->query('q', ''));
 
-        $zaznamy = VkvpaData::query()
-            ->when($koloId > 0, fn (Builder $query): Builder => $query->where('id_kola', $koloId))
+        $zaznamy = EdiEntry::query()
+            ->when($koloId > 0, fn (Builder $query): Builder => $query->where('round_id', $koloId))
             ->when($q !== '', function (Builder $query) use ($q): Builder {
                 $like = '%'.$q.'%';
 
                 return $query->where(function (Builder $sub) use ($like): void {
-                    $sub->where('znacka', 'like', $like)
-                        ->orWhere('jmeno', 'like', $like)
-                        ->orWhere('mail', 'like', $like)
-                        ->orWhere('telefon', 'like', $like);
+                    $sub->where('callsign', 'like', $like)
+                        ->orWhere('name', 'like', $like)
+                        ->orWhere('email', 'like', $like)
+                        ->orWhere('phone', 'like', $like);
                 });
             })
-            ->orderByDesc('timestamp')
+            ->orderByDesc('submitted_at')
             ->orderByDesc('id')
             ->paginate(50)
             ->withQueryString();
 
-        $kola = VkvpaKola::query()->orderByDesc('datum_konani')->limit(200)->pluck('nazev', 'id');
+        $kola = EdiRound::query()->orderByDesc('starts_at')->limit(200)->pluck('name', 'id');
 
         return view('pages.admin.uzivatele', [
             'active' => 'uzivatele.index',

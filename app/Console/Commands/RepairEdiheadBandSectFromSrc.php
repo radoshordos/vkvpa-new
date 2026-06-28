@@ -20,7 +20,7 @@ use function Laravel\Prompts\outro;
  * `p_band`/`p_sect` jsou prázdné, ale `src` nese plnou REG1TEST hlavičku. Tenhle
  * příkaz z `src` vytáhne hodnoty a doplní JEN prázdné sloupce (existující data
  * nepřepisuje) – čistě kvalita dat, na edi_head.edi_category_id (které se bere
- * 1:1 z vkvpa_data) to nemá vliv. Idempotentní.
+ * 1:1 z edi_entries) to nemá vliv. Idempotentní.
  */
 class RepairEdiheadBandSectFromSrc extends Command
 {

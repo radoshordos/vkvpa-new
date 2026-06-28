@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services\Scoring;
 
-use App\Models\VkvpaData;
-use App\Models\VkvpaKola;
+use App\Models\EdiEntry;
+use App\Models\EdiRound;
 use Illuminate\Support\Collection;
 
 /**
@@ -22,32 +22,32 @@ final class SkokanService
     /**
      * Body-delta a příznak největšího skokana pro řádky zobrazovaného kola.
      *
-     * @param  Collection<int, VkvpaData>  $radky  řádky aktuálně zobrazovaného kola
-     * @return array<int, array{delta: int|null, top: bool}> klíč = VkvpaData.id;
+     * @param  Collection<int, EdiEntry>  $radky  řádky aktuálně zobrazovaného kola
+     * @return array<int, array{delta: int|null, top: bool}> klíč = EdiEntry.id;
      *                                                       delta = null → první start v kategorii
      */
-    public function bodyDeltas(VkvpaKola $kolo, Collection $radky): array
+    public function bodyDeltas(EdiRound $kolo, Collection $radky): array
     {
         if ($radky->isEmpty()) {
             return [];
         }
 
-        $znacky = $radky->pluck('znacka')->unique()->values()->all();
+        $znacky = $radky->pluck('callsign')->unique()->values()->all();
 
         // Předchozí (schválené) výsledky stejných značek z dřívějších kol, nejnovější první.
-        $prior = VkvpaData::query()
-            ->join('vkvpa_kola', 'vkvpa_data.id_kola', '=', 'vkvpa_kola.id')
-            ->where('vkvpa_kola.datum_konani', '<', $kolo->datum_konani->toDateString())
-            ->where('vkvpa_data.schvaleno', true)
-            ->whereIn('vkvpa_data.znacka', $znacky)
-            ->orderByDesc('vkvpa_kola.datum_konani')
-            ->get(['vkvpa_data.znacka', 'vkvpa_data.id_kategorie', 'vkvpa_data.body']);
+        $prior = EdiEntry::query()
+            ->join('edi_rounds', 'edi_entries.round_id', '=', 'edi_rounds.id')
+            ->where('edi_rounds.starts_at', '<', $kolo->starts_at->toDateString())
+            ->where('edi_entries.approved', true)
+            ->whereIn('edi_entries.callsign', $znacky)
+            ->orderByDesc('edi_rounds.starts_at')
+            ->get(['edi_entries.callsign', 'edi_entries.category_id', 'edi_entries.points']);
 
         // Poslední předchozí start podle (značka|kategorie) – díky řazení je první výskyt nejnovější.
         /** @var array<string, int> $prevBody */
         $prevBody = [];
         foreach ($prior as $p) {
-            $prevBody[$p->znacka.'|'.$p->id_kategorie] ??= (int) $p->body;
+            $prevBody[$p->callsign.'|'.$p->category_id] ??= (int) $p->points;
         }
 
         // Delta pro každý řádek + největší kladná delta v rámci kategorie.
@@ -56,18 +56,18 @@ final class SkokanService
         /** @var array<int, int> $maxByKat */
         $maxByKat = [];
         foreach ($radky as $r) {
-            $key = $r->znacka.'|'.$r->id_kategorie;
+            $key = $r->callsign.'|'.$r->category_id;
             if (! array_key_exists($key, $prevBody)) {
                 $delta[$r->id] = null;
 
                 continue;
             }
 
-            $d = (int) $r->body - $prevBody[$key];
+            $d = (int) $r->points - $prevBody[$key];
             $delta[$r->id] = $d;
             if ($d > 0) {
-                // Záznam bez kategorie (id_kategorie NULL) se sdružuje pod klíčem 0.
-                $kat = $r->id_kategorie ?? 0;
+                // Záznam bez kategorie (category_id NULL) se sdružuje pod klíčem 0.
+                $kat = $r->category_id ?? 0;
                 $maxByKat[$kat] = max($maxByKat[$kat] ?? 0, $d);
             }
         }
@@ -78,7 +78,7 @@ final class SkokanService
             $d = $delta[$r->id];
             $out[$r->id] = [
                 'delta' => $d,
-                'top' => $d !== null && $d > 0 && ($maxByKat[$r->id_kategorie ?? 0] ?? 0) === $d,
+                'top' => $d !== null && $d > 0 && ($maxByKat[$r->category_id ?? 0] ?? 0) === $d,
             ];
         }
 

@@ -11,28 +11,28 @@ use function Laravel\Prompts\intro;
 use function Laravel\Prompts\outro;
 
 /**
- * Nastaví edi_head.edi_category_id 1:1 z vkvpa_data.id_kategorie
+ * Nastaví edi_head.edi_category_id 1:1 z edi_entries.category_id
  * (osiřelé i víceznačné deníky → NULL). Idempotentní.
  */
 class SetEdiheadCategoryFromVkvpa extends Command
 {
     protected $signature = 'vkvpa:set-edihead-category {--dry-run : Jen spočítej, nezapisuj}';
 
-    protected $description = 'Nastaví edi_head.edi_category_id 1:1 z vkvpa_data.id_kategorie';
+    protected $description = 'Nastaví edi_head.edi_category_id 1:1 z edi_entries.category_id';
 
     public function handle(EdiheadCategoryBackfiller $backfiller): int
     {
         $dryRun = (bool) $this->option('dry-run');
 
         intro($dryRun
-            ? 'edi_head.edi_category_id ← vkvpa_data.id_kategorie (DRY-RUN)'
-            : 'edi_head.edi_category_id ← vkvpa_data.id_kategorie');
+            ? 'edi_head.edi_category_id ← edi_entries.category_id (DRY-RUN)'
+            : 'edi_head.edi_category_id ← edi_entries.category_id');
 
-        $n = $backfiller->mirrorVkvpaDataCategory($dryRun);
+        $n = $backfiller->mirrorEdiEntryCategory($dryRun);
 
         outro($dryRun
             ? sprintf('Ke změně: %d řádků.', $n)
-            : sprintf('Změněno %d řádků (1:1 z vkvpa_data.id_kategorie).', $n));
+            : sprintf('Změněno %d řádků (1:1 z edi_entries.category_id).', $n));
 
         return self::SUCCESS;
     }

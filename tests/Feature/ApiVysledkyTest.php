@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Models\EdiCategory;
-use App\Models\VkvpaData;
-use App\Models\VkvpaKola;
+use App\Models\EdiEntry;
+use App\Models\EdiRound;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
@@ -18,17 +18,17 @@ class ApiVysledkyTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function kolo(): VkvpaKola
+    private function round(): EdiRound
     {
-        return VkvpaKola::create([
-            'nazev' => '2024 duben',
-            'datum_konani' => '2024-04-20 08:00:00',
-            'datum_uzaverky' => '2024-04-28 23:59:00',
-            'poznamka' => '',
+        return EdiRound::create([
+            'name' => '2024 duben',
+            'starts_at' => '2024-04-20 08:00:00',
+            'closes_at' => '2024-04-28 23:59:00',
+            'note' => '',
         ]);
     }
 
-    private function kategorie(): EdiCategory
+    private function category(): EdiCategory
     {
         return EdiCategory::create([
             'name' => '2m SSB',
@@ -42,11 +42,11 @@ class ApiVysledkyTest extends TestCase
 
     public function test_kola_returns_200_with_data_key(): void
     {
-        $this->kolo();
+        $this->round();
 
         $this->getJson('/api/kola')
             ->assertOk()
-            ->assertJsonStructure(['data' => [['id', 'nazev', 'datum_konani', 'stav']]]);
+            ->assertJsonStructure(['data' => [['id', 'nazev', 'starts_at', 'stav']]]);
     }
 
     public function test_kola_returns_empty_list_when_no_rounds(): void
@@ -68,20 +68,20 @@ class ApiVysledkyTest extends TestCase
 
     public function test_vysledky_kolo_returns_kolo_and_data(): void
     {
-        $kolo = $this->kolo();
-        $kat = $this->kategorie();
-        VkvpaData::create([
-            'id_kola' => $kolo->id, 'id_kategorie' => $kat->id,
-            'znacka' => 'OK1XY', 'locator' => 'JN79FX', 'schvaleno' => true,
-            'body' => 500, 'pocet' => 10, 'nasobice' => 5, 'bodu_za_qso' => 100,
-            'edihead_id' => 1, 'qrp' => false, 'poradi' => 1,
+        $kolo = $this->round();
+        $kat = $this->category();
+        EdiEntry::create([
+            'round_id' => $kolo->id, 'category_id' => $kat->id,
+            'callsign' => 'OK1XY', 'locator' => 'JN79FX', 'approved' => true,
+            'points' => 500, 'qso_count' => 10, 'multiplier' => 5, 'qso_points' => 100,
+            'edi_head_id' => 1, 'qrp' => false, 'rank' => 1,
         ]);
 
         $this->getJson("/api/vysledky/{$kolo->id}")
             ->assertOk()
             ->assertJsonStructure([
-                'kolo' => ['id', 'nazev', 'datum_konani'],
-                'data' => [['poradi', 'znacka', 'body', 'pocet', 'nasobice', 'kategorie_id', 'edi']],
+                'kolo' => ['id', 'nazev', 'starts_at'],
+                'data' => [['poradi', 'znacka', 'body', 'pocet', 'multiplier', 'kategorie_id', 'edi']],
             ])
             ->assertJsonPath('data.0.znacka', 'OK1XY')
             ->assertJsonPath('data.0.body', 500);
@@ -89,18 +89,18 @@ class ApiVysledkyTest extends TestCase
 
     public function test_vysledky_kolo_only_returns_approved(): void
     {
-        $kolo = $this->kolo();
-        $kat = $this->kategorie();
+        $kolo = $this->round();
+        $kat = $this->category();
 
-        VkvpaData::create([
-            'id_kola' => $kolo->id, 'id_kategorie' => $kat->id,
-            'znacka' => 'OK1SCHVALENO', 'schvaleno' => true,
-            'body' => 100, 'pocet' => 5, 'nasobice' => 2, 'bodu_za_qso' => 50,
+        EdiEntry::create([
+            'round_id' => $kolo->id, 'category_id' => $kat->id,
+            'callsign' => 'OK1SCHVALENO', 'approved' => true,
+            'points' => 100, 'qso_count' => 5, 'multiplier' => 2, 'qso_points' => 50,
         ]);
-        VkvpaData::create([
-            'id_kola' => $kolo->id, 'id_kategorie' => $kat->id,
-            'znacka' => 'OK1CEKA', 'schvaleno' => false,
-            'body' => 200, 'pocet' => 8, 'nasobice' => 4, 'bodu_za_qso' => 80,
+        EdiEntry::create([
+            'round_id' => $kolo->id, 'category_id' => $kat->id,
+            'callsign' => 'OK1CEKA', 'approved' => false,
+            'points' => 200, 'qso_count' => 8, 'multiplier' => 4, 'qso_points' => 80,
         ]);
 
         $this->getJson("/api/vysledky/{$kolo->id}")

@@ -1,7 +1,7 @@
 <h2>Oznámení o přijetí hlášení:</h2>
 <p style="font-weight: bold">
-  {{ $hlaseni->znacka }} {{ $hlaseni->pocet }} {{ $hlaseni->bodu_za_qso }}
-  {{ $hlaseni->nasobice }} {{ $hlaseni->body }} {{ $kategorieNazev }} {{ $hlaseni->poznamka }}<br>
+  {{ $hlaseni->callsign }} {{ $hlaseni->qso_count }} {{ $hlaseni->qso_points }}
+  {{ $hlaseni->multiplier }} {{ $hlaseni->points }} {{ $kategorieNazev }} {{ $hlaseni->note }}<br>
   {{ $hlaseni->soapbox }}
 </p>
 <p>

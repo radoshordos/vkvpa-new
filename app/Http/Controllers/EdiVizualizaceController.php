@@ -44,7 +44,7 @@ class EdiVizualizaceController extends Controller
         $fromMin = DenikStatistiky::minutes(ContestWindow::from());
         $toMin = DenikStatistiky::minutes(ContestWindow::to());
 
-        $nasobice = $this->statistiky->noveNasobice($enriched, $homeSq);
+        $multiplier = $this->statistiky->noveNasobice($enriched, $homeSq);
 
         // Rozpad QSO podle zemí/prefixů (číselník prefixes); koš pro neznámé
         // značky lokalizovaně.
@@ -70,13 +70,13 @@ class EdiVizualizaceController extends Controller
                 'mode' => $q->mode->value,
                 'time' => $q->timeMinutes,
             ]),
-            'nasobice' => $nasobice,
+            'multiplier' => $multiplier,
             'squares' => $this->geometry->bigSquares($head),
             'roundStations' => $this->geometry->roundStations($head),
             'roundDataPending' => ! $this->geometry->roundResultsDisclosable($head),
             'porovnaniDostupne' => $this->porovnani->hasRivals($head),
             'cumulative' => $this->geometry->prubehSkore($enriched, $homeSq),
-            'timeline' => $this->statistiky->timeline($enriched, $nasobice, $fromMin, $toMin),
+            'timeline' => $this->statistiky->timeline($enriched, $multiplier, $fromMin, $toMin),
             'azimuth' => $this->statistiky->azimuthRose($enriched),
             'squarePoints' => $this->statistiky->bodyPodleCtvercu($enriched),
             'podleZemi' => $this->statistiky->podleZemi($enriched, $prefixy, $ostatni),

@@ -23,13 +23,13 @@ final class SendEdiMailsListener implements ShouldQueue
     public function handle(EdiImported $event): void
     {
         $data = $event->data;
-        $data->loadMissing(['kolo', 'kategorie']);
+        $data->loadMissing(['round', 'category']);
 
-        $koloNazev = $data->kolo->nazev ?? '';
-        $kategorieNazev = $data->kategorie->nazev ?? '';
+        $koloNazev = $data->round->name ?? '';
+        $kategorieNazev = $data->category->name ?? '';
 
-        if (filter_var($data->mail, FILTER_VALIDATE_EMAIL) !== false) {
-            Mail::to($data->mail)->queue(new HlaseniPrijato($data, $koloNazev, $kategorieNazev));
+        if (filter_var($data->email, FILTER_VALIDATE_EMAIL) !== false) {
+            Mail::to($data->email)->queue(new HlaseniPrijato($data, $koloNazev, $kategorieNazev));
         }
 
         $contactMail = VkvpaSettings::contactMail();

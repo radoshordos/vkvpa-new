@@ -6,10 +6,10 @@ namespace Tests\Feature;
 
 use App\Http\Controllers\StatistikyController;
 use App\Models\EdiCategory;
+use App\Models\EdiEntry;
 use App\Models\Edihead;
 use App\Models\Ediline;
-use App\Models\VkvpaData;
-use App\Models\VkvpaKola;
+use App\Models\EdiRound;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Tests\TestCase;
@@ -25,15 +25,15 @@ class StatistikyTest extends TestCase
 
     public function test_index_lists_only_evaluated_rounds(): void
     {
-        VkvpaKola::create([
-            'datum_konani' => '2026-03-15', 'datum_uzaverky' => '2026-03-20 23:59:59',
-            'nazev' => '03/2026', 'poznamka' => '', 'vyhodnoceno' => '2026-03-21 10:00:00',
+        EdiRound::create([
+            'starts_at' => '2026-03-15', 'closes_at' => '2026-03-20 23:59:59',
+            'name' => '03/2026', 'note' => '', 'evaluated_at' => '2026-03-21 10:00:00',
         ]);
         // Nadcházející kolo (nevyhodnocené) se v rozcestníku zobrazit nesmí.
-        VkvpaKola::create([
-            'datum_konani' => now()->addMonth()->toDateTimeString(),
-            'datum_uzaverky' => now()->addMonths(2)->toDateTimeString(),
-            'nazev' => '07/2026', 'poznamka' => '',
+        EdiRound::create([
+            'starts_at' => now()->addMonth()->toDateTimeString(),
+            'closes_at' => now()->addMonths(2)->toDateTimeString(),
+            'name' => '07/2026', 'note' => '',
         ]);
 
         $this->get(route('statistiky.index'))
@@ -44,10 +44,10 @@ class StatistikyTest extends TestCase
 
     public function test_detail_returns_404_for_non_evaluated_round(): void
     {
-        $kolo = VkvpaKola::create([
-            'datum_konani' => now()->addMonth()->toDateTimeString(),
-            'datum_uzaverky' => now()->addMonths(2)->toDateTimeString(),
-            'nazev' => '07/2026', 'poznamka' => '',
+        $kolo = EdiRound::create([
+            'starts_at' => now()->addMonth()->toDateTimeString(),
+            'closes_at' => now()->addMonths(2)->toDateTimeString(),
+            'name' => '07/2026', 'note' => '',
         ]);
 
         $this->get(route('statistiky.kolo', ['kolo' => $kolo->id]))
@@ -108,10 +108,10 @@ class StatistikyTest extends TestCase
 
     public function test_og_image_returns_404_for_non_evaluated_round(): void
     {
-        $kolo = VkvpaKola::create([
-            'datum_konani' => now()->addMonth()->toDateTimeString(),
-            'datum_uzaverky' => now()->addMonths(2)->toDateTimeString(),
-            'nazev' => '07/2026', 'poznamka' => '',
+        $kolo = EdiRound::create([
+            'starts_at' => now()->addMonth()->toDateTimeString(),
+            'closes_at' => now()->addMonths(2)->toDateTimeString(),
+            'name' => '07/2026', 'note' => '',
         ]);
 
         $this->get(route('statistiky.kolo.og', ['kolo' => $kolo->id]))->assertNotFound();
@@ -164,15 +164,15 @@ class StatistikyTest extends TestCase
      * Vyhodnocené kolo se dvěma deníky (OK5BIG pracován napříč oběma) a dvěma
      * převzatými záznamy listiny pro žebříčky/souhrn.
      */
-    private function seedEvaluatedRound(): VkvpaKola
+    private function seedEvaluatedRound(): EdiRound
     {
-        $kolo = VkvpaKola::create([
-            'datum_konani' => '2026-03-15', 'datum_uzaverky' => '2026-03-20 23:59:59',
-            'nazev' => '03/2026', 'poznamka' => '', 'vyhodnoceno' => '2026-03-21 10:00:00',
+        $kolo = EdiRound::create([
+            'starts_at' => '2026-03-15', 'closes_at' => '2026-03-20 23:59:59',
+            'name' => '03/2026', 'note' => '', 'evaluated_at' => '2026-03-21 10:00:00',
         ]);
 
-        $headA = Edihead::create(['id_kola' => $kolo->id, 't_date' => '20260315', 'p_call' => 'OK1AAA', 'p_wwlo' => 'JN79', 'p_band' => '144 MHz', 'r_name' => 'A', 'r_emai' => 'a@a.cz', 's_powe' => 100]);
-        $headB = Edihead::create(['id_kola' => $kolo->id, 't_date' => '20260315', 'p_call' => 'OK1BBB', 'p_wwlo' => 'JN89', 'p_band' => '144 MHz', 'r_name' => 'B', 'r_emai' => 'b@b.cz', 's_powe' => 100]);
+        $headA = Edihead::create(['round_id' => $kolo->id, 't_date' => '20260315', 'p_call' => 'OK1AAA', 'p_wwlo' => 'JN79', 'p_band' => '144 MHz', 'r_name' => 'A', 'r_emai' => 'a@a.cz', 's_powe' => 100]);
+        $headB = Edihead::create(['round_id' => $kolo->id, 't_date' => '20260315', 'p_call' => 'OK1BBB', 'p_wwlo' => 'JN89', 'p_band' => '144 MHz', 'r_name' => 'B', 'r_emai' => 'b@b.cz', 's_powe' => 100]);
 
         foreach (['0810', '0811', '0812'] as $t) {
             Ediline::create(['edihead_id' => $headA->id, 'qso_at' => '2026-03-15 '.substr($t, 0, 2).':'.substr($t, 2, 2).':00', 'call_sign' => 'OK5BIG', 'received_wwl' => 'JN99AA']);
@@ -183,14 +183,14 @@ class StatistikyTest extends TestCase
 
         $kat = EdiCategory::create(['name' => '144 MHz', 'band' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
 
-        foreach ([['OK1AAA', 5, 4, 80], ['OK1BBB', 3, 3, 30]] as [$znacka, $pocet, $nasobice, $body]) {
-            VkvpaData::create([
-                'id_kola' => $kolo->id, 'id_kategorie' => $kat->id,
-                'qrp' => false, 'lp' => false, 'znacka' => $znacka, 'locator' => 'JN79AA',
-                'pocet' => $pocet, 'bodu_za_qso' => 20, 'nasobice' => $nasobice, 'body' => $body,
-                'jmeno' => 'Test', 'mail' => 't@t.cz', 'telefon' => '', 'poznamka' => '',
-                'soapbox' => '', 'ip' => '', 'edihead_id' => null,
-                'poradi' => 1, 'schvaleno' => true, 'session_id' => '',
+        foreach ([['OK1AAA', 5, 4, 80], ['OK1BBB', 3, 3, 30]] as [$znacka, $pocet, $multiplier, $body]) {
+            EdiEntry::create([
+                'round_id' => $kolo->id, 'category_id' => $kat->id,
+                'qrp' => false, 'lp' => false, 'callsign' => $znacka, 'locator' => 'JN79AA',
+                'qso_count' => $pocet, 'qso_points' => 20, 'multiplier' => $multiplier, 'points' => $body,
+                'name' => 'Test', 'email' => 't@t.cz', 'phone' => '', 'note' => '',
+                'soapbox' => '', 'ip' => '', 'edi_head_id' => null,
+                'rank' => 1, 'approved' => true, 'session_id' => '',
             ]);
         }
 

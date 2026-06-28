@@ -113,10 +113,10 @@ return [
     'zaloha_btn_download' => 'Download SQL backup',
     'zaloha_hint' => 'The backup contains the full contents of the selected tables including personal data – store it securely.',
 
-    // Entrant details (contact / personal data from vkvpa_data)
+    // Entrant details (contact / personal data from edi_entries)
     'uzivatele_title' => 'Entrant details – VKV PA Administration',
     'uzivatele_heading' => 'Entrant contact details',
-    'uzivatele_desc' => 'Personal and contact data (name, e-mail, phone, IP) from entries in the vkvpa_data table. Sensitive data – accessible to administrators only.',
+    'uzivatele_desc' => 'Personal and contact data (name, e-mail, phone, IP) from entries in the edi_entries table. Sensitive data – accessible to administrators only.',
     'uzivatele_filter_round' => 'Round',
     'uzivatele_filter_all_rounds' => '— all rounds —',
     'uzivatele_filter_search' => 'Search',

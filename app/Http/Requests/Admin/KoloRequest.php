@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Admin;
 
-use App\Models\VkvpaKola;
+use App\Models\EdiRound;
 use Carbon\CarbonImmutable;
 use Closure;
 use Illuminate\Foundation\Http\FormRequest;
@@ -28,17 +28,17 @@ class KoloRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nazev' => ['required', 'string', 'max:250'],
+            'name' => ['required', 'string', 'max:250'],
             // Kolo se koná třetí neděli v měsíci → jeden termín = nejvýš jedno
             // kolo (DB to jistí unikátním indexem, tady chceme hezkou hlášku).
-            'datum_konani' => [
+            'starts_at' => [
                 'required', 'date',
-                Rule::unique('vkvpa_kola', 'datum_konani')->ignore($this->route('kolo')),
+                Rule::unique('edi_rounds', 'starts_at')->ignore($this->route('kolo')),
                 $this->startPosunRule(),
             ],
-            'datum_uzaverky' => ['required', 'date'],
-            'poznamka' => ['nullable', 'string', 'max:250'],
-            'vyhodnoceno' => ['nullable', 'date'],
+            'closes_at' => ['required', 'date'],
+            'note' => ['nullable', 'string', 'max:250'],
+            'evaluated_at' => ['nullable', 'date'],
         ];
     }
 
@@ -50,11 +50,11 @@ class KoloRequest extends FormRequest
     {
         return function (string $attribute, mixed $value, Closure $fail): void {
             $kolo = $this->route('kolo');
-            if (! $kolo instanceof VkvpaKola || ! is_string($value)) {
+            if (! $kolo instanceof EdiRound || ! is_string($value)) {
                 return;
             }
 
-            $puvodni = CarbonImmutable::parse($kolo->datum_konani);
+            $puvodni = CarbonImmutable::parse($kolo->starts_at);
             $novy = CarbonImmutable::parse($value);
 
             if ($puvodni->diffInDays($novy, true) > 7) {
@@ -68,11 +68,11 @@ class KoloRequest extends FormRequest
     {
         return [
             'nazev.required' => 'Název kola je povinný.',
-            'datum_konani.required' => 'Datum konání je povinné.',
-            'datum_konani.date' => 'Datum konání není platné datum.',
-            'datum_konani.unique' => 'Pro toto datum už kolo existuje.',
-            'datum_uzaverky.required' => 'Datum uzávěrky je povinné.',
-            'datum_uzaverky.date' => 'Datum uzávěrky není platné datum.',
+            'starts_at.required' => 'Datum konání je povinné.',
+            'starts_at.date' => 'Datum konání není platné datum.',
+            'starts_at.unique' => 'Pro toto datum už kolo existuje.',
+            'closes_at.required' => 'Datum uzávěrky je povinné.',
+            'closes_at.date' => 'Datum uzávěrky není platné datum.',
         ];
     }
 
@@ -84,13 +84,13 @@ class KoloRequest extends FormRequest
     public function toModel(): array
     {
         return [
-            'nazev' => $this->string('nazev')->value(),
-            'datum_konani' => $this->string('datum_konani')->value(),
-            'datum_uzaverky' => $this->string('datum_uzaverky')->value(),
-            // poznamka je v DB NOT NULL – string() vrátí prázdný řetězec místo null.
-            'poznamka' => $this->string('poznamka')->value(),
+            'name' => $this->string('name')->value(),
+            'starts_at' => $this->string('starts_at')->value(),
+            'closes_at' => $this->string('closes_at')->value(),
+            // note je v DB NOT NULL – string() vrátí prázdný řetězec místo null.
+            'note' => $this->string('note')->value(),
             // Prázdné pole = nevyhodnoceno (NULL); vyplněné = terminální stav.
-            'vyhodnoceno' => $this->filled('vyhodnoceno') ? $this->string('vyhodnoceno')->value() : null,
+            'evaluated_at' => $this->filled('evaluated_at') ? $this->string('evaluated_at')->value() : null,
         ];
     }
 }

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Mail;
 
-use App\Models\VkvpaData;
+use App\Models\EdiEntry;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -20,7 +20,7 @@ class HlaseniPrijato extends Mailable
     use SerializesModels;
 
     public function __construct(
-        public readonly VkvpaData $hlaseni,
+        public readonly EdiEntry $hlaseni,
         public readonly string $koloNazev,
         public readonly string $kategorieNazev,
     ) {}

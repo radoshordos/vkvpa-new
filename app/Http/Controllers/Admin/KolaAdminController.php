@@ -6,7 +6,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\KoloRequest;
-use App\Models\VkvpaKola;
+use App\Models\EdiRound;
 use App\Services\Scoring\ScoringService;
 use App\Support\AdminLogger;
 use App\Support\ContestCalendar;
@@ -24,7 +24,7 @@ class KolaAdminController extends Controller
         return view('pages.kola', [
             'active' => 'kola.admin.index',
             'isAdmin' => true,
-            'kola' => VkvpaKola::query()->withCount('hlaseni')->orderByDesc('datum_konani')->get(),
+            'kola' => EdiRound::query()->withCount('entries')->orderByDesc('starts_at')->get(),
         ]);
     }
 
@@ -40,7 +40,7 @@ class KolaAdminController extends Controller
     /**
      * Vrátí předvyplněné hodnoty pro nejbližší měsíc, pro který ještě kolo neexistuje.
      *
-     * @return array{nazev: string, datum_konani: string, datum_uzaverky: string}
+     * @return array{name: string, starts_at: string, closes_at: string}
      */
     private function nextSuggestedRound(): array
     {
@@ -51,15 +51,15 @@ class KolaAdminController extends Controller
             $year = (int) $target->format('Y');
             $month = (int) $target->format('n');
 
-            $exists = VkvpaKola::query()->inYearMonth($year, $month)->exists();
+            $exists = EdiRound::query()->inYearMonth($year, $month)->exists();
 
             if (! $exists) {
                 $start = ContestCalendar::roundStart($year, $month);
 
                 return [
-                    'nazev' => ContestCalendar::roundName($year, $month),
-                    'datum_konani' => $start->format('Y-m-d\TH:i'),
-                    'datum_uzaverky' => ContestCalendar::uploadDeadline($start)->format('Y-m-d\TH:i'),
+                    'name' => ContestCalendar::roundName($year, $month),
+                    'starts_at' => $start->format('Y-m-d\TH:i'),
+                    'closes_at' => ContestCalendar::uploadDeadline($start)->format('Y-m-d\TH:i'),
                 ];
             }
         }
@@ -71,27 +71,27 @@ class KolaAdminController extends Controller
         $start = ContestCalendar::roundStart($year, $month);
 
         return [
-            'nazev' => ContestCalendar::roundName($year, $month),
-            'datum_konani' => $start->format('Y-m-d\TH:i'),
-            'datum_uzaverky' => ContestCalendar::uploadDeadline($start)->format('Y-m-d\TH:i'),
+            'name' => ContestCalendar::roundName($year, $month),
+            'starts_at' => $start->format('Y-m-d\TH:i'),
+            'closes_at' => ContestCalendar::uploadDeadline($start)->format('Y-m-d\TH:i'),
         ];
     }
 
     public function store(KoloRequest $request): RedirectResponse
     {
-        $kolo = VkvpaKola::create($request->toModel());
+        $kolo = EdiRound::create($request->toModel());
 
         AdminLogger::log('admin.kolo.create', [
-            'kolo_id' => $kolo->id,
-            'nazev' => $kolo->nazev,
+            'round_id' => $kolo->id,
+            'name' => $kolo->name,
         ]);
 
         return redirect()
             ->route('kola.admin.index')
-            ->with('announcement', 'Kolo „'.$kolo->nazev.'" bylo vytvořeno.');
+            ->with('announcement', 'Kolo „'.$kolo->name.'" bylo vytvořeno.');
     }
 
-    public function edit(VkvpaKola $kolo): View
+    public function edit(EdiRound $kolo): View
     {
         return view('pages.admin.kolo-form', [
             'active' => 'kola.admin.index',
@@ -100,25 +100,25 @@ class KolaAdminController extends Controller
         ]);
     }
 
-    public function update(KoloRequest $request, VkvpaKola $kolo, ScoringService $scoring): RedirectResponse
+    public function update(KoloRequest $request, EdiRound $kolo, ScoringService $scoring): RedirectResponse
     {
-        $puvodniRok = $kolo->datum_konani->year;
+        $puvodniRok = $kolo->starts_at->year;
         $kolo->update($request->toModel());
 
-        // Roční výsledky se agregují podle roku `datum_konani` – přesun kola
+        // Roční výsledky se agregují podle roku `starts_at` – přesun kola
         // do jiného roku musí shodit cache obou dotčených let.
-        if ($kolo->datum_konani->year !== $puvodniRok) {
+        if ($kolo->starts_at->year !== $puvodniRok) {
             $scoring->forgetYearlyCache($puvodniRok);
-            $scoring->forgetYearlyCache($kolo->datum_konani->year);
+            $scoring->forgetYearlyCache($kolo->starts_at->year);
         }
 
         AdminLogger::log('admin.kolo.update', [
-            'kolo_id' => $kolo->id,
-            'nazev' => $kolo->nazev,
+            'round_id' => $kolo->id,
+            'name' => $kolo->name,
         ]);
 
         return redirect()
             ->route('kola.admin.index')
-            ->with('announcement', 'Kolo „'.$kolo->nazev.'" bylo aktualizováno.');
+            ->with('announcement', 'Kolo „'.$kolo->name.'" bylo aktualizováno.');
     }
 }

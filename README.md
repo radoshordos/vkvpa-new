@@ -62,7 +62,7 @@ Webový systém pro správu a vyhodnocování závodů v pásmu VKV (Very High F
 - **Registrace deníků** – formulář se záložkami: upload EDI souboru nebo ruční zadání (bez EDI)
 - **EDI import** – reaktivní Livewire upload `.edi` souborů (REF 01 formát), bez překreslení stránky; podporuje Windows-1250 kódování
 - **EDI validace** – kontrola kvality deníku (duplicitní volaná stanice, neplatné lokátory, QSO mimo závodní okno, neshoda deklarovaného a skutečného počtu); varování se zobrazí závodníkovi bez blokování importu
-- **Automatické bodování** – výpočet skóre (`boduZaQso × nasobice`) dle závodních pravidel
+- **Automatické bodování** – výpočet skóre (`boduZaQso × multiplier`) dle závodních pravidel
 - **Výsledkové listiny** – přehled výsledků dle kola, kategorie a volacího znaku; vyhledávání
 - **Průběžné výsledky** – živá průběžná tabulka aktivního kola
 - **Roční výsledky** – kumulativní skóre přes všechna kola v roce
@@ -112,7 +112,7 @@ Webový systém pro správu a vyhodnocování závodů v pásmu VKV (Very High F
 | **Zpracování výsledků** | po uzávěrce, před vyhodnocením | poznámka o zpracování, živá tabulka výsledků |
 | **Vyhodnocené** | po vyhodnocení | tlačítko na výsledkovou listinu |
 
-„Závod právě probíhá" je **prezentační podstav** odvozený v `HomeController` (ne nový case v `KoloStav`): platí, když aktuální čas leží v závodním okně (`ContestWindow`, 08:00–11:00 UTC) dne `datum_konani` — funguje i tehdy, když cron kolo ještě formálně neaktivoval.
+„Závod právě probíhá" je **prezentační podstav** odvozený v `HomeController` (ne nový case v `KoloStav`): platí, když aktuální čas leží v závodním okně (`ContestWindow`, 08:00–11:00 UTC) dne `starts_at` — funguje i tehdy, když cron kolo ještě formálně neaktivoval.
 
 Další prvky nezávislé na fázi:
 
@@ -141,10 +141,10 @@ EdiValidator::validate(EdiLog) ──► EdiValidationReport (varování, neblok
 EdiImportService::import(EdiLog) ──► edihead + edilines (transakce)
         │
         ▼
-ScoringService::scoreEdi(Edihead) ──► EdiScore (boduZaQso × nasobice = body)
+ScoringService::scoreEdi(Edihead) ──► EdiScore (boduZaQso × multiplier = body)
         │
         ▼
-ImportEdiAction ──► VkvpaData row + edihead_id + EdiImported event
+ImportEdiAction ──► EdiEntry row + edihead_id + EdiImported event
         │
         ▼
 SendEdiMailsListener (queue) ──► HlaseniPrijato + HlaseniProVyhodnocovatele
@@ -154,25 +154,25 @@ SendEdiMailsListener (queue) ──► HlaseniPrijato + HlaseniProVyhodnocovatel
 
 ![Životní cyklus závodního kola](docs/kolo-lifecycle.svg)
 
-Stav je čistá funkce času – odvozuje se ze tří sloupců `VkvpaKola` (`datum_konani` = start závodu jako datetime, standardně třetí neděle 08:00 UTC):
+Stav je čistá funkce času – odvozuje se ze tří sloupců `EdiRound` (`starts_at` = start závodu jako datetime, standardně třetí neděle 08:00 UTC):
 
 | Stav | Label | Podmínka |
 |------|-------|----------|
-| `Nadchazejici` | Nadcházející | `datum_konani > teď` |
-| `Aktivni` | Probíhá | závodní okno právě běží (`datum_konani` až `konecZavodu()`, standardně +3 h) |
+| `Nadchazejici` | Nadcházející | `starts_at > teď` |
+| `Aktivni` | Probíhá | závodní okno právě běží (`starts_at` až `konecZavodu()`, standardně +3 h) |
 | `Prijem` | Příjem hlášení | závod skončil, uzávěrka ještě neuplynula |
 | `Uzavrene` | Zpracování výsledků | uzávěrka uplynula, `vyhodnoceno = null` |
 | `Vyhodnocene` | Vyhodnocené | `vyhodnoceno ≠ null` (nastaví automatika) |
 
 Hlášení se od běžných závodníků přijímají ve stavech `Aktivni` a `Prijem` (od startu závodu do uzávěrky); admin smí nahrávat a opravovat kdykoliv.
 
-**Přechod do `Vyhodnocené`** je automatický: po uzávěrce (stav `Uzavrene`) kolo vyhodnotí buď převzetí posledního dosud nepřevzatého záznamu (admin záznamy přebírá tlačítkem „P" už během příjmu), nebo denní příkaz `kola:finalize-evaluated` jakmile jsou všechny záznamy převzaty, případně po 20 dnech od uzávěrky (`vkvpa.finalize_fallback_days`). Odebrat převzetí (`zaznam.update`) smí admin jen mezi `datum_konani` a `datum_uzaverky`; po uzávěrce už lze záznam jen editovat (body se přepočítají).
+**Přechod do `Vyhodnocené`** je automatický: po uzávěrce (stav `Uzavrene`) kolo vyhodnotí buď převzetí posledního dosud nepřevzatého záznamu (admin záznamy přebírá tlačítkem „P" už během příjmu), nebo denní příkaz `kola:finalize-evaluated` jakmile jsou všechny záznamy převzaty, případně po 20 dnech od uzávěrky (`vkvpa.finalize_fallback_days`). Odebrat převzetí (`zaznam.update`) smí admin jen mezi `starts_at` a `closes_at`; po uzávěrce už lze záznam jen editovat (body se přepočítají).
 
 ### Dvě databázové schémata
 
 **EDI schéma** (`edihead`, `edilines`): odvozeno z původního systému, ale plně normalizováno na `snake_case` názvy sloupců (`mode_code`, `received_wwl`, `qso_points`, `t_date`, `p_call` apod.) – přistupuje se k nim jako k běžným Eloquent atributům, žádný magický `$line->{'...'}` přístup ani potlačení `property.notFound`. Oba modely mají `#[WithoutTimestamps]` (vlastní časové sloupce `stamp`, `d_cas`). Model `Ediline` navíc nabízí **PHP 8.4 property hooks** (`$receivedWwl`, `$qsoPoints`, `$modeCode`, `$mode`, `$newWwl`), které surové sloupce normalizují/castují.
 
-**Aplikační schéma** (`vkvpa_*`): `VkvpaData` (závodní záznamy/výsledky), `VkvpaKola` (kola závodu), `VkvpaPrihlaseni` (přihlašovací tokeny), `Prispevek` (diskuze ke kolům). Kategorie je `edi_category` (model `EdiCategory`) – **jediný** číselník kategorií; `VkvpaData.id_kategorie` je FK na `edi_category.id` (původní duplicitní tabulka `vkvpa_kategorie` byla zrušena).
+**Aplikační schéma** (`vkvpa_*`): `EdiEntry` (závodní záznamy/výsledky), `EdiRound` (kola závodu), `VkvpaPrihlaseni` (přihlašovací tokeny), `Prispevek` (diskuze ke kolům). Kategorie je `edi_category` (model `EdiCategory`) – **jediný** číselník kategorií; `EdiEntry.category_id` je FK na `edi_category.id` (původní duplicitní tabulka `vkvpa_kategorie` byla zrušena).
 
 ### Eloquent strict mode
 
@@ -444,11 +444,11 @@ Jedna migrace na tabulku – každá `create_*` migrace nese finální schéma t
 | `create_cache_table` | Laravel cache |
 | `create_jobs_table` | Laravel queue jobs |
 | `create_users_table` | Admin uživatelé |
-| `create_vkvpa_kola_table` | Kola závodu (`datum_konani` jako datetime = start závodu 08:00 UTC) |
+| `create_edi_rounds_table` | Kola závodu (`starts_at` jako datetime = start závodu 08:00 UTC) |
 | `create_edihead_table` | Hlavičky EDI logů (EDI schéma, snake_case) |
 | `create_edilines_table` | QSO záznamy (EDI schéma; FK na `edihead` deklarovaný inline) |
-| `create_vkvpa_data_table` | Závodní záznamy / výsledky (FK na kolo, edihead; FK na kategorii se přidává v `create_edi_category_table`) |
-| `create_edi_category_table` | Jediný číselník kategorií (pásmo × sekce × varianta); přidává i FK `vkvpa_data.id_kategorie` → `edi_category` |
+| `create_edi_entries_table` | Závodní záznamy / výsledky (FK na kolo, edihead; FK na kategorii se přidává v `create_edi_category_table`) |
+| `create_edi_category_table` | Jediný číselník kategorií (pásmo × sekce × varianta); přidává i FK `edi_entries.category_id` → `edi_category` |
 | `create_diskuse_table` | Diskuzní příspěvky ke kolům |
 | `create_vkvpa_prihlaseni_table` | Dočasné přihlašovací tokeny |
 | `create_prefixes_table` | Mapování prefixů na země (DXCC) |
@@ -456,22 +456,22 @@ Jedna migrace na tabulku – každá `create_*` migrace nese finální schéma t
 ### Modely a vztahy
 
 ```
-VkvpaKola ──► VkvpaData ◄── EdiCategory
+EdiRound ──► EdiEntry ◄── EdiCategory
                 │
                 └──► Edihead ──► Ediline[]
 
-VkvpaKola ──► Prispevek[]
+EdiRound ──► Prispevek[]
 ```
 
 | Model | Klíčové vztahy a atributy |
 |-------|---------------------------|
-| `VkvpaData` | `belongsTo(VkvpaKola, EdiCategory, Edihead)` |
+| `EdiEntry` | `belongsTo(EdiRound, EdiCategory, Edihead)` |
 | `Edihead` | `hasMany(Ediline)`, `belongsTo(EdiCategory)`, `#[WithoutTimestamps]` |
 | `Ediline` | `belongsTo(Edihead)`, nestandardní názvy sloupců, `#[WithoutTimestamps]`; PHP 8.4 property hooks: `$receivedWwl`, `$qsoPoints`, `$modeCode`, `$mode`, `$newWwl` |
-| `VkvpaKola` | `hasMany(VkvpaData, Prispevek)`, `stav(): KoloStav`, `isActive()`, scope `active()` |
-| `EdiCategory` | `hasMany(VkvpaData)` (`hlaseni`), `domestic()`/`domesticCounterpart()`; jediný číselník kategorií, accessory `nazev`/`zkratka` |
+| `EdiRound` | `hasMany(EdiEntry, Prispevek)`, `stav(): KoloStav`, `isActive()`, scope `active()` |
+| `EdiCategory` | `hasMany(EdiEntry)` (`hlaseni`), `domestic()`/`domesticCounterpart()`; jediný číselník kategorií, accessory `nazev`/`zkratka` |
 | `VkvpaPrihlaseni` | tokeny s TTL = `vkvpa.token_ttl_days` (výchozí: 5 dní) |
-| `Prispevek` | `belongsTo(VkvpaKola)` – diskuzní příspěvky |
+| `Prispevek` | `belongsTo(EdiRound)` – diskuzní příspěvky |
 | `User` | přihlašování přes `name` (ne email), `is_admin` boolean |
 
 ---
@@ -605,7 +605,7 @@ Všechny enumy jsou v `app/Enums/`. Backed enumy nesou hodnotu (`value`), která
 | Enum | Typ | Hodnoty | Použití |
 |------|-----|---------|---------|
 | `QsoMode` | `int` | `Ssb(1)`, `Cw(2)`, `Other(0)` | Druh provozu z EDI `Mode-code`; řídí barvy v mapách a vizualizaci. `fromCode()` mapuje neznámý kód na `Other`, `label()` vrací `SSB`/`CW`/`?` |
-| `KoloStav` | `string` | `Nadchazejici`, `Aktivni`, `Prijem`, `Uzavrene`, `Vyhodnocene` | Fáze životního cyklu kola, odvozená z času (`datum_konani` = start závodu, `datum_uzaverky`) a sloupce `vyhodnoceno`; do `Vyhodnocené` se kolo dostane automaticky po uzávěrce (vše převzato / +20 dní, viz `VkvpaKola::maBytVyhodnoceno()` a `kola:finalize-evaluated`). Logika v `VkvpaKola::stav()`, diagram: [`docs/kolo-lifecycle.svg`](docs/kolo-lifecycle.svg). `label()` vrací `Nadcházející`/`Probíhá`/`Příjem hlášení`/`Zpracování výsledků`/`Vyhodnocené`; `badgeClass()` barvu badge. |
+| `KoloStav` | `string` | `Nadchazejici`, `Aktivni`, `Prijem`, `Uzavrene`, `Vyhodnocene` | Fáze životního cyklu kola, odvozená z času (`starts_at` = start závodu, `closes_at`) a sloupce `vyhodnoceno`; do `Vyhodnocené` se kolo dostane automaticky po uzávěrce (vše převzato / +20 dní, viz `EdiRound::maBytVyhodnoceno()` a `kola:finalize-evaluated`). Logika v `EdiRound::stav()`, diagram: [`docs/kolo-lifecycle.svg`](docs/kolo-lifecycle.svg). `label()` vrací `Nadcházející`/`Probíhá`/`Příjem hlášení`/`Zpracování výsledků`/`Vyhodnocené`; `badgeClass()` barvu badge. |
 | `QsoCountStatus` | `string` | `Counted`, `OutOfWindow`, `WrongDate`, `EmptyWwl` | Důvod (ne)započítání QSO do bodování – odlišuje spojení mimo závodní okno, ve špatný den a s prázdným lokátorem od platných |
 | `Severity` | `string` | `Fatal`, `Warning`, `Info` | Závažnost nálezu EDI validace (`EdiValidationReport`); `Warning`/`Info` neblokují import |
 
@@ -639,12 +639,12 @@ Výsledek je `EdiValidationReport` zobrazený závodníkovi jako varování; imp
 ### Vzorec
 
 ```
-body = boduZaQso × nasobice
+body = boduZaQso × multiplier
 ```
 
 - **`pocet`** – počet QSO v závodním okně (den závodu dle `TDate`, čas 08:00–11:00 UTC); QSO do vlastního velkého čtverce jsou **započítána**
 - **`boduZaQso`** – součet bodů za spojení přepočítaný z lokátorů (hodnota `QSO-Points` z deníku se ignoruje): vlastní velký čtverec = 2 body, každý sousední pás o bod více (`Maidenhead::qsoPoints()`)
-- **`nasobice`** – počet různých velkých čtverců (4-znakový Maidenhead) včetně vlastního; vlastní se počítá vždy, i pokud s ním nebylo pracováno žádné QSO
+- **`multiplier`** – počet různých velkých čtverců (4-znakový Maidenhead) včetně vlastního; vlastní se počítá vždy, i pokud s ním nebylo pracováno žádné QSO
 
 Konstanta `NON_EDI_NULLIFY_FROM_KOLO = 91`: záznamy bez EDI souboru se v ročních výsledcích počítají jako 0 bodů pro kola ≥ 91.
 
@@ -797,7 +797,7 @@ Trasa `GET /edi/{head}/porovnani` (`edi.porovnani`) je samostatná stránka **po
 
 ### Pravidla výběru soupeře
 
-- Porovnat lze **jen deníky z téhož kola a téže kategorie** – soupeře hledá `PorovnaniRivals` podle schválených záznamů výsledkové listiny (`vkvpa_data`)
+- Porovnat lze **jen deníky z téhož kola a téže kategorie** – soupeře hledá `PorovnaniRivals` podle schválených záznamů výsledkové listiny (`edi_entries`)
 - **Férovost:** soupeřův deník se vydá až po uzávěrce, resp. vyhodnocení kola (`QsoGeometry::roundResultsDisclosable()`); do té doby se nenabízí nic a query parametr se ignoruje
 - Soupeř mimo nabídku (jiná kategorie, jiné kolo) je tiše ignorován
 - Vizualizace odkazuje na tuto stránku jen tehdy, když existuje aspoň jeden soupeř (`PorovnaniRivals::hasRivals()`)
@@ -844,7 +844,7 @@ Každé závodní kolo má vlastní diskuzní vlákno dostupné na `/diskuse/{ko
 
 - Příspěvky může přidávat kdokoli (throttle: `diskuse`, ochrana před spamem)
 - Příspěvky moderuje admin (smazání přes `DELETE /admin/diskuse/{prispevek}`)
-- Model `Prispevek` patří pod `VkvpaKola`
+- Model `Prispevek` patří pod `EdiRound`
 - Výchozí redirect `/diskuse` → nejnovější kolo
 
 ---

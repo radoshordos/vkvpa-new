@@ -8,8 +8,8 @@ namespace App\Services\Scoring;
  * Kompletní výsledek debug analýzy EDI deníku: hlavička, parametry bodování,
  * souhrn parsování a rozpad jednotlivých QSO ({@see EdiDebugRow}).
  *
- * Slouží jen pro náhled – nic se neukládá do databáze. Hodnoty `pocet`,
- * `boduZaQso`, `nasobice` a `body` jsou shodné s {@see ScoringService::scoreEdi()}.
+ * Slouží jen pro náhled – nic se neukládá do databáze. Hodnoty `qsoCount`,
+ * `qsoPoints`, `multiplier` a `points` jsou shodné s {@see ScoringService::scoreEdi()}.
  */
 final readonly class EdiDebugReport
 {
@@ -35,10 +35,10 @@ final readonly class EdiDebugReport
         public array $rows,
         public array $ignoredLines,
         public array $lineErrors,
-        public int $pocet,
-        public int $boduZaQso,
-        public int $nasobice,
-        public int $body,
+        public int $qsoCount,
+        public int $qsoPoints,
+        public int $multiplier,
+        public int $points,
         public int $excludedIncomplete,
         public int $excludedOutOfWindow,
         public int $excludedWrongDate,

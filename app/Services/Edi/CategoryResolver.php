@@ -23,7 +23,7 @@ use Illuminate\Support\Facades\Cache;
  *
  * Výsledkem je id záznamu z tabulky `edi_category` (viz seed), nebo null,
  * když sekci/kombinaci nelze určit. `edi_category` je jediný číselník kategorií
- * (na něj míří FK `vkvpa_data.id_kategorie`).
+ * (na něj míří FK `edi_entries.category_id`).
  */
 final class CategoryResolver
 {

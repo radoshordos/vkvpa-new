@@ -6,8 +6,8 @@ namespace Tests\Feature;
 
 use App\Http\Controllers\Admin\ZalohaController;
 use App\Models\Edihead;
+use App\Models\EdiRound;
 use App\Models\User;
-use App\Models\VkvpaKola;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
@@ -26,17 +26,17 @@ class ZalohaControllerTest extends TestCase
         return User::create(['name' => 'Admin', 'password' => Hash::make('x'), 'is_admin' => true]);
     }
 
-    private function seedKolo(): VkvpaKola
+    private function seedKolo(): EdiRound
     {
-        $kolo = VkvpaKola::create([
-            'datum_konani' => '2026-01-17 08:00:00',
-            'datum_uzaverky' => '2026-02-01 23:59:00',
-            'nazev' => 'Testovací kolo',
-            'poznamka' => '',
+        $kolo = EdiRound::create([
+            'starts_at' => '2026-01-17 08:00:00',
+            'closes_at' => '2026-02-01 23:59:00',
+            'name' => 'Testovací kolo',
+            'note' => '',
         ]);
 
         Edihead::create([
-            'id_kola' => $kolo->id, 't_date' => '20260117', 'p_call' => "OK1'ABC",
+            'round_id' => $kolo->id, 't_date' => '20260117', 'p_call' => "OK1'ABC",
             'p_wwlo' => 'JN79', 'p_sect' => '', 'p_band' => '144MHz', 'r_name' => 'X',
             's_powe' => 10, 'src' => 'PCall=OK1ABC',
         ]);
@@ -63,7 +63,7 @@ class ZalohaControllerTest extends TestCase
             ->get(route('zaloha.index'))
             ->assertOk()
             ->assertSee('edi_head')
-            ->assertSee('vkvpa_kola');
+            ->assertSee('edi_rounds');
     }
 
     public function test_download_streams_sql_with_schema_and_data(): void
@@ -71,7 +71,7 @@ class ZalohaControllerTest extends TestCase
         $this->seedKolo();
 
         $response = $this->actingAs($this->admin())
-            ->post(route('zaloha.download'), ['tables' => ['vkvpa_kola', 'edi_head']]);
+            ->post(route('zaloha.download'), ['tables' => ['edi_rounds', 'edi_head']]);
 
         $response->assertOk();
         $response->assertHeader('content-type', 'application/sql; charset=utf-8');
@@ -92,7 +92,7 @@ class ZalohaControllerTest extends TestCase
         $this->seedKolo();
 
         $response = $this->actingAs($this->admin())
-            ->post(route('zaloha.download'), ['tables' => ['vkvpa_kola'], 'gzip' => '1']);
+            ->post(route('zaloha.download'), ['tables' => ['edi_rounds'], 'gzip' => '1']);
 
         $response->assertOk();
         $response->assertHeader('content-type', 'application/gzip');

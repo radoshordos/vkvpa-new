@@ -41,12 +41,12 @@
             <tbody>
                 @foreach ($zaznamy as $z)
                     <tr>
-                        <td class="mono font-bold">{{ $z->znacka ?: '—' }}</td>
-                        <td>{{ $z->jmeno ?: '—' }}</td>
-                        <td class="text-sm">@if ($z->mail)<a href="mailto:{{ $z->mail }}" class="link">{{ $z->mail }}</a>@else—@endif</td>
-                        <td class="mono text-sm">@if ($z->telefon)<a href="tel:{{ preg_replace('/\s+/', '', $z->telefon) }}" class="link">{{ $z->telefon }}</a>@else—@endif</td>
-                        <td class="text-sm">{{ $kola->get($z->id_kola, '—') }}</td>
-                        <td class="hidden whitespace-nowrap text-sm text-muted @[520px]:table-cell">{{ $z->timestamp?->format('j. n. Y H:i') ?? '—' }}</td>
+                        <td class="mono font-bold">{{ $z->callsign ?: '—' }}</td>
+                        <td>{{ $z->name ?: '—' }}</td>
+                        <td class="text-sm">@if ($z->email)<a href="mailto:{{ $z->email }}" class="link">{{ $z->email }}</a>@else—@endif</td>
+                        <td class="mono text-sm">@if ($z->phone)<a href="tel:{{ preg_replace('/\s+/', '', $z->phone) }}" class="link">{{ $z->phone }}</a>@else—@endif</td>
+                        <td class="text-sm">{{ $kola->get($z->round_id, '—') }}</td>
+                        <td class="hidden whitespace-nowrap text-sm text-muted @[520px]:table-cell">{{ $z->submitted_at?->format('j. n. Y H:i') ?? '—' }}</td>
                     </tr>
                 @endforeach
             </tbody>

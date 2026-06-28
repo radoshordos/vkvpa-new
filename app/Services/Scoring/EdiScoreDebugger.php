@@ -26,8 +26,8 @@ use App\Support\Maidenhead;
  *     (YYMMDD z TDate), jehož přijatý velký čtverec je neprázdný (vč. vlastního),
  *   - pocet = počet takových QSO, boduZaQso = součet bodů za spojení přepočtených
  *     z lokátorů (QSO-Points z deníku se ignoruje),
- *     nasobice = počet různých cizích čtverců + 1 (vlastní čtverec),
- *   - body = boduZaQso × nasobice.
+ *     multiplier = počet různých cizích čtverců + 1 (vlastní čtverec),
+ *   - body = boduZaQso × multiplier.
  */
 final class EdiScoreDebugger
 {
@@ -128,7 +128,7 @@ final class EdiScoreDebugger
             );
         }
 
-        $nasobice = count($foreignSquares) + 1;
+        $multiplier = count($foreignSquares) + 1;
 
         try {
             $categoryId = $this->categoryResolver->resolve(
@@ -137,7 +137,7 @@ final class EdiScoreDebugger
                 $header->pSect(),
             );
             $found = $categoryId !== null ? EdiCategory::find($categoryId) : null;
-            $categoryName = $found !== null ? (string) $found->nazev : null;
+            $categoryName = $found !== null ? (string) $found->name : null;
         } catch (UnknownBandException) {
             $categoryId = null;
             $categoryName = null;
@@ -160,10 +160,10 @@ final class EdiScoreDebugger
             rows: $rows,
             ignoredLines: $log->ignoredLines,
             lineErrors: $log->lineErrors,
-            pocet: $pocet,
-            boduZaQso: $boduZaQso,
-            nasobice: $nasobice,
-            body: $boduZaQso * $nasobice,
+            qsoCount: $pocet,
+            qsoPoints: $boduZaQso,
+            multiplier: $multiplier,
+            points: $boduZaQso * $multiplier,
             excludedIncomplete: $incomplete,
             excludedOutOfWindow: $outOfWindow,
             excludedWrongDate: $wrongDate,

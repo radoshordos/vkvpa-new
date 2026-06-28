@@ -7,9 +7,9 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreHlaseniRequest;
 use App\Jobs\RankRoundJob;
 use App\Models\EdiCategory;
+use App\Models\EdiEntry;
 use App\Models\Edihead;
-use App\Models\VkvpaData;
-use App\Models\VkvpaKola;
+use App\Models\EdiRound;
 use App\Services\Admin\AdminEntryChecker;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -30,14 +30,14 @@ class HlaseniController extends Controller
         $editId = $request->user()?->is_admin ? $request->integer('id') : 0;
 
         $targetId = $editId ?: $ownedId;
-        $edit = $targetId > 0 ? VkvpaData::find($targetId) : null;
+        $edit = $targetId > 0 ? EdiEntry::find($targetId) : null;
 
-        $idKola = $edit->id_kola ?? ($request->integer('kolo') ?: null);
-        $idKategorie = $edit->id_kategorie ?? ($request->integer('kategorie') ?: null);
+        $idKola = $edit->round_id ?? ($request->integer('kolo') ?: null);
+        $idKategorie = $edit->category_id ?? ($request->integer('kategorie') ?: null);
 
         // Průběžné výsledky vybraného kola (i nezveřejněné = stav „Čeká").
         $vysledky = $idKola
-            ? VkvpaData::prubezne($idKola, $idKategorie)->get()
+            ? EdiEntry::standings($idKola, $idKategorie)->get()
             : collect();
 
         $adminWarnings = ($request->user()?->is_admin && $edit !== null)
@@ -49,7 +49,7 @@ class HlaseniController extends Controller
             // Stránka hlášení (EDI i ruční formulář) jen v otevřeném upload okně;
             // admin ji vidí vždy (opravy starých kol). Vlastní rozpracovaný řádek
             // ze session smí účastník dokončit i po zavření okna.
-            'maAktivniKolo' => VkvpaKola::existujeUploadOkno()
+            'maAktivniKolo' => EdiRound::uploadWindowExists()
                 || $edit !== null
                 || (bool) ($request->user()?->is_admin),
             // Do selektoru jen kola, která už začala – přesun záznamu do dosud
@@ -57,14 +57,14 @@ class HlaseniController extends Controller
             // která se otevírá až od startu závodu, a admin by se k němu (smazání,
             // editaci) už nedostal. Vlastní kolo editovaného záznamu se přidá vždy,
             // i kdyby bylo nadcházející (aby z formuláře nezmizelo).
-            'kola' => VkvpaKola::query()
+            'kola' => EdiRound::query()
                 ->where(function (Builder $q) use ($edit): void {
-                    $q->where('datum_konani', '<=', now());
+                    $q->where('starts_at', '<=', now());
                     if ($edit !== null) {
-                        $q->orWhere('id', $edit->id_kola);
+                        $q->orWhere('id', $edit->round_id);
                     }
                 })
-                ->orderByDesc('datum_konani')
+                ->orderByDesc('starts_at')
                 ->limit(36)
                 ->get(),
             'kategorie' => EdiCategory::query()->orderBy('id')->get(),
@@ -85,9 +85,9 @@ class HlaseniController extends Controller
         // rezervovaný řádek (EDI nahraný na poslední chvíli) lze dokončit
         // i těsně po zavření okna – vlastnictví hlídá StoreHlaseniRequest.
         if ($idZaznamu === 0 && ! (bool) ($request->user()?->is_admin)) {
-            $kolo = VkvpaKola::find($this->intFrom($v['kolo']));
+            $kolo = EdiRound::find($this->intFrom($v['kolo']));
 
-            if ($kolo === null || ! $kolo->prijimaHlaseni()) {
+            if ($kolo === null || ! $kolo->acceptsReports()) {
                 return back()
                     ->withErrors(['kolo' => 'Kolo právě nepřijímá hlášení – odeslat je lze jen v otevřeném upload okně (od dne závodu 08:00 UTC do uzávěrky).'])
                     ->withInput();
@@ -95,42 +95,42 @@ class HlaseniController extends Controller
         }
 
         $payload = [
-            'id_kola' => $this->intFrom($v['kolo']),
-            'id_kategorie' => isset($v['kategorie']) && is_numeric($v['kategorie']) ? (int) $v['kategorie'] : null,
-            'znacka' => $znacka,
+            'round_id' => $this->intFrom($v['kolo']),
+            'category_id' => isset($v['kategorie']) && is_numeric($v['kategorie']) ? (int) $v['kategorie'] : null,
+            'callsign' => $znacka,
             'locator' => $v['locator'],
-            'pocet' => $this->intFrom($v['pocet'] ?? 0),
-            'bodu_za_qso' => $this->intFrom($v['bodu_za_qso'] ?? 0),
-            'nasobice' => $this->intFrom($v['nasobice'] ?? 0),
-            'body' => $this->intFrom($v['body'] ?? 0),
+            'qso_count' => $this->intFrom($v['pocet'] ?? 0),
+            'qso_points' => $this->intFrom($v['qso_points'] ?? 0),
+            'multiplier' => $this->intFrom($v['multiplier'] ?? 0),
+            'points' => $this->intFrom($v['body'] ?? 0),
             'qrp' => (bool) ($v['qrp'] ?? false),
             'lp' => (bool) ($v['lp'] ?? false),
-            'mail' => $v['email'] ?? '',
-            'jmeno' => $v['jmeno'] ?? '',
-            'telefon' => $v['telefon'] ?? '',
+            'email' => $v['email'] ?? '',
+            'name' => $v['jmeno'] ?? '',
+            'phone' => $v['telefon'] ?? '',
             'soapbox' => $v['soapbox'] ?? '',
-            'poznamka' => $v['poznamka'] ?? '',
-            'edihead_id' => $this->ediheadIdFrom($v['edihead_id'] ?? 0),
+            'note' => $v['poznamka'] ?? '',
+            'edi_head_id' => $this->ediheadIdFrom($v['edihead_id'] ?? 0),
             // Jen administrátor smí záznam rovnou „převzít". Hlášení od veřejnosti
-            // zůstává ve stavu „Čeká" (schvaleno=false), dokud ho vyhodnocovatel
+            // zůstává ve stavu „Čeká" (approved=false), dokud ho vyhodnocovatel
             // nepřevezme – brání to podvržení veřejně zobrazených výsledků.
-            'schvaleno' => (bool) ($request->user()?->is_admin),
+            'approved' => (bool) ($request->user()?->is_admin),
         ];
 
         if ($idZaznamu > 0) {
-            $zaznam = VkvpaData::findOrFail($idZaznamu);
-            $puvodniKolo = $zaznam->id_kola;
+            $zaznam = EdiEntry::findOrFail($idZaznamu);
+            $puvodniKolo = $zaznam->round_id;
             $zaznam->update($payload);
 
             // Přesun záznamu do jiného kola → přepočítat i původní kolo.
-            if ($puvodniKolo !== $payload['id_kola']) {
+            if ($puvodniKolo !== $payload['round_id']) {
                 RankRoundJob::dispatchSync($puvodniKolo);
             }
         } else {
-            if (VkvpaData::query()
-                ->where('id_kola', $payload['id_kola'])
-                ->where('znacka', $znacka)
-                ->where('id_kategorie', $payload['id_kategorie'])
+            if (EdiEntry::query()
+                ->where('round_id', $payload['round_id'])
+                ->where('callsign', $znacka)
+                ->where('category_id', $payload['category_id'])
                 ->exists()
             ) {
                 return back()
@@ -138,18 +138,18 @@ class HlaseniController extends Controller
                     ->withInput();
             }
 
-            VkvpaData::create($payload);
+            EdiEntry::create($payload);
         }
 
         // Admin editace mění body/převzetí už zařazeného záznamu – pořadí kola
         // a cache ročních výsledků se musí přepočítat hned. U veřejného hlášení
-        // (schvaleno=false, poradi=0) je přepočet neškodný.
-        RankRoundJob::dispatchSync($payload['id_kola']);
+        // (approved=false, poradi=0) je přepočet neškodný.
+        RankRoundJob::dispatchSync($payload['round_id']);
 
         $request->session()->forget('owned_data_id');
 
         return redirect()
-            ->route('vysledkova_listina', ['kolo' => $payload['id_kola']])
+            ->route('vysledkova_listina', ['kolo' => $payload['round_id']])
             ->with('announcement', 'Hlášení bylo uloženo.');
     }
 

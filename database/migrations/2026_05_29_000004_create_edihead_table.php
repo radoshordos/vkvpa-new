@@ -16,7 +16,7 @@ return new class extends Migration
             $table->collation = 'utf8mb4_unicode_ci';
 
             $table->integer('id', true);
-            $table->integer('id_kola')->nullable();
+            $table->integer('round_id')->nullable();
             $table->string('t_date', 17);
             $table->string('p_call', 30);
             $table->string('p_wwlo', 6);
@@ -36,7 +36,7 @@ return new class extends Migration
             $table->dateTime('d_cas')->nullable()->useCurrent();
             $table->longText('s_rcr')->nullable();
 
-            $table->index('id_kola', 'edihead_id_kola_idx');
+            $table->index('round_id', 'edi_head_round_id_idx');
             $table->index('p_call', 'edihead_pcall_idx');
         });
 
@@ -48,8 +48,8 @@ return new class extends Migration
 
         // Kola se nikdy nemažou → RESTRICT brání tichému smazání navázaných deníků.
         Schema::table('edi_head', function (Blueprint $table): void {
-            $table->foreign('id_kola', 'edihead_id_kola_fk')
-                ->references('id')->on('vkvpa_kola')
+            $table->foreign('round_id', 'edi_head_round_id_fk')
+                ->references('id')->on('edi_rounds')
                 ->restrictOnDelete();
         });
     }

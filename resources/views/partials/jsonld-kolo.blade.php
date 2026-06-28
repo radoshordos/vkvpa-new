@@ -3,14 +3,14 @@
     Online akce → eventAttendanceMode + VirtualLocation; odkaz vede na veřejnou
     stránku diskuse kola (vždy existuje). Vkládá se uvnitř @section('jsonld').
 
-    Očekává: $kolo (App\Models\VkvpaKola)
+    Očekává: $kolo (App\Models\EdiRound)
 --}}
 @php
     $event = array_filter([
         '@context' => 'https://schema.org',
         '@type' => 'Event',
-        'name' => $kolo->nazev,
-        'startDate' => $kolo->datum_konani?->toAtomString(),
+        'name' => $kolo->name,
+        'startDate' => $kolo->starts_at?->toAtomString(),
         'eventStatus' => 'https://schema.org/EventScheduled',
         'eventAttendanceMode' => 'https://schema.org/OnlineEventAttendanceMode',
         'location' => ['@type' => 'VirtualLocation', 'url' => url('/')],

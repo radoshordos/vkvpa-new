@@ -6,9 +6,9 @@ namespace App\Http\Controllers;
 
 use App\Enums\KoloStav;
 use App\Models\EdiCategory;
+use App\Models\EdiEntry;
+use App\Models\EdiRound;
 use App\Models\Prispevek;
-use App\Models\VkvpaData;
-use App\Models\VkvpaKola;
 use Illuminate\Support\Carbon;
 use Illuminate\View\View;
 
@@ -19,37 +19,37 @@ class HomeController extends Controller
         $now = Carbon::now();
 
         // Priority: kolo s otevřeným upload oknem → nejbližší nadcházející → poslední
-        $kolo = VkvpaKola::query()
-            ->whereNull('vyhodnoceno')
-            ->where('datum_konani', '<=', $now)
-            ->where('datum_uzaverky', '>=', $now)
-            ->orderBy('datum_konani')
+        $kolo = EdiRound::query()
+            ->whereNull('evaluated_at')
+            ->where('starts_at', '<=', $now)
+            ->where('closes_at', '>=', $now)
+            ->orderBy('starts_at')
             ->first()
-            ?? VkvpaKola::query()->where('datum_konani', '>', $now)->orderBy('datum_konani')->first()
-            ?? VkvpaKola::query()->orderByDesc('datum_konani')->first();
+            ?? EdiRound::query()->where('starts_at', '>', $now)->orderBy('starts_at')->first()
+            ?? EdiRound::query()->orderByDesc('starts_at')->first();
 
-        $state = $kolo ? $this->stateKey($kolo->stav()) : null;
+        $state = $kolo ? $this->stateKey($kolo->state()) : null;
 
         $countdownTarget = ($kolo && $state) ? $this->resolveCountdownTarget($kolo, $state) : null;
         $liveMode = in_array($state, ['running', 'deadline', 'evaluating'], true);
 
         $kategorie = EdiCategory::query()->orderBy('id')->get()->keyBy('id');
         $vysledky = ($kolo && $liveMode)
-            ? VkvpaData::prubezne($kolo->id)->get()
+            ? EdiEntry::standings($kolo->id)->get()
             : collect();
 
         // Poslední vyhodnocené kolo – kompaktní karta s odkazem na výsledky,
         // jen když hero ukazuje nadcházející kolo (jinak by výsledky
         // předchozího kola z úvodky mezi koly úplně zmizely).
         $posledniVyhodnocene = $state === 'upcoming'
-            ? VkvpaKola::query()->whereNotNull('vyhodnoceno')->orderByDesc('datum_konani')->first()
+            ? EdiRound::query()->whereNotNull('evaluated_at')->orderByDesc('starts_at')->first()
             : null;
 
         // Diskuse: počet příspěvků ke kolu v hero + poslední 3 příspěvky
         // napříč koly (mezi koly je diskuse aktuálního kola prázdná).
-        $diskuseCount = $kolo ? Prispevek::query()->where('kolo_id', $kolo->id)->count() : 0;
+        $diskuseCount = $kolo ? Prispevek::query()->where('round_id', $kolo->id)->count() : 0;
         $posledniPrispevky = Prispevek::query()
-            ->with('kolo')
+            ->with('round')
             ->orderByDesc('created_at')
             ->orderByDesc('id')
             ->limit(3)
@@ -57,10 +57,10 @@ class HomeController extends Controller
 
         // Next upcoming rounds (for mini-calendar), excluding the round already shown.
         $excludeId = $kolo?->id;
-        $upcomingRounds = VkvpaKola::query()
-            ->where('datum_konani', '>', $now)
+        $upcomingRounds = EdiRound::query()
+            ->where('starts_at', '>', $now)
             ->when($excludeId !== null, fn ($q) => $q->where('id', '!=', $excludeId))
-            ->orderBy('datum_konani')
+            ->orderBy('starts_at')
             ->limit(3)
             ->get();
 
@@ -73,7 +73,7 @@ class HomeController extends Controller
 
     /**
      * Přemapuje stav kola na klíč používaný šablonou úvodky a odpočtem.
-     * Stav je jediný zdroj pravdy ({@see VkvpaKola::stav()}), úvodka si jen
+     * Stav je jediný zdroj pravdy ({@see EdiRound::stav()}), úvodka si jen
      * drží vlastní bohatší popisky a logiku odpočtu navázané na tyto klíče.
      */
     private function stateKey(KoloStav $stav): string
@@ -89,16 +89,16 @@ class HomeController extends Controller
 
     /**
      * Returns the Carbon datetime the JS countdown should count down to.
-     * upcoming → start of the contest window (datum_konani)
+     * upcoming → start of the contest window (starts_at)
      * running → end of the contest window
      * deadline → submission deadline
      */
-    private function resolveCountdownTarget(VkvpaKola $kolo, string $state): ?Carbon
+    private function resolveCountdownTarget(EdiRound $kolo, string $state): ?Carbon
     {
         return match ($state) {
-            'upcoming' => $kolo->datum_konani,
-            'running' => $kolo->konecZavodu(),
-            'deadline' => $kolo->datum_uzaverky,
+            'upcoming' => $kolo->starts_at,
+            'running' => $kolo->contestEnd(),
+            'deadline' => $kolo->closes_at,
             default => null,
         };
     }

@@ -6,8 +6,8 @@ namespace App\Http\Controllers;
 
 use App\Enums\KoloStav;
 use App\Models\EdiCategory;
-use App\Models\VkvpaData;
-use App\Models\VkvpaKola;
+use App\Models\EdiEntry;
+use App\Models\EdiRound;
 use App\Services\Scoring\ScoringService;
 use App\Services\Scoring\SkokanService;
 use App\Support\VkvpaSettings;
@@ -30,13 +30,13 @@ class VysledkyController extends Controller
         // zůstává podporované kvůli formuláři filtru a starým odkazům.
         $koloId = $kolo !== null ? (int) $kolo : $request->integer('kolo');
         $kolo = $koloId !== 0
-            ? VkvpaKola::find($koloId)
-            : VkvpaKola::query()->where('datum_uzaverky', '<', now())->orderByDesc('datum_konani')->first();
+            ? EdiRound::find($koloId)
+            : EdiRound::query()->where('closes_at', '<', now())->orderByDesc('starts_at')->first();
 
         // Hledat / Search – filtruje podle značky nebo lokátoru ve vybraném kole.
         $hledat = $request->string('hledat')->trim()->value();
 
-        // Veřejnost vidí jen převzaté (schvaleno=1); admin vidí i nepřevzaté
+        // Veřejnost vidí jen převzaté (approved=1); admin vidí i nepřevzaté
         // (meruňkové) záznamy, aby je mohl tlačítkem „P" převzít.
         $isAdmin = (bool) ($request->user()?->is_admin);
 
@@ -53,18 +53,18 @@ class VysledkyController extends Controller
         $radky = collect();
         $skokani = [];
         if ($kolo) {
-            $radky = VkvpaData::query()
-                ->where('id_kola', $kolo->id)
-                ->when($prevzeti === 'yes', fn ($q) => $q->where('schvaleno', true))
-                ->when($prevzeti === 'no', fn ($q) => $q->where('schvaleno', false))
+            $radky = EdiEntry::query()
+                ->where('round_id', $kolo->id)
+                ->when($prevzeti === 'yes', fn ($q) => $q->where('approved', true))
+                ->when($prevzeti === 'no', fn ($q) => $q->where('approved', false))
                 ->when($request->boolean('qrp'), fn ($q) => $q->onlyQrp())
                 ->when($request->boolean('lp'), fn ($q) => $q->onlyLp())
                 ->when($hledat !== '', fn ($q) => $q->where(
-                    fn ($w) => $w->where('znacka', 'like', sprintf('%%%s%%', $hledat))
+                    fn ($w) => $w->where('callsign', 'like', sprintf('%%%s%%', $hledat))
                         ->orWhere('locator', 'like', sprintf('%%%s%%', $hledat)),
                 ))
-                ->with('kategorie')
-                ->orderBy('id_kategorie')->orderBy('poradi')->orderByDesc('body')
+                ->with('category')
+                ->orderBy('category_id')->orderBy('rank')->orderByDesc('points')
                 ->limit($maxRows)
                 ->get();
 
@@ -75,8 +75,8 @@ class VysledkyController extends Controller
             'active' => 'vysledkova_listina',
             // Nadcházející kola a kola bez jediného záznamu nemají co
             // zobrazit – ve výběru se nenabízejí.
-            'kola' => VkvpaKola::query()->whereHas('hlaseni')->orderByDesc('datum_konani')->get()
-                ->reject(fn (VkvpaKola $k): bool => $k->stav() === KoloStav::Nadchazejici)
+            'kola' => EdiRound::query()->whereHas('entries')->orderByDesc('starts_at')->get()
+                ->reject(fn (EdiRound $k): bool => $k->state() === KoloStav::Nadchazejici)
                 ->values(),
             'kolo' => $kolo,
             'kategorie' => EdiCategory::query()->orderBy('id')->get()->keyBy('id'),
@@ -88,7 +88,7 @@ class VysledkyController extends Controller
             // Odkazy EDI/EDIR se neadminům skrývají jen u kola, jehož upload okno
             // právě běží (aby během příjmu neunikaly deníky soupeřů) – ne globálně
             // podle jiných kol. Deníky uzavřených kol zůstávají veřejné.
-            'uploadWindowOpen' => $kolo?->prijimaHlaseni() ?? false,
+            'uploadWindowOpen' => $kolo?->acceptsReports() ?? false,
         ]);
     }
 
@@ -104,16 +104,16 @@ class VysledkyController extends Controller
         // upload oknem; výběr kola se nenabízí. Admin smí listovat ve všech
         // kolech, která mají záznamy (výběr přes ?kolo=).
         $kolaVyber = $isAdmin
-            ? VkvpaKola::query()->whereHas('hlaseni')->orderByDesc('datum_konani')->get()
+            ? EdiRound::query()->whereHas('entries')->orderByDesc('starts_at')->get()
             : collect();
 
-        $kolo = VkvpaKola::aktualniProPrubezne();
+        $kolo = EdiRound::currentForStandings();
         if ($isAdmin) {
             $zvolene = $koloRouteId ?? $request->integer('kolo');
             $kolo = $zvolene !== 0
-                ? VkvpaKola::find($zvolene)
+                ? EdiRound::find($zvolene)
                 // Bez výběru: aktuální průběžné, jinak nejnovější kolo se záznamy.
-                : ($kolo ?? VkvpaKola::query()->whereHas('hlaseni')->orderByDesc('datum_konani')->first());
+                : ($kolo ?? EdiRound::query()->whereHas('entries')->orderByDesc('starts_at')->first());
         }
 
         $katId = $request->integer('kategorie');
@@ -121,11 +121,11 @@ class VysledkyController extends Controller
         // Průběžné výsledky vybraného kola – stejná data jako spodní část
         // stránky „Načíst EDI soubor" (i nepřevzaté = stav „Čeká").
         $vysledky = $kolo
-            ? VkvpaData::prubezne($kolo->id, $katId ?: null)->get()
+            ? EdiEntry::standings($kolo->id, $katId ?: null)->get()
             : collect();
 
         $obsazeneKatIds = $kolo
-            ? VkvpaData::query()->where('id_kola', $kolo->id)->distinct()->pluck('id_kategorie')
+            ? EdiEntry::query()->where('round_id', $kolo->id)->distinct()->pluck('category_id')
             : collect();
 
         return view('pages.pribezne-vysledky', [

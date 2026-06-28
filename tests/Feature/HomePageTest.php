@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Models\EdiCategory;
+use App\Models\EdiEntry;
+use App\Models\EdiRound;
 use App\Models\Prispevek;
-use App\Models\VkvpaData;
-use App\Models\VkvpaKola;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
@@ -28,26 +28,26 @@ class HomePageTest extends TestCase
     }
 
     /** @param  array<string, mixed>  $attrs */
-    private function kolo(array $attrs = []): VkvpaKola
+    private function round(array $attrs = []): EdiRound
     {
-        return VkvpaKola::create(array_merge([
-            'nazev' => '06/2026',
-            'poznamka' => '',
-            'vyhodnoceno' => null,
-            'datum_konani' => '2026-06-21 08:00:00',
-            'datum_uzaverky' => '2026-06-26 23:59:59',
+        return EdiRound::create(array_merge([
+            'name' => '06/2026',
+            'note' => '',
+            'evaluated_at' => null,
+            'starts_at' => '2026-06-21 08:00:00',
+            'closes_at' => '2026-06-26 23:59:59',
         ], $attrs));
     }
 
-    private function zaznam(VkvpaKola $kolo, string $znacka): VkvpaData
+    private function zaznam(EdiRound $kolo, string $znacka): EdiEntry
     {
-        return VkvpaData::create([
-            'id_kola' => $kolo->id,
-            'id_kategorie' => EdiCategory::firstOrCreate(
+        return EdiEntry::create([
+            'round_id' => $kolo->id,
+            'category_id' => EdiCategory::firstOrCreate(
                 ['band' => '144SO', 'section' => 'SO', 'variant' => 'domestic'],
                 ['name' => '144 MHz SO'],
             )->id,
-            'znacka' => $znacka,
+            'callsign' => $znacka,
             'locator' => 'JN79XX',
         ]);
     }
@@ -58,7 +58,7 @@ class HomePageTest extends TestCase
     public function test_running_state_inside_contest_window(): void
     {
         Carbon::setTestNow('2026-06-21 09:00:00');
-        $this->kolo();
+        $this->round();
 
         $this->get(route('home'))
             ->assertOk()
@@ -69,7 +69,7 @@ class HomePageTest extends TestCase
     public function test_deadline_state_after_contest_window(): void
     {
         Carbon::setTestNow('2026-06-21 12:00:00');
-        $this->kolo();
+        $this->round();
 
         $this->get(route('home'))
             ->assertOk()
@@ -84,7 +84,7 @@ class HomePageTest extends TestCase
     public function test_received_counter_with_entries(): void
     {
         Carbon::setTestNow('2026-06-22 12:00:00');
-        $kolo = $this->kolo();
+        $kolo = $this->round();
         $this->zaznam($kolo, 'OK1AAA');
         $this->zaznam($kolo, 'OK1BBB');
 
@@ -96,7 +96,7 @@ class HomePageTest extends TestCase
     public function test_received_counter_without_entries(): void
     {
         Carbon::setTestNow('2026-06-22 12:00:00');
-        $this->kolo();
+        $this->round();
 
         $this->get(route('home'))
             ->assertOk()
@@ -109,8 +109,8 @@ class HomePageTest extends TestCase
     public function test_last_evaluated_card_shown_with_upcoming_round(): void
     {
         Carbon::setTestNow('2026-06-01 12:00:00');
-        $this->kolo(['nazev' => '05/2026', 'datum_konani' => '2026-05-17 08:00:00', 'datum_uzaverky' => '2026-05-22 23:59:59', 'vyhodnoceno' => '2026-05-25 10:00:00']);
-        $this->kolo(['nazev' => '06/2026']);
+        $this->round(['name' => '05/2026', 'starts_at' => '2026-05-17 08:00:00', 'closes_at' => '2026-05-22 23:59:59', 'evaluated_at' => '2026-05-25 10:00:00']);
+        $this->round(['name' => '06/2026']);
 
         $this->get(route('home'))
             ->assertOk()
@@ -122,8 +122,8 @@ class HomePageTest extends TestCase
     public function test_last_evaluated_card_hidden_when_hero_not_upcoming(): void
     {
         Carbon::setTestNow('2026-06-22 12:00:00');
-        $this->kolo(['nazev' => '05/2026', 'datum_konani' => '2026-05-17 08:00:00', 'datum_uzaverky' => '2026-05-22 23:59:59', 'vyhodnoceno' => '2026-05-25 10:00:00']);
-        $this->kolo();
+        $this->round(['name' => '05/2026', 'starts_at' => '2026-05-17 08:00:00', 'closes_at' => '2026-05-22 23:59:59', 'evaluated_at' => '2026-05-25 10:00:00']);
+        $this->round();
 
         $this->get(route('home'))
             ->assertOk()
@@ -136,7 +136,7 @@ class HomePageTest extends TestCase
     public function test_hero_links_to_round_discussion(): void
     {
         Carbon::setTestNow('2026-06-22 12:00:00');
-        $kolo = $this->kolo();
+        $kolo = $this->round();
 
         $this->get(route('home'))
             ->assertOk()
@@ -146,8 +146,8 @@ class HomePageTest extends TestCase
     public function test_discussion_section_shows_latest_posts(): void
     {
         Carbon::setTestNow('2026-06-22 12:00:00');
-        $kolo = $this->kolo();
-        Prispevek::create(['kolo_id' => $kolo->id, 'znacka' => 'OK1XYZ', 'text' => 'Pěkné podmínky dnes ráno!', 'ip' => '127.0.0.1']);
+        $kolo = $this->round();
+        Prispevek::create(['round_id' => $kolo->id, 'znacka' => 'OK1XYZ', 'text' => 'Pěkné podmínky dnes ráno!', 'ip' => '127.0.0.1']);
 
         $this->get(route('home'))
             ->assertOk()
@@ -159,7 +159,7 @@ class HomePageTest extends TestCase
     public function test_discussion_section_hidden_without_posts(): void
     {
         Carbon::setTestNow('2026-06-22 12:00:00');
-        $this->kolo();
+        $this->round();
 
         $this->get(route('home'))
             ->assertOk()

@@ -26,7 +26,7 @@
                     <tr>
                         <td>{{ $k['nazev'] }}</td>
                         <td class="hidden whitespace-nowrap text-sm text-muted @[520px]:table-cell">
-                            {{ $k['datum_konani']?->format('j. n. Y') ?? '—' }}
+                            {{ $k['starts_at']?->format('j. n. Y') ?? '—' }}
                         </td>
                         <td class="num">{{ $k['pocet'] }}</td>
                         <td class="whitespace-nowrap text-sm">

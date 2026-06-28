@@ -93,22 +93,22 @@
     <section class="mb-5 rounded-xl bg-brand p-5 text-brand-fg">
         <div class="flex flex-wrap items-center gap-4">
             <div class="flex flex-col leading-none">
-                <b class="text-3xl">{{ $report->boduZaQso }}</b>
+                <b class="text-3xl">{{ $report->qsoPoints }}</b>
                 <span class="mt-1 text-xs uppercase tracking-wide opacity-80">{{ __('admin.debug_score_pts') }}</span>
             </div>
             <span class="text-xl opacity-60">×</span>
             <div class="flex flex-col leading-none">
-                <b class="text-3xl">{{ $report->nasobice }}</b>
+                <b class="text-3xl">{{ $report->multiplier }}</b>
                 <span class="mt-1 text-xs uppercase tracking-wide opacity-80">{{ __('admin.debug_score_mult') }}</span>
             </div>
             <span class="text-xl opacity-60">=</span>
             <div class="flex flex-col leading-none">
-                <b class="text-4xl text-amber-300">{{ $report->body }}</b>
+                <b class="text-4xl text-amber-300">{{ $report->points }}</b>
                 <span class="mt-1 text-xs uppercase tracking-wide opacity-80">{{ __('admin.debug_score_total') }}</span>
             </div>
         </div>
         <p class="mt-3 text-xs opacity-80">
-            {{ __('admin.debug_score_desc', ['count' => $report->pocet, 'mult' => $report->nasobice - 1]) }}
+            {{ __('admin.debug_score_desc', ['count' => $report->qsoCount, 'mult' => $report->multiplier - 1]) }}
         </p>
     </section>
 
@@ -116,7 +116,7 @@
     <section class="mb-5 flex flex-wrap gap-2">
         <x-badge variant="brand">{{ __('admin.debug_badge_decl') }} <b>{{ $report->declaredTotal }}</b></x-badge>
         <x-badge variant="brand">{{ __('admin.debug_badge_parsed') }} <b>{{ $report->parsedCount }}</b></x-badge>
-        <x-badge variant="ok">{{ __('admin.debug_badge_counted') }} <b>{{ $report->pocet }}</b></x-badge>
+        <x-badge variant="ok">{{ __('admin.debug_badge_counted') }} <b>{{ $report->qsoCount }}</b></x-badge>
         @if ($report->excludedIncomplete)<x-badge variant="danger">{{ __('admin.debug_badge_incomplete') }} <b>{{ $report->excludedIncomplete }}</b></x-badge>@endif
         @if ($report->excludedOutOfWindow)<x-badge variant="warn">{{ __('admin.debug_badge_window') }} <b>{{ $report->excludedOutOfWindow }}</b></x-badge>@endif
         @if ($report->excludedWrongDate)<x-badge variant="warn">{{ __('admin.debug_badge_date') }} <b>{{ $report->excludedWrongDate }}</b></x-badge>@endif

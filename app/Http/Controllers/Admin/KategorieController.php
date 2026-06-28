@@ -17,7 +17,7 @@ class KategorieController extends Controller
     public function index(): View
     {
         $kategorie = EdiCategory::query()
-            ->withCount('hlaseni')
+            ->withCount('entries')
             ->orderBy('id')
             ->get();
 

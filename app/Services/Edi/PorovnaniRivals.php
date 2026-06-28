@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Services\Edi;
 
 use App\Http\Controllers\EdiPorovnaniController;
+use App\Models\EdiEntry;
 use App\Models\Edihead;
-use App\Models\VkvpaData;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 
@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
  * Výběr soupeřů pro porovnání dvou deníků (stránka {@see EdiPorovnaniController}).
  *
  * Porovnat lze jen deníky z téhož kola a téže kategorie – soupeři se hledají
- * podle schválených záznamů výsledkové listiny ({@see VkvpaData}). Pravidlo
+ * podle schválených záznamů výsledkové listiny ({@see EdiEntry}). Pravidlo
  * férovosti je shodné s vizualizací: soupeřův deník se vydá až po uzávěrce,
  * resp. vyhodnocení kola ({@see QsoGeometry::roundResultsDisclosable()}).
  *
@@ -41,8 +41,8 @@ final class PorovnaniRivals
         }
 
         return Edihead::query()
-            ->whereIn('id', $query->pluck('edihead_id'))
-            ->where('id_kola', $head->id_kola)
+            ->whereIn('id', $query->pluck('edi_head_id'))
+            ->where('round_id', $head->round_id)
             ->orderBy('p_call')
             ->get();
     }
@@ -57,7 +57,7 @@ final class PorovnaniRivals
         $query = $this->rivalEntriesQuery($head);
 
         return $query !== null
-            && $query->whereHas('edihead', fn (Builder $q): Builder => $q->where('id_kola', $head->id_kola))->exists();
+            && $query->whereHas('ediHead', fn (Builder $q): Builder => $q->where('round_id', $head->round_id))->exists();
     }
 
     /**
@@ -65,28 +65,28 @@ final class PorovnaniRivals
      * a kategorie, s EDI deníkem, kromě tohoto deníku). Null, když porovnání
      * není dostupné (bez kola, před uzávěrkou, bez záznamu s kategorií).
      *
-     * @return Builder<VkvpaData>|null
+     * @return Builder<EdiEntry>|null
      */
     private function rivalEntriesQuery(Edihead $head): ?Builder
     {
-        if ($head->id_kola === null || ! $this->geometry->roundResultsDisclosable($head)) {
+        if ($head->round_id === null || ! $this->geometry->roundResultsDisclosable($head)) {
             return null;
         }
 
-        $entry = VkvpaData::query()
+        $entry = EdiEntry::query()
             ->approved()
-            ->where('edihead_id', $head->id)
-            ->first(['id_kategorie']);
+            ->where('edi_head_id', $head->id)
+            ->first(['category_id']);
 
-        if ($entry === null || $entry->id_kategorie === null) {
+        if ($entry === null || $entry->category_id === null) {
             return null;
         }
 
-        return VkvpaData::query()
+        return EdiEntry::query()
             ->approved()
-            ->where('id_kola', $head->id_kola)
-            ->where('id_kategorie', $entry->id_kategorie)
-            ->whereNotNull('edihead_id')
-            ->where('edihead_id', '!=', $head->id);
+            ->where('round_id', $head->round_id)
+            ->where('category_id', $entry->category_id)
+            ->whereNotNull('edi_head_id')
+            ->where('edi_head_id', '!=', $head->id);
     }
 }

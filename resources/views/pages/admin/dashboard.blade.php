@@ -125,10 +125,10 @@
                     <tr>
                         <td>
                             <a href="{{ route('kola.admin.edit', $kolo) }}" class="font-medium hover:underline">
-                                {{ $kolo->nazev }}
+                                {{ $kolo->name }}
                             </a>
                         </td>
-                        <td class="num whitespace-nowrap text-sm text-muted">{{ $kolo->datum_konani->format('j. n. Y') }}</td>
+                        <td class="num whitespace-nowrap text-sm text-muted">{{ $kolo->starts_at->format('j. n. Y') }}</td>
                         <td class="num">{{ $kolo->pocet_celkem }}</td>
                         <td class="num">
                             <div class="flex items-center justify-end gap-2">
@@ -142,7 +142,7 @@
                             {{ $ceka > 0 ? $ceka : '—' }}
                         </td>
                         <td>
-                            <span class="badge {{ $kolo->stav()->badgeClass() }}">{{ $kolo->stav()->label() }}</span>
+                            <span class="badge {{ $kolo->state()->badgeClass() }}">{{ $kolo->state()->label() }}</span>
                         </td>
                     </tr>
                 @endforeach
@@ -175,9 +175,9 @@
                 @foreach ($top10 as $i => $r)
                     <tr>
                         <td class="num font-bold {{ $medalColors[$i] ?? 'text-muted' }}">{{ $i + 1 }}</td>
-                        <td class="mono font-bold">{{ $r->znacka }}</td>
-                        <td>{{ $r->jmeno }}</td>
-                        <td class="text-sm text-muted">{{ $kategorie->get($r->kategorie_id)?->nazev ?? '—' }}</td>
+                        <td class="mono font-bold">{{ $r->callsign }}</td>
+                        <td>{{ $r->name }}</td>
+                        <td class="text-sm text-muted">{{ $kategorie->get($r->kategorie_id)?->name ?? '—' }}</td>
                         <td class="num font-semibold">{{ \Illuminate\Support\Number::format((int) $r->celkem, 0) }}</td>
                     </tr>
                 @endforeach
@@ -193,7 +193,7 @@ window.__dashboardConfig = {
     rokPredchozi: {{ $rok - 1 }},
     trendKolaLabels: @json($trendKola->pluck('nazev')),
     trendKolaData: @json($trendKola->pluck('pocet')),
-    katLabels: @json($kategorieData->map(fn ($r) => $kategorie[$r->id_kategorie]?->nazev ?? "kat {$r->id_kategorie}")->values()),
+    katLabels: @json($kategorieData->map(fn ($r) => $kategorie[$r->category_id]?->name ?? "kat {$r->category_id}")->values()),
     katData: @json($kategorieData->pluck('pocet')),
     aktData: @json($kolaRoku->pluck('pocet_schvalenych')->values()),
     prevData: @json($trendPredchoziRok->pluck('pocet')->values()),

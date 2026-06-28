@@ -65,7 +65,7 @@ konzistentní s existujícím `ValidMaidenhead`.
 i překlady (`admin.uzivatele_*`), ale controller ani Blade šablona nebyly
 commitnuté. Doplněno:
 - `app/Http/Controllers/Admin/UzivateleController.php` – přehled kontaktních
-  údajů z `vkvpa_data` s filtrem dle kola a fulltextem (značka / jméno /
+  údajů z `edi_entries` s filtrem dle kola a fulltextem (značka / jméno /
   e-mail / telefon), stránkováno po 50.
 - `resources/views/pages/admin/uzivatele.blade.php` – tabulka dle připravených
   překladů; routa je za `admin` middleware (citlivá osobní data).
@@ -121,10 +121,10 @@ přípona se odvozuje z obsahu; pravidlo nahrazeno `mimes:jpeg,png,gif,webp`
 **Soubor:** `HlaseniController::store`
 
 Nepřihlášený uživatel mohl do aktivního kola vložit záznam s libovolnou
-značkou a body, který se ihned zobrazil jako převzatý (`schvaleno=true`) –
+značkou a body, který se ihned zobrazil jako převzatý (`approved=true`) –
 riziko podvržení/narušení integrity výsledků.
 
-**Náprava:** veřejné (neEDI i EDI) hlášení se ukládá jako `schvaleno=false`
+**Náprava:** veřejné (neEDI i EDI) hlášení se ukládá jako `approved=false`
 (stav „Čeká") a zobrazí se až po převzetí vyhodnocovatelem; jen administrátor
 zakládá rovnou převzatý záznam. Ověřeno v `HlaseniController`.
 

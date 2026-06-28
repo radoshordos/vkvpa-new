@@ -3,7 +3,7 @@
     Anonymní Blade komponenta – sjednocuje opakující se vzor ve formulářích.
 
     Textový input (výchozí):
-      <x-field name="znacka" :label="__('pages.hlaseni.field_callsign')" :value="$val('znacka', $e->znacka ?? '')" required class="mono font-bold" />
+      <x-field name="znacka" :label="__('pages.hlaseni.field_callsign')" :value="$val('znacka', $e->callsign ?? '')" required class="mono font-bold" />
 
     Vlastní prvek (select, textarea…) přes slot „control“:
       <x-field name="kolo" :label="..." required>

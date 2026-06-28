@@ -58,11 +58,11 @@ class EdiScoreDebuggerTest extends TestCase
 
         // pocet=5 (A,B,C,F,G). Body přepočítané z lokátorů (domácí JN99):
         // JN89=3, JN89=3, JO70=4, vlastní JN99=2, JN89 dup=3 → boduZaQso=15.
-        // cizí čtverce {JN89,JO70} + vlastní JN99 → nasobice=3, body=15×3=45.
-        $this->assertSame(5, $report->pocet);
-        $this->assertSame(15, $report->boduZaQso);
-        $this->assertSame(3, $report->nasobice);
-        $this->assertSame(45, $report->body);
+        // cizí čtverce {JN89,JO70} + vlastní JN99 → multiplier=3, body=15×3=45.
+        $this->assertSame(5, $report->qsoCount);
+        $this->assertSame(15, $report->qsoPoints);
+        $this->assertSame(3, $report->multiplier);
+        $this->assertSame(45, $report->points);
 
         $this->assertSame(1, $report->excludedOutOfWindow);
         $this->assertSame(1, $report->excludedWrongDate);
@@ -99,9 +99,9 @@ class EdiScoreDebuggerTest extends TestCase
         $head = new EdiImportService()->import($log);
         $score = app(ScoringService::class)->scoreEdi($head);
 
-        $this->assertSame($score->pocet, $report->pocet);
-        $this->assertSame($score->boduZaQso, $report->boduZaQso);
-        $this->assertSame($score->nasobice, $report->nasobice);
-        $this->assertSame($score->body, $report->body);
+        $this->assertSame($score->qsoCount, $report->qsoCount);
+        $this->assertSame($score->qsoPoints, $report->qsoPoints);
+        $this->assertSame($score->multiplier, $report->multiplier);
+        $this->assertSame($score->points, $report->points);
     }
 }

@@ -93,12 +93,12 @@ nově 166 testů.
 ## P1 – Duplikace EDI import pipeline ✅ vyřešeno
 
 Jádro příjmu deníku (validace shody `TDate` s QSO, `koloForTDate`, dedup, resolve
-kategorie, `import` + `scoreEdi`, `VkvpaData::create`) bylo dříve zkopírované do
+kategorie, `import` + `scoreEdi`, `EdiEntry::create`) bylo dříve zkopírované do
 `ImportEdiAction` (jednotlivý upload) i `ImportController::importFile()` (hromadný).
 
 **Náprava (provedeno):** `ImportController::importFile()` už tok neduplikuje –
 deleguje na `ImportEdiAction` a jen mapuje výsledek/výjimku na řádek souhrnu
-importu. Payload `VkvpaData::create` existuje na jediném místě. `execute()` dostal
+importu. Payload `EdiEntry::create` existuje na jediném místě. `execute()` dostal
 parametr `notify` (default `true`); hromadný import ho volá s `notify: false`, takže
 se při backfillu **nerozesílají potvrzovací e-maily** účastníkům (zachované původní
 chování). Z controlleru odstraněny nepotřebné závislosti (`EdiImportService`,
@@ -118,14 +118,14 @@ pravda o schématu:
 
 - `create_edihead` ← index `PCall`
 - `create_edilines` ← kompozitní index `(IDS, Time)`
-- `create_vkvpa_data` ← odstraněno redundantní `nullable()` u sloupců s DEFAULT
-  (NOT NULL + DEFAULT) a doplněny indexy `id_kategorie`, `(id_kola, schvaleno)`,
-  `(znacka, id_kola)`
+- `create_edi_entries` ← odstraněno redundantní `nullable()` u sloupců s DEFAULT
+  (NOT NULL + DEFAULT) a doplněny indexy `category_id`, `(round_id, approved)`,
+  `(znacka, round_id)`
 - `create_vkvpa_prihlaseni` ← UNIQUE na `kod`
 
 Net stav schématu zůstal identický; ověřeno `migrate:fresh` i celou testovací sadou.
-Ponechány legitimní `create_diskuse_table` a `add_aktivni_to_vkvpa_kola`.
-Drobnost ponechána beze změny: `bodu_za_qso` má `->default(1)` (ostatní skóre `0`) –
+Ponechány legitimní `create_diskuse_table` a `add_aktivni_to_edi_rounds`.
+Drobnost ponechána beze změny: `qso_points` má `->default(1)` (ostatní skóre `0`) –
 aplikace hodnotu vždy nastavuje explicitně, default je bezvýznamný.
 
 > Pozn.: protože šlo o přepis již aplikovaných migrací, je po této změně nutné
@@ -156,7 +156,7 @@ Důsledky:
 ## Drobnosti ✅ vyřešeno
 
 - **Duplikovaný dotaz „průběžné výsledky"** – sloučen do scope
-  `VkvpaData::prubezne($idKola, $idKategorie)`; `HlaseniController` i
+  `EdiEntry::prubezne($idKola, $idKategorie)`; `HlaseniController` i
   `VysledkyController::pribezne()` ho teď oba volají.
 - **Hardcoded limity v `ImportController`** – `max:20480` a `$limit = 200`
   přesunuty do `config/vkvpa.php` (`import_max_size_kb`, `import_max_files`)
@@ -173,7 +173,7 @@ Důsledky:
 - **Kategorie `CategoryResolver`** – párují se z normalizovaného číselníku
   `edi_category` (pásmo × sekce × varianta) přes cachovanou mapu, žádná hardcoded
   matice ID v kódu. `edi_category` je **jediný** číselník kategorií (duplicitní
-  `vkvpa_kategorie` byla zrušena; `vkvpa_data.id_kategorie` má FK na `edi_category`).
+  `vkvpa_kategorie` byla zrušena; `edi_entries.category_id` má FK na `edi_category`).
 - **Value objekty** EDI (`EdiLog`, `EdiHeader`, `EdiQso`) – neměnné, bez DB/IO.
 - **Bilingvní vrstva** `lang/cs` + `lang/en` – kompletní.
 - **Centralizovaná konfigurace** `config/vkvpa.php` + typový `VkvpaSettings`.
@@ -199,7 +199,7 @@ Důsledky:
 | D3 – testy vizualizace | ✅ `EdiVizualizaceTest` + `QsoGeometryTest` (166 testů) |
 | P1 – hromadný import přes `ImportEdiAction` | ✅ delegace + `notify: false` (bez mailů) |
 | P6 (zbytek) – `Mode-code` leak | ✅ accessor `Ediline::modeCode()` |
-| Drobnost – duplikovaný dotaz „průběžné" | ✅ scope `VkvpaData::prubezne()` |
+| Drobnost – duplikovaný dotaz „průběžné" | ✅ scope `EdiEntry::prubezne()` |
 | Drobnost – hardcoded import limity | ✅ přesunuto do `config/vkvpa.php` |
 
 ---

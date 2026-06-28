@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 namespace App\Enums;
 
-use App\Models\VkvpaKola;
+use App\Models\EdiRound;
 
 /**
  * Fáze životního cyklu závodního kola.
  *
- * Stav je čistá funkce času – odvozuje se ze sloupců {@see VkvpaKola}:
- * `vyhodnoceno`, `datum_konani` (start závodu, standardně 08:00 UTC)
- * a `datum_uzaverky` (viz {@see VkvpaKola::stav()}):
+ * Stav je čistá funkce času – odvozuje se ze sloupců {@see EdiRound}:
+ * `vyhodnoceno`, `starts_at` (start závodu, standardně 08:00 UTC)
+ * a `closes_at` (viz {@see EdiRound::stav()}):
  *
  *  1) {@see self::Nadchazejici} – kolo je založené, ale start závodu
- *     (`datum_konani`) ještě nenastal.
- *  2) {@see self::Aktivni} – závod právě běží (od `datum_konani` do konce
- *     závodního okna, {@see VkvpaKola::konecZavodu()}); hlášení se přijímají.
+ *     (`starts_at`) ještě nenastal.
+ *  2) {@see self::Aktivni} – závod právě běží (od `starts_at` do konce
+ *     závodního okna, {@see EdiRound::konecZavodu()}); hlášení se přijímají.
  *  3) {@see self::Prijem} – závod skončil, ale uzávěrka ještě neuplynula
  *     → hlášení se stále přijímají.
  *  4) {@see self::Uzavrene} – uzávěrka uplynula, kolo už od běžných závodníků

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Services\Edi;
 
 use App\Models\EdiCategory;
-use App\Models\VkvpaData;
-use App\Models\VkvpaKola;
+use App\Models\EdiEntry;
+use App\Models\EdiRound;
 use App\Services\Scoring\RekordyService;
 use App\Support\ContestWindow;
 use App\Support\Maidenhead;
@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\DB;
 /**
  * Souhrnné statistiky celého (vyhodnoceného) kola pro veřejnou stránku
  * Statistiky. Agreguje napříč všemi deníky kola (`edihead`/`edilines`)
- * a převzatými záznamy výsledkové listiny (`vkvpa_data`):
+ * a převzatými záznamy výsledkové listiny (`edi_entries`):
  *  - souhrn (stanice, QSO, body, čtverce, ODX),
  *  - mapová data (stanice kola, obsazené čtverce, účastníci),
  *  - časová osa aktivity, druhy provozu, země/prefixy, kategorie,
@@ -31,7 +31,7 @@ use Illuminate\Support\Facades\DB;
  * @phpstan-type StatStanice array{lat: float, lon: float, call: string, wwl: string, count: int}
  * @phpstan-type StatCtverec array{square: string, count: int, lat: float, lon: float}
  * @phpstan-type StatUcastnik array{lat: float, lon: float, call: string, loc: string, kat: string, body: int, poradi: int}
- * @phpstan-type StatTop array{znacka: string, kategorie: string, body: int, pocet: int, nasobice: int}
+ * @phpstan-type StatTop array{znacka: string, kategorie: string, body: int, pocet: int, multiplier: int}
  * @phpstan-type StatOdx array{call: string, wwl: string, home: string, homeCall: string, dist: int}
  * @phpstan-type StatNazevPocet array{nazev: string, pocet: int}
  * @phpstan-type StatKat array{zkratka: string, nazev: string, pocet: int}
@@ -39,7 +39,7 @@ use Illuminate\Support\Facades\DB;
  * @phpstan-type StatMody array{ssb: int, cw: int, other: int}
  * @phpstan-type StatTrend array{labels: list<string>, stanic: list<int>, qso: list<int>, body: list<int>}
  * @phpstan-type StatFakt array{key: string, params: array<string, string|int>}
- * @phpstan-type StatOdznaky array{ucast: bool, skore: bool, qso: bool, nasobice: bool}
+ * @phpstan-type StatOdznaky array{ucast: bool, skore: bool, qso: bool, multiplier: bool}
  * @phpstan-type StatTok array{from: string, to: string, fromLat: float, fromLon: float, toLat: float, toLon: float, count: int}
  * @phpstan-type StatAnalyza array{ctverce: list<StatCtverec>, odx: StatOdx|null, timeline: StatTimeline, mody: StatMody, zeme: list<StatNazevPocet>, prefixy: list<StatNazevPocet>, tok: list<StatTok>}
  * @phpstan-type StatPrehled array{
@@ -67,7 +67,7 @@ final class KoloStatistiky
      *
      * @return StatPrehled
      */
-    public function prehled(VkvpaKola $kolo): array
+    public function prehled(EdiRound $kolo): array
     {
         /** @var StatPrehled $data */
         $data = Cache::remember(
@@ -82,7 +82,7 @@ final class KoloStatistiky
     /**
      * @return StatPrehled
      */
-    private function compute(VkvpaKola $kolo): array
+    private function compute(EdiRound $kolo): array
     {
         $a = $this->analyzaQso($kolo->id);
         [$souhrn, $kategorie, $topBody, $topQso, $topNasobice] = $this->vysledky($kolo->id);
@@ -141,7 +141,7 @@ final class KoloStatistiky
 
         $rows = DB::table('edi_lines')
             ->join('edi_head', 'edi_lines.edihead_id', '=', 'edi_head.id')
-            ->where('edi_head.id_kola', $koloId)
+            ->where('edi_head.round_id', $koloId)
             ->whereTime('edi_lines.qso_at', '>=', ContestWindow::fromSqlTime())
             ->whereTime('edi_lines.qso_at', '<=', ContestWindow::toSqlTime())
             ->get([
@@ -271,24 +271,24 @@ final class KoloStatistiky
         /** @var SupportCollection<int, string> $zkratky */
         $zkratky = EdiCategory::zkratkaMap();
 
-        $entries = VkvpaData::query()
-            ->where('id_kola', $koloId)
+        $entries = EdiEntry::query()
+            ->where('round_id', $koloId)
             ->approved()
-            ->get(['znacka', 'body', 'pocet', 'nasobice', 'id_kategorie']);
+            ->get(['callsign', 'points', 'qso_count', 'multiplier', 'category_id']);
 
         $souhrn = [
-            'pocetStanic' => $entries->pluck('znacka')->unique()->count(),
+            'pocetStanic' => $entries->pluck('callsign')->unique()->count(),
             'pocetZaznamu' => $entries->count(),
-            'pocetQso' => (int) $entries->sum(fn (VkvpaData $e): int => $e->pocet),
-            'bodyCelkem' => (int) $entries->sum(fn (VkvpaData $e): int => $e->body),
+            'pocetQso' => (int) $entries->sum(fn (EdiEntry $e): int => $e->qso_count),
+            'bodyCelkem' => (int) $entries->sum(fn (EdiEntry $e): int => $e->points),
         ];
 
         return [
             $souhrn,
-            $this->kategorie($koloId),
+            $this->category($koloId),
             $this->topN($entries, $zkratky, 'body'),
             $this->topN($entries, $zkratky, 'pocet'),
-            $this->topN($entries, $zkratky, 'nasobice'),
+            $this->topN($entries, $zkratky, 'multiplier'),
         ];
     }
 
@@ -297,20 +297,20 @@ final class KoloStatistiky
      *
      * @return list<StatKat>
      */
-    private function kategorie(int $koloId): array
+    private function category(int $koloId): array
     {
         $out = [];
         $zkratky = EdiCategory::zkratkaMap();
         $nazvy = EdiCategory::nazevMap();
-        $rows = VkvpaData::query()
-            ->where('vkvpa_data.id_kola', $koloId)
-            ->where('vkvpa_data.schvaleno', true)
-            ->groupBy('vkvpa_data.id_kategorie')
-            ->selectRaw('vkvpa_data.id_kategorie as id_kategorie, COUNT(*) as pocet')
+        $rows = EdiEntry::query()
+            ->where('edi_entries.round_id', $koloId)
+            ->where('edi_entries.approved', true)
+            ->groupBy('edi_entries.category_id')
+            ->selectRaw('edi_entries.category_id as category_id, COUNT(*) as pocet')
             ->get();
 
         foreach ($rows as $row) {
-            $katId = self::intAttr($row, 'id_kategorie');
+            $katId = self::intAttr($row, 'category_id');
             $out[] = [
                 'zkratka' => $zkratky->get($katId) ?: '?',
                 'nazev' => $nazvy->get($katId) ?: '?',
@@ -333,11 +333,11 @@ final class KoloStatistiky
         $zkratky = EdiCategory::zkratkaMap();
 
         $out = [];
-        $entries = VkvpaData::query()
-            ->where('id_kola', $koloId)
+        $entries = EdiEntry::query()
+            ->where('round_id', $koloId)
             ->approved()
-            ->orderByDesc('body')
-            ->get(['znacka', 'locator', 'body', 'poradi', 'id_kategorie']);
+            ->orderByDesc('points')
+            ->get(['callsign', 'locator', 'points', 'rank', 'category_id']);
 
         foreach ($entries as $e) {
             $loc = strtoupper(trim($e->locator));
@@ -345,15 +345,15 @@ final class KoloStatistiky
             if ($c === null) {
                 continue;
             }
-            $zkr = $e->id_kategorie !== null ? $zkratky->get($e->id_kategorie) : null;
+            $zkr = $e->category_id !== null ? $zkratky->get($e->category_id) : null;
             $out[] = [
                 'lat' => $c['lat'],
                 'lon' => $c['lon'],
-                'call' => (string) $e->znacka,
+                'call' => (string) $e->callsign,
                 'loc' => $loc,
                 'kat' => is_string($zkr) ? $zkr : '',
-                'body' => (int) $e->body,
-                'poradi' => (int) $e->poradi,
+                'body' => (int) $e->points,
+                'poradi' => (int) $e->rank,
             ];
         }
 
@@ -365,24 +365,24 @@ final class KoloStatistiky
      *
      * @return StatTrend
      */
-    private function trend(VkvpaKola $kolo, int $n = 12): array
+    private function trend(EdiRound $kolo, int $n = 12): array
     {
-        $kola = VkvpaKola::query()
-            ->whereNotNull('vyhodnoceno')
-            ->where('datum_konani', '<=', $kolo->datum_konani)
-            ->orderByDesc('datum_konani')
+        $kola = EdiRound::query()
+            ->whereNotNull('evaluated_at')
+            ->where('starts_at', '<=', $kolo->starts_at)
+            ->orderByDesc('starts_at')
             ->limit($n)
-            ->get(['id', 'nazev', 'datum_konani'])
-            ->sortBy('datum_konani')
+            ->get(['id', 'name', 'starts_at'])
+            ->sortBy('starts_at')
             ->values();
 
-        $agg = VkvpaData::query()
-            ->where('schvaleno', true)
-            ->whereIn('id_kola', $kola->pluck('id'))
-            ->selectRaw('id_kola, COUNT(DISTINCT znacka) as stanic, SUM(pocet) as qso, SUM(body) as body')
-            ->groupBy('id_kola')
+        $agg = EdiEntry::query()
+            ->where('approved', true)
+            ->whereIn('round_id', $kola->pluck('id'))
+            ->selectRaw('round_id, COUNT(DISTINCT callsign) as stanic, SUM(qso_count) as qso, SUM(points) as body')
+            ->groupBy('round_id')
             ->get()
-            ->keyBy('id_kola');
+            ->keyBy('round_id');
 
         $labels = [];
         $stanic = [];
@@ -390,7 +390,7 @@ final class KoloStatistiky
         $body = [];
         foreach ($kola as $k) {
             $a = $agg->get($k->id);
-            $labels[] = (string) $k->nazev;
+            $labels[] = (string) $k->name;
             $stanic[] = $a !== null ? self::intAttr($a, 'stanic') : 0;
             $qso[] = $a !== null ? self::intAttr($a, 'qso') : 0;
             $body[] = $a !== null ? self::intAttr($a, 'body') : 0;
@@ -407,7 +407,7 @@ final class KoloStatistiky
      * @param  list<StatTop>  $topBody
      * @return list<StatFakt>
      */
-    private function zajimavosti(VkvpaKola $kolo, array $ctverce, array $topBody): array
+    private function zajimavosti(EdiRound $kolo, array $ctverce, array $topBody): array
     {
         $out = [];
 
@@ -431,49 +431,49 @@ final class KoloStatistiky
     }
 
     /** Počet značek, které v tomto kole startovaly poprvé (nebyly v dřívějších kolech). */
-    private function novacku(VkvpaKola $kolo): int
+    private function novacku(EdiRound $kolo): int
     {
-        $earlier = VkvpaData::query()
-            ->join('vkvpa_kola', 'vkvpa_data.id_kola', '=', 'vkvpa_kola.id')
-            ->where('vkvpa_data.schvaleno', true)
-            ->where('vkvpa_kola.datum_konani', '<', $kolo->datum_konani)
+        $earlier = EdiEntry::query()
+            ->join('edi_rounds', 'edi_entries.round_id', '=', 'edi_rounds.id')
+            ->where('edi_entries.approved', true)
+            ->where('edi_rounds.starts_at', '<', $kolo->starts_at)
             ->distinct()
-            ->pluck('vkvpa_data.znacka');
+            ->pluck('edi_entries.callsign');
 
-        return VkvpaData::query()
-            ->where('id_kola', $kolo->id)
+        return EdiEntry::query()
+            ->where('round_id', $kolo->id)
             ->approved()
-            ->whereNotIn('znacka', $earlier)
+            ->whereNotIn('callsign', $earlier)
             ->distinct()
-            ->count('znacka');
+            ->count('callsign');
     }
 
     /**
-     * TOP 10 záznamů sestupně podle sloupce ($col = body|pocet|nasobice).
+     * TOP 10 záznamů sestupně podle sloupce ($col = body|pocet|multiplier).
      *
-     * @param  EloquentCollection<int, VkvpaData>  $entries
+     * @param  EloquentCollection<int, EdiEntry>  $entries
      * @param  SupportCollection<int, string>  $zkratky  id kategorie → zkratka
      * @return list<StatTop>
      */
     private function topN(EloquentCollection $entries, SupportCollection $zkratky, string $col): array
     {
         $sorted = $entries
-            ->sortByDesc(fn (VkvpaData $e): int => match ($col) {
-                'pocet' => $e->pocet,
-                'nasobice' => $e->nasobice,
-                default => $e->body,
+            ->sortByDesc(fn (EdiEntry $e): int => match ($col) {
+                'pocet' => $e->qso_count,
+                'multiplier' => $e->multiplier,
+                default => $e->points,
             })
             ->take(10);
 
         $out = [];
         foreach ($sorted as $e) {
-            $zkr = $e->id_kategorie !== null ? $zkratky->get($e->id_kategorie) : null;
+            $zkr = $e->category_id !== null ? $zkratky->get($e->category_id) : null;
             $out[] = [
-                'znacka' => (string) $e->znacka,
+                'znacka' => (string) $e->callsign,
                 'kategorie' => is_string($zkr) ? $zkr : '',
-                'body' => (int) $e->body,
-                'pocet' => (int) $e->pocet,
-                'nasobice' => (int) $e->nasobice,
+                'body' => (int) $e->points,
+                'pocet' => (int) $e->qso_count,
+                'multiplier' => (int) $e->multiplier,
             ];
         }
 

@@ -30,7 +30,7 @@ class DiskuseSeeder extends Seeder
         // sloupec `foto`); nové schéma je drží binárně v `diskuse_foto`.
         $prispevky = [
             [
-                'kolo_id' => 130,
+                'round_id' => 130,
                 'znacka' => 'OK1KZE',
                 'jmeno' => 'OK1VUM',
                 'text' => 'Sem můžete psát své komentáře a zážitky a doplnit je fotografií',
@@ -38,7 +38,7 @@ class DiskuseSeeder extends Seeder
                 'created_at' => '2026-04-22 07:11:23',
             ],
             [
-                'kolo_id' => 130,
+                'round_id' => 130,
                 'znacka' => 'OK1DWF',
                 'jmeno' => 'Karel',
                 'text' => 'Test',
@@ -46,7 +46,7 @@ class DiskuseSeeder extends Seeder
                 'created_at' => '2026-04-22 10:59:25',
             ],
             [
-                'kolo_id' => 131,
+                'round_id' => 131,
                 'znacka' => 'OK2XKO',
                 'jmeno' => 'Jirka',
                 'text' => 'Dík za QSO !',
@@ -54,7 +54,7 @@ class DiskuseSeeder extends Seeder
                 'created_at' => '2026-05-17 18:32:27',
             ],
             [
-                'kolo_id' => 131,
+                'round_id' => 131,
                 'znacka' => 'OK1IO',
                 'jmeno' => 'Jiří Knejfl',
                 'text' => 'Zdravím,dnes velmi kvalitní contest.Podmínky OK. Contest jsem jel z kopce.WX krásné i když venku chladno.Dík za milá QSO fungovalo to velmi hezky,NSL v dalším kole. 73 Jirka.',
@@ -62,7 +62,7 @@ class DiskuseSeeder extends Seeder
                 'created_at' => '2026-05-18 11:31:16',
             ],
             [
-                'kolo_id' => 131,
+                'round_id' => 131,
                 'znacka' => 'OK1KZE',
                 'jmeno' => 'ok1vum',
                 'text' => 'Tentokrát dobrá účast, dokonce zavolal SSB bez domluvy 9A6A ze Hvaru JN83GE. Na slyšenou příště.',
@@ -70,7 +70,7 @@ class DiskuseSeeder extends Seeder
                 'created_at' => '2026-05-18 13:13:16',
             ],
             [
-                'kolo_id' => 132,
+                'round_id' => 132,
                 'znacka' => 'OK5SE',
                 'jmeno' => 'Jiří',
                 'text' => 'No holky kluci, webové rozhraní pro VKV PA vypadá super, krásně udělané statistiky a už jsem zvědavý, co ještě přibude po uzávěrce kola. Good job a velký dík.',
@@ -78,7 +78,7 @@ class DiskuseSeeder extends Seeder
                 'created_at' => '2026-06-23 10:15:13',
             ],
             [
-                'kolo_id' => 132,
+                'round_id' => 132,
                 'znacka' => 'OK1IO',
                 'jmeno' => null,
                 'text' => 'Zdravím všechny závodníky, hezký závod. Jen to rušení z JJV mne na QTH trápí, téměř vždy jako když někdo vaří oběd. 
@@ -87,7 +87,7 @@ V cca v 11.30 je po sršení. Vyskytuje se to pouze na 2metrech. Děkuji všem z
                 'created_at' => '2026-06-23 10:33:10',
             ],
             [
-                'kolo_id' => 132,
+                'round_id' => 132,
                 'znacka' => 'OK2BPN',
                 'jmeno' => 'Jaroslav',
                 'text' => 'Moc pěkně udělaná statistika, děkuji.',

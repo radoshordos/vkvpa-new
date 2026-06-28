@@ -30,17 +30,17 @@
     </thead>
     <tbody>
       @foreach ($kola as $k)
-        @php $stav = $k->stav(); @endphp
+        @php $stav = $k->state(); @endphp
         <tr>
-          <td class="whitespace-nowrap">{{ $k->datum_konani ? $k->datum_konani->locale(app()->getLocale())->isoFormat('dddd D. M. YYYY HH:mm').' UTC' : '' }}</td>
+          <td class="whitespace-nowrap">{{ $k->starts_at ? $k->starts_at->locale(app()->getLocale())->isoFormat('dddd D. M. YYYY HH:mm').' UTC' : '' }}</td>
           {{-- isoFormat dddd = název dne v aktuálním jazyce (pátek / Friday) --}}
-          <td class="whitespace-nowrap">{{ $k->datum_uzaverky ? $k->datum_uzaverky->locale(app()->getLocale())->isoFormat('dddd D. M. YYYY HH:mm').' UTC' : '' }}</td>
-          <td>{{ $k->nazev }}</td>
-          <td class="text-right">{{ $k->hlaseni_count }}</td>
+          <td class="whitespace-nowrap">{{ $k->closes_at ? $k->closes_at->locale(app()->getLocale())->isoFormat('dddd D. M. YYYY HH:mm').' UTC' : '' }}</td>
+          <td>{{ $k->name }}</td>
+          <td class="text-right">{{ $k->entries_count }}</td>
           <td>
             <span class="badge {{ $stav->badgeClass() }}">{{ $stav->label() }}</span>
           </td>
-          <td class="whitespace-nowrap">{{ $k->vyhodnoceno?->format('j. n. Y H:i') ?? '—' }}</td>
+          <td class="whitespace-nowrap">{{ $k->evaluated_at?->format('j. n. Y H:i') ?? '—' }}</td>
           @if ($isAdmin)
             <td>
               {{-- Vyhodnocení probíhá automaticky (po uzávěrce: vše převzato / 20 dní),

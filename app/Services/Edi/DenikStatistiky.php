@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Services\Edi;
 
+use App\Models\EdiEntry;
 use App\Models\Edihead;
-use App\Models\VkvpaData;
-use App\Models\VkvpaKola;
+use App\Models\EdiRound;
 use App\Support\ContestWindow;
 use App\Support\Maidenhead;
 use Illuminate\Support\Collection;
@@ -66,10 +66,10 @@ class DenikStatistiky
      * která přinesla nový násobič (pro skládaný sloupcový graf).
      *
      * @param  Collection<int, EnrichedQso>  $lines
-     * @param  list<array{square: string, call: string, cas: string, t: int, poradi: int, idx: int}>  $nasobice
+     * @param  list<array{square: string, call: string, cas: string, t: int, poradi: int, idx: int}>  $multiplier
      * @return array{labels: list<string>, celkem: list<int>, nove: list<int>}
      */
-    public function timeline(Collection $lines, array $nasobice, int $fromMin, int $toMin): array
+    public function timeline(Collection $lines, array $multiplier, int $fromMin, int $toMin): array
     {
         $count = $this->timelineBuckets($fromMin, $toMin);
 
@@ -91,7 +91,7 @@ class DenikStatistiky
             }
         }
 
-        foreach ($nasobice as $n) {
+        foreach ($multiplier as $n) {
             $i = $bucket($n['t']);
             if ($i !== null) {
                 $nove[$i]++;
@@ -448,27 +448,27 @@ class DenikStatistiky
      */
     public function sezona(Edihead $head): ?array
     {
-        if ($head->id_kola === null) {
+        if ($head->round_id === null) {
             return null;
         }
 
-        $kolo = VkvpaKola::query()->find($head->id_kola);
-        if ($kolo === null || preg_match('/(\d{4})\s*$/', $kolo->nazev, $m) !== 1) {
+        $kolo = EdiRound::query()->find($head->round_id);
+        if ($kolo === null || preg_match('/(\d{4})\s*$/', $kolo->name, $m) !== 1) {
             return null;
         }
 
-        $kola = VkvpaKola::query()
-            ->where('nazev', 'like', '%'.$m[1])
-            ->orderBy('datum_konani')
-            ->get(['id', 'nazev']);
+        $kola = EdiRound::query()
+            ->where('name', 'like', '%'.$m[1])
+            ->orderBy('starts_at')
+            ->get(['id', 'name']);
 
-        $entries = VkvpaData::query()
+        $entries = EdiEntry::query()
             ->approved()
-            ->where('znacka', (string) $head->p_call)
-            ->whereIn('id_kola', $kola->pluck('id'))
+            ->where('callsign', (string) $head->p_call)
+            ->whereIn('round_id', $kola->pluck('id'))
             ->orderBy('id')
-            ->get(['id_kola', 'body', 'poradi'])
-            ->keyBy('id_kola');
+            ->get(['round_id', 'points', 'rank'])
+            ->keyBy('round_id');
 
         if ($entries->isEmpty()) {
             return null;
@@ -480,9 +480,9 @@ class DenikStatistiky
 
         foreach ($kola as $k) {
             $e = $entries->get($k->id);
-            $labels[] = $k->nazev;
-            $body[] = $e?->body;
-            $poradi[] = ($e !== null && $e->poradi > 0) ? $e->poradi : null;
+            $labels[] = $k->name;
+            $body[] = $e?->points;
+            $poradi[] = ($e !== null && $e->rank > 0) ? $e->rank : null;
         }
 
         return ['labels' => $labels, 'body' => $body, 'poradi' => $poradi];

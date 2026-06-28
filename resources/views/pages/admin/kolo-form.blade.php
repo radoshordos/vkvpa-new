@@ -5,11 +5,11 @@
 @php
     $sug = $suggested ?? [];
     // Předvyplnění: při vytváření z ContestCalendar, při editaci z modelu.
-    $defNazev      = old('nazev',          $kolo?->nazev          ?? ($sug['nazev'] ?? ''));
-    $defKonani     = old('datum_konani',   $kolo?->datum_konani?->format('Y-m-d\TH:i') ?? ($sug['datum_konani'] ?? ''));
-    $defUzaverky   = old('datum_uzaverky', $kolo?->datum_uzaverky?->format('Y-m-d\TH:i') ?? ($sug['datum_uzaverky'] ?? ''));
-    $defPoznamka   = old('poznamka',       $kolo?->poznamka       ?? '');
-    $defVyhodnoceno = old('vyhodnoceno',   $kolo?->vyhodnoceno?->format('Y-m-d\TH:i') ?? '');
+    $defNazev      = old('name',           $kolo?->name          ?? ($sug['name'] ?? ''));
+    $defKonani     = old('starts_at',   $kolo?->starts_at?->format('Y-m-d\TH:i') ?? ($sug['starts_at'] ?? ''));
+    $defUzaverky   = old('closes_at', $kolo?->closes_at?->format('Y-m-d\TH:i') ?? ($sug['closes_at'] ?? ''));
+    $defPoznamka   = old('note',           $kolo?->note       ?? '');
+    $defVyhodnoceno = old('evaluated_at',  $kolo?->evaluated_at?->format('Y-m-d\TH:i') ?? '');
 @endphp
 
 <h1>{{ $kolo ? __('admin.kolo_edit_heading') : __('admin.kolo_create_heading') }}</h1>
@@ -25,23 +25,23 @@
             @method('PATCH')
         @endif
 
-        <x-field name="nazev" id="nazev" :label="__('admin.kolo_field_name')" required
+        <x-field name="name" id="name" :label="__('admin.kolo_field_name')" required
                  :value="$defNazev" maxlength="250" />
 
         <div class="grid gap-x-5 sm:grid-cols-2">
-            <x-field name="datum_konani" id="datum_konani" type="datetime-local" required
+            <x-field name="starts_at" id="starts_at" type="datetime-local" required
                      :label="__('admin.kolo_field_date')" :value="$defKonani"
                      :hint="$kolo ? __('admin.kolo_hint_date_edit') : __('admin.kolo_hint_date')" />
 
-            <x-field name="datum_uzaverky" id="datum_uzaverky" type="datetime-local" required
+            <x-field name="closes_at" id="closes_at" type="datetime-local" required
                      :label="__('admin.kolo_field_deadline')" :value="$defUzaverky" :hint="__('admin.kolo_hint_deadline')" />
         </div>
 
-        <x-field name="poznamka" id="poznamka" :label="__('admin.kolo_field_note')"
+        <x-field name="note" id="note" :label="__('admin.kolo_field_note')"
                  :value="$defPoznamka" maxlength="250" />
 
         @if ($kolo)
-            <x-field name="vyhodnoceno" id="vyhodnoceno" type="datetime-local"
+            <x-field name="evaluated_at" id="evaluated_at" type="datetime-local"
                      :label="__('admin.kolo_field_vyhodnoceno')" :value="$defVyhodnoceno"
                      :hint="__('admin.kolo_hint_vyhodnoceno')" />
         @endif
@@ -58,9 +58,9 @@
 @push('scripts')
 <script @cspNonce>
 (function () {
-    var datumKonani   = document.getElementById('datum_konani');
-    var datumUzaverky = document.getElementById('datum_uzaverky');
-    var nazev         = document.getElementById('nazev');
+    var datumKonani   = document.getElementById('starts_at');
+    var datumUzaverky = document.getElementById('closes_at');
+    var nazev         = document.getElementById('name');
 
     if (! datumKonani) { return; }
 

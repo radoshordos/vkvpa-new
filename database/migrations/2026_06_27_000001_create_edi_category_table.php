@@ -52,10 +52,10 @@ return new class extends Migration
             });
 
             // edi_category je jediný číselník kategorií (vkvpa_kategorie zrušena).
-            // FK vkvpa_data.id_kategorie sem patří až teď – vkvpa_data (000006)
+            // FK edi_entries.category_id sem patří až teď – edi_entries (000006)
             // se vytváří dřív, ale edi_category až tady.
-            Schema::table('vkvpa_data', function (Blueprint $table): void {
-                $table->foreign('id_kategorie', 'vkvpa_data_id_kategorie_fk')
+            Schema::table('edi_entries', function (Blueprint $table): void {
+                $table->foreign('category_id', 'edi_entries_category_id_fk')
                     ->references('id')->on('edi_category')
                     ->restrictOnDelete();
             });
@@ -65,8 +65,8 @@ return new class extends Migration
     public function down(): void
     {
         if (DB::getDriverName() !== 'sqlite') {
-            Schema::table('vkvpa_data', function (Blueprint $table): void {
-                $table->dropForeign('vkvpa_data_id_kategorie_fk');
+            Schema::table('edi_entries', function (Blueprint $table): void {
+                $table->dropForeign('edi_entries_category_id_fk');
             });
         }
 

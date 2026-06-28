@@ -7,7 +7,7 @@ namespace Tests\Feature;
 use App\Enums\QsoMode;
 use App\Models\Edihead;
 use App\Models\Ediline;
-use App\Models\VkvpaKola;
+use App\Models\EdiRound;
 use App\Services\Edi\BigSquareCount;
 use App\Services\Edi\EdiImportService;
 use App\Services\Edi\EdiParser;
@@ -92,9 +92,9 @@ class QsoGeometryTest extends TestCase
     public function test_round_stations_aggregate_across_logs_and_filter_by_min_qso(): void
     {
         // Vyhodnocené kolo → cizí stanice z kola se smí zveřejnit.
-        $kolo = VkvpaKola::create([
-            'datum_konani' => '2026-03-15', 'datum_uzaverky' => '2026-03-20 23:59:59',
-            'nazev' => '03/2026', 'poznamka' => '', 'vyhodnoceno' => '2026-03-21 10:00:00',
+        $kolo = EdiRound::create([
+            'starts_at' => '2026-03-15', 'closes_at' => '2026-03-20 23:59:59',
+            'name' => '03/2026', 'note' => '', 'evaluated_at' => '2026-03-21 10:00:00',
         ]);
         $headA = $this->seedRoundLogs($kolo->id);
 
@@ -113,9 +113,9 @@ class QsoGeometryTest extends TestCase
     {
         // Kolo v příjmu hlášení (uzávěrka v budoucnu, nevyhodnocené) → cizí
         // stanice se nesmí odhalit, i když by jinak prahem prošly.
-        $kolo = VkvpaKola::create([
-            'datum_konani' => '2026-03-15 08:00:00', 'datum_uzaverky' => now()->addDay(),
-            'nazev' => '03/2026', 'poznamka' => '',
+        $kolo = EdiRound::create([
+            'starts_at' => '2026-03-15 08:00:00', 'closes_at' => now()->addDay(),
+            'name' => '03/2026', 'note' => '',
         ]);
         $headA = $this->seedRoundLogs($kolo->id);
 
@@ -124,9 +124,9 @@ class QsoGeometryTest extends TestCase
 
     public function test_round_stations_are_cached_per_round(): void
     {
-        $kolo = VkvpaKola::create([
-            'datum_konani' => '2026-03-15', 'datum_uzaverky' => '2026-03-20 23:59:59',
-            'nazev' => '03/2026', 'poznamka' => '', 'vyhodnoceno' => '2026-03-21 10:00:00',
+        $kolo = EdiRound::create([
+            'starts_at' => '2026-03-15', 'closes_at' => '2026-03-20 23:59:59',
+            'name' => '03/2026', 'note' => '', 'evaluated_at' => '2026-03-21 10:00:00',
         ]);
         $headA = $this->seedRoundLogs($kolo->id);
 
@@ -146,9 +146,9 @@ class QsoGeometryTest extends TestCase
 
     public function test_compare_with_returns_unique_and_common_stations(): void
     {
-        $kolo = VkvpaKola::create([
-            'datum_konani' => '2026-03-15', 'datum_uzaverky' => '2026-03-20 23:59:59',
-            'nazev' => '03/2026', 'poznamka' => '', 'vyhodnoceno' => '2026-03-21 10:00:00',
+        $kolo = EdiRound::create([
+            'starts_at' => '2026-03-15', 'closes_at' => '2026-03-20 23:59:59',
+            'name' => '03/2026', 'note' => '', 'evaluated_at' => '2026-03-21 10:00:00',
         ]);
         [$headA, $headB] = $this->seedCompareLogs($kolo->id);
 
@@ -170,9 +170,9 @@ class QsoGeometryTest extends TestCase
     public function test_compare_with_hidden_while_round_open(): void
     {
         // Kolo v příjmu hlášení → porovnání by odhalilo soupeřův deník, vrací null.
-        $kolo = VkvpaKola::create([
-            'datum_konani' => '2026-03-15 08:00:00', 'datum_uzaverky' => now()->addDay(),
-            'nazev' => '03/2026', 'poznamka' => '',
+        $kolo = EdiRound::create([
+            'starts_at' => '2026-03-15 08:00:00', 'closes_at' => now()->addDay(),
+            'name' => '03/2026', 'note' => '',
         ]);
         [$headA, $headB] = $this->seedCompareLogs($kolo->id);
 
@@ -181,12 +181,12 @@ class QsoGeometryTest extends TestCase
 
     public function test_compare_with_requires_same_round(): void
     {
-        $kolo = VkvpaKola::create([
-            'datum_konani' => '2026-03-15', 'datum_uzaverky' => '2026-03-20 23:59:59',
-            'nazev' => '03/2026', 'poznamka' => '', 'vyhodnoceno' => '2026-03-21 10:00:00',
+        $kolo = EdiRound::create([
+            'starts_at' => '2026-03-15', 'closes_at' => '2026-03-20 23:59:59',
+            'name' => '03/2026', 'note' => '', 'evaluated_at' => '2026-03-21 10:00:00',
         ]);
         [$headA, $headB] = $this->seedCompareLogs($kolo->id);
-        $headB->update(['id_kola' => null]);
+        $headB->update(['round_id' => null]);
 
         $this->assertNull(new QsoGeometry()->compareWith($headA, $headB, null));
         $this->assertNull(new QsoGeometry()->compareWith($headA, $headA, null));
@@ -200,8 +200,8 @@ class QsoGeometryTest extends TestCase
      */
     private function seedCompareLogs(int $idKola): array
     {
-        $headA = Edihead::create(['id_kola' => $idKola, 't_date' => '20260315', 'p_call' => 'OK1AAA', 'p_wwlo' => 'JN79', 'p_band' => '144 MHz', 'r_name' => 'A', 'r_emai' => 'a@a.cz', 's_powe' => 100]);
-        $headB = Edihead::create(['id_kola' => $idKola, 't_date' => '20260315', 'p_call' => 'OK1BBB', 'p_wwlo' => 'JN89', 'p_band' => '144 MHz', 'r_name' => 'B', 'r_emai' => 'b@b.cz', 's_powe' => 100]);
+        $headA = Edihead::create(['round_id' => $idKola, 't_date' => '20260315', 'p_call' => 'OK1AAA', 'p_wwlo' => 'JN79', 'p_band' => '144 MHz', 'r_name' => 'A', 'r_emai' => 'a@a.cz', 's_powe' => 100]);
+        $headB = Edihead::create(['round_id' => $idKola, 't_date' => '20260315', 'p_call' => 'OK1BBB', 'p_wwlo' => 'JN89', 'p_band' => '144 MHz', 'r_name' => 'B', 'r_emai' => 'b@b.cz', 's_powe' => 100]);
 
         Ediline::create(['edihead_id' => $headA->id, 'qso_at' => '2026-03-15 08:10:00', 'call_sign' => 'OK5BIG', 'received_wwl' => 'JN99AA']);
         Ediline::create(['edihead_id' => $headA->id, 'qso_at' => '2026-03-15 08:15:00', 'call_sign' => 'OK9SML', 'received_wwl' => 'JO60AA']);
@@ -221,8 +221,8 @@ class QsoGeometryTest extends TestCase
      */
     private function seedRoundLogs(int $idKola): Edihead
     {
-        $headA = Edihead::create(['id_kola' => $idKola, 't_date' => '20260315', 'p_call' => 'OK1AAA', 'p_wwlo' => 'JN79', 'p_band' => '144 MHz', 'r_name' => 'A', 'r_emai' => 'a@a.cz', 's_powe' => 100]);
-        $headB = Edihead::create(['id_kola' => $idKola, 't_date' => '20260315', 'p_call' => 'OK1BBB', 'p_wwlo' => 'JN89', 'p_band' => '144 MHz', 'r_name' => 'B', 'r_emai' => 'b@b.cz', 's_powe' => 100]);
+        $headA = Edihead::create(['round_id' => $idKola, 't_date' => '20260315', 'p_call' => 'OK1AAA', 'p_wwlo' => 'JN79', 'p_band' => '144 MHz', 'r_name' => 'A', 'r_emai' => 'a@a.cz', 's_powe' => 100]);
+        $headB = Edihead::create(['round_id' => $idKola, 't_date' => '20260315', 'p_call' => 'OK1BBB', 'p_wwlo' => 'JN89', 'p_band' => '144 MHz', 'r_name' => 'B', 'r_emai' => 'b@b.cz', 's_powe' => 100]);
 
         // OK5BIG: 3 QSO v deníku A + 2 v deníku B = 5 napříč kolem → projde (min 5).
         foreach (['0810', '0811', '0812'] as $t) {

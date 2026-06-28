@@ -37,7 +37,7 @@
   <text x="85" y="98" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">Nadcházející</text>
   <line x1="35" y1="106" x2="135" y2="106" stroke="#e2e8f0" stroke-width="1"/>
   <text x="85" y="120" text-anchor="middle" font-size="9.5" fill="#94a3b8">start závodu</text>
-  <text x="85" y="133" text-anchor="middle" font-size="9.5" fill="#94a3b8">datum_konani &gt; nyní</text>
+  <text x="85" y="133" text-anchor="middle" font-size="9.5" fill="#94a3b8">starts_at &gt; nyní</text>
 
   <!-- ② Probíhá (badge-ok: bg #f0fdf4, border #86efac) -->
   <rect x="202" y="68" width="100" height="76" rx="10" fill="#f0fdf4" stroke="#86efac" stroke-width="1.5" filter="url(#shadow)"/>
@@ -51,7 +51,7 @@
   <text x="435" y="98" text-anchor="middle" font-size="13" font-weight="700" fill="#b45309">Příjem hlášení</text>
   <line x1="373" y1="106" x2="497" y2="106" stroke="#fde68a" stroke-width="1"/>
   <text x="435" y="120" text-anchor="middle" font-size="9.5" fill="#d97706">závod skončil</text>
-  <text x="435" y="133" text-anchor="middle" font-size="9.5" fill="#d97706">datum_uzaverky &gt; nyní</text>
+  <text x="435" y="133" text-anchor="middle" font-size="9.5" fill="#d97706">closes_at &gt; nyní</text>
 
   <!-- ④ Zpracování výsledků (badge-brand: bg #eef2ff, border #a5b4fc) -->
   <rect x="568" y="68" width="132" height="76" rx="10" fill="#eef2ff" stroke="#a5b4fc" stroke-width="1.5" filter="url(#shadow)"/>
@@ -92,7 +92,7 @@
 
   <!-- ①→② label -->
   <text x="174" y="59" text-anchor="middle" font-size="8.5" fill="#4338ca" font-weight="600">start závodu</text>
-  <text x="174" y="70" text-anchor="middle" font-size="8" fill="#6366f1">datum_konani · 08:00 UTC</text>
+  <text x="174" y="70" text-anchor="middle" font-size="8" fill="#6366f1">starts_at · 08:00 UTC</text>
 
   <!-- ②→③ label -->
   <text x="328" y="59" text-anchor="middle" font-size="8.5" fill="#4338ca" font-weight="600">konec závodu</text>
@@ -126,10 +126,10 @@
 
   <!-- Legend: DB columns -->
   <text x="30" y="207" font-size="9.5" fill="#94a3b8">
-    DB sloupce VkvpaKola:
-    <tspan font-weight="600" fill="#475569">datum_konani</tspan>
+    DB sloupce EdiRound:
+    <tspan font-weight="600" fill="#475569">starts_at</tspan>
     (datetime · start závodu) ·
-    <tspan font-weight="600" fill="#475569">datum_uzaverky</tspan>
+    <tspan font-weight="600" fill="#475569">closes_at</tspan>
     (datetime) ·
     <tspan font-weight="600" fill="#475569">vyhodnoceno</tspan>
     (datetime|null)

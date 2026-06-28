@@ -45,8 +45,8 @@ paths:
                 data:
                   - id: 5
                     nazev: "2024 duben"
-                    datum_konani: "2024-04-20T08:00:00+00:00"
-                    datum_uzaverky: "2024-04-28T23:59:00+00:00"
+                    starts_at: "2024-04-20T08:00:00+00:00"
+                    closes_at: "2024-04-28T23:59:00+00:00"
                     vyhodnoceno: "2024-05-01T10:00:00+00:00"
                     stav: "vyhodnocene"
 
@@ -133,12 +133,12 @@ components:
           type: string
           description: Název kola (obvykle rok + měsíc)
           example: "2024 duben"
-        datum_konani:
+        starts_at:
           type: string
           format: date-time
           description: Start závodu (standardně třetí neděle v měsíci 08:00 UTC)
           example: "2024-04-20T08:00:00+00:00"
-        datum_uzaverky:
+        closes_at:
           type: string
           format: date-time
           nullable: true
@@ -188,17 +188,17 @@ components:
           example: "2m SSB"
         body:
           type: integer
-          description: "Celkové body (body_za_qso × nasobice)"
+          description: "Celkové body (body_za_qso × multiplier)"
           example: 1250
         pocet:
           type: integer
           description: Počet započítaných QSO
           example: 45
-        nasobice:
+        multiplier:
           type: integer
           description: Počet různých velkých čtverců (násobiče)
           example: 12
-        bodu_za_qso:
+        qso_points:
           type: integer
           description: Součet bodů za jednotlivá spojení
           example: 120
@@ -239,4 +239,4 @@ components:
             properties:
               message:
                 type: string
-                example: "No query results for model [App\\Models\\VkvpaKola]."
+                example: "No query results for model [App\\Models\\EdiRound]."

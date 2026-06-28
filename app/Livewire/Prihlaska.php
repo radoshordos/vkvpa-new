@@ -16,8 +16,8 @@ use App\Exceptions\UnknownSectionException;
 use App\Exceptions\UploadWindowClosedException;
 use App\Jobs\RankRoundJob;
 use App\Models\EdiCategory;
-use App\Models\VkvpaData;
-use App\Models\VkvpaKola;
+use App\Models\EdiEntry;
+use App\Models\EdiRound;
 use App\Rules\ValidMaidenhead;
 use App\Rules\ValidPhone;
 use App\Services\Edi\EdiLog;
@@ -66,23 +66,23 @@ class Prihlaska extends Component
 
     public string $band = '';
 
-    public int $pocetView = 0;
+    public int $qsoCountView = 0;
 
-    public int $nasobiceView = 0;
+    public int $multiplierView = 0;
 
-    public int $bodyView = 0;
+    public int $pointsView = 0;
 
-    public string $koloNazev = '';
+    public string $roundName = '';
 
-    public string $kategorieNazev = '';
+    public string $categoryName = '';
 
     // ── Editovatelná pole ────────────────────────────────────────────────────
     // Ruční režim: značka/lokátor/kolo/kategorie + počty. EDI režim: jen kontakt.
-    public int $kolo = 0;
+    public int $round = 0;
 
-    public int $kategorie = 0;
+    public int $category = 0;
 
-    public string $znacka = '';
+    public string $callsign = '';
 
     public string $locator = '';
 
@@ -90,21 +90,21 @@ class Prihlaska extends Component
 
     public bool $lp = false;
 
-    public int $pocet = 0;
+    public int $qsoCount = 0;
 
-    public int $bodu_za_qso = 0;
+    public int $qso_points = 0;
 
-    public int $nasobice = 0;
+    public int $multiplier = 0;
 
-    public int $body = 0;
+    public int $points = 0;
 
-    public string $jmeno = '';
+    public string $name = '';
 
     public string $email = '';
 
-    public string $telefon = '';
+    public string $phone = '';
 
-    public string $poznamka = '';
+    public string $note = '';
 
     public string $soapbox = '';
 
@@ -139,10 +139,10 @@ class Prihlaska extends Component
         // Veřejnost podává jen do aktuálního průběžného kola – předvyplníme je
         // a selektor kola nezobrazujeme (výběr má jen admin pro backfill).
         if (! $this->isAdmin()) {
-            $aktualni = VkvpaKola::aktualniProPrubezne();
+            $aktualni = EdiRound::currentForStandings();
             if ($aktualni !== null) {
-                $this->kolo = $aktualni->id;
-                $this->koloNazev = $aktualni->nazev;
+                $this->round = $aktualni->id;
+                $this->roundName = $aktualni->name;
             }
         }
     }
@@ -195,28 +195,28 @@ class Prihlaska extends Component
         }
 
         $h = $log->header;
-        $this->kolo = $preview->idKola;
-        $this->kategorie = $preview->idKategorie;
+        $this->round = $preview->idKola;
+        $this->category = $preview->idKategorie;
         $this->pcall = $h->pCall();
         $this->band = $h->pBand();
-        $this->znacka = $h->pCall();
+        $this->callsign = $h->pCall();
         $this->locator = $h->pWWLo();
         $this->qrp = $h->isQrp();
         $this->lp = $h->isLp();
-        $this->pocetView = $preview->score->pocet;
-        $this->nasobiceView = $preview->score->nasobice;
-        $this->bodyView = $preview->score->body;
+        $this->qsoCountView = $preview->score->qsoCount;
+        $this->multiplierView = $preview->score->multiplier;
+        $this->pointsView = $preview->score->points;
         // Název kola/kategorie je jen informativní popisek do náhledu – pokud
         // řádek chybí (kategorie může být statické id bez DB záznamu), necháme prázdno.
-        $koloNazev = VkvpaKola::query()->whereKey($preview->idKola)->value('nazev');
-        $kategorieNazev = EdiCategory::query()->whereKey($preview->idKategorie)->value('name');
-        $this->koloNazev = is_string($koloNazev) ? $koloNazev : '';
-        $this->kategorieNazev = is_string($kategorieNazev) ? $kategorieNazev : '';
+        $roundName = EdiRound::query()->whereKey($preview->idKola)->value('name');
+        $categoryName = EdiCategory::query()->whereKey($preview->idKategorie)->value('name');
+        $this->roundName = is_string($roundName) ? $roundName : '';
+        $this->categoryName = is_string($categoryName) ? $categoryName : '';
 
         // Předvyplníme kontaktní pole z hlavičky – závodník je může upravit.
-        $this->jmeno = $h->rName();
+        $this->name = $h->rName();
         $this->email = $h->rEmail();
-        $this->telefon = $h->rPhon();
+        $this->phone = $h->rPhon();
         $this->soapbox = $h->get('RSoap');
 
         $this->warnings = app(EdiValidator::class)->validate($log, $this->ediContestDay($log))->messages();
@@ -274,19 +274,19 @@ class Prihlaska extends Component
     {
         $this->resetEdiState();
 
-        $this->jmeno = trim($this->jmeno);
-        $this->telefon = trim($this->telefon);
+        $this->name = trim($this->name);
+        $this->phone = trim($this->phone);
 
         $this->validate([
-            'jmeno' => ['required', 'string', 'max:60'],
+            'name' => ['required', 'string', 'max:60'],
             'email' => ['required', 'email', 'max:250'],
-            'telefon' => ['required', 'string', 'max:20', new ValidPhone],
-            'poznamka' => ['nullable', 'string', 'max:250'],
+            'phone' => ['required', 'string', 'max:20', new ValidPhone],
+            'note' => ['nullable', 'string', 'max:250'],
             'soapbox' => ['nullable', 'string', 'max:250'],
         ], attributes: [
-            'jmeno' => 'jméno',
+            'name' => 'jméno',
             'email' => 'e-mail',
-            'telefon' => 'telefon',
+            'phone' => 'telefon',
         ]);
 
         try {
@@ -303,14 +303,14 @@ class Prihlaska extends Component
                 $log,
                 enforceUploadWindow: ! $this->isAdmin(),
                 overrides: [
-                    'jmeno' => $this->jmeno,
-                    'mail' => $this->email,
-                    'telefon' => $this->telefon,
+                    'name' => $this->name,
+                    'email' => $this->email,
+                    'phone' => $this->phone,
                     'soapbox' => $this->soapbox,
-                    'poznamka' => $this->poznamka,
+                    'note' => $this->note,
                     'qrp' => $this->qrp,
                     'lp' => $this->lp,
-                    'schvaleno' => $this->isAdmin(),
+                    'approved' => $this->isAdmin(),
                 ],
             );
         } catch (
@@ -329,87 +329,87 @@ class Prihlaska extends Component
         }
 
         // Pořadí kola přepočítat hned (u nepřevzatého řádku neškodné).
-        RankRoundJob::dispatchSync($row->id_kola);
+        RankRoundJob::dispatchSync($row->round_id);
 
-        return $this->dokonceno($row->id_kola);
+        return $this->dokonceno($row->round_id);
     }
 
     private function odeslatRucne(): mixed
     {
-        $this->znacka = mb_strtoupper(trim($this->znacka));
+        $this->callsign = mb_strtoupper(trim($this->callsign));
         $this->locator = mb_strtoupper(trim($this->locator));
-        $this->jmeno = trim($this->jmeno);
-        $this->telefon = trim($this->telefon);
+        $this->name = trim($this->name);
+        $this->phone = trim($this->phone);
 
         $this->validate([
-            'kolo' => ['required', 'integer', 'exists:vkvpa_kola,id'],
-            'kategorie' => ['required', 'integer', 'exists:edi_category,id'],
-            'znacka' => ['required', 'string', 'max:10'],
+            'round' => ['required', 'integer', 'exists:edi_rounds,id'],
+            'category' => ['required', 'integer', 'exists:edi_category,id'],
+            'callsign' => ['required', 'string', 'max:10'],
             'locator' => ['required', 'string', 'max:6', new ValidMaidenhead],
-            'jmeno' => ['required', 'string', 'max:60'],
+            'name' => ['required', 'string', 'max:60'],
             // E-mail je u ručního hlášení nepovinný (EDI hlavička ho obvykle nese).
             'email' => ['nullable', 'email', 'max:250'],
-            'telefon' => ['required', 'string', 'max:20', new ValidPhone],
-            'pocet' => ['nullable', 'integer', 'min:0'],
-            'bodu_za_qso' => ['nullable', 'integer', 'min:0'],
-            'nasobice' => ['nullable', 'integer', 'min:0'],
-            'body' => ['nullable', 'integer', 'min:0'],
-            'poznamka' => ['nullable', 'string', 'max:250'],
+            'phone' => ['required', 'string', 'max:20', new ValidPhone],
+            'qsoCount' => ['nullable', 'integer', 'min:0'],
+            'qso_points' => ['nullable', 'integer', 'min:0'],
+            'multiplier' => ['nullable', 'integer', 'min:0'],
+            'points' => ['nullable', 'integer', 'min:0'],
+            'note' => ['nullable', 'string', 'max:250'],
             'soapbox' => ['nullable', 'string', 'max:250'],
         ], attributes: [
-            'kolo' => 'kolo',
-            'jmeno' => 'jméno',
+            'round' => 'kolo',
+            'name' => 'jméno',
             'email' => 'e-mail',
-            'telefon' => 'telefon',
-            'znacka' => 'volací znak',
+            'phone' => 'telefon',
+            'callsign' => 'volací znak',
             'locator' => 'lokátor',
         ]);
 
         // Hlášení od veřejnosti lze odeslat jen v otevřeném okně příjmu kola.
         if (! $this->isAdmin()) {
-            $kolo = VkvpaKola::find($this->kolo);
-            if ($kolo === null || ! $kolo->prijimaHlaseni()) {
-                $this->addError('kolo', 'Kolo právě nepřijímá hlášení – odeslat je lze jen v otevřeném upload okně (od dne závodu 08:00 UTC do uzávěrky).');
+            $kolo = EdiRound::find($this->round);
+            if ($kolo === null || ! $kolo->acceptsReports()) {
+                $this->addError('round', 'Kolo právě nepřijímá hlášení – odeslat je lze jen v otevřeném upload okně (od dne závodu 08:00 UTC do uzávěrky).');
 
                 return null;
             }
         }
 
-        if (VkvpaData::query()
-            ->where('id_kola', $this->kolo)
-            ->where('znacka', $this->znacka)
-            ->where('id_kategorie', $this->kategorie)
+        if (EdiEntry::query()
+            ->where('round_id', $this->round)
+            ->where('callsign', $this->callsign)
+            ->where('category_id', $this->category)
             ->exists()
         ) {
-            $this->addError('znacka', 'Pro toto kolo a kategorii již existuje hlášení pro značku '.$this->znacka.'.');
+            $this->addError('callsign', 'Pro toto kolo a kategorii již existuje hlášení pro značku '.$this->callsign.'.');
 
             return null;
         }
 
-        $row = VkvpaData::create([
-            'id_kola' => $this->kolo,
-            'id_kategorie' => $this->kategorie,
-            'znacka' => $this->znacka,
+        $row = EdiEntry::create([
+            'round_id' => $this->round,
+            'category_id' => $this->category,
+            'callsign' => $this->callsign,
             'locator' => $this->locator,
-            'pocet' => $this->pocet,
-            'bodu_za_qso' => $this->bodu_za_qso,
-            'nasobice' => $this->nasobice,
-            'body' => $this->body,
+            'qso_count' => $this->qsoCount,
+            'qso_points' => $this->qso_points,
+            'multiplier' => $this->multiplier,
+            'points' => $this->points,
             'qrp' => $this->qrp,
             'lp' => $this->lp,
-            'mail' => $this->email,
-            'jmeno' => $this->jmeno,
-            'telefon' => $this->telefon,
+            'email' => $this->email,
+            'name' => $this->name,
+            'phone' => $this->phone,
             'soapbox' => $this->soapbox,
-            'poznamka' => $this->poznamka,
-            'edihead_id' => null,
+            'note' => $this->note,
+            'edi_head_id' => null,
             // Veřejné hlášení čeká na převzetí vyhodnocovatelem; admin smí rovnou převzít.
-            'schvaleno' => $this->isAdmin(),
+            'approved' => $this->isAdmin(),
         ]);
 
-        RankRoundJob::dispatchSync($row->id_kola);
+        RankRoundJob::dispatchSync($row->round_id);
 
-        return $this->dokonceno($row->id_kola);
+        return $this->dokonceno($row->round_id);
     }
 
     private function dokonceno(int $idKola): mixed
@@ -453,7 +453,7 @@ class Prihlaska extends Component
 
         return view('livewire.prihlaska', [
             'isAdmin' => $this->isAdmin(),
-            'kola' => VkvpaKola::query()->orderByDesc('datum_konani')->limit(36)->get(),
+            'kola' => EdiRound::query()->orderByDesc('starts_at')->limit(36)->get(),
             'kategorieList' => EdiCategory::query()->orderBy('id')->get(),
             'report' => $report,
             'ediLines' => $ediLines,

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Http\Controllers\Admin\ZaznamController;
-use App\Models\VkvpaKola;
+use App\Models\EdiRound;
 use App\Services\Scoring\ScoringService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
@@ -34,9 +34,9 @@ final class FinalizeEvaluatedRoundsCommand extends Command
 
         // Kandidáti: nevyhodnocená kola po uzávěrce. Vlastní podmínku
         // (vše převzato / 20 dní) ověří finalizeIfDue přes maBytVyhodnoceno().
-        $kola = VkvpaKola::query()
-            ->whereNull('vyhodnoceno')
-            ->where('datum_uzaverky', '<', now())
+        $kola = EdiRound::query()
+            ->whereNull('evaluated_at')
+            ->where('closes_at', '<', now())
             ->get();
 
         foreach ($kola as $kolo) {
@@ -44,7 +44,7 @@ final class FinalizeEvaluatedRoundsCommand extends Command
                 continue;
             }
 
-            $this->info(sprintf('Vyhodnoceno: %s (id %d)', $kolo->nazev, $kolo->id));
+            $this->info(sprintf('Vyhodnoceno: %s (id %d)', $kolo->name, $kolo->id));
             $finalized++;
         }
 
