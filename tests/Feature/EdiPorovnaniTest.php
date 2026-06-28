@@ -160,8 +160,8 @@ class EdiPorovnaniTest extends TestCase
             'evaluated_at' => $otevrene ? null : '2026-03-21 10:00:00',
         ]);
 
-        $katA = EdiCategory::create(['name' => '144 MHz', 'band' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
-        $katB = EdiCategory::create(['name' => '432 MHz', 'band' => 'B', 'section' => 'SO', 'variant' => 'domestic']);
+        $katA = EdiCategory::create(['name' => '144 MHz', 'section' => 'SO', 'variant' => 'domestic']);
+        $katB = EdiCategory::create(['name' => '432 MHz', 'section' => 'SO', 'variant' => 'domestic']);
 
         $head = $this->importSample();
         $head->update(['round_id' => $kolo->id]);

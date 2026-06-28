@@ -44,7 +44,7 @@ class HomePageTest extends TestCase
         return EdiEntry::create([
             'round_id' => $kolo->id,
             'category_id' => EdiCategory::firstOrCreate(
-                ['band' => '144SO', 'section' => 'SO', 'variant' => 'domestic'],
+                ['section' => 'SO', 'variant' => 'domestic'],
                 ['name' => '144 MHz SO'],
             )->id,
             'callsign' => $znacka,

@@ -36,7 +36,7 @@ class ZaznamAdminTest extends TestCase
             'name' => '05/2026',
             'note' => '',
         ]);
-        $kat = EdiCategory::create(['name' => '144 MHz single op', 'band' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
+        $kat = EdiCategory::create(['name' => '144 MHz single op', 'section' => 'SO', 'variant' => 'domestic']);
 
         return EdiEntry::create([
             'round_id' => $kolo->id, 'category_id' => $kat->id, 'callsign' => 'OK1TEST',
@@ -108,7 +108,7 @@ class ZaznamAdminTest extends TestCase
     public function test_unapprove_resets_ranking_for_round(): void
     {
         $kolo = EdiRound::create(['starts_at' => now()->subDays(2), 'closes_at' => now()->addDays(3), 'name' => '05/2026', 'note' => '']);
-        $kat = EdiCategory::create(['name' => '144 MHz single op', 'band' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
+        $kat = EdiCategory::create(['name' => '144 MHz single op', 'section' => 'SO', 'variant' => 'domestic']);
 
         $a = EdiEntry::create(['round_id' => $kolo->id, 'category_id' => $kat->id, 'callsign' => 'OK1A', 'locator' => 'JN99AJ', 'qso_count' => 10, 'multiplier' => 5, 'points' => 100, 'qso_points' => 0, 'approved' => true, 'sent' => false, 'rank' => 1]);
         $b = EdiEntry::create(['round_id' => $kolo->id, 'category_id' => $kat->id, 'callsign' => 'OK1B', 'locator' => 'JN99AJ', 'qso_count' => 5, 'multiplier' => 3, 'points' => 50, 'qso_points' => 0, 'approved' => true, 'sent' => false, 'rank' => 2]);
@@ -126,7 +126,7 @@ class ZaznamAdminTest extends TestCase
     public function test_prevzit_recalculates_ranking_for_round(): void
     {
         $kolo = EdiRound::create(['starts_at' => now()->subDays(2), 'closes_at' => now()->addDays(3), 'name' => '05/2026', 'note' => '']);
-        $kat = EdiCategory::create(['name' => '144 MHz single op', 'band' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
+        $kat = EdiCategory::create(['name' => '144 MHz single op', 'section' => 'SO', 'variant' => 'domestic']);
 
         $a = EdiEntry::create(['round_id' => $kolo->id, 'category_id' => $kat->id, 'callsign' => 'OK1A', 'locator' => 'JN99AJ', 'qso_count' => 10, 'multiplier' => 5, 'points' => 100, 'qso_points' => 0, 'approved' => true, 'sent' => false, 'rank' => 0]);
         $b = EdiEntry::create(['round_id' => $kolo->id, 'category_id' => $kat->id, 'callsign' => 'OK1B', 'locator' => 'JN99AJ', 'qso_count' => 5, 'multiplier' => 3, 'points' => 50, 'qso_points' => 0, 'approved' => false, 'sent' => false, 'rank' => 0]);
@@ -143,7 +143,7 @@ class ZaznamAdminTest extends TestCase
     public function test_smazat_recalculates_ranking_after_deletion(): void
     {
         $kolo = EdiRound::create(['starts_at' => now()->subDays(2), 'closes_at' => now()->addDays(3), 'name' => '05/2026', 'note' => '']);
-        $kat = EdiCategory::create(['name' => '144 MHz single op', 'band' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
+        $kat = EdiCategory::create(['name' => '144 MHz single op', 'section' => 'SO', 'variant' => 'domestic']);
 
         $a = EdiEntry::create(['round_id' => $kolo->id, 'category_id' => $kat->id, 'callsign' => 'OK1A', 'locator' => 'JN99AJ', 'qso_count' => 10, 'multiplier' => 5, 'points' => 100, 'qso_points' => 0, 'approved' => true, 'sent' => false, 'rank' => 2]);
         $b = EdiEntry::create(['round_id' => $kolo->id, 'category_id' => $kat->id, 'callsign' => 'OK1B', 'locator' => 'JN99AJ', 'qso_count' => 5, 'multiplier' => 3, 'points' => 200, 'qso_points' => 0, 'approved' => true, 'sent' => false, 'rank' => 1]);
@@ -161,7 +161,7 @@ class ZaznamAdminTest extends TestCase
     {
         // Kolo po uzávěrce (stav Zpracování) – převzetí už nelze vrátit.
         $kolo = EdiRound::create(['starts_at' => now()->subDays(7), 'closes_at' => now()->subDay(), 'name' => '05/2026', 'note' => '']);
-        $kat = EdiCategory::create(['name' => '144 MHz single op', 'band' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
+        $kat = EdiCategory::create(['name' => '144 MHz single op', 'section' => 'SO', 'variant' => 'domestic']);
         $zaznam = EdiEntry::create([
             'round_id' => $kolo->id, 'category_id' => $kat->id, 'callsign' => 'OK1A', 'locator' => 'JN99AJ',
             'qso_count' => 10, 'multiplier' => 5, 'points' => 50, 'qso_points' => 0, 'approved' => true, 'sent' => false,
@@ -180,7 +180,7 @@ class ZaznamAdminTest extends TestCase
     {
         // Kolo po uzávěrce s jediným dosud nepřevzatým záznamem.
         $kolo = EdiRound::create(['starts_at' => now()->subDays(7), 'closes_at' => now()->subDay(), 'name' => '05/2026', 'note' => '']);
-        $kat = EdiCategory::create(['name' => '144 MHz single op', 'band' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
+        $kat = EdiCategory::create(['name' => '144 MHz single op', 'section' => 'SO', 'variant' => 'domestic']);
         $zaznam = EdiEntry::create([
             'round_id' => $kolo->id, 'category_id' => $kat->id, 'callsign' => 'OK1A', 'locator' => 'JN99AJ',
             'qso_count' => 10, 'multiplier' => 5, 'points' => 50, 'qso_points' => 0, 'approved' => false, 'sent' => false,

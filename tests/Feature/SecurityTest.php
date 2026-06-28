@@ -68,7 +68,7 @@ class SecurityTest extends TestCase
     public function test_xss_in_vysledky_jmeno_is_escaped(): void
     {
         $kolo = $this->round();
-        $kat = EdiCategory::create(['name' => '144 MHz', 'band' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
+        $kat = EdiCategory::create(['name' => '144 MHz', 'section' => 'SO', 'variant' => 'domestic']);
 
         EdiEntry::create([
             'round_id' => $kolo->id,
@@ -91,7 +91,7 @@ class SecurityTest extends TestCase
     public function test_xss_in_vysledky_soapbox_is_escaped(): void
     {
         $kolo = $this->round();
-        $kat = EdiCategory::create(['name' => '144 MHz', 'band' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
+        $kat = EdiCategory::create(['name' => '144 MHz', 'section' => 'SO', 'variant' => 'domestic']);
 
         EdiEntry::create([
             'round_id' => $kolo->id,

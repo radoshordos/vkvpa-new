@@ -15,8 +15,8 @@ use Override;
  * Přístup řeší middleware „admin" na routě.
  *
  * Formulář posílá pásmo jako název (`band`, např. '144 MHz') z číselníku
- * `edi_bands`; {@see self::toModel()} ho zapíše jako textový `band` a zároveň
- * doplní normalizovaný `band_id` (FK do `edi_bands`).
+ * `edi_bands`; {@see self::toModel()} ho přeloží na `edi_category.band_id`
+ * (textový sloupec už neexistuje).
  */
 class KategorieRequest extends FormRequest
 {
@@ -63,12 +63,12 @@ class KategorieRequest extends FormRequest
             'name' => ['required', 'string', 'max:50'],
             'band' => ['required', Rule::in(self::bands())],
             'section' => ['required', Rule::in(['SO', 'MO'])],
-            // Přirozený klíč band+section+variant je unikátní (jedna kombinace =
-            // jedna kategorie); kontrolujeme přes variant s where na band+section.
+            // Přirozený klíč band_id+section+variant je unikátní (jedna kombinace
+            // = jedna kategorie); kontrolujeme přes variant s where na band_id+section.
             'variant' => [
                 'required', Rule::in(['domestic', 'dx']),
                 Rule::unique('edi_category', 'variant')
-                    ->where('band', $this->string('band')->value())
+                    ->where('band_id', $this->bandId())
                     ->where('section', $this->string('section')->value())
                     ->ignore($ignoreId),
             ],
@@ -106,7 +106,6 @@ class KategorieRequest extends FormRequest
     {
         $data = [
             'name' => $this->string('name')->value(),
-            'band' => $this->string('band')->value(),
             'band_id' => $this->bandId(),
             'section' => $this->string('section')->value(),
             'variant' => $this->string('variant')->value(),

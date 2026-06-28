@@ -32,7 +32,7 @@ class VysledkyListinaTest extends TestCase
 
     private function kat(string $nazev): EdiCategory
     {
-        return EdiCategory::create(['name' => $nazev, 'band' => $nazev, 'section' => 'SO', 'variant' => 'domestic']);
+        return EdiCategory::create(['name' => $nazev, 'section' => 'SO', 'variant' => 'domestic']);
     }
 
     private function entry(int $kolo, int $kat, string $znacka, int $pocet, int $nas, int $body, int $poradi): EdiEntry

@@ -38,7 +38,7 @@ class AdminEntryCheckerTest extends TestCase
 
     private function kat(): EdiCategory
     {
-        return EdiCategory::create(['name' => '144 MHz', 'band' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
+        return EdiCategory::create(['name' => '144 MHz', 'section' => 'SO', 'variant' => 'domestic']);
     }
 
     /** @param array<string, mixed> $overrides */

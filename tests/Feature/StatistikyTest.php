@@ -181,7 +181,7 @@ class StatistikyTest extends TestCase
             Ediline::create(['edihead_id' => $headB->id, 'qso_at' => '2026-03-15 '.substr($t, 0, 2).':'.substr($t, 2, 2).':00', 'call_sign' => 'OK5BIG', 'received_wwl' => 'JN99AA']);
         }
 
-        $kat = EdiCategory::create(['name' => '144 MHz', 'band' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
+        $kat = EdiCategory::create(['name' => '144 MHz', 'section' => 'SO', 'variant' => 'domestic']);
 
         foreach ([['OK1AAA', 5, 4, 80], ['OK1BBB', 3, 3, 30]] as [$znacka, $pocet, $multiplier, $body]) {
             EdiEntry::create([

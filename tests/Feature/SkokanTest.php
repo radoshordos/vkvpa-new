@@ -28,7 +28,7 @@ class SkokanTest extends TestCase
     {
         parent::setUp();
 
-        $this->kat = EdiCategory::create(['name' => '144 MHz single op', 'band' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
+        $this->kat = EdiCategory::create(['name' => '144 MHz single op', 'section' => 'SO', 'variant' => 'domestic']);
         $this->r1 = EdiRound::create(['starts_at' => '2026-05-17', 'closes_at' => '2026-05-22 23:59:59', 'name' => '05/2026', 'note' => '', 'evaluated_at' => '2026-05-23 10:00:00']);
         $this->r2 = EdiRound::create(['starts_at' => '2026-06-21', 'closes_at' => '2026-06-26 23:59:59', 'name' => '06/2026', 'note' => '']);
     }
@@ -81,7 +81,7 @@ class SkokanTest extends TestCase
 
     public function test_different_category_is_not_compared(): void
     {
-        $kat2 = EdiCategory::create(['name' => '432 MHz single op', 'band' => 'B', 'section' => 'SO', 'variant' => 'domestic']);
+        $kat2 = EdiCategory::create(['name' => '432 MHz single op', 'section' => 'SO', 'variant' => 'domestic']);
         // Předchozí start v jiné kategorii se nezapočítá.
         EdiEntry::create([
             'round_id' => $this->r1->id, 'category_id' => $kat2->id, 'callsign' => 'OK1A',

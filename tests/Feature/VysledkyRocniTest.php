@@ -22,7 +22,7 @@ class VysledkyRocniTest extends TestCase
 
     private function kat(string $nazev): EdiCategory
     {
-        return EdiCategory::create(['name' => $nazev, 'band' => $nazev, 'section' => 'SO', 'variant' => 'domestic']);
+        return EdiCategory::create(['name' => $nazev, 'section' => 'SO', 'variant' => 'domestic']);
     }
 
     private function round(string $rok): EdiRound

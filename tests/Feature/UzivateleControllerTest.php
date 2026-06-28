@@ -39,7 +39,7 @@ class UzivateleControllerTest extends TestCase
             'name' => '05/2026',
             'note' => '',
         ]);
-        $kat = EdiCategory::create(['name' => '144 MHz single op '.$this->koloSeq, 'band' => 'A'.$this->koloSeq, 'section' => 'SO', 'variant' => 'domestic']);
+        $kat = EdiCategory::create(['name' => '144 MHz single op '.$this->koloSeq, 'section' => 'SO', 'variant' => 'domestic']);
 
         return EdiEntry::create(array_merge([
             'round_id' => $kolo->id, 'category_id' => $kat->id, 'callsign' => 'OK1TEST',

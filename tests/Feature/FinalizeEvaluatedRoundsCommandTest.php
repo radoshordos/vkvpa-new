@@ -37,7 +37,7 @@ class FinalizeEvaluatedRoundsCommandTest extends TestCase
     private function zaznam(EdiRound $kolo, bool $approved, int $body = 50): EdiEntry
     {
         $kat = EdiCategory::firstOrCreate(
-            ['band' => 'A', 'section' => 'SO', 'variant' => 'domestic'],
+            ['section' => 'SO', 'variant' => 'domestic'],
             ['name' => '144 MHz single op'],
         );
 

@@ -32,7 +32,6 @@ class ApiVysledkyTest extends TestCase
     {
         return EdiCategory::create([
             'name' => '2m SSB',
-            'band' => 'SSB',
             'section' => 'SO',
             'variant' => 'domestic',
         ]);
