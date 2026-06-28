@@ -92,7 +92,8 @@ final class StatistikyInkubator
      *     median: list<int>,
      *     p25: list<int>,
      *     p75: list<int>,
-     *     race: list<array{call: string, body: list<int>}>,
+     *     raceMine: list<array{t: int, body: int}>,
+     *     race: list<array{call: string, body: list<array{t: int, body: int}>}>,
      *     rateLabels: list<string>,
      *     rateMoje: list<int>,
      *     rateMedian: list<int>,
@@ -111,7 +112,8 @@ final class StatistikyInkubator
 
         // ── Moje strana ────────────────────────────────────────────────────
         $mojeQso = $this->geometry->enrichedQsos($head, $home, 'qso_at');
-        $mojeBody = $this->sample($this->geometry->prubehSkore($mojeQso, $homeSq), $ticks);
+        $mojeCum = $this->geometry->prubehSkore($mojeQso, $homeSq);
+        $mojeBody = $this->sample($mojeCum, $ticks);
         $rateMoje = $this->statistiky->timelineCounts($mojeQso, $fromMin, $toMin);
         $mojeCtverce = $this->distinctSquares($mojeQso);
         $mojeStanice = $this->distinctCalls($mojeQso);
@@ -119,7 +121,9 @@ final class StatistikyInkubator
         // ── Pole (medián/kvartily) + sběr popularit pro promarněné ─────────
         $poleBody = [$mojeBody];      // sloupce pro medián: já + soupeři
         $poleRate = [$rateMoje];
-        /** @var list<array{call: string, body: list<int>}> $souperi */
+        // Pro „závod" si vedle vzorkovaných bodů držím i surovou kumulativní
+        // řadu (bod v čase každého QSO) – animace pak roste minutu po minutě.
+        /** @var list<array{call: string, final: int, raw: list<array{t: int, body: int}>}> $souperi */
         $souperi = [];
         /** @var array<string, int> $ctverecPop  kolik soupeřů čtverec pracovalo */
         $ctverecPop = [];
@@ -133,10 +137,15 @@ final class StatistikyInkubator
             $rivalSq = Maidenhead::bigSquare((string) $rival->p_wwlo);
             $rivalQso = $this->geometry->enrichedQsos($rival, $rivalHome, 'qso_at');
 
-            $body = $this->sample($this->geometry->prubehSkore($rivalQso, $rivalSq), $ticks);
+            $cum = $this->geometry->prubehSkore($rivalQso, $rivalSq);
+            $body = $this->sample($cum, $ticks);
             $poleBody[] = $body;
             $poleRate[] = $this->statistiky->timelineCounts($rivalQso, $fromMin, $toMin);
-            $souperi[] = ['call' => (string) $rival->p_call, 'body' => $body];
+            $souperi[] = [
+                'call' => (string) $rival->p_call,
+                'final' => $body === [] ? 0 : $body[count($body) - 1],
+                'raw' => $this->rawBody($cum),
+            ];
 
             foreach ($this->distinctSquares($rivalQso) as $sq) {
                 $ctverecPop[$sq] = ($ctverecPop[$sq] ?? 0) + 1;
@@ -164,6 +173,7 @@ final class StatistikyInkubator
             'median' => $this->percentilSloupce($poleBody, 0.5),
             'p25' => $this->percentilSloupce($poleBody, 0.25),
             'p75' => $this->percentilSloupce($poleBody, 0.75),
+            'raceMine' => $this->rawBody($mojeCum),
             'race' => $this->topZavod($souperi, 5),
             'rateLabels' => $this->statistiky->timelineLabels($fromMin, $toMin),
             'rateMoje' => $rateMoje,
@@ -244,21 +254,32 @@ final class StatistikyInkubator
     }
 
     /**
-     * TOP soupeři podle výsledných bodů (poslední vzorek) pro „závod".
+     * TOP soupeři podle výsledných bodů pro „závod"; vrací jejich surovou
+     * kumulativní řadu (bod v čase každého QSO) pro animaci po minutách.
      *
-     * @param  list<array{call: string, body: list<int>}>  $souperi
-     * @return list<array{call: string, body: list<int>}>
+     * @param  list<array{call: string, final: int, raw: list<array{t: int, body: int}>}>  $souperi
+     * @return list<array{call: string, body: list<array{t: int, body: int}>}>
      */
     private function topZavod(array $souperi, int $limit): array
     {
-        usort($souperi, function (array $a, array $b): int {
-            $av = $a['body'] === [] ? 0 : $a['body'][count($a['body']) - 1];
-            $bv = $b['body'] === [] ? 0 : $b['body'][count($b['body']) - 1];
+        usort($souperi, fn (array $a, array $b): int => $b['final'] <=> $a['final']);
 
-            return $bv <=> $av;
-        });
+        return array_map(
+            static fn (array $s): array => ['call' => $s['call'], 'body' => $s['raw']],
+            array_slice($souperi, 0, $limit),
+        );
+    }
 
-        return array_slice($souperi, 0, $limit);
+    /**
+     * Surová kumulativní řada skóre: pro každé QSO jeho čas a průběžné body
+     * (podklad pro animovaný „závod" na lineární časové ose).
+     *
+     * @param  list<array{t: int, cas: string, call: string, points: int, multiplier: int, body: int}>  $cum
+     * @return list<array{t: int, body: int}>
+     */
+    private function rawBody(array $cum): array
+    {
+        return array_map(static fn (array $c): array => ['t' => $c['t'], 'body' => $c['body']], $cum);
     }
 
     /**

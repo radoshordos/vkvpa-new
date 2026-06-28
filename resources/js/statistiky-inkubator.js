@@ -83,8 +83,6 @@ if (hmWrap) {
 const pole = cfg.pole;
 
 if (pole) {
-    const tickMins = pole.ticks.map((_, i) => cfg.window.from + i * 15);
-
     // ── 2) Vs. pole kategorie (moje skóre + medián + kvartilové pásmo) ─────
     const poleEl = document.getElementById('chartPole');
     if (poleEl) {
@@ -110,21 +108,35 @@ if (pole) {
         }));
     }
 
-    // ── 3) Závod skóre (animace) ──────────────────────────────────────────
+    // ── 3) Závod skóre (animace po minutách) ──────────────────────────────
+    // Surová kumulativní data (bod v čase každého QSO) na lineární časové ose;
+    // posuvník po minutách prodlužuje schodové čáry minutu po minutě.
     const palette = ['#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
-    const raceSeries = [{ call: cfg.pcall, body: pole.mojeBody, color: '#3b82f6', mine: true }]
-        .concat(pole.race.map((r, i) => ({ call: r.call, body: r.body, color: palette[i % palette.length], mine: false })));
+    const raceSeries = [{ call: cfg.pcall, raw: pole.raceMine, color: '#3b82f6', mine: true }]
+        .concat(pole.race.map((r, i) => ({ call: r.call, raw: r.body, color: palette[i % palette.length], mine: false })));
 
     const zavodEl = document.getElementById('chartZavod');
-    let raceChart = null;
     if (zavodEl) {
-        raceChart = new Chart(zavodEl, {
+        // Čára k zadanému času: všechny body s t ≤ time + koncový bod v čase
+        // (drží poslední hodnotu), aby křivka rostla i mezi QSO.
+        const seriesTo = (raw, time) => {
+            const pts = [{ x: cfg.window.from, y: 0 }];
+            let last = 0;
+            for (const p of raw) {
+                if (p.t > time) break;
+                pts.push({ x: p.t, y: p.body });
+                last = p.body;
+            }
+            pts.push({ x: time, y: last });
+            return pts;
+        };
+
+        const raceChart = new Chart(zavodEl, {
             type: 'line',
             data: {
-                labels: pole.ticks,
                 datasets: raceSeries.map((s) => ({
                     label: s.call,
-                    data: s.body.slice(),
+                    data: seriesTo(s.raw, cfg.window.to),
                     borderColor: s.color,
                     backgroundColor: s.color,
                     borderWidth: s.mine ? 3 : 1.5,
@@ -138,8 +150,12 @@ if (pole) {
                 plugins: {
                     legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } },
                     title: { display: true, text: 'Závod skóre v čase', font: { size: 13 } },
+                    tooltip: { callbacks: { title: (its) => (its.length ? hhmm(its[0].parsed.x) + ' UTC' : '') } },
                 },
-                scales: { y: { beginAtZero: true }, x: { grid: { display: false } } },
+                scales: {
+                    x: { type: 'linear', min: cfg.window.from, max: cfg.window.to, ticks: { stepSize: 15, callback: (v) => hhmm(v) }, grid: { display: false } },
+                    y: { beginAtZero: true },
+                },
             },
         });
         charts.push(raceChart);
@@ -149,10 +165,7 @@ if (pole) {
         const playBtn = document.getElementById('race-play');
 
         function applyRace(time) {
-            const k = tickMins.filter((m) => m <= time).length;
-            raceChart.data.datasets.forEach((ds, di) => {
-                ds.data = raceSeries[di].body.map((v, i) => (i < k ? v : null));
-            });
+            raceChart.data.datasets.forEach((ds, di) => { ds.data = seriesTo(raceSeries[di].raw, time); });
             raceChart.update('none');
             label.textContent = hhmm(time) + ' UTC';
         }
