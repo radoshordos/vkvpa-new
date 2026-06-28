@@ -77,10 +77,12 @@ final class StatistikyInkubator
      * Souhrnná analýza vůči poli kategorie (já + všichni soupeři z téhož kola
      * a kategorie). Vrací podklady pro:
      *  – graf „vs. pole" (moje průběžné skóre vs. medián a kvartilové pásmo),
-     *  – „závod" TOP soupeřů (kumulativní křivky pro animaci),
      *  – rate sheet (moje QSO/15 min vs. medián pole),
      *  – promarněné příležitosti (čtverce a stanice, které pracovala většina
      *    pole, ale já ne).
+     *
+     * Animovaný „závod" TOP soupeřů má vlastní {@see zavodPole()} (je na stránce
+     * Porovnání deníků).
      *
      * Null, když porovnání není dostupné (bez kola, před uzávěrkou, bez soupeřů).
      *
@@ -92,8 +94,6 @@ final class StatistikyInkubator
      *     median: list<int>,
      *     p25: list<int>,
      *     p75: list<int>,
-     *     raceMine: list<array{t: int, body: int}>,
-     *     race: list<array{call: string, body: list<array{t: int, body: int}>}>,
      *     rateLabels: list<string>,
      *     rateMoje: list<int>,
      *     rateMedian: list<int>,
@@ -112,8 +112,7 @@ final class StatistikyInkubator
 
         // ── Moje strana ────────────────────────────────────────────────────
         $mojeQso = $this->geometry->enrichedQsos($head, $home, 'qso_at');
-        $mojeCum = $this->geometry->prubehSkore($mojeQso, $homeSq);
-        $mojeBody = $this->sample($mojeCum, $ticks);
+        $mojeBody = $this->sample($this->geometry->prubehSkore($mojeQso, $homeSq), $ticks);
         $rateMoje = $this->statistiky->timelineCounts($mojeQso, $fromMin, $toMin);
         $mojeCtverce = $this->distinctSquares($mojeQso);
         $mojeStanice = $this->distinctCalls($mojeQso);
@@ -121,10 +120,6 @@ final class StatistikyInkubator
         // ── Pole (medián/kvartily) + sběr popularit pro promarněné ─────────
         $poleBody = [$mojeBody];      // sloupce pro medián: já + soupeři
         $poleRate = [$rateMoje];
-        // Pro „závod" si vedle vzorkovaných bodů držím i surovou kumulativní
-        // řadu (bod v čase každého QSO) – animace pak roste minutu po minutě.
-        /** @var list<array{call: string, final: int, raw: list<array{t: int, body: int}>}> $souperi */
-        $souperi = [];
         /** @var array<string, int> $ctverecPop  kolik soupeřů čtverec pracovalo */
         $ctverecPop = [];
         /** @var array<string, int> $stanicePop */
@@ -137,15 +132,8 @@ final class StatistikyInkubator
             $rivalSq = Maidenhead::bigSquare((string) $rival->p_wwlo);
             $rivalQso = $this->geometry->enrichedQsos($rival, $rivalHome, 'qso_at');
 
-            $cum = $this->geometry->prubehSkore($rivalQso, $rivalSq);
-            $body = $this->sample($cum, $ticks);
-            $poleBody[] = $body;
+            $poleBody[] = $this->sample($this->geometry->prubehSkore($rivalQso, $rivalSq), $ticks);
             $poleRate[] = $this->statistiky->timelineCounts($rivalQso, $fromMin, $toMin);
-            $souperi[] = [
-                'call' => (string) $rival->p_call,
-                'final' => $body === [] ? 0 : $body[count($body) - 1],
-                'raw' => $this->rawBody($cum),
-            ];
 
             foreach ($this->distinctSquares($rivalQso) as $sq) {
                 $ctverecPop[$sq] = ($ctverecPop[$sq] ?? 0) + 1;
@@ -173,14 +161,53 @@ final class StatistikyInkubator
             'median' => $this->percentilSloupce($poleBody, 0.5),
             'p25' => $this->percentilSloupce($poleBody, 0.25),
             'p75' => $this->percentilSloupce($poleBody, 0.75),
-            'raceMine' => $this->rawBody($mojeCum),
-            'race' => $this->topZavod($souperi, 5),
             'rateLabels' => $this->statistiky->timelineLabels($fromMin, $toMin),
             'rateMoje' => $rateMoje,
             'rateMedian' => $this->percentilSloupce($poleRate, 0.5),
             'missedSquares' => $this->promarneneCtverce($ctverecPop, $mojeCtverce, $homeSq, $prah),
             'missedStations' => $this->promarneneStanice($stanicePop, $staniceInfo, $mojeStanice, $home, $prah),
         ];
+    }
+
+    /**
+     * Podklad pro animovaný „závod skóre" na stránce Porovnání deníků: surová
+     * kumulativní řada (bod v čase každého QSO) tohoto deníku a TOP 5 soupeřů
+     * z téhož kola a kategorie. Vykresluje se jako schodová čára na lineární
+     * časové ose, posuvník ji prodlužuje minutu po minutě.
+     *
+     * Null, když porovnání není dostupné (bez kola, před uzávěrkou, bez soupeřů).
+     *
+     * @param  array{lat: float, lon: float}|null  $home  souřadnice domácího QTH
+     * @return array{
+     *     mine: list<array{t: int, body: int}>,
+     *     race: list<array{call: string, body: list<array{t: int, body: int}>}>
+     * }|null
+     */
+    public function zavodPole(Edihead $head, ?array $home, string $homeSq): ?array
+    {
+        $rivals = $this->rivals->rivals($head);
+        if ($rivals->isEmpty()) {
+            return null;
+        }
+
+        $mine = $this->rawBody($this->geometry->prubehSkore($this->geometry->enrichedQsos($head, $home, 'qso_at'), $homeSq));
+
+        /** @var list<array{call: string, final: int, raw: list<array{t: int, body: int}>}> $souperi */
+        $souperi = [];
+
+        foreach ($rivals as $rival) {
+            $rivalHome = Maidenhead::toLatLon((string) $rival->p_wwlo);
+            $rivalSq = Maidenhead::bigSquare((string) $rival->p_wwlo);
+            $raw = $this->rawBody($this->geometry->prubehSkore($this->geometry->enrichedQsos($rival, $rivalHome, 'qso_at'), $rivalSq));
+
+            $souperi[] = [
+                'call' => (string) $rival->p_call,
+                'final' => $raw === [] ? 0 : $raw[count($raw) - 1]['body'],
+                'raw' => $raw,
+            ];
+        }
+
+        return ['mine' => $mine, 'race' => $this->topZavod($souperi, 5)];
     }
 
     /**

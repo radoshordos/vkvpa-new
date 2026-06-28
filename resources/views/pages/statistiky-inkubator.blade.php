@@ -6,10 +6,11 @@
     Prototypy:
       • Heatmapa směr × čas (kdy se kam pásmo otevřelo)
       • Vs. pole kategorie (moje skóre vs. medián + kvartilové pásmo)
-      • Závod skóre (animované kumulativní křivky TOP soupeřů)
       • Rate sheet (moje QSO/15 min vs. medián pole)
       • Promarněné příležitosti (čtverce a stanice, které pracovala většina pole)
       • Export QSO do CSV
+
+    Animovaný „závod skóre" se přesunul na stránku Porovnání deníků.
 --}}
 @extends('layouts.app')
 
@@ -56,6 +57,7 @@ window.__inkubatorConfig = {
 <p class="text-sm text-muted mb-4">
   {{ $homeLoc }} · Hřiště s návrhy nových funkcí — vyber, co se ti líbí, a sloučí se do statistik. ·
   <a href="{{ route('edi.vizualizace', ['head' => $head]) }}" class="underline hover:text-heading">zpět na vizualizaci</a>
+  · <a href="{{ route('edi.porovnani', ['head' => $head]) }}" class="underline hover:text-heading">souboj soupeřů (závod skóre)</a>
   @php $znacka = preg_replace('/[^A-Za-z0-9]/', '', $pcall); @endphp
   @if ($znacka !== '')
     · <a href="{{ route('statistiky.stanice', ['znacka' => $znacka]) }}" class="underline hover:text-heading">profil stanice</a>
@@ -93,28 +95,16 @@ window.__inkubatorConfig = {
     <p class="text-xs text-muted mt-2">Modře moje průběžné skóre, šedá čára = medián pole, šedé pásmo = 25.–75. percentil. Nad pásmem = patřím ke špičce kategorie.</p>
   </div>
 
-  {{-- ── 3) Závod skóre (animace) ─────────────────────────────────────── --}}
-  <div class="section-head">3 · Závod skóre <span class="text-xs font-normal text-muted">— animovaný souboj TOP soupeřů</span></div>
-  <div class="rounded-lg border border-line bg-surface p-3 mb-5">
-    <div class="flex items-center gap-3 mb-2 flex-wrap">
-      <button type="button" id="race-play" class="map-tab">▶ Přehrát</button>
-      <input type="range" id="race-cas" class="flex-1 min-w-40" min="{{ $window['from'] }}" max="{{ $window['to'] }}" value="{{ $window['to'] }}" step="1">
-      <span class="text-sm font-mono font-semibold text-heading" id="race-cas-label"></span>
-    </div>
-    <div class="h-72"><canvas id="chartZavod"></canvas></div>
-    <p class="text-xs text-muted mt-2">Kumulativní skóre rostoucí v čase — kdo vedl kdy a kde tě soupeř předjel. Posuvníkem zastavíš čas.</p>
-  </div>
-
-  {{-- ── 4) Rate sheet ────────────────────────────────────────────────── --}}
-  <div class="section-head">4 · Rate sheet <span class="text-xs font-normal text-muted">— moje tempo proti mediánu pole</span></div>
+  {{-- ── 3) Rate sheet ────────────────────────────────────────────────── --}}
+  <div class="section-head">3 · Rate sheet <span class="text-xs font-normal text-muted">— moje tempo proti mediánu pole</span></div>
   <div class="relative rounded-lg border border-line bg-surface p-3 mb-5">
     <button type="button" class="ink-png" data-ink-png="chartRate" data-nazev="rate-sheet" title="Stáhnout jako PNG">⤓</button>
     <div class="h-72"><canvas id="chartRate"></canvas></div>
     <p class="text-xs text-muted mt-2">QSO v 15min intervalech: tvoje (modře) vs. medián kategorie (šedě). Kde jsi pod medián, tam ti tempo stojí.</p>
   </div>
 
-  {{-- ── 5) Promarněné příležitosti ───────────────────────────────────── --}}
-  <div class="section-head">5 · Promarněné příležitosti <span class="text-xs font-normal text-muted">— co pracovalo pole, ale ty ne</span></div>
+  {{-- ── 4) Promarněné příležitosti ───────────────────────────────────── --}}
+  <div class="section-head">4 · Promarněné příležitosti <span class="text-xs font-normal text-muted">— co pracovalo pole, ale ty ne</span></div>
   <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 mb-6">
     <div class="rounded-lg border border-line bg-surface p-3">
       <div class="text-sm font-semibold text-heading mb-2">Čtverce, které ti chybí</div>
@@ -153,8 +143,8 @@ window.__inkubatorConfig = {
   </div>
 @endif
 
-{{-- ── 6) Export ────────────────────────────────────────────────────────── --}}
-<div class="section-head">6 · Export deníku</div>
+{{-- ── 5) Export ────────────────────────────────────────────────────────── --}}
+<div class="section-head">5 · Export deníku</div>
 <div class="rounded-lg border border-line bg-surface p-3 mb-4">
   <button type="button" id="export-csv" class="map-tab">⤓ Stáhnout QSO jako CSV</button>
   <span class="text-xs text-muted ml-2">{{ count($qso) }} spojení · sloupce: čas, značka, lokátor, km, azimut, body, druh provozu. (ADIF/EDI export jako další krok.)</span>
