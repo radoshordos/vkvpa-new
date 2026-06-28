@@ -452,7 +452,11 @@ class EdiGenerator extends Component
             'home' => $home,
             'homeLoc' => $homeLoc,
             'bands' => EdiComposer::BANDS,
-            'modes' => [2 => QsoMode::Cw->label(), 1 => QsoMode::Ssb->label()],
+            // Nabídka druhů provozu = oficiálně povolené módy 1–6 (bez „Ostatní").
+            'modes' => collect(QsoMode::cases())
+                ->reject(fn (QsoMode $m): bool => $m === QsoMode::Other)
+                ->mapWithKeys(fn (QsoMode $m): array => [$m->value => $m->label()])
+                ->all(),
             'submittable' => $this->isSubmittable(),
         ]);
     }
