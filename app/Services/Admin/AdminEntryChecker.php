@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Admin;
 
+use App\Enums\QsoMode;
 use App\Enums\Severity;
 use App\Models\EdiEntry;
 use App\Models\Edihead;
@@ -45,7 +46,7 @@ final class AdminEntryChecker
             return $findings; // ruční hlášení bez EDI – EDI kontroly přeskočit
         }
 
-        $head = Edihead::with(['lines' => static fn (HasMany $q) => $q->select('edihead_id', 'call_sign', 'qso_at', 'received_wwl')])
+        $head = Edihead::with(['lines' => static fn (HasMany $q) => $q->select('edihead_id', 'call_sign', 'qso_at', 'received_wwl', 'mode_code')])
             ->find($entry->edi_head_id);
 
         if ($head === null) {
@@ -64,6 +65,7 @@ final class AdminEntryChecker
             $this->invalidHomeLocatorWarning($head),
             $this->duplicateCallsWarning($head->lines),
             $this->invalidLocatorsWarning($head->lines),
+            $this->invalidModeCodesWarning($head->lines),
             $this->outOfWindowWarning($head->lines),
         ]) as $w) {
             $findings[] = $w;
@@ -294,6 +296,43 @@ final class AdminEntryChecker
         return new Finding(
             Severity::Warning,
             'Neplatný WWL lokátor u spojení: '.$invalid->implode(', ').'.',
+        );
+    }
+
+    // ── Chybný kód druhu provozu ─────────────────────────────────────────────
+
+    /**
+     * Upozorní na QSO s kódem provozu mimo oficiálně povolené 1–6 (SSB, CW,
+     * SSB/CW, CW/SSB, AM, FM). Takový kód (0/prázdný, dřívější MGM/SSTV/ATV,
+     * nebo rozhozený sloupec s RST) se mapuje na {@see QsoMode::Other} a počítá
+     * se jako „Ostatní". Jen informativní – body to neovlivní.
+     *
+     * @param  Collection<int, Ediline>  $lines
+     */
+    private function invalidModeCodesWarning(Collection $lines): ?Finding
+    {
+        $invalid = $lines->filter(static fn (Ediline $l): bool => $l->mode === QsoMode::Other);
+        $total = $invalid->count();
+
+        if ($total === 0) {
+            return null;
+        }
+
+        $sample = $invalid
+            ->take(8)
+            ->map(static function (Ediline $l): string {
+                $call = strtoupper(trim((string) $l->call_sign));
+
+                return ($call !== '' ? $call : '?').': '.$l->modeCode;
+            })
+            ->values();
+
+        $more = $total > 8 ? ' … (+'.($total - 8).')' : '';
+
+        return new Finding(
+            Severity::Info,
+            'Chybný kód druhu provozu (mimo povolené 1–6) u '.$total.' QSO: '
+                .$sample->implode(', ').$more.'. Tato spojení se počítají jako „Ostatní".',
         );
     }
 
