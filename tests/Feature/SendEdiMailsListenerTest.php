@@ -9,8 +9,8 @@ use App\Listeners\SendEdiMailsListener;
 use App\Mail\HlaseniPrijato;
 use App\Mail\HlaseniProVyhodnocovatele;
 use App\Models\EdiCategory;
-use App\Models\VkvpaData;
-use App\Models\VkvpaKola;
+use App\Models\EdiEntry;
+use App\Models\EdiRound;
 use App\Models\VkvpaPrihlaseni;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
@@ -24,7 +24,7 @@ class SendEdiMailsListenerTest extends TestCase
 {
     use RefreshDatabase;
 
-    private VkvpaData $data;
+    private EdiEntry $data;
 
     private SendEdiMailsListener $listener;
 
@@ -32,24 +32,24 @@ class SendEdiMailsListenerTest extends TestCase
     {
         parent::setUp();
 
-        $kolo = VkvpaKola::create([
-            'datum_konani' => now()->subDay(),
-            'datum_uzaverky' => now()->addDays(5),
-            'nazev' => 'Testovací kolo',
-            'poznamka' => '',
+        $kolo = EdiRound::create([
+            'starts_at' => now()->subDay(),
+            'closes_at' => now()->addDays(5),
+            'name' => 'Testovací kolo',
+            'note' => '',
         ]);
         $kat = EdiCategory::create(['name' => '144 MHz', 'band' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
 
-        $this->data = VkvpaData::create([
-            'id_kola' => $kolo->id,
-            'id_kategorie' => $kat->id,
-            'znacka' => 'OK2KJT',
+        $this->data = EdiEntry::create([
+            'round_id' => $kolo->id,
+            'category_id' => $kat->id,
+            'callsign' => 'OK2KJT',
             'locator' => 'JN99AJ',
-            'mail' => 'zavodnik@example.com',
-            'pocet' => 10,
-            'nasobice' => 5,
-            'body' => 50,
-            'schvaleno' => false,
+            'email' => 'zavodnik@example.com',
+            'qso_count' => 10,
+            'multiplier' => 5,
+            'points' => 50,
+            'approved' => false,
         ]);
 
         $this->listener = new SendEdiMailsListener;
@@ -77,7 +77,7 @@ class SendEdiMailsListenerTest extends TestCase
     {
         Mail::fake();
 
-        $this->data->mail = '';
+        $this->data->email = '';
         $this->dispatch();
 
         Mail::assertNotQueued(HlaseniPrijato::class);
@@ -87,7 +87,7 @@ class SendEdiMailsListenerTest extends TestCase
     {
         Mail::fake();
 
-        $this->data->mail = 'tohle-neni-email';
+        $this->data->email = 'tohle-neni-email';
         $this->dispatch();
 
         Mail::assertNotQueued(HlaseniPrijato::class);
@@ -97,7 +97,7 @@ class SendEdiMailsListenerTest extends TestCase
     {
         Mail::fake();
 
-        $this->data->mail = 'ok2kjt@';
+        $this->data->email = 'ok2kjt@';
         $this->dispatch();
 
         Mail::assertNotQueued(HlaseniPrijato::class);
@@ -122,7 +122,7 @@ class SendEdiMailsListenerTest extends TestCase
         Mail::fake();
 
         Config::set('vkvpa.contact_mail', 'vyhodnocovatel@example.com');
-        $this->data->mail = '';
+        $this->data->email = '';
         $this->dispatch();
 
         Mail::assertQueued(
@@ -135,7 +135,7 @@ class SendEdiMailsListenerTest extends TestCase
     {
         Mail::fake();
 
-        $this->data->mail = '';
+        $this->data->email = '';
         $this->dispatch();
 
         Mail::assertNotQueued(HlaseniProVyhodnocovatele::class);
@@ -146,7 +146,7 @@ class SendEdiMailsListenerTest extends TestCase
         Mail::fake();
 
         Config::set('vkvpa.contact_mail', 'not-an-email');
-        $this->data->mail = '';
+        $this->data->email = '';
         $this->dispatch();
 
         Mail::assertNotQueued(HlaseniProVyhodnocovatele::class);
@@ -157,7 +157,7 @@ class SendEdiMailsListenerTest extends TestCase
         Mail::fake();
 
         Config::set('vkvpa.contact_mail', 'vyhodnocovatel@example.com');
-        $this->data->mail = '';
+        $this->data->email = '';
         $this->dispatch();
 
         Mail::assertQueued(HlaseniProVyhodnocovatele::class, function (HlaseniProVyhodnocovatele $m) {
@@ -172,7 +172,7 @@ class SendEdiMailsListenerTest extends TestCase
         Mail::fake();
 
         Config::set('vkvpa.contact_mail', 'vyhodnocovatel@example.com');
-        $this->data->mail = '';
+        $this->data->email = '';
         $this->dispatch();
 
         Mail::assertQueued(
@@ -196,7 +196,7 @@ class SendEdiMailsListenerTest extends TestCase
     public function test_token_is_hashed_sha256_in_db(): void
     {
         Config::set('vkvpa.contact_mail', 'vyhodnocovatel@example.com');
-        $this->data->mail = '';
+        $this->data->email = '';
 
         $mailable = null;
         Mail::fake();
@@ -241,7 +241,7 @@ class SendEdiMailsListenerTest extends TestCase
     {
         Mail::fake();
 
-        $this->data->mail = '';
+        $this->data->email = '';
         $this->dispatch();
 
         Mail::assertNothingQueued();

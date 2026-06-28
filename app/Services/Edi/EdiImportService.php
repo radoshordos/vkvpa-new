@@ -19,7 +19,7 @@ final class EdiImportService
             $h = $log->header;
 
             $head = Edihead::create([
-                'id_kola' => $idKola,
+                'round_id' => $idKola,
                 't_date' => $h->tDate(),
                 'p_call' => $h->pCall(),
                 'p_wwlo' => $h->pWWLo(),

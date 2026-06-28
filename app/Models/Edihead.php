@@ -20,7 +20,7 @@ use Override;
  * Vlastní časové sloupce (`stamp`, `d_cas`) nejsou Laravel created_at/updated_at.
  *
  * @property int $id
- * @property int|null $id_kola
+ * @property int|null $round_id
  * @property int|null $edi_category_id
  * @property string $t_date
  * @property string $p_call
@@ -43,7 +43,7 @@ use Override;
  * @property-read EdiCategory|null $category
  */
 #[Fillable([
-    'id_kola', 'edi_category_id', 't_date', 'p_call', 'p_wwlo', 'p_sect', 'p_band',
+    'round_id', 'edi_category_id', 't_date', 'p_call', 'p_wwlo', 'p_sect', 'p_band',
     'r_name', 'r_emai', 'r_phon', 's_powe', 's_tx_eq', 's_ante',
     'src', 'remarks', 's_rcr',
 ])]
@@ -75,7 +75,7 @@ class Edihead extends Model
     protected function casts(): array
     {
         return [
-            'id_kola' => 'integer',
+            'round_id' => 'integer',
             'edi_category_id' => 'integer',
             's_powe' => 'integer',
             'stamp' => 'datetime',

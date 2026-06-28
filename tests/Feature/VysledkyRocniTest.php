@@ -6,8 +6,8 @@ namespace Tests\Feature;
 
 use App\Http\Controllers\VysledkyController;
 use App\Models\EdiCategory;
-use App\Models\VkvpaData;
-use App\Models\VkvpaKola;
+use App\Models\EdiEntry;
+use App\Models\EdiRound;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -25,34 +25,34 @@ class VysledkyRocniTest extends TestCase
         return EdiCategory::create(['name' => $nazev, 'band' => $nazev, 'section' => 'SO', 'variant' => 'domestic']);
     }
 
-    private function kolo(string $rok): VkvpaKola
+    private function round(string $rok): EdiRound
     {
-        return VkvpaKola::create([
-            'datum_konani' => "{$rok}-01-18",
-            'datum_uzaverky' => "{$rok}-02-01",
-            'nazev' => "01/{$rok}",
-            'poznamka' => '',
+        return EdiRound::create([
+            'starts_at' => "{$rok}-01-18",
+            'closes_at' => "{$rok}-02-01",
+            'name' => "01/{$rok}",
+            'note' => '',
         ]);
     }
 
-    private function entry(VkvpaKola $kolo, EdiCategory $kat, string $znacka, int $body, bool $qrp = false, bool $edi = true, bool $lp = false): VkvpaData
+    private function entry(EdiRound $kolo, EdiCategory $kat, string $znacka, int $body, bool $qrp = false, bool $edi = true, bool $lp = false): EdiEntry
     {
-        return VkvpaData::create([
-            'id_kola' => $kolo->id,
-            'id_kategorie' => $kat->id,
-            'znacka' => $znacka,
+        return EdiEntry::create([
+            'round_id' => $kolo->id,
+            'category_id' => $kat->id,
+            'callsign' => $znacka,
             'locator' => 'JN99AJ',
-            'pocet' => 10,
-            'nasobice' => 5,
-            'bodu_za_qso' => 0,
-            'body' => $body,
-            'poradi' => 1,
-            'schvaleno' => true,
-            'odeslano' => false,
+            'qso_count' => 10,
+            'multiplier' => 5,
+            'qso_points' => 0,
+            'points' => $body,
+            'rank' => 1,
+            'approved' => true,
+            'sent' => false,
             'qrp' => $qrp,
             'lp' => $lp,
             // FK na edihead se v sqlite testech nevynucuje – id 1 nemusí existovat.
-            'edihead_id' => $edi ? 1 : null,
+            'edi_head_id' => $edi ? 1 : null,
         ]);
     }
 
@@ -71,12 +71,12 @@ class VysledkyRocniTest extends TestCase
     public function test_rocni_sums_points_across_rounds_for_same_year(): void
     {
         $kat = $this->kat('144 MHz single op');
-        $kolo1 = $this->kolo('2026');
-        $kolo2 = VkvpaKola::create([
-            'datum_konani' => '2026-04-19',
-            'datum_uzaverky' => '2026-05-03',
-            'nazev' => '02/2026',
-            'poznamka' => '',
+        $kolo1 = $this->round('2026');
+        $kolo2 = EdiRound::create([
+            'starts_at' => '2026-04-19',
+            'closes_at' => '2026-05-03',
+            'name' => '02/2026',
+            'note' => '',
         ]);
 
         $this->entry($kolo1, $kat, 'OK1DOL', 1000);
@@ -91,12 +91,12 @@ class VysledkyRocniTest extends TestCase
     public function test_rocni_shows_per_round_monthly_breakdown(): void
     {
         $kat = $this->kat('144 MHz single op');
-        $kolo1 = $this->kolo('2026'); // 01/2026
-        $kolo2 = VkvpaKola::create([
-            'datum_konani' => '2026-04-19',
-            'datum_uzaverky' => '2026-05-03',
-            'nazev' => '04/2026',
-            'poznamka' => '',
+        $kolo1 = $this->round('2026'); // 01/2026
+        $kolo2 = EdiRound::create([
+            'starts_at' => '2026-04-19',
+            'closes_at' => '2026-05-03',
+            'name' => '04/2026',
+            'note' => '',
         ]);
 
         $this->entry($kolo1, $kat, 'OK1DOL', 1000);
@@ -116,8 +116,8 @@ class VysledkyRocniTest extends TestCase
     public function test_rocni_excludes_results_from_other_year(): void
     {
         $kat = $this->kat('144 MHz single op');
-        $kolo2025 = $this->kolo('2025');
-        $kolo2026 = $this->kolo('2026');
+        $kolo2025 = $this->round('2025');
+        $kolo2026 = $this->round('2026');
 
         $this->entry($kolo2025, $kat, 'OK2OLD', 999);
         $this->entry($kolo2026, $kat, 'OK1NEW', 100);
@@ -131,7 +131,7 @@ class VysledkyRocniTest extends TestCase
     public function test_rocni_qrp_filter_shows_only_qrp_stations(): void
     {
         $kat = $this->kat('144 MHz single op');
-        $kolo = $this->kolo('2026');
+        $kolo = $this->round('2026');
 
         $this->entry($kolo, $kat, 'OK1QRP', 200, qrp: true);
         $this->entry($kolo, $kat, 'OK1FULL', 500, qrp: false);
@@ -145,7 +145,7 @@ class VysledkyRocniTest extends TestCase
     public function test_rocni_lp_filter_includes_lp_and_qrp_stations(): void
     {
         $kat = $this->kat('144 MHz single op');
-        $kolo = $this->kolo('2026');
+        $kolo = $this->round('2026');
 
         // QRP (≤5 W) je podmnožinou LP (<100 W) – filtr „jen LP" musí zahrnout obě.
         $this->entry($kolo, $kat, 'OK1LP', 300, lp: true);
@@ -162,12 +162,12 @@ class VysledkyRocniTest extends TestCase
     public function test_rocni_tints_monthly_cell_by_power(): void
     {
         $kat = $this->kat('144 MHz single op');
-        $kolo1 = $this->kolo('2026'); // 01/2026 – QRP
-        $kolo4 = VkvpaKola::create([
-            'datum_konani' => '2026-04-19',
-            'datum_uzaverky' => '2026-05-03',
-            'nazev' => '04/2026',
-            'poznamka' => '',
+        $kolo1 = $this->round('2026'); // 01/2026 – QRP
+        $kolo4 = EdiRound::create([
+            'starts_at' => '2026-04-19',
+            'closes_at' => '2026-05-03',
+            'name' => '04/2026',
+            'note' => '',
         ]);
 
         // Stanice jede 01 QRP a 04 na plný výkon – obarvit se má jen lednová buňka.
@@ -187,7 +187,7 @@ class VysledkyRocniTest extends TestCase
     {
         $kat144 = $this->kat('144 MHz single op');
         $kat432 = $this->kat('432 MHz single op');
-        $kolo = $this->kolo('2026');
+        $kolo = $this->round('2026');
 
         $this->entry($kolo, $kat144, 'OK1VHF', 1000);
         $this->entry($kolo, $kat432, 'OK1UHF', 800);
@@ -204,7 +204,7 @@ class VysledkyRocniTest extends TestCase
     {
         $kat144 = $this->kat('144 MHz single op');
         $kat432 = $this->kat('432 MHz single op');
-        $kolo = $this->kolo('2026');
+        $kolo = $this->round('2026');
 
         $this->entry($kolo, $kat144, 'OK1VHF', 1000);
         $this->entry($kolo, $kat432, 'OK1UHF', 800);

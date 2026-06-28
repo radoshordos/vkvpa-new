@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\EdiRound;
 use App\Models\Prispevek;
 use App\Models\User;
-use App\Models\VkvpaKola;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -22,13 +22,13 @@ class DiskuseTest extends TestCase
         return User::create(['name' => 'Admin', 'password' => Hash::make('x'), 'is_admin' => true]);
     }
 
-    private function kolo(): VkvpaKola
+    private function round(): EdiRound
     {
-        return VkvpaKola::create([
-            'datum_konani' => now()->subDays(3),
-            'datum_uzaverky' => now()->addDays(2),
-            'nazev' => '05/2026',
-            'poznamka' => '',
+        return EdiRound::create([
+            'starts_at' => now()->subDays(3),
+            'closes_at' => now()->addDays(2),
+            'name' => '05/2026',
+            'note' => '',
         ]);
     }
 
@@ -37,7 +37,7 @@ class DiskuseTest extends TestCase
 
     public function test_index_redirects_to_latest_kolo(): void
     {
-        $kolo = $this->kolo();
+        $kolo = $this->round();
 
         $this->get(route('diskuse.index'))
             ->assertRedirect(route('diskuse.show', $kolo->id));
@@ -54,8 +54,8 @@ class DiskuseTest extends TestCase
 
     public function test_show_renders_view_with_prispevky(): void
     {
-        $kolo = $this->kolo();
-        Prispevek::create(['kolo_id' => $kolo->id, 'znacka' => 'OK1AB', 'text' => 'Ahoj ze závodu!', 'ip' => '127.0.0.1']);
+        $kolo = $this->round();
+        Prispevek::create(['round_id' => $kolo->id, 'znacka' => 'OK1AB', 'text' => 'Ahoj ze závodu!', 'ip' => '127.0.0.1']);
 
         $this->get(route('diskuse.show', $kolo->id))
             ->assertOk()
@@ -65,7 +65,7 @@ class DiskuseTest extends TestCase
 
     public function test_show_renders_empty_state_without_prispevky(): void
     {
-        $kolo = $this->kolo();
+        $kolo = $this->round();
 
         $this->get(route('diskuse.show', $kolo->id))
             ->assertOk()
@@ -74,20 +74,20 @@ class DiskuseTest extends TestCase
 
     public function test_selectbox_omits_old_kola_without_prispevky(): void
     {
-        $aktualni = $this->kolo();
-        $stareBez = VkvpaKola::create([
-            'datum_konani' => now()->subYears(2),
-            'datum_uzaverky' => now()->subYears(2),
-            'nazev' => '01/2024',
-            'poznamka' => '',
+        $aktualni = $this->round();
+        $stareBez = EdiRound::create([
+            'starts_at' => now()->subYears(2),
+            'closes_at' => now()->subYears(2),
+            'name' => '01/2024',
+            'note' => '',
         ]);
-        $stareS = VkvpaKola::create([
-            'datum_konani' => now()->subYears(3),
-            'datum_uzaverky' => now()->subYears(3),
-            'nazev' => '01/2023',
-            'poznamka' => '',
+        $stareS = EdiRound::create([
+            'starts_at' => now()->subYears(3),
+            'closes_at' => now()->subYears(3),
+            'name' => '01/2023',
+            'note' => '',
         ]);
-        Prispevek::create(['kolo_id' => $stareS->id, 'znacka' => 'OK1AB', 'text' => 'Starý příspěvek.', 'ip' => '127.0.0.1']);
+        Prispevek::create(['round_id' => $stareS->id, 'znacka' => 'OK1AB', 'text' => 'Starý příspěvek.', 'ip' => '127.0.0.1']);
 
         $kola = $this->get(route('diskuse.show', $aktualni->id))
             ->assertOk()
@@ -101,12 +101,12 @@ class DiskuseTest extends TestCase
 
     public function test_selectbox_always_contains_displayed_kolo(): void
     {
-        $this->kolo();
-        $stare = VkvpaKola::create([
-            'datum_konani' => now()->subYears(2),
-            'datum_uzaverky' => now()->subYears(2),
-            'nazev' => '01/2024',
-            'poznamka' => '',
+        $this->round();
+        $stare = EdiRound::create([
+            'starts_at' => now()->subYears(2),
+            'closes_at' => now()->subYears(2),
+            'name' => '01/2024',
+            'note' => '',
         ]);
 
         $kola = $this->get(route('diskuse.show', $stare->id))
@@ -122,7 +122,7 @@ class DiskuseTest extends TestCase
 
     public function test_store_creates_prispevek(): void
     {
-        $kolo = $this->kolo();
+        $kolo = $this->round();
 
         $this->post(route('diskuse.store', $kolo->id), [
             'znacka' => 'OK1TEST',
@@ -131,14 +131,14 @@ class DiskuseTest extends TestCase
             ->assertSessionHas('success');
 
         $this->assertDatabaseHas('diskuse', [
-            'kolo_id' => $kolo->id,
+            'round_id' => $kolo->id,
             'znacka' => 'OK1TEST',
         ]);
     }
 
     public function test_store_normalises_znacka_to_uppercase(): void
     {
-        $kolo = $this->kolo();
+        $kolo = $this->round();
 
         $this->post(route('diskuse.store', $kolo->id), [
             'znacka' => 'ok1lower',
@@ -150,7 +150,7 @@ class DiskuseTest extends TestCase
 
     public function test_store_accepts_optional_jmeno(): void
     {
-        $kolo = $this->kolo();
+        $kolo = $this->round();
 
         $this->post(route('diskuse.store', $kolo->id), [
             'znacka' => 'OK1A',
@@ -163,7 +163,7 @@ class DiskuseTest extends TestCase
 
     public function test_store_saves_photo_into_database(): void
     {
-        $kolo = $this->kolo();
+        $kolo = $this->round();
 
         $this->post(route('diskuse.store', $kolo->id), [
             'znacka' => 'OK1FOTO',
@@ -185,7 +185,7 @@ class DiskuseTest extends TestCase
 
     public function test_store_saves_multiple_photos_in_order(): void
     {
-        $kolo = $this->kolo();
+        $kolo = $this->round();
 
         $this->post(route('diskuse.store', $kolo->id), [
             'znacka' => 'OK1MULTI',
@@ -204,7 +204,7 @@ class DiskuseTest extends TestCase
 
     public function test_store_rejects_more_than_max_photos(): void
     {
-        $kolo = $this->kolo();
+        $kolo = $this->round();
 
         $fotky = [];
         for ($i = 0; $i < 6; $i++) {
@@ -222,7 +222,7 @@ class DiskuseTest extends TestCase
 
     public function test_store_downscales_large_photo(): void
     {
-        $kolo = $this->kolo();
+        $kolo = $this->round();
 
         $this->post(route('diskuse.store', $kolo->id), [
             'znacka' => 'OK1BIG',
@@ -238,7 +238,7 @@ class DiskuseTest extends TestCase
 
     public function test_foto_route_serves_image_from_db(): void
     {
-        $kolo = $this->kolo();
+        $kolo = $this->round();
 
         $this->post(route('diskuse.store', $kolo->id), [
             'znacka' => 'OK1SERVE',
@@ -259,7 +259,7 @@ class DiskuseTest extends TestCase
 
     public function test_store_requires_znacka(): void
     {
-        $kolo = $this->kolo();
+        $kolo = $this->round();
 
         $this->post(route('diskuse.store', $kolo->id), [
             'text' => 'Text bez značky.',
@@ -268,7 +268,7 @@ class DiskuseTest extends TestCase
 
     public function test_store_rejects_znacka_with_special_chars(): void
     {
-        $kolo = $this->kolo();
+        $kolo = $this->round();
 
         $this->post(route('diskuse.store', $kolo->id), [
             'znacka' => 'OK1@#$',
@@ -278,7 +278,7 @@ class DiskuseTest extends TestCase
 
     public function test_store_requires_text(): void
     {
-        $kolo = $this->kolo();
+        $kolo = $this->round();
 
         $this->post(route('diskuse.store', $kolo->id), [
             'znacka' => 'OK1TEST',
@@ -287,7 +287,7 @@ class DiskuseTest extends TestCase
 
     public function test_store_rejects_text_too_short(): void
     {
-        $kolo = $this->kolo();
+        $kolo = $this->round();
 
         $this->post(route('diskuse.store', $kolo->id), [
             'znacka' => 'OK1TEST',
@@ -297,7 +297,7 @@ class DiskuseTest extends TestCase
 
     public function test_store_rejects_non_image_file(): void
     {
-        $kolo = $this->kolo();
+        $kolo = $this->round();
 
         $this->post(route('diskuse.store', $kolo->id), [
             'znacka' => 'OK1FILE',
@@ -311,8 +311,8 @@ class DiskuseTest extends TestCase
 
     public function test_admin_can_delete_prispevek(): void
     {
-        $kolo = $this->kolo();
-        $p = Prispevek::create(['kolo_id' => $kolo->id, 'znacka' => 'OK1DEL', 'text' => 'Smažitelný.', 'ip' => '127.0.0.1']);
+        $kolo = $this->round();
+        $p = Prispevek::create(['round_id' => $kolo->id, 'znacka' => 'OK1DEL', 'text' => 'Smažitelný.', 'ip' => '127.0.0.1']);
 
         $this->actingAs($this->admin())
             ->delete(route('diskuse.destroy', $p->id))
@@ -324,7 +324,7 @@ class DiskuseTest extends TestCase
 
     public function test_admin_delete_removes_photos_from_db(): void
     {
-        $kolo = $this->kolo();
+        $kolo = $this->round();
 
         $this->post(route('diskuse.store', $kolo->id), [
             'znacka' => 'OK1FOTO',
@@ -344,8 +344,8 @@ class DiskuseTest extends TestCase
 
     public function test_guest_cannot_delete_prispevek(): void
     {
-        $kolo = $this->kolo();
-        $p = Prispevek::create(['kolo_id' => $kolo->id, 'znacka' => 'OK1ND', 'text' => 'Nesmažitelný hostem.', 'ip' => '127.0.0.1']);
+        $kolo = $this->round();
+        $p = Prispevek::create(['round_id' => $kolo->id, 'znacka' => 'OK1ND', 'text' => 'Nesmažitelný hostem.', 'ip' => '127.0.0.1']);
 
         $this->delete(route('diskuse.destroy', $p->id))
             ->assertRedirect(route('login'));

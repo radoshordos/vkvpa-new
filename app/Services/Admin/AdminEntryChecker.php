@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Services\Admin;
 
 use App\Enums\Severity;
+use App\Models\EdiEntry;
 use App\Models\Edihead;
 use App\Models\Ediline;
-use App\Models\VkvpaData;
 use App\Services\Edi\DenikStatistiky;
 use App\Support\ContestWindow;
 use App\Support\Finding;
@@ -33,7 +33,7 @@ final class AdminEntryChecker
      *
      * @return list<Finding>
      */
-    public function warnings(VkvpaData $entry): array
+    public function warnings(EdiEntry $entry): array
     {
         $findings = [];
 
@@ -41,12 +41,12 @@ final class AdminEntryChecker
             $findings[] = $w;
         }
 
-        if ($entry->edihead_id === null) {
+        if ($entry->edi_head_id === null) {
             return $findings; // ruční hlášení bez EDI – EDI kontroly přeskočit
         }
 
         $head = Edihead::with(['lines' => static fn (HasMany $q) => $q->select('edihead_id', 'call_sign', 'qso_at', 'received_wwl')])
-            ->find($entry->edihead_id);
+            ->find($entry->edi_head_id);
 
         if ($head === null) {
             return $findings;
@@ -60,7 +60,7 @@ final class AdminEntryChecker
         // (lokátor, duplicity, okno – zrcadlí logiku EdiValidationReport::fromLog()).
         foreach (array_filter([
             $this->operatingRateWarning($head->lines),
-            $this->crossCheckWarning($head, (int) $entry->id_kola),
+            $this->crossCheckWarning($head, (int) $entry->round_id),
             $this->invalidHomeLocatorWarning($head),
             $this->duplicateCallsWarning($head->lines),
             $this->invalidLocatorsWarning($head->lines),
@@ -75,18 +75,18 @@ final class AdminEntryChecker
     // ── Chybějící kontaktní údaje ─────────────────────────────────────────────
 
     /** @return list<Finding> */
-    private function contactWarnings(VkvpaData $entry): array
+    private function contactWarnings(EdiEntry $entry): array
     {
         $findings = [];
 
-        if (trim((string) $entry->jmeno) === '') {
+        if (trim((string) $entry->name) === '') {
             $findings[] = new Finding(
                 Severity::Warning,
                 'Chybí jméno operátora – pole Jméno je prázdné.',
             );
         }
 
-        if (trim((string) $entry->mail) === '') {
+        if (trim((string) $entry->email) === '') {
             $findings[] = new Finding(
                 Severity::Warning,
                 'Chybí kontaktní e-mail – závodníkovi nelze odeslat potvrzení ani ho kontaktovat.',
@@ -192,7 +192,7 @@ final class AdminEntryChecker
 
         $count = Edihead::query()
             ->whereIn('p_call', $workedCalls)
-            ->where('id_kola', $koloId)
+            ->where('round_id', $koloId)
             ->where('p_call', '!=', strtoupper(trim((string) $head->p_call)))
             ->count();
 

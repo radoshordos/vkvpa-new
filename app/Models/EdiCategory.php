@@ -50,11 +50,11 @@ class EdiCategory extends Model
     /**
      * Hlášení (záznamy listiny) v této kategorii.
      *
-     * @return HasMany<VkvpaData, $this>
+     * @return HasMany<EdiEntry, $this>
      */
-    public function hlaseni(): HasMany
+    public function entries(): HasMany
     {
-        return $this->hasMany(VkvpaData::class, 'id_kategorie', 'id');
+        return $this->hasMany(EdiEntry::class, 'category_id', 'id');
     }
 
     /**

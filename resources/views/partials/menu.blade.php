@@ -2,7 +2,7 @@
 @php
     // Průběžné výsledky se nabízejí, jen když je nějaké kolo k průběžnému
     // zobrazení (aktivní a nevyhodnocené); once() = jeden dotaz na request.
-    $showPribezne = once(fn (): bool => \App\Models\VkvpaKola::aktualniProPrubezne() !== null);
+    $showPribezne = once(fn (): bool => \App\Models\EdiRound::currentForStandings() !== null);
 @endphp
 <nav>
 @foreach(config('navigation.menu') as $group)

@@ -22,11 +22,11 @@
         @if ($isAdmin && $kolaVyber->isNotEmpty())
             <select id="kolo" name="kolo" class="select w-auto">
                 @foreach ($kolaVyber as $k)
-                    <option value="{{ $k->id }}" @selected($k->id === $kolo->id)>{{ $k->nazev }} ({{ $k->datum_konani?->format('j. n. Y') }})</option>
+                    <option value="{{ $k->id }}" @selected($k->id === $kolo->id)>{{ $k->name }} ({{ $k->starts_at?->format('j. n. Y') }})</option>
                 @endforeach
             </select>
         @else
-            <strong>{{ $kolo->nazev }} ({{ $kolo->datum_konani?->format('j. n. Y') }})</strong>
+            <strong>{{ $kolo->name }} ({{ $kolo->starts_at?->format('j. n. Y') }})</strong>
         @endif
     </div>
     <div class="field mb-0">
@@ -34,7 +34,7 @@
         <select id="kategorie" name="kategorie" class="select w-auto" data-autosubmit>
             <option value="0" @selected($katId === 0)>{{ __('pages.pribezne.filter_all') }}</option>
             @foreach ($kategorie as $kat)
-                <option value="{{ $kat->id }}" @selected($katId === $kat->id)>{{ $kat->nazev }}</option>
+                <option value="{{ $kat->id }}" @selected($katId === $kat->id)>{{ $kat->name }}</option>
             @endforeach
         </select>
     </div>
@@ -47,8 +47,8 @@
 @elseif ($vysledky->isEmpty())
     <p class="text-muted">{{ __('pages.pribezne.no_results') }}</p>
 @else
-@foreach ($vysledky->groupBy('id_kategorie') as $katId => $radky)
-    <div class="section-head">{{ __('pages.hlaseni.interim_results') }} — {{ $kategorie[$katId]->nazev ?? ('kategorie ' . $katId) }}</div>
+@foreach ($vysledky->groupBy('category_id') as $katId => $radky)
+    <div class="section-head">{{ __('pages.hlaseni.interim_results') }} — {{ $kategorie[$katId]->name ?? ('kategorie ' . $katId) }}</div>
     <div class="table-wrap mb-4">
         <table class="data-table">
             <thead>
@@ -66,16 +66,16 @@
             </thead>
             <tbody>
             @foreach ($radky as $i => $r)
-                <tr @class(['row-pending' => ! $r->schvaleno, 'group' => $isAdmin])>
+                <tr @class(['row-pending' => ! $r->approved, 'group' => $isAdmin])>
                     <td class="num font-bold">{{ $i + 1 }}.</td>
-                    <td class="mono font-bold">@if ($isAdmin)<a href="{{ route('uzivatele.index', ['kolo' => $r->id_kola, 'q' => $r->znacka]) }}" class="link" title="{{ __('pages.vysledky.link_contact') }}">{{ $r->znacka }}</a>@else{{ $r->znacka }}@endif<x-vykon-badge :vykon="$r->vykon()" /></td>
+                    <td class="mono font-bold">@if ($isAdmin)<a href="{{ route('uzivatele.index', ['kolo' => $r->round_id, 'q' => $r->callsign]) }}" class="link" title="{{ __('pages.vysledky.link_contact') }}">{{ $r->callsign }}</a>@else{{ $r->callsign }}@endif<x-vykon-badge :vykon="$r->power()" /></td>
                     <td class="mono whitespace-nowrap">{{ $r->locator }}</td>
-                    <td class="num">{{ (int) $r->pocet }}</td>
-                    <td class="num">{{ (int) $r->nasobice }}</td>
-                    <td class="num font-bold">{{ (int) $r->body }}</td>
-                    <td class="text-muted">{{ $r->jmeno }} @if ($r->poznamka)<i>({{ $r->poznamka }})</i>@endif</td>
+                    <td class="num">{{ (int) $r->qso_count }}</td>
+                    <td class="num">{{ (int) $r->multiplier }}</td>
+                    <td class="num font-bold">{{ (int) $r->points }}</td>
+                    <td class="text-muted">{{ $r->name }} @if ($r->note)<i>({{ $r->note }})</i>@endif</td>
                     <td>
-                        @if ($r->schvaleno)
+                        @if ($r->approved)
                             <x-badge variant="ok">{{ __('pages.hlaseni.status_ok') }}</x-badge>
                         @else
                             <x-badge variant="warn">{{ __('pages.hlaseni.status_pending') }}</x-badge>

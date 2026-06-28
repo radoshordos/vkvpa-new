@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
-use App\Models\VkvpaKola;
+use App\Models\EdiRound;
 use App\Support\ContestCalendar;
 use Carbon\CarbonImmutable;
 use Illuminate\Console\Command;
@@ -38,11 +38,11 @@ final class EnsureUpcomingRoundsCommand extends Command
             $start = ContestCalendar::roundStart($year, $month);
             $deadline = ContestCalendar::uploadDeadline($start);
 
-            VkvpaKola::create([
-                'nazev' => ContestCalendar::roundName($year, $month),
-                'datum_konani' => $start->toDateTimeString(),
-                'datum_uzaverky' => $deadline->toDateTimeString(),
-                'poznamka' => '',
+            EdiRound::create([
+                'name' => ContestCalendar::roundName($year, $month),
+                'starts_at' => $start->toDateTimeString(),
+                'closes_at' => $deadline->toDateTimeString(),
+                'note' => '',
             ]);
 
             $this->info(sprintf(
@@ -64,6 +64,6 @@ final class EnsureUpcomingRoundsCommand extends Command
 
     private function roundExists(int $year, int $month): bool
     {
-        return VkvpaKola::query()->inYearMonth($year, $month)->exists();
+        return EdiRound::query()->inYearMonth($year, $month)->exists();
     }
 }

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
-use App\Models\VkvpaKola;
+use App\Models\EdiRound;
 use App\Services\Edi\KoloStatistiky;
 use App\Services\Scoring\RekordyService;
 use Illuminate\Console\Command;
@@ -29,10 +29,10 @@ final class PrecomputeOdxCommand extends Command
         /** @var array{dist: int, call: string, wwl: string, home: string, homeCall: string, kolo: string, koloId: int}|null $best */
         $best = null;
 
-        $kola = VkvpaKola::query()
-            ->whereNotNull('vyhodnoceno')
-            ->orderBy('datum_konani')
-            ->get(['id', 'nazev', 'datum_konani']);
+        $kola = EdiRound::query()
+            ->whereNotNull('evaluated_at')
+            ->orderBy('starts_at')
+            ->get(['id', 'name', 'starts_at']);
 
         foreach ($kola as $kolo) {
             $odx = $statistiky->prehled($kolo)['odx'];
@@ -47,7 +47,7 @@ final class PrecomputeOdxCommand extends Command
                     'wwl' => $odx['wwl'],
                     'home' => $odx['home'],
                     'homeCall' => $odx['homeCall'],
-                    'kolo' => $kolo->nazev,
+                    'kolo' => $kolo->name,
                     'koloId' => $kolo->id,
                 ];
             }
@@ -57,7 +57,7 @@ final class PrecomputeOdxCommand extends Command
 
         if ($best !== null) {
             $this->info(sprintf('All-time ODX: %d km (%s → %s, kolo %s)', $best['dist'], $best['homeCall'], $best['call'], $best['kolo']));
-            Log::info('schedule.statistiky.precompute_odx', ['dist' => $best['dist'], 'kolo_id' => $best['koloId']]);
+            Log::info('schedule.statistiky.precompute_odx', ['dist' => $best['dist'], 'round_id' => $best['koloId']]);
         } else {
             $this->warn('Žádné spojení k vyhodnocení (prázdná data).');
         }

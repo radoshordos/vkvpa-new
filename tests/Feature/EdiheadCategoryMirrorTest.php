@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\EdiEntry;
 use App\Models\Edihead;
-use App\Models\VkvpaData;
 use App\Services\Edi\EdiheadCategoryBackfiller;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * edi_head.edi_category_id se nastavuje 1:1 z vkvpa_data.id_kategorie.
+ * edi_head.edi_category_id se nastavuje 1:1 z edi_entries.category_id.
  * Osiřelé (bez příspěvku) i víceznačné (víc kategorií) deníky → NULL.
  *
  * @see EdiheadCategoryBackfiller
@@ -20,7 +20,7 @@ class EdiheadCategoryMirrorTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_mirrors_vkvpa_data_category_and_nulls_orphans_and_ambiguous(): void
+    public function test_mirrors_edi_entries_category_and_nulls_orphans_and_ambiguous(): void
     {
         $single = $this->makeHead('OK1A');     // jeden příspěvek → jeho kategorie
         $orphan = $this->makeHead('OK1B');     // bez příspěvku → NULL
@@ -32,7 +32,7 @@ class EdiheadCategoryMirrorTest extends TestCase
         $this->vkvpaData($ambiguous->id, 2);
         $this->vkvpaData($stale->id, 5);
 
-        $changed = app(EdiheadCategoryBackfiller::class)->mirrorVkvpaDataCategory();
+        $changed = app(EdiheadCategoryBackfiller::class)->mirrorEdiEntryCategory();
 
         self::assertSame(3, $single->refresh()->edi_category_id);
         self::assertNull($orphan->refresh()->edi_category_id);
@@ -43,7 +43,7 @@ class EdiheadCategoryMirrorTest extends TestCase
         self::assertSame(2, $changed);
 
         // idempotence
-        self::assertSame(0, app(EdiheadCategoryBackfiller::class)->mirrorVkvpaDataCategory());
+        self::assertSame(0, app(EdiheadCategoryBackfiller::class)->mirrorEdiEntryCategory());
     }
 
     public function test_dry_run_writes_nothing(): void
@@ -51,7 +51,7 @@ class EdiheadCategoryMirrorTest extends TestCase
         $h = $this->makeHead('OK1A');
         $this->vkvpaData($h->id, 4);
 
-        $n = app(EdiheadCategoryBackfiller::class)->mirrorVkvpaDataCategory(dryRun: true);
+        $n = app(EdiheadCategoryBackfiller::class)->mirrorEdiEntryCategory(dryRun: true);
 
         self::assertSame(1, $n);
         self::assertNull($h->refresh()->edi_category_id);
@@ -59,11 +59,11 @@ class EdiheadCategoryMirrorTest extends TestCase
 
     private function vkvpaData(int $edheadId, int $idKategorie): void
     {
-        VkvpaData::create([
-            'id_kola' => 1,
-            'edihead_id' => $edheadId,
-            'id_kategorie' => $idKategorie,
-            'znacka' => 'OK'.$edheadId, // unikátní v rámci (id_kola, id_kategorie)
+        EdiEntry::create([
+            'round_id' => 1,
+            'edi_head_id' => $edheadId,
+            'category_id' => $idKategorie,
+            'callsign' => 'OK'.$edheadId, // unikátní v rámci (round_id, category_id)
         ]);
     }
 

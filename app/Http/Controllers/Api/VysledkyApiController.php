@@ -8,8 +8,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\KoloResource;
 use App\Http\Resources\Api\VysledkaResource;
 use App\Models\EdiCategory;
-use App\Models\VkvpaData;
-use App\Models\VkvpaKola;
+use App\Models\EdiEntry;
+use App\Models\EdiRound;
 use App\Services\Scoring\ScoringService;
 use Illuminate\Http\JsonResponse;
 
@@ -29,8 +29,8 @@ final class VysledkyApiController extends Controller
      */
     public function kola(): JsonResponse
     {
-        $kola = VkvpaKola::query()
-            ->orderByDesc('datum_konani')
+        $kola = EdiRound::query()
+            ->orderByDesc('starts_at')
             ->limit(50)
             ->get();
 
@@ -42,15 +42,15 @@ final class VysledkyApiController extends Controller
      *
      * GET /api/vysledky/{kolo}
      */
-    public function kolo(VkvpaKola $kolo): JsonResponse
+    public function kolo(EdiRound $kolo): JsonResponse
     {
-        $vysledky = VkvpaData::query()
-            ->where('id_kola', $kolo->id)
+        $vysledky = EdiEntry::query()
+            ->where('round_id', $kolo->id)
             ->approved()
-            ->with('kategorie')
-            ->orderBy('id_kategorie')
-            ->orderBy('poradi')
-            ->orderByDesc('body')
+            ->with('category')
+            ->orderBy('category_id')
+            ->orderBy('rank')
+            ->orderByDesc('points')
             ->get();
 
         return response()->json([
@@ -72,8 +72,8 @@ final class VysledkyApiController extends Controller
         $items = [];
         foreach ($vysledky as $row) {
             $items[] = [
-                'znacka' => $row->znacka,
-                'jmeno' => $row->jmeno,
+                'znacka' => $row->callsign,
+                'jmeno' => $row->name,
                 'kategorie_id' => $row->kategorie_id,
                 'kategorie' => $kategorie->get($row->kategorie_id, '—'),
                 'celkem' => (int) $row->celkem,

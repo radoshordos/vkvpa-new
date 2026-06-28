@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Http\Resources\Api;
 
-use App\Models\VkvpaKola;
+use App\Models\EdiRound;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-/** @mixin VkvpaKola */
+/** @mixin EdiRound */
 final class KoloResource extends JsonResource
 {
     /** @return array<string, mixed> */
@@ -16,11 +16,11 @@ final class KoloResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'nazev' => $this->nazev,
-            'datum_konani' => $this->datum_konani->toIso8601String(),
-            'datum_uzaverky' => $this->datum_uzaverky?->toIso8601String(),
-            'vyhodnoceno' => $this->vyhodnoceno?->toIso8601String(),
-            'stav' => $this->stav()->value,
+            'nazev' => $this->name,
+            'starts_at' => $this->starts_at->toIso8601String(),
+            'closes_at' => $this->closes_at?->toIso8601String(),
+            'vyhodnoceno' => $this->evaluated_at?->toIso8601String(),
+            'stav' => $this->state()->value,
         ];
     }
 }

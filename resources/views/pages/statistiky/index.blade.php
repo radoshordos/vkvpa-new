@@ -12,7 +12,7 @@
 </header>
 
 {{-- ── Síň slávy (all-time rekordy) ─────────────────────────────────────── --}}
-@if ($rekordy['ucast'] || $rekordy['skore'] || $rekordy['qso'] || $rekordy['nasobice'] || $odxAllTime)
+@if ($rekordy['ucast'] || $rekordy['skore'] || $rekordy['qso'] || $rekordy['multiplier'] || $odxAllTime)
 <div class="section-head">{{ __('pages.stat.hall_heading') }}</div>
 <div class="grid gap-3 grid-cols-2 lg:grid-cols-4 mb-6">
   @if ($odxAllTime)
@@ -29,7 +29,7 @@
     <div class="text-xs text-muted">{{ __('pages.stat.rec_in_round', ['kolo' => $rekordy['ucast']['kolo']]) }}</div>
   </a>
   @endif
-  @foreach (['skore' => 'rec_skore', 'qso' => 'rec_qso', 'nasobice' => 'rec_nasobice'] as $k => $label)
+  @foreach (['skore' => 'rec_skore', 'qso' => 'rec_qso', 'multiplier' => 'rec_multiplier'] as $k => $label)
     @if ($rekordy[$k])
     <a href="{{ route('statistiky.kolo', ['kolo' => $rekordy[$k]['koloId']]) }}" class="card block p-4 hover:border-brand hover:bg-surface-2 transition-colors">
       <div class="text-xs font-semibold uppercase tracking-wide text-muted">{{ __('pages.stat.'.$label) }}</div>
@@ -51,8 +51,8 @@
   <a href="{{ route('statistiky.kolo', ['kolo' => $k->id]) }}"
      class="card block p-4 transition-colors hover:border-brand hover:bg-surface-2">
     <div class="flex items-baseline justify-between gap-2">
-      <span class="font-bold text-heading">{{ $k->nazev }}</span>
-      <span class="text-xs text-muted">{{ $k->datum_konani->locale(app()->getLocale())->isoFormat('D. M. YYYY') }}</span>
+      <span class="font-bold text-heading">{{ $k->name }}</span>
+      <span class="text-xs text-muted">{{ $k->starts_at->locale(app()->getLocale())->isoFormat('D. M. YYYY') }}</span>
     </div>
     <div class="mt-2 text-sm text-muted">
       {{ trans_choice('pages.stat.card_participants', (int) $k->ucastniku, ['count' => (int) $k->ucastniku]) }}

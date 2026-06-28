@@ -76,23 +76,23 @@
                     </div>
                     <div>
                         <dt class="label">{{ __('pages.hlaseni.field_period') }}</dt>
-                        <dd class="text-heading">{{ $koloNazev }}</dd>
+                        <dd class="text-heading">{{ $roundName }}</dd>
                     </div>
                     <div>
                         <dt class="label">{{ __('pages.hlaseni.field_category') }}</dt>
-                        <dd class="text-heading">{{ $kategorieNazev }}</dd>
+                        <dd class="text-heading">{{ $categoryName }}</dd>
                     </div>
                     <div>
                         <dt class="label">{{ __('pages.hlaseni.field_qso') }}</dt>
-                        <dd class="font-bold text-heading">{{ $pocetView }}</dd>
+                        <dd class="font-bold text-heading">{{ $qsoCountView }}</dd>
                     </div>
                     <div>
                         <dt class="label">{{ __('pages.hlaseni.field_mult') }}</dt>
-                        <dd class="font-bold text-heading">{{ $nasobiceView }}</dd>
+                        <dd class="font-bold text-heading">{{ $multiplierView }}</dd>
                     </div>
                     <div>
                         <dt class="label">{{ __('pages.hlaseni.field_total') }}</dt>
-                        <dd class="font-bold text-heading">{{ \Illuminate\Support\Number::format($bodyView, 0) }}</dd>
+                        <dd class="font-bold text-heading">{{ \Illuminate\Support\Number::format($pointsView, 0) }}</dd>
                     </div>
                 </dl>
 
@@ -111,7 +111,7 @@
                 @if ($report)
                     <details class="mt-4 rounded-lg border border-line p-3">
                         <summary class="cursor-pointer text-sm font-semibold text-heading">
-                            {{ __('pages.hlaseni.analysis_summary') }} ({{ $report->pocet }}/{{ $report->parsedCount }} QSO)
+                            {{ __('pages.hlaseni.analysis_summary') }} ({{ $report->qsoCount }}/{{ $report->parsedCount }} QSO)
                         </summary>
                         <div class="mt-3">
                             @include('partials.edi-rozpad', ['report' => $report])
@@ -179,34 +179,34 @@
                     <div class="field">
                         <label class="label" for="f-kolo">{{ __('pages.hlaseni.field_period') }} *</label>
                         @if ($isAdmin)
-                            <select id="f-kolo" wire:model="kolo" @class(['select', 'input-err' => $errors->has('kolo')])>
+                            <select id="f-kolo" wire:model="round" @class(['select', 'input-err' => $errors->has('round')])>
                                 <option value="0">{{ __('pages.hlaseni.select_period') }}</option>
                                 @foreach ($kola as $k)
-                                    <option value="{{ $k->id }}">{{ $k->nazev }}</option>
+                                    <option value="{{ $k->id }}">{{ $k->name }}</option>
                                 @endforeach
                             </select>
                         @else
                             {{-- Veřejnost podává jen do aktuálního průběžného kola – jen ke čtení. --}}
-                            <div class="input flex items-center bg-surface-2 text-heading">{{ $koloNazev }}</div>
+                            <div class="input flex items-center bg-surface-2 text-heading">{{ $roundName }}</div>
                         @endif
-                        @error('kolo')<span class="field-error">{{ $message }}</span>@enderror
+                        @error('round')<span class="field-error">{{ $message }}</span>@enderror
                     </div>
 
                     <div class="field">
                         <label class="label" for="f-kategorie">{{ __('pages.hlaseni.field_category') }} *</label>
-                        <select id="f-kategorie" wire:model="kategorie" @class(['select', 'input-err' => $errors->has('kategorie')])>
+                        <select id="f-kategorie" wire:model="category" @class(['select', 'input-err' => $errors->has('category')])>
                             <option value="0">{{ __('pages.hlaseni.select_category') }}</option>
                             @foreach ($kategorieList as $cat)
-                                <option value="{{ $cat->id }}">{{ $cat->nazev }}</option>
+                                <option value="{{ $cat->id }}">{{ $cat->name }}</option>
                             @endforeach
                         </select>
-                        @error('kategorie')<span class="field-error">{{ $message }}</span>@enderror
+                        @error('category')<span class="field-error">{{ $message }}</span>@enderror
                     </div>
 
                     <div class="field">
                         <label class="label" for="f-znacka">{{ __('pages.hlaseni.field_callsign') }} *</label>
-                        <input id="f-znacka" wire:model="znacka" @class(['input mono font-bold', 'input-err' => $errors->has('znacka')])>
-                        @error('znacka')<span class="field-error">{{ $message }}</span>@enderror
+                        <input id="f-znacka" wire:model="callsign" @class(['input mono font-bold', 'input-err' => $errors->has('callsign')])>
+                        @error('callsign')<span class="field-error">{{ $message }}</span>@enderror
                     </div>
 
                     <div class="field">
@@ -229,20 +229,20 @@
                 <div class="grid grid-cols-2 gap-x-5 sm:grid-cols-4">
                     <div class="field">
                         <label class="label" for="f-pocet">{{ __('pages.hlaseni.field_qso') }} *</label>
-                        <input id="f-pocet" type="number" min="0" wire:model="pocet" @class(['input num', 'input-err' => $errors->has('pocet')])>
-                        @error('pocet')<span class="field-error">{{ $message }}</span>@enderror
+                        <input id="f-pocet" type="number" min="0" wire:model="qsoCount" @class(['input num', 'input-err' => $errors->has('qsoCount')])>
+                        @error('qsoCount')<span class="field-error">{{ $message }}</span>@enderror
                     </div>
                     <div class="field">
                         <label class="label" for="f-bodu">{{ __('pages.hlaseni.field_qso_pts') }}</label>
-                        <input id="f-bodu" type="number" min="0" wire:model="bodu_za_qso" class="input num">
+                        <input id="f-bodu" type="number" min="0" wire:model="qso_points" class="input num">
                     </div>
                     <div class="field">
-                        <label class="label" for="f-nasobice">{{ __('pages.hlaseni.field_mult') }} *</label>
-                        <input id="f-nasobice" type="number" min="0" wire:model="nasobice" class="input num">
+                        <label class="label" for="f-multiplier">{{ __('pages.hlaseni.field_mult') }} *</label>
+                        <input id="f-multiplier" type="number" min="0" wire:model="multiplier" class="input num">
                     </div>
                     <div class="field">
                         <label class="label" for="f-body">{{ __('pages.hlaseni.field_total') }} *</label>
-                        <input id="f-body" type="number" min="0" wire:model="body" class="input num font-bold">
+                        <input id="f-body" type="number" min="0" wire:model="points" class="input num font-bold">
                     </div>
                 </div>
 

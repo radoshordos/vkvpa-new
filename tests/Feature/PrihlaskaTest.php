@@ -6,10 +6,10 @@ namespace Tests\Feature;
 
 use App\Livewire\Prihlaska;
 use App\Models\EdiCategory;
+use App\Models\EdiEntry;
 use App\Models\Edihead;
+use App\Models\EdiRound;
 use App\Models\User;
-use App\Models\VkvpaData;
-use App\Models\VkvpaKola;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
@@ -30,24 +30,24 @@ class PrihlaskaTest extends TestCase
     }
 
     /** Založí kolo s daným dnem konání (otevřené okno příjmu). */
-    private function koloProDatum(string $datum): VkvpaKola
+    private function koloProDatum(string $datum): EdiRound
     {
-        return VkvpaKola::create([
-            'datum_konani' => $datum.' 08:00:00',
-            'datum_uzaverky' => now()->addDay(),
-            'nazev' => 'Kolo '.$datum,
-            'poznamka' => '',
+        return EdiRound::create([
+            'starts_at' => $datum.' 08:00:00',
+            'closes_at' => now()->addDay(),
+            'name' => 'Kolo '.$datum,
+            'note' => '',
         ]);
     }
 
-    /** @return array{VkvpaKola, EdiCategory} */
+    /** @return array{EdiRound, EdiCategory} */
     private function prepare(): array
     {
-        $kolo = VkvpaKola::create([
-            'datum_konani' => now()->subDay(),
-            'datum_uzaverky' => now()->addDays(5),
-            'nazev' => 'Testovací kolo',
-            'poznamka' => '',
+        $kolo = EdiRound::create([
+            'starts_at' => now()->subDay(),
+            'closes_at' => now()->addDays(5),
+            'name' => 'Testovací kolo',
+            'note' => '',
         ]);
         $kat = EdiCategory::create(['name' => '144 MHz', 'band' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
 
@@ -156,7 +156,7 @@ class PrihlaskaTest extends TestCase
         Livewire::test(Prihlaska::class)
             ->set('upload', $this->file($edi))
             ->set('email', 'ok1rng@example.com')
-            ->set('telefon', '+420 777 123 456')
+            ->set('phone', '+420 777 123 456')
             ->call('odeslat')
             ->assertRedirect(route('pribezne_vysledky'));
 
@@ -200,24 +200,24 @@ class PrihlaskaTest extends TestCase
 
         Livewire::test(Prihlaska::class)
             ->call('rucne')
-            ->set('kolo', $kolo->id)
-            ->set('kategorie', $kat->id)
-            ->set('znacka', 'ok2kjt')
+            ->set('round', $kolo->id)
+            ->set('category', $kat->id)
+            ->set('callsign', 'ok2kjt')
             ->set('locator', 'jn99aj')
-            ->set('jmeno', 'Jan Novák')
+            ->set('name', 'Jan Novák')
             ->set('email', 'test@example.com')
-            ->set('telefon', '+420 777 123 456')
-            ->set('pocet', 10)
-            ->set('nasobice', 5)
-            ->set('body', 50)
+            ->set('phone', '+420 777 123 456')
+            ->set('qsoCount', 10)
+            ->set('multiplier', 5)
+            ->set('points', 50)
             ->call('odeslat')
             ->assertRedirect(route('pribezne_vysledky'));
 
-        $row = VkvpaData::firstOrFail();
-        $this->assertSame('OK2KJT', $row->znacka);  // uppercased
+        $row = EdiEntry::firstOrFail();
+        $this->assertSame('OK2KJT', $row->callsign);  // uppercased
         $this->assertSame('JN99AJ', $row->locator);
-        $this->assertNull($row->edihead_id);
-        $this->assertFalse((bool) $row->schvaleno); // veřejnost čeká na převzetí
+        $this->assertNull($row->edi_head_id);
+        $this->assertFalse((bool) $row->approved); // veřejnost čeká na převzetí
     }
 
     public function test_manual_admin_submission_is_approved(): void
@@ -229,21 +229,21 @@ class PrihlaskaTest extends TestCase
 
         Livewire::test(Prihlaska::class)
             ->call('rucne')
-            ->set('kolo', $kolo->id)
-            ->set('kategorie', $kat->id)
-            ->set('znacka', 'ok2kjt')
+            ->set('round', $kolo->id)
+            ->set('category', $kat->id)
+            ->set('callsign', 'ok2kjt')
             ->set('locator', 'jn99aj')
-            ->set('jmeno', 'Jan Novák')
+            ->set('name', 'Jan Novák')
             ->set('email', 'test@example.com')
-            ->set('telefon', '+420 777 123 456')
-            ->set('pocet', 10)
-            ->set('nasobice', 5)
-            ->set('body', 50)
+            ->set('phone', '+420 777 123 456')
+            ->set('qsoCount', 10)
+            ->set('multiplier', 5)
+            ->set('points', 50)
             ->call('odeslat')
             // Admin se přesměruje rovnou na kolo svého hlášení (smí listovat v kolech).
             ->assertRedirect(route('pribezne_vysledky', ['kolo' => $kolo->id]));
 
-        $this->assertTrue((bool) VkvpaData::firstOrFail()->schvaleno);
+        $this->assertTrue((bool) EdiEntry::firstOrFail()->approved);
     }
 
     public function test_manual_submission_without_email_is_accepted(): void
@@ -252,84 +252,84 @@ class PrihlaskaTest extends TestCase
 
         $component = Livewire::test(Prihlaska::class)
             ->call('rucne')
-            ->set('kolo', $kolo->id)
-            ->set('kategorie', $kat->id)
-            ->set('znacka', 'ok2kjt')
+            ->set('round', $kolo->id)
+            ->set('category', $kat->id)
+            ->set('callsign', 'ok2kjt')
             ->set('locator', 'jn99aj')
-            ->set('jmeno', 'Jan Novák')
-            ->set('telefon', '+420 777 123 456')
+            ->set('name', 'Jan Novák')
+            ->set('phone', '+420 777 123 456')
             ->call('odeslat');
 
         $component->assertHasNoErrors('email');
         $component->assertRedirect(route('pribezne_vysledky'));
 
-        $this->assertSame(1, VkvpaData::count());
+        $this->assertSame(1, EdiEntry::count());
     }
 
     public function test_manual_duplicate_is_rejected(): void
     {
         [$kolo, $kat] = $this->prepare();
-        VkvpaData::create([
-            'id_kola' => $kolo->id, 'id_kategorie' => $kat->id, 'znacka' => 'OK2KJT',
-            'locator' => 'JN99AJ', 'mail' => 'x@y.cz', 'pocet' => 1, 'nasobice' => 1, 'body' => 1,
-            'schvaleno' => true,
+        EdiEntry::create([
+            'round_id' => $kolo->id, 'category_id' => $kat->id, 'callsign' => 'OK2KJT',
+            'locator' => 'JN99AJ', 'email' => 'x@y.cz', 'qso_count' => 1, 'multiplier' => 1, 'points' => 1,
+            'approved' => true,
         ]);
 
         Livewire::test(Prihlaska::class)
             ->call('rucne')
-            ->set('kolo', $kolo->id)
-            ->set('kategorie', $kat->id)
-            ->set('znacka', 'ok2kjt')
+            ->set('round', $kolo->id)
+            ->set('category', $kat->id)
+            ->set('callsign', 'ok2kjt')
             ->set('locator', 'jn99aj')
-            ->set('jmeno', 'Jan Novák')
+            ->set('name', 'Jan Novák')
             ->set('email', 'test@example.com')
-            ->set('telefon', '+420 777 123 456')
+            ->set('phone', '+420 777 123 456')
             ->call('odeslat')
-            ->assertHasErrors('znacka');
+            ->assertHasErrors('callsign');
 
-        $this->assertSame(1, VkvpaData::count());
+        $this->assertSame(1, EdiEntry::count());
     }
 
     public function test_manual_rejected_outside_upload_window(): void
     {
         [$kolo, $kat] = $this->prepare();
-        $kolo->update(['datum_uzaverky' => now()->subDay()]); // okno zavřené
+        $kolo->update(['closes_at' => now()->subDay()]); // okno zavřené
 
         Livewire::test(Prihlaska::class)
             ->call('rucne')
-            ->set('kolo', $kolo->id)
-            ->set('kategorie', $kat->id)
-            ->set('znacka', 'ok2kjt')
+            ->set('round', $kolo->id)
+            ->set('category', $kat->id)
+            ->set('callsign', 'ok2kjt')
             ->set('locator', 'jn99aj')
-            ->set('jmeno', 'Jan Novák')
+            ->set('name', 'Jan Novák')
             ->set('email', 'test@example.com')
-            ->set('telefon', '+420 777 123 456')
+            ->set('phone', '+420 777 123 456')
             ->call('odeslat')
-            ->assertHasErrors('kolo');
+            ->assertHasErrors('round');
 
-        $this->assertSame(0, VkvpaData::count());
+        $this->assertSame(0, EdiEntry::count());
     }
 
     public function test_manual_admin_allowed_outside_upload_window(): void
     {
         [$kolo, $kat] = $this->prepare();
-        $kolo->update(['datum_uzaverky' => now()->subDay()]);
+        $kolo->update(['closes_at' => now()->subDay()]);
         $admin = User::create(['name' => 'Admin', 'password' => Hash::make('x'), 'is_admin' => true]);
 
         $this->actingAs($admin);
 
         Livewire::test(Prihlaska::class)
             ->call('rucne')
-            ->set('kolo', $kolo->id)
-            ->set('kategorie', $kat->id)
-            ->set('znacka', 'ok2kjt')
+            ->set('round', $kolo->id)
+            ->set('category', $kat->id)
+            ->set('callsign', 'ok2kjt')
             ->set('locator', 'jn99aj')
-            ->set('jmeno', 'Jan Novák')
+            ->set('name', 'Jan Novák')
             ->set('email', 'test@example.com')
-            ->set('telefon', '+420 777 123 456')
+            ->set('phone', '+420 777 123 456')
             ->call('odeslat')
             ->assertRedirect(route('pribezne_vysledky', ['kolo' => $kolo->id]));
 
-        $this->assertSame(1, VkvpaData::count());
+        $this->assertSame(1, EdiEntry::count());
     }
 }

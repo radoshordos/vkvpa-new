@@ -7,7 +7,7 @@ namespace App\Services\Edi;
 use App\Enums\KoloStav;
 use App\Models\Edihead;
 use App\Models\Ediline;
-use App\Models\VkvpaKola;
+use App\Models\EdiRound;
 use App\Support\Maidenhead;
 use App\Support\VkvpaSettings;
 use Illuminate\Support\Collection;
@@ -130,7 +130,7 @@ final class QsoGeometry
      * stanice z kola" kombinované mapy (obdoba „show all logged calls" na
      * vkvzavody.crk.cz).
      *
-     * Agreguje protistanice napříč všemi deníky téhož kola (`id_kola`); když
+     * Agreguje protistanice napříč všemi deníky téhož kola (`round_id`); když
      * deník kolo nemá (null), počítá jen z něj. Každá značka je zastoupena
      * jednou, se souřadnicemi a lokátorem prvního platného výskytu a s počtem
      * spojení napříč všemi deníky kola. Jen QSO uvnitř závodního okna.
@@ -148,7 +148,7 @@ final class QsoGeometry
         if (! $this->roundResultsDisclosable($head)) {
             /** @var list<array{lat: float, lon: float, call: string, wwl: string, count: int}> $rows */
             $rows = [];
-        } elseif ($head->id_kola === null) {
+        } elseif ($head->round_id === null) {
             // Deník bez kola agreguje jen sám sebe – levné, bez cache.
             $rows = $this->computeRoundStations([$head->id], $minQso);
         } else {
@@ -158,10 +158,10 @@ final class QsoGeometry
             // objekty by se z cache vrátily jako __PHP_Incomplete_Class).
             /** @var list<array{lat: float, lon: float, call: string, wwl: string, count: int}> $rows */
             $rows = Cache::remember(
-                sprintf('vkvpa:round-stations:%d:%d', $head->id_kola, $minQso),
+                sprintf('vkvpa:round-stations:%d:%d', $head->round_id, $minQso),
                 VkvpaSettings::roundStationsCacheTtl(),
                 fn (): array => $this->computeRoundStations(
-                    Edihead::query()->where('id_kola', $head->id_kola)->pluck('id')->all(),
+                    Edihead::query()->where('round_id', $head->round_id)->pluck('id')->all(),
                     $minQso,
                 ),
             );
@@ -173,7 +173,7 @@ final class QsoGeometry
     /**
      * Stanice (protistanice) z celého kola pro veřejnou statistiku kola
      * ({@see KoloStatistiky}). Stejná agregace jako
-     * {@see roundStations()}, ale adresovaná přímo `id_kola`, bez férovostní
+     * {@see roundStations()}, ale adresovaná přímo `round_id`, bez férovostní
      * brány a bez vlastní cache – disclosure hlídá controller (vydává jen
      * vyhodnocená kola) a cachování řeší KoloStatistiky kolem celého přehledu.
      *
@@ -182,7 +182,7 @@ final class QsoGeometry
     public function stationsForKolo(int $koloId, int $minQso = 1): array
     {
         return $this->computeRoundStations(
-            Edihead::query()->where('id_kola', $koloId)->pluck('id')->all(),
+            Edihead::query()->where('round_id', $koloId)->pluck('id')->all(),
             $minQso,
         );
     }
@@ -271,7 +271,7 @@ final class QsoGeometry
      */
     public function compareWith(Edihead $head, Edihead $rival, ?array $home): ?array
     {
-        if ($head->id_kola === null || $head->id_kola !== $rival->id_kola || $head->id === $rival->id) {
+        if ($head->round_id === null || $head->round_id !== $rival->round_id || $head->id === $rival->id) {
             return null;
         }
 
@@ -333,7 +333,7 @@ final class QsoGeometry
      * stránkou porovnání deníků.
      *
      * @param  Collection<int, EnrichedQso>  $lines
-     * @return list<array{t: int, cas: string, call: string, points: int, nasobice: int, body: int}>
+     * @return list<array{t: int, cas: string, call: string, points: int, multiplier: int, body: int}>
      */
     public function prubehSkore(Collection $lines, string $homeSq): array
     {
@@ -358,7 +358,7 @@ final class QsoGeometry
                 'cas' => DenikStatistiky::hhmm($l->timeMinutes),
                 'call' => $l->call,
                 'points' => $l->points,
-                'nasobice' => count($squares),
+                'multiplier' => count($squares),
                 'body' => $sum * count($squares),
             ];
         }
@@ -369,24 +369,24 @@ final class QsoGeometry
     /**
      * Smí se vrstva „všechny stanice z kola" zveřejnit?
      *
-     * Bez kola (`id_kola === null`) jde jen o vlastní deník – žádná cizí data,
+     * Bez kola (`round_id === null`) jde jen o vlastní deník – žádná cizí data,
      * lze zobrazit. S kolem se cizí stanice odhalí až po uzávěrce nebo
      * vyhodnocení; během příjmu hlášení (a u nenalezeného kola) se skryjí.
      *
-     * Výsledek je memoizován per `id_kola` pro trvání requestu – volání
+     * Výsledek je memoizován per `round_id` pro trvání requestu – volání
      * `roundStations()` a dotaz controlleru na stav tak sdílí jeden SELECT.
      */
     public function roundResultsDisclosable(Edihead $head): bool
     {
-        $key = $head->id_kola ?? -1;
+        $key = $head->round_id ?? -1;
 
         if (! array_key_exists($key, $this->disclosableCache)) {
-            if ($head->id_kola === null) {
+            if ($head->round_id === null) {
                 $this->disclosableCache[$key] = true;
             } else {
-                $kolo = VkvpaKola::query()->find($head->id_kola);
+                $kolo = EdiRound::query()->find($head->round_id);
                 $this->disclosableCache[$key] = $kolo !== null
-                    && in_array($kolo->stav(), [KoloStav::Uzavrene, KoloStav::Vyhodnocene], true);
+                    && in_array($kolo->state(), [KoloStav::Uzavrene, KoloStav::Vyhodnocene], true);
             }
         }
 

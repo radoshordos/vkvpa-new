@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Http\Controllers\Admin\KolaAdminController;
+use App\Models\EdiRound;
 use App\Models\User;
-use App\Models\VkvpaKola;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
@@ -26,13 +26,13 @@ class KolaAdminControllerTest extends TestCase
     }
 
     /** @param array<string, mixed> $overrides */
-    private function makeKolo(array $overrides = []): VkvpaKola
+    private function makeKolo(array $overrides = []): EdiRound
     {
-        return VkvpaKola::create(array_merge([
-            'datum_konani' => '2026-01-17 08:00:00',
-            'datum_uzaverky' => '2026-02-01 23:59:00',
-            'nazev' => 'Testovací kolo',
-            'poznamka' => '',
+        return EdiRound::create(array_merge([
+            'starts_at' => '2026-01-17 08:00:00',
+            'closes_at' => '2026-02-01 23:59:00',
+            'name' => 'Testovací kolo',
+            'note' => '',
         ], $overrides));
     }
 
@@ -60,40 +60,40 @@ class KolaAdminControllerTest extends TestCase
     {
         $this->actingAs($this->admin())
             ->post(route('kola.admin.store'), [
-                'nazev' => 'Nové kolo 2026',
-                'datum_konani' => '2026-04-19T08:00',
-                'datum_uzaverky' => '2026-05-03T23:59',
-                'poznamka' => '',
+                'name' => 'Nové kolo 2026',
+                'starts_at' => '2026-04-19T08:00',
+                'closes_at' => '2026-05-03T23:59',
+                'note' => '',
             ])
             ->assertRedirect(route('kola.admin.index'))
             ->assertSessionHas('announcement');
 
-        $this->assertDatabaseHas('vkvpa_kola', [
-            'nazev' => 'Nové kolo 2026',
+        $this->assertDatabaseHas('edi_rounds', [
+            'name' => 'Nové kolo 2026',
         ]);
         // Čas z datetime-local pole se uloží jako start závodu.
         $this->assertSame(
             '2026-04-19 08:00:00',
-            VkvpaKola::where('nazev', 'Nové kolo 2026')->firstOrFail()->datum_konani->toDateTimeString(),
+            EdiRound::where('name', 'Nové kolo 2026')->firstOrFail()->starts_at->toDateTimeString(),
         );
     }
 
     public function test_store_requires_admin(): void
     {
         $this->post(route('kola.admin.store'), [
-            'nazev' => 'Neautorizované kolo',
-            'datum_konani' => '2026-04-19T08:00',
-            'datum_uzaverky' => '2026-05-03T23:59',
+            'name' => 'Neautorizované kolo',
+            'starts_at' => '2026-04-19T08:00',
+            'closes_at' => '2026-05-03T23:59',
         ])->assertRedirect(route('login'));
 
-        $this->assertDatabaseMissing('vkvpa_kola', ['nazev' => 'Neautorizované kolo']);
+        $this->assertDatabaseMissing('edi_rounds', ['name' => 'Neautorizované kolo']);
     }
 
     public function test_store_validates_required_fields(): void
     {
         $this->actingAs($this->admin())
             ->post(route('kola.admin.store'), [])
-            ->assertSessionHasErrors(['nazev', 'datum_konani', 'datum_uzaverky']);
+            ->assertSessionHasErrors(['name', 'starts_at', 'closes_at']);
     }
 
     // ------------------------------------------------------------------
@@ -101,7 +101,7 @@ class KolaAdminControllerTest extends TestCase
 
     public function test_edit_form_renders_with_existing_data(): void
     {
-        $kolo = $this->makeKolo(['nazev' => 'Kolo pro editaci']);
+        $kolo = $this->makeKolo(['name' => 'Kolo pro editaci']);
 
         $this->actingAs($this->admin())
             ->get(route('kola.admin.edit', $kolo->id))
@@ -122,23 +122,23 @@ class KolaAdminControllerTest extends TestCase
 
     public function test_update_saves_changes(): void
     {
-        $kolo = $this->makeKolo(['nazev' => 'Původní název']);
+        $kolo = $this->makeKolo(['name' => 'Původní název']);
 
         $this->actingAs($this->admin())
             ->patch(route('kola.admin.update', $kolo->id), [
-                'nazev' => 'Nový název kola',
+                'name' => 'Nový název kola',
                 // Start lze posunout nejvýše o 7 dní oproti původnímu termínu
                 // (původní = 2026-01-17), viz KoloRequest::startPosunRule().
-                'datum_konani' => '2026-01-18T08:00',
-                'datum_uzaverky' => '2026-02-01T23:59',
-                'poznamka' => 'Poznámka',
+                'starts_at' => '2026-01-18T08:00',
+                'closes_at' => '2026-02-01T23:59',
+                'note' => 'Poznámka',
             ])
             ->assertRedirect(route('kola.admin.index'))
             ->assertSessionHas('announcement');
 
-        $this->assertDatabaseHas('vkvpa_kola', [
+        $this->assertDatabaseHas('edi_rounds', [
             'id' => $kolo->id,
-            'nazev' => 'Nový název kola',
+            'name' => 'Nový název kola',
         ]);
     }
 
@@ -147,12 +147,12 @@ class KolaAdminControllerTest extends TestCase
         $kolo = $this->makeKolo();
 
         $this->patch(route('kola.admin.update', $kolo->id), [
-            'nazev' => 'Neoprávněná změna',
-            'datum_konani' => '2026-04-19T08:00',
-            'datum_uzaverky' => '2026-05-03T23:59',
+            'name' => 'Neoprávněná změna',
+            'starts_at' => '2026-04-19T08:00',
+            'closes_at' => '2026-05-03T23:59',
         ])->assertRedirect(route('login'));
 
-        $this->assertDatabaseMissing('vkvpa_kola', ['nazev' => 'Neoprávněná změna']);
+        $this->assertDatabaseMissing('edi_rounds', ['name' => 'Neoprávněná změna']);
     }
 
     public function test_update_validates_required_fields(): void
@@ -161,7 +161,7 @@ class KolaAdminControllerTest extends TestCase
 
         $this->actingAs($this->admin())
             ->patch(route('kola.admin.update', $kolo->id), [])
-            ->assertSessionHasErrors(['nazev', 'datum_konani', 'datum_uzaverky']);
+            ->assertSessionHasErrors(['name', 'starts_at', 'closes_at']);
     }
 
     // ------------------------------------------------------------------
@@ -169,7 +169,7 @@ class KolaAdminControllerTest extends TestCase
 
     public function test_admin_sees_create_button_and_edit_links_on_kola_page(): void
     {
-        $kolo = $this->makeKolo(['nazev' => 'Kolo 2026/01']);
+        $kolo = $this->makeKolo(['name' => 'Kolo 2026/01']);
 
         $this->actingAs($this->admin())
             ->get(route('kola.admin.index'))

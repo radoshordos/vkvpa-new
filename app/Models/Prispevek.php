@@ -17,25 +17,25 @@ use Override;
  * Diskusní příspěvek navázaný na kolo závodu.
  *
  * @property int $id
- * @property int $kolo_id
+ * @property int $round_id
  * @property string $znacka
  * @property string|null $jmeno
  * @property string $text
  * @property string|null $ip
  * @property Carbon $created_at
- * @property-read VkvpaKola $kolo
+ * @property-read EdiRound $round
  * @property-read Collection<int, PrispevekFoto> $fotky
  */
-#[Fillable(['kolo_id', 'znacka', 'jmeno', 'text', 'ip'])]
+#[Fillable(['round_id', 'znacka', 'jmeno', 'text', 'ip'])]
 #[Table(name: 'diskuse', key: 'id')]
 class Prispevek extends Model
 {
     public const UPDATED_AT = null;
 
-    /** @return BelongsTo<VkvpaKola, $this> */
-    public function kolo(): BelongsTo
+    /** @return BelongsTo<EdiRound, $this> */
+    public function round(): BelongsTo
     {
-        return $this->belongsTo(VkvpaKola::class, 'kolo_id');
+        return $this->belongsTo(EdiRound::class, 'round_id');
     }
 
     /** @return HasMany<PrispevekFoto, $this> */
@@ -48,7 +48,7 @@ class Prispevek extends Model
     protected function casts(): array
     {
         return [
-            'kolo_id' => 'integer',
+            'round_id' => 'integer',
             'created_at' => 'datetime',
         ];
     }

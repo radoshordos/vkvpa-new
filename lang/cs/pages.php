@@ -485,7 +485,7 @@ return [
         'badge_ucast' => 'Rekord účasti!',
         'badge_skore' => 'Rekord skóre!',
         'badge_qso' => 'Rekord QSO!',
-        'badge_nasobice' => 'Rekord násobičů!',
+        'badge_multiplier' => 'Rekord násobičů!',
 
         'fact_active_square' => 'Nejaktivnější čtverec: :square (:count QSO)',
         'fact_winner_margin' => 'Náskok vítěze :call: :margin b. před druhým',
@@ -497,7 +497,7 @@ return [
         'rec_ucast' => 'Rekordní účast',
         'rec_skore' => 'Nejvyšší skóre',
         'rec_qso' => 'Nejvíc QSO',
-        'rec_nasobice' => 'Nejvíc násobičů',
+        'rec_multiplier' => 'Nejvíc násobičů',
         'rec_in_round' => 'kolo :kolo',
         'rec_stations_unit' => 'stanic',
 

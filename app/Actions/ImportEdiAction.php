@@ -13,8 +13,8 @@ use App\Exceptions\TDateNotContestDayException;
 use App\Exceptions\UnknownBandException;
 use App\Exceptions\UnknownSectionException;
 use App\Exceptions\UploadWindowClosedException;
-use App\Models\VkvpaData;
-use App\Models\VkvpaKola;
+use App\Models\EdiEntry;
+use App\Models\EdiRound;
 use App\Services\Edi\CategoryResolver;
 use App\Services\Edi\EdiImportService;
 use App\Services\Edi\EdiLog;
@@ -28,9 +28,9 @@ use Throwable;
 
 /**
  * Orchestruje celý tok importu EDI deníku: validace business pravidel,
- * uložení do DB, scoring a vytvoření rezervovaného řádku ve vkvpa_data.
+ * uložení do DB, scoring a vytvoření rezervovaného řádku ve edi_entries.
  *
- * Vyhodí výjimku při jakémkoli selhání; úspěch vrací nový VkvpaData řádek.
+ * Vyhodí výjimku při jakémkoli selhání; úspěch vrací nový EdiEntry řádek.
  *
  * @throws EmptyPCallException Hlavička deníku neobsahuje volačí značku (PCall)
  * @throws TDateNotContestDayException TDate neodpovídá termínu kola (3. neděle v měsíci)
@@ -72,14 +72,14 @@ final readonly class ImportEdiAction
 
         $idKola = $this->scoring->koloForTDate($h->tDate()) ?? 0;
 
-        Context::add('znacka', $pcall);
-        Context::add('id_kola', $idKola);
+        Context::add('callsign', $pcall);
+        Context::add('round_id', $idKola);
 
         if ($idKola === 0) {
             throw new RoundNotFoundException($h->tDate());
         }
 
-        $kolo = VkvpaKola::query()->find($idKola);
+        $kolo = EdiRound::query()->find($idKola);
 
         if ($kolo !== null) {
             $this->assertTDateIsContestDay($h->tDate(), $kolo);
@@ -106,10 +106,10 @@ final readonly class ImportEdiAction
         // Duplicita se hlídá na trojici kolo + značka + kategorie (stejně jako
         // unique index v DB) – tatáž stanice tak smí pro jedno kolo nahrát
         // deníky do více kategorií, ale jen jeden na každou kategorii.
-        if (VkvpaData::query()
-            ->where('znacka', $pcall)
-            ->where('id_kola', $idKola)
-            ->where('id_kategorie', $idKategorie)
+        if (EdiEntry::query()
+            ->where('callsign', $pcall)
+            ->where('round_id', $idKola)
+            ->where('category_id', $idKategorie)
             ->exists()
         ) {
             throw new DuplicateEdiException($pcall);
@@ -126,11 +126,11 @@ final readonly class ImportEdiAction
      *                                     backfill starých kol ne)
      * @param  array<string, mixed>  $overrides  hodnoty, kterými závodník v náhledu
      *                                           přepsal odvozená pole (kontakt,
-     *                                           schvaleno) – sloučí se do payloadu
+     *                                           approved) – sloučí se do payloadu
      *                                           před vytvořením řádku i odesláním
      *                                           potvrzovacích e-mailů
      */
-    public function execute(EdiLog $log, bool $notify = true, bool $enforceUploadWindow = true, array $overrides = []): VkvpaData
+    public function execute(EdiLog $log, bool $notify = true, bool $enforceUploadWindow = true, array $overrides = []): EdiEntry
     {
         $h = $log->header;
         $pcall = $h->pCall();
@@ -142,28 +142,28 @@ final readonly class ImportEdiAction
         $idKategorie = $preview->idKategorie;
 
         try {
-            $data = DB::transaction(function () use ($log, $h, $pcall, $idKola, $idKategorie, $overrides): VkvpaData {
+            $data = DB::transaction(function () use ($log, $h, $pcall, $idKola, $idKategorie, $overrides): EdiEntry {
                 $head = $this->importer->import($log, $idKola);
                 $score = $this->scoring->scoreEdi($head);
 
-                return VkvpaData::create([
-                    'id_kola' => $idKola,
-                    'id_kategorie' => $idKategorie,
-                    'znacka' => $pcall,
+                return EdiEntry::create([
+                    'round_id' => $idKola,
+                    'category_id' => $idKategorie,
+                    'callsign' => $pcall,
                     'locator' => $h->pWWLo(),
-                    'jmeno' => $h->rName(),
-                    'mail' => $h->rEmail(),
-                    'telefon' => $h->rPhon(),
+                    'name' => $h->rName(),
+                    'email' => $h->rEmail(),
+                    'phone' => $h->rPhon(),
                     'soapbox' => $h->get('RSoap'),
-                    'pocet' => $score->pocet,
-                    'nasobice' => $score->nasobice,
-                    'bodu_za_qso' => $score->boduZaQso,
-                    'body' => $score->body,
+                    'qso_count' => $score->qsoCount,
+                    'multiplier' => $score->multiplier,
+                    'qso_points' => $score->qsoPoints,
+                    'points' => $score->points,
                     'qrp' => $h->isQrp(),
                     'lp' => $h->isLp(),
-                    'edihead_id' => $head->id,
-                    'schvaleno' => false,
-                    // Závodníkem upravená pole z náhledu (kontakt, příp. schvaleno
+                    'edi_head_id' => $head->id,
+                    'approved' => false,
+                    // Závodníkem upravená pole z náhledu (kontakt, příp. approved
                     // u admina) mají přednost před hodnotami odvozenými z hlavičky.
                     // Skóre/kolo/kategorie/značka jsou autoritativní – ty nepřepisujeme.
                     ...$overrides,
@@ -191,27 +191,27 @@ final readonly class ImportEdiAction
      */
     private function assertUploadWindowOpen(int $idKola): void
     {
-        $kolo = VkvpaKola::query()->find($idKola);
+        $kolo = EdiRound::query()->find($idKola);
 
         if ($kolo === null) {
             return; // neexistenci kola hlásí RoundNotFoundException dříve
         }
 
-        if (! $kolo->prijimaHlaseni()) {
-            throw new UploadWindowClosedException($kolo->nazev);
+        if (! $kolo->acceptsReports()) {
+            throw new UploadWindowClosedException($kolo->name);
         }
     }
 
     /**
      * Ověří, že TDate odpovídá termínu závodu. Termín bereme z DB
-     * (`vkvpa_kola.datum_konani` nalezeného kola), ne z výpočtu „třetí neděle",
+     * (`edi_rounds.starts_at` nalezeného kola), ne z výpočtu „třetí neděle",
      * aby šlo snadno testovat libovolně nadefinovaná kola. TDate může být
      * i dvoudenní rozsah (start;end) ze šablony 24h závodu – stačí proto, aby
      * dni konání odpovídalo alespoň jedno z dat uvedených v TDate.
      *
      * @throws TDateNotContestDayException
      */
-    private function assertTDateIsContestDay(string $tdate, VkvpaKola $kolo): void
+    private function assertTDateIsContestDay(string $tdate, EdiRound $kolo): void
     {
         $dates = $this->parseTDateDates($tdate);
         if ($dates === []) {
@@ -219,7 +219,7 @@ final readonly class ImportEdiAction
             return;
         }
 
-        $denKonani = $kolo->datum_konani;
+        $denKonani = $kolo->starts_at;
 
         if (array_any($dates, fn (CarbonImmutable $d): bool => $d->isSameDay($denKonani))) {
             return;

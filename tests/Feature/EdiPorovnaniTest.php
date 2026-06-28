@@ -6,11 +6,11 @@ namespace Tests\Feature;
 
 use App\Http\Controllers\EdiPorovnaniController;
 use App\Models\EdiCategory;
+use App\Models\EdiEntry;
 use App\Models\Edihead;
 use App\Models\Ediline;
+use App\Models\EdiRound;
 use App\Models\User;
-use App\Models\VkvpaData;
-use App\Models\VkvpaKola;
 use App\Services\Edi\EdiImportService;
 use App\Services\Edi\EdiParser;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -151,30 +151,30 @@ class EdiPorovnaniTest extends TestCase
      */
     private function seedRound(bool $otevrene = false): array
     {
-        $kolo = VkvpaKola::create([
-            'datum_konani' => '2026-03-15 08:00:00',
+        $kolo = EdiRound::create([
+            'starts_at' => '2026-03-15 08:00:00',
             // Otevřené kolo = uzávěrka v budoucnu (stav Příjem), jinak vyhodnocené.
-            'datum_uzaverky' => $otevrene ? now()->addDay()->toDateTimeString() : '2026-03-20 23:59:59',
-            'nazev' => '03/2026',
-            'poznamka' => '',
-            'vyhodnoceno' => $otevrene ? null : '2026-03-21 10:00:00',
+            'closes_at' => $otevrene ? now()->addDay()->toDateTimeString() : '2026-03-20 23:59:59',
+            'name' => '03/2026',
+            'note' => '',
+            'evaluated_at' => $otevrene ? null : '2026-03-21 10:00:00',
         ]);
 
         $katA = EdiCategory::create(['name' => '144 MHz', 'band' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
         $katB = EdiCategory::create(['name' => '432 MHz', 'band' => 'B', 'section' => 'SO', 'variant' => 'domestic']);
 
         $head = $this->importSample();
-        $head->update(['id_kola' => $kolo->id]);
+        $head->update(['round_id' => $kolo->id]);
 
         $rival = Edihead::create([
-            'id_kola' => $kolo->id, 't_date' => '20260315', 'p_call' => 'OK1BBB', 'p_wwlo' => 'JN89',
+            'round_id' => $kolo->id, 't_date' => '20260315', 'p_call' => 'OK1BBB', 'p_wwlo' => 'JN89',
             'p_band' => '144 MHz', 'r_name' => 'B', 'r_emai' => 'b@b.cz', 's_powe' => 100,
         ]);
         Ediline::create(['edihead_id' => $rival->id, 'qso_at' => '2026-03-15 08:30:00', 'call_sign' => 'OK2IMH', 'received_wwl' => 'JN99BP']);
         Ediline::create(['edihead_id' => $rival->id, 'qso_at' => '2026-03-15 08:31:00', 'call_sign' => 'OK9ZZZ', 'received_wwl' => 'JO60AA']);
 
         $other = Edihead::create([
-            'id_kola' => $kolo->id, 't_date' => '20260315', 'p_call' => 'OK7CCC', 'p_wwlo' => 'JO70AA',
+            'round_id' => $kolo->id, 't_date' => '20260315', 'p_call' => 'OK7CCC', 'p_wwlo' => 'JO70AA',
             'p_band' => '432 MHz', 'r_name' => 'C', 'r_emai' => 'c@c.cz', 's_powe' => 100,
         ]);
 
@@ -183,13 +183,13 @@ class EdiPorovnaniTest extends TestCase
             [$rival, $katA->id, 'OK1BBB', 'JN89'],
             [$other, $katB->id, 'OK7CCC', 'JO70AA'],
         ] as [$h, $katId, $znacka, $locator]) {
-            VkvpaData::create([
-                'id_kola' => $kolo->id, 'id_kategorie' => $katId,
-                'qrp' => false, 'lp' => false, 'znacka' => $znacka, 'locator' => $locator,
-                'pocet' => 2, 'bodu_za_qso' => 7, 'nasobice' => 2, 'body' => 14,
-                'jmeno' => 'Test', 'mail' => 't@t.cz', 'telefon' => '', 'poznamka' => '',
-                'soapbox' => '', 'ip' => '', 'edihead_id' => $h->id,
-                'poradi' => 1, 'schvaleno' => true, 'session_id' => '',
+            EdiEntry::create([
+                'round_id' => $kolo->id, 'category_id' => $katId,
+                'qrp' => false, 'lp' => false, 'callsign' => $znacka, 'locator' => $locator,
+                'qso_count' => 2, 'qso_points' => 7, 'multiplier' => 2, 'points' => 14,
+                'name' => 'Test', 'email' => 't@t.cz', 'phone' => '', 'note' => '',
+                'soapbox' => '', 'ip' => '', 'edi_head_id' => $h->id,
+                'rank' => 1, 'approved' => true, 'session_id' => '',
             ]);
         }
 

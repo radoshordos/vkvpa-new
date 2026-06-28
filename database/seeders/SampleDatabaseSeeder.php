@@ -17,14 +17,14 @@ class SampleDatabaseSeeder extends Seeder
     {
         // Pořadí respektuje cizí klíče (na MySQL se vynucují) – rodičovské
         // tabulky se plní dřív než ty, které na ně odkazují: kola+kategorie →
-        // edihead → edilines/vkvpa_data → diskuse. prihlaseni (user_id NULL) a
+        // edihead → edilines/edi_entries → diskuse. prihlaseni (user_id NULL) a
         // prefixes jsou bez závislostí.
         $this->call([
-            VkvpaKolaTableSeeder::class,
+            EdiRoundTableSeeder::class,
             EdiCategoryTableSeeder::class,
             EdiheadTableSeeder::class,
             EdilinesTableSeeder::class,
-            VkvpaDataTableSeeder::class,
+            EdiEntryTableSeeder::class,
             DiskuseSeeder::class,
             VkvpaPrihlaseniTableSeeder::class,
             PrefixesTableSeeder::class,
@@ -35,8 +35,8 @@ class SampleDatabaseSeeder extends Seeder
         Artisan::call('vkvpa:repair-edihead-band-sect');
 
         // edi_head.edi_category_id snapshot nenese – nastavíme ho 1:1 z
-        // autoritativní kategorie příspěvku (vkvpa_data.id_kategorie); osiřelé
-        // i víceznačné deníky zůstávají NULL. Musí běžet až po vkvpa_data.
-        app(EdiheadCategoryBackfiller::class)->mirrorVkvpaDataCategory();
+        // autoritativní kategorie příspěvku (edi_entries.category_id); osiřelé
+        // i víceznačné deníky zůstávají NULL. Musí běžet až po edi_entries.
+        app(EdiheadCategoryBackfiller::class)->mirrorEdiEntryCategory();
     }
 }

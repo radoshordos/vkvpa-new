@@ -99,7 +99,7 @@ class EdiPorovnaniController extends Controller
                 'mine' => self::souhrn((string) $head->p_call, $cumulative),
                 'rival' => self::souhrn($compare['rival'], $rivalCumulative),
             ],
-            'roundDataPending' => $head->id_kola !== null && ! $this->geometry->roundResultsDisclosable($head),
+            'roundDataPending' => $head->round_id !== null && ! $this->geometry->roundResultsDisclosable($head),
         ]);
     }
 
@@ -107,8 +107,8 @@ class EdiPorovnaniController extends Controller
      * Souhrnná karta jedné strany porovnání z průběhu skóre (poslední bod
      * průběhu = výsledné hodnoty; jen QSO s platným lokátorem).
      *
-     * @param  list<array{t: int, cas: string, call: string, points: int, nasobice: int, body: int}>  $cumulative
-     * @return array{call: string, qso: int, nasobice: int, body: int}
+     * @param  list<array{t: int, cas: string, call: string, points: int, multiplier: int, body: int}>  $cumulative
+     * @return array{call: string, qso: int, multiplier: int, body: int}
      */
     private static function souhrn(string $call, array $cumulative): array
     {
@@ -117,7 +117,7 @@ class EdiPorovnaniController extends Controller
         return [
             'call' => $call,
             'qso' => count($cumulative),
-            'nasobice' => $last['nasobice'] ?? 0,
+            'multiplier' => $last['multiplier'] ?? 0,
             'body' => $last['body'] ?? 0,
         ];
     }

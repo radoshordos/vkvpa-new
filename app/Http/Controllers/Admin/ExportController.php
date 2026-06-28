@@ -6,7 +6,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Edihead;
-use App\Models\VkvpaKola;
+use App\Models\EdiRound;
 use App\Support\FileName;
 use Illuminate\Http\Response;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -29,18 +29,18 @@ class ExportController extends Controller
         $pocty = Edihead::query()
             ->whereNotNull('src')
             ->whereRaw("TRIM(src) <> ''")
-            ->selectRaw('id_kola, COUNT(*) AS pocet')
-            ->groupBy('id_kola')
-            ->pluck('pocet', 'id_kola')
+            ->selectRaw('round_id, COUNT(*) AS pocet')
+            ->groupBy('round_id')
+            ->pluck('pocet', 'round_id')
             ->map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0);
 
-        $kola = VkvpaKola::query()
-            ->orderByDesc('datum_konani')
+        $kola = EdiRound::query()
+            ->orderByDesc('starts_at')
             ->get()
-            ->map(static fn (VkvpaKola $k): array => [
+            ->map(static fn (EdiRound $k): array => [
                 'id' => $k->id,
-                'nazev' => $k->nazev,
-                'datum_konani' => $k->datum_konani,
+                'nazev' => $k->name,
+                'starts_at' => $k->starts_at,
                 'pocet' => $pocty[$k->id] ?? 0,
             ]);
 
@@ -53,10 +53,10 @@ class ExportController extends Controller
     /**
      * Stáhne ZIP se všemi EDI deníky daného kola (jen ty se zdrojovým souborem).
      */
-    public function download(VkvpaKola $kolo): BinaryFileResponse|StreamedResponse
+    public function download(EdiRound $kolo): BinaryFileResponse|StreamedResponse
     {
         $deniky = Edihead::query()
-            ->where('id_kola', $kolo->id)
+            ->where('round_id', $kolo->id)
             ->whereNotNull('src')
             ->whereRaw("TRIM(src) <> ''")
             ->orderBy('p_call')
@@ -81,7 +81,7 @@ class ExportController extends Controller
         }
         $zip->close();
 
-        $zipName = sprintf('edi-%s-kolo-%d.zip', $kolo->datum_konani->format('Y-m-d'), $kolo->id);
+        $zipName = sprintf('edi-%s-kolo-%d.zip', $kolo->starts_at->format('Y-m-d'), $kolo->id);
 
         return response()
             ->download($tmp, $zipName, ['Content-Type' => 'application/zip'])

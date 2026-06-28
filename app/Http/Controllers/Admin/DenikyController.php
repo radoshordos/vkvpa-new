@@ -6,7 +6,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Edihead;
-use App\Models\VkvpaKola;
+use App\Models\EdiRound;
 use Illuminate\View\View;
 
 /** Administrace – Deníky. */
@@ -18,7 +18,7 @@ class DenikyController extends Controller
             ->orderByDesc('stamp')
             ->paginate(50);
 
-        $kola = VkvpaKola::query()->orderByDesc('datum_konani')->limit(200)->pluck('nazev', 'id');
+        $kola = EdiRound::query()->orderByDesc('starts_at')->limit(200)->pluck('name', 'id');
 
         return view('pages.admin.deniky', [
             'active' => 'deniky.index',

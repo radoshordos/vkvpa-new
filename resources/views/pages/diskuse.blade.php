@@ -1,6 +1,6 @@
 @extends('layouts.app')
-@section('title', __('pages.diskuse.title', ['round' => $kolo->nazev]))
-@section('meta_description', __('pages.diskuse.meta', ['round' => $kolo->nazev]))
+@section('title', __('pages.diskuse.title', ['round' => $kolo->name]))
+@section('meta_description', __('pages.diskuse.meta', ['round' => $kolo->name]))
 
 @section('jsonld')
     @include('partials.jsonld-kolo', ['kolo' => $kolo])
@@ -19,7 +19,7 @@
             <select id="kolo_sel" name="kolo" class="select w-auto" data-autosubmit>
                 @foreach ($kola as $k)
                     <option value="{{ $k->id }}" @selected($k->id === $kolo->id)>
-                        {{ $k->nazev }} ({{ $k->datum_konani?->format('j. n. Y') }})
+                        {{ $k->name }} ({{ $k->starts_at?->format('j. n. Y') }})
                     </option>
                 @endforeach
             </select>

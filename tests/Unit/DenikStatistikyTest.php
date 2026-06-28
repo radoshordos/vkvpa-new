@@ -40,7 +40,7 @@ class DenikStatistikyTest extends TestCase
 
     // ---- noveNasobice ----------------------------------------------------
 
-    public function test_nove_nasobice_skips_home_square(): void
+    public function test_nove_multiplier_skips_home_square(): void
     {
         // QSO do vlastního čtverce nesmí tvořit nový násobič.
         $lines = new Collection([
@@ -50,7 +50,7 @@ class DenikStatistikyTest extends TestCase
         $this->assertSame([], $this->svc->noveNasobice($lines, 'JN99'));
     }
 
-    public function test_nove_nasobice_tracks_new_squares_in_order(): void
+    public function test_nove_multiplier_tracks_new_squares_in_order(): void
     {
         $lines = new Collection([
             $this->qso('OK2IMH', 'JN99AJ', 2, 480), // vlastní čtverec – nepočítá
@@ -69,7 +69,7 @@ class DenikStatistikyTest extends TestCase
         $this->assertSame(3, $result[1]['poradi']);
     }
 
-    public function test_nove_nasobice_ignores_invalid_locators(): void
+    public function test_nove_multiplier_ignores_invalid_locators(): void
     {
         $lines = new Collection([
             $this->qso('OK1BAD', 'XXXX', 0, 480), // neplatný lokátor → přeskočit
@@ -123,7 +123,7 @@ class DenikStatistikyTest extends TestCase
         $this->assertSame(0, $result['celkem'][0]);
     }
 
-    public function test_timeline_counts_nasobice_in_separate_column(): void
+    public function test_timeline_counts_multiplier_in_separate_column(): void
     {
         $from = 480;
         $to = 660;
@@ -134,11 +134,11 @@ class DenikStatistikyTest extends TestCase
         ]);
 
         // JN89 je nový násobič v bucket 1 (t=496 → intdiv(16,15)=1).
-        $nasobice = [
+        $multiplier = [
             ['square' => 'JN89', 'call' => 'B', 'cas' => '08:16', 't' => 496, 'poradi' => 2, 'idx' => 1],
         ];
 
-        $result = $this->svc->timeline($lines, $nasobice, $from, $to);
+        $result = $this->svc->timeline($lines, $multiplier, $from, $to);
 
         $this->assertSame(1, $result['celkem'][0]); // A v bucket 0
         $this->assertSame(1, $result['celkem'][1]); // B v bucket 1

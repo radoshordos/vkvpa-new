@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Models\Edihead;
-use App\Models\VkvpaKola;
+use App\Models\EdiRound;
 use App\Services\Edi\EdiImportService;
 use App\Services\Edi\EdiParser;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -21,14 +21,14 @@ class SeoTest extends TestCase
     use RefreshDatabase;
 
     /** Uzavřené kolo (po uzávěrce) – jeho výsledky/deníky jsou veřejné. */
-    private function uzavreneKolo(): VkvpaKola
+    private function uzavreneKolo(): EdiRound
     {
-        return VkvpaKola::create([
-            'datum_konani' => '2026-03-15',
-            'datum_uzaverky' => now()->subDay()->toDateTimeString(),
-            'nazev' => '03/2026',
-            'poznamka' => '',
-            'vyhodnoceno' => now()->toDateTimeString(),
+        return EdiRound::create([
+            'starts_at' => '2026-03-15',
+            'closes_at' => now()->subDay()->toDateTimeString(),
+            'name' => '03/2026',
+            'note' => '',
+            'evaluated_at' => now()->toDateTimeString(),
         ]);
     }
 
@@ -168,7 +168,7 @@ class SeoTest extends TestCase
     {
         $kolo = $this->uzavreneKolo();
         $head = $this->importSample();
-        $head->update(['id_kola' => $kolo->id]);
+        $head->update(['round_id' => $kolo->id]);
 
         $body = (string) $this->get('/sitemap.xml')->assertOk()->content();
 

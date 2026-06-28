@@ -21,7 +21,7 @@
     <select id="kategorie" name="kategorie" class="select w-auto" data-autosubmit>
       <option value="0" @selected($katId === 0)>{{ __('pages.rocni.filter_all') }}</option>
       @foreach ($kategorie as $kat)
-        <option value="{{ $kat->id }}" @selected($katId === $kat->id)>{{ $kat->nazev }}</option>
+        <option value="{{ $kat->id }}" @selected($katId === $kat->id)>{{ $kat->name }}</option>
       @endforeach
     </select>
   </div>
@@ -45,7 +45,7 @@
 @endif
 
 @forelse ($vysledky as $kategorieId => $radky)
-  <div class="section-head">{{ $kategorie[$kategorieId]->nazev ?? ('Kategorie ' . $kategorieId) }}</div>
+  <div class="section-head">{{ $kategorie[$kategorieId]->name ?? ('Kategorie ' . $kategorieId) }}</div>
   <div class="table-wrap mb-4">
     <table class="data-table">
       <thead>
@@ -62,7 +62,7 @@
         @foreach ($radky as $i => $r)
           <tr>
             <td class="num">{{ $i + 1 }}.</td>
-            <td class="mono font-semibold">{{ $r->znacka }}</td>
+            <td class="mono font-semibold">{{ $r->callsign }}</td>
             @for ($m = 1; $m <= 12; $m++)
               @php($b = (int) $r->getAttribute('mesic_' . $m))
               @php($vk = $r->getAttribute('vykon_' . $m))

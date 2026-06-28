@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Mail;
 
-use App\Models\VkvpaData;
+use App\Models\EdiEntry;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -24,7 +24,7 @@ class HlaseniProVyhodnocovatele extends Mailable
     public string $prevzitUrl;
 
     public function __construct(
-        public readonly VkvpaData $hlaseni,
+        public readonly EdiEntry $hlaseni,
         public readonly string $koloNazev,
         public readonly string $kategorieNazev,
         public readonly string $kod,
@@ -35,7 +35,7 @@ class HlaseniProVyhodnocovatele extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: $this->hlaseni->znacka.' '.$this->koloNazev,
+            subject: $this->hlaseni->callsign.' '.$this->koloNazev,
         );
     }
 

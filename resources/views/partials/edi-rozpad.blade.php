@@ -16,7 +16,7 @@
 <div class="mb-3 flex flex-wrap gap-2">
     <x-badge variant="brand">{{ __('admin.debug_badge_decl') }} <b>{{ $report->declaredTotal }}</b></x-badge>
     <x-badge variant="brand">{{ __('admin.debug_badge_parsed') }} <b>{{ $report->parsedCount }}</b></x-badge>
-    <x-badge variant="ok">{{ __('admin.debug_badge_counted') }} <b>{{ $report->pocet }}</b></x-badge>
+    <x-badge variant="ok">{{ __('admin.debug_badge_counted') }} <b>{{ $report->qsoCount }}</b></x-badge>
     @if ($report->excludedIncomplete)<x-badge variant="danger">{{ __('admin.debug_badge_incomplete') }} <b>{{ $report->excludedIncomplete }}</b></x-badge>@endif
     @if ($report->excludedOutOfWindow)<x-badge variant="warn">{{ __('admin.debug_badge_window') }} <b>{{ $report->excludedOutOfWindow }}</b></x-badge>@endif
     @if ($report->excludedWrongDate)<x-badge variant="warn">{{ __('admin.debug_badge_date') }} <b>{{ $report->excludedWrongDate }}</b></x-badge>@endif

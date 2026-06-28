@@ -35,8 +35,8 @@ The core flow for submitting a contest log:
 
 1. `EdiParser::parse(string)` → `EdiLog` (value object with `EdiHeader` + `EdiQso[]` + raw source)
 2. `EdiImportService::import(EdiLog)` → writes to `edi_head` + `edi_lines` tables in one transaction
-3. `ScoringService::scoreEdi(Edihead)` → computes `EdiScore` (pocet × nasobice = body)
-4. `EdiController::store()` orchestrates steps 1–3, creates a `VkvpaData` row linked via `edihead_id` (nullable FK; `NULL` = entry without an EDI log)
+3. `ScoringService::scoreEdi(Edihead)` → computes `EdiScore` (pocet × multiplier = body)
+4. `EdiController::store()` orchestrates steps 1–3, creates a `EdiEntry` row linked via `edihead_id` (nullable FK; `NULL` = entry without an EDI log)
 
 EDI files may arrive as Windows-1250; `EdiParser` converts via `iconv` before processing. Real-world fixture EDI files live in `resources/edi/` and are used in unit tests.
 
@@ -44,7 +44,7 @@ EDI files may arrive as Windows-1250; `EdiParser` converts via `iconv` before pr
 
 **EDI schema** (`edi_head`, `edi_lines`, `edi_category`): derived from the original system but fully normalized to `snake_case` column names (`mode_code`, `received_wwl`, `qso_points`, `t_date`, `p_call`, etc.) — accessed as ordinary Eloquent attributes, no magic-string `$line->{'...'}` access and no `property.notFound` suppressions. `Ediline` exposes a few PHP 8.4 property hooks (`receivedWwl`, `qsoPoints`, `modeCode`, `mode`, `newWwl`) that normalize/cast the raw columns. Both models carry `#[WithoutTimestamps]` since they have custom time columns (`stamp`, `d_cas`). `EdiCategory` (`edi_category`) is the **single** category lookup — band × section × variant, with `dxid` self-FK linking a DX row to its domestic counterpart (NULL = domestic); it exposes back-compat read accessors `nazev` (= `name`) and generated `zkratka`. The historical dataset now lives only as seeder snapshots (see *Seeding* below); the original Adminer SQL dumps were converted and removed.
 
-**Application schema** (`vkvpa_*` tables): `VkvpaData` (contest entry/result row), `VkvpaKola` (contest round), `VkvpaPrihlaseni`, `Prispevek` (discussion). Category is `edi_category` (above): `VkvpaData.id_kategorie` is a FK to `edi_category.id` (the old duplicate `vkvpa_kategorie` table was dropped; `EdiCategory` is the sole category model).
+**Application schema** (`vkvpa_*` tables): `EdiEntry` (contest entry/result row), `EdiRound` (contest round), `VkvpaPrihlaseni`, `Prispevek` (discussion). Category is `edi_category` (above): `EdiEntry.category_id` is a FK to `edi_category.id` (the old duplicate `vkvpa_kategorie` table was dropped; `EdiCategory` is the sole category model).
 
 One migration per table: each `create_*` migration holds the table's final schema including its outgoing foreign keys, ordered so referenced tables are created first. FKs are added in a `DB::getDriverName() !== 'sqlite'` guard (SQLite can't `ALTER TABLE ADD FOREIGN KEY` and the test DB runs without them — integrity is enforced by the app + tests there); `edi_lines` is the exception, declaring its FK inline since it works in `CREATE TABLE`.
 
@@ -52,16 +52,16 @@ One migration per table: each `create_*` migration holds the table's final schem
 
 `DatabaseSeeder` → `SampleDatabaseSeeder` (historical snapshot) + `AdminUserSeeder` (admin from `ADMIN_USER`/`ADMIN_PASS` env, not from a file). Per-table seeders extend `JsonTableSeeder`, which truncates then bulk-inserts in chunks of 500.
 
-The large tables (`edi_head`, `edi_lines`, `vkvpa_data`) ship as gzipped newline-delimited JSON snapshots in `database/seeders/data/{table}.jsonl.gz` — `JsonTableSeeder` streams them line by line via the `compress.zlib://` wrapper, so seeding stays low-memory regardless of size. Small/static tables either keep a plain `{table}.json` array (still supported as a fallback) or inline their rows directly in the seeder's `rows()` (e.g. `PrefixesTableSeeder`, `VkvpaKolaTableSeeder`). The former Adminer SQL dumps were one-off converted into these snapshots and deleted, along with the `legacy:import` command that imported them.
+The large tables (`edi_head`, `edi_lines`, `edi_entries`) ship as gzipped newline-delimited JSON snapshots in `database/seeders/data/{table}.jsonl.gz` — `JsonTableSeeder` streams them line by line via the `compress.zlib://` wrapper, so seeding stays low-memory regardless of size. Small/static tables either keep a plain `{table}.json` array (still supported as a fallback) or inline their rows directly in the seeder's `rows()` (e.g. `PrefixesTableSeeder`, `EdiRoundTableSeeder`). The former Adminer SQL dumps were one-off converted into these snapshots and deleted, along with the `legacy:import` command that imported them.
 
 ### Scoring Formula
 
 `ScoringService::scoreEdi()` implements the contest rules:
-- Count QSOs within the contest window (`ContestWindow::from()` = `'0800'`, `to()` = `'1100'` UTC) on the contest day; QSOs outside the window or day score 0. The contest day is the round's `datum_konani` (resolved by `ScoringService::contestDay()` from `edi_head.id_kola`, or the round matching `TDate`'s year+month), **not** the first token of `TDate` — so a two-day `TDate` (`YYYYMMDD;YYYYMMDD`) still scores QSOs on the real contest day instead of silently zeroing them. Only when no matching round exists does it fall back to `TDate`'s first day. `koloForTDate()` and the `assertTDate*` import guards already require `TDate` to contain the contest day and the QSOs to fall on a `TDate` day; `scoreLog()`/`EdiValidator`/`EdiScoreDebugger` take the same contest day so previews, warnings and the debug breakdown agree with the stored score
+- Count QSOs within the contest window (`ContestWindow::from()` = `'0800'`, `to()` = `'1100'` UTC) on the contest day; QSOs outside the window or day score 0. The contest day is the round's `starts_at` (resolved by `ScoringService::contestDay()` from `edi_head.round_id`, or the round matching `TDate`'s year+month), **not** the first token of `TDate` — so a two-day `TDate` (`YYYYMMDD;YYYYMMDD`) still scores QSOs on the real contest day instead of silently zeroing them. Only when no matching round exists does it fall back to `TDate`'s first day. `koloForTDate()` and the `assertTDate*` import guards already require `TDate` to contain the contest day and the QSOs to fall on a `TDate` day; `scoreLog()`/`EdiValidator`/`EdiScoreDebugger` take the same contest day so previews, warnings and the debug breakdown agree with the stored score
 - QSOs to the station's own big square (first 4 chars of `PWWLo`) **are** counted — `pocet` includes them
 - `boduZaQso` = sum of per-QSO points recomputed from locators via `Maidenhead::qsoPoints()` (own big square = 2 points, +1 for each further ring of big squares); the EDI `QSO-Points` column is ignored
-- `nasobice` = count of distinct big squares including the home square (home always counts, even if not worked)
-- `body = boduZaQso × nasobice`
+- `multiplier` = count of distinct big squares including the home square (home always counts, even if not worked)
+- `body = boduZaQso × multiplier`
 
 `ScoringService::rankRound()` assigns dense ranks within each category of a round.
 
@@ -71,12 +71,12 @@ The large tables (`edi_head`, `edi_lines`, `vkvpa_data`) ship as gzipped newline
 
 ### Round Lifecycle (`KoloStav`)
 
-`VkvpaKola::stav()` derives the phase from time (`datum_konani`, `datum_uzaverky`) plus the `vyhodnoceno` timestamp: `Nadchazejici → Aktivni → Prijem → Uzavrene → Vyhodnocene`. There is **no manual "close round" action** — the transition into `Vyhodnocene` (setting `vyhodnoceno`) is automatic, gated by `VkvpaKola::maBytVyhodnoceno()`: the round must be past reception (`Uzavrene`) **and** either every entry is taken over (`schvaleno = true`) or the fallback window elapsed (`vkvpa.finalize_fallback_days` = 20 days after `datum_uzaverky`). `ScoringService::finalizeIfDue()` performs it (ranks + sets `vyhodnoceno`); it's invoked both by the daily `kola:finalize-evaluated` command and inline in `ZaznamController::update()` when an admin takes over the last entry after the deadline. Per-entry "převzetí" is the `VkvpaData.schvaleno` flag (button "P"); un-taking-over is only allowed while the round still accepts reports (`prijimaHlaseni()`, i.e. between `datum_konani` and `datum_uzaverky`) — after the deadline an entry can only be edited (which recomputes points).
+`EdiRound::stav()` derives the phase from time (`starts_at`, `closes_at`) plus the `vyhodnoceno` timestamp: `Nadchazejici → Aktivni → Prijem → Uzavrene → Vyhodnocene`. There is **no manual "close round" action** — the transition into `Vyhodnocene` (setting `vyhodnoceno`) is automatic, gated by `EdiRound::maBytVyhodnoceno()`: the round must be past reception (`Uzavrene`) **and** either every entry is taken over (`approved = true`) or the fallback window elapsed (`vkvpa.finalize_fallback_days` = 20 days after `closes_at`). `ScoringService::finalizeIfDue()` performs it (ranks + sets `vyhodnoceno`); it's invoked both by the daily `kola:finalize-evaluated` command and inline in `ZaznamController::update()` when an admin takes over the last entry after the deadline. Per-entry "převzetí" is the `EdiEntry.approved` flag (button "P"); un-taking-over is only allowed while the round still accepts reports (`prijimaHlaseni()`, i.e. between `starts_at` and `closes_at`) — after the deadline an entry can only be edited (which recomputes points).
 
 ### Caching
 
 `config/cache.php` keeps Laravel's secure default `serializable_classes => false` — objects are never unserialized from cache, so **only plain arrays/scalars may be cached** (a cached Eloquent collection comes back as `__PHP_Incomplete_Class`). Two application caches exist:
-- Yearly results (`ScoringService::yearlyResults()`): `Cache::flexible` over attribute arrays, rehydrated via `VkvpaData::hydrate()`; invalidated by `rankRound()`. A round belongs to the year of its `datum_konani` (not the year in `nazev`).
+- Yearly results (`ScoringService::yearlyResults()`): `Cache::flexible` over attribute arrays, rehydrated via `EdiEntry::hydrate()`; invalidated by `rankRound()`. A round belongs to the year of its `starts_at` (not the year in `nazev`).
 - "All round stations" map layer (`QsoGeometry::roundStations()`): per-round TTL cache (`vkvpa.round_stations_cache_ttl`); no targeted invalidation needed because the layer is only disclosed after the round closes, when the data no longer changes.
 
 ### Map Views

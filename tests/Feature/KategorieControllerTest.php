@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Models\EdiCategory;
+use App\Models\EdiEntry;
+use App\Models\EdiRound;
 use App\Models\User;
-use App\Models\VkvpaData;
-use App\Models\VkvpaKola;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
@@ -66,20 +66,20 @@ class KategorieControllerTest extends TestCase
 
     public function test_index_shows_usage_count_per_category_and_total(): void
     {
-        $kolo = VkvpaKola::create([
-            'nazev' => '06/2026',
-            'poznamka' => '',
-            'vyhodnoceno' => null,
-            'datum_konani' => '2026-06-21 08:00:00',
-            'datum_uzaverky' => '2026-06-26 23:59:59',
+        $kolo = EdiRound::create([
+            'name' => '06/2026',
+            'note' => '',
+            'evaluated_at' => null,
+            'starts_at' => '2026-06-21 08:00:00',
+            'closes_at' => '2026-06-26 23:59:59',
         ]);
         $kat = EdiCategory::create($this->payload(['name' => '144 MHz SO', 'band' => '47 GHz']));
 
         foreach (['OK1AAA', 'OK1BBB', 'OK1CCC'] as $znacka) {
-            VkvpaData::create([
-                'id_kola' => $kolo->id,
-                'id_kategorie' => $kat->id,
-                'znacka' => $znacka,
+            EdiEntry::create([
+                'round_id' => $kolo->id,
+                'category_id' => $kat->id,
+                'callsign' => $znacka,
                 'locator' => 'JN79XX',
             ]);
         }

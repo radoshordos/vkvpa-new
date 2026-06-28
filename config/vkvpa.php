@@ -44,7 +44,7 @@ return [
 
     // Záchranná lhůta automatického vyhodnocení kola: pokud administrátor
     // nepřevezme všechny záznamy, kolo se vyhodnotí (nastaví `vyhodnoceno`)
-    // automaticky po tomto počtu dní od uzávěrky příjmu (`datum_uzaverky`).
+    // automaticky po tomto počtu dní od uzávěrky příjmu (`closes_at`).
     'finalize_fallback_days' => (int) env('FINALIZE_FALLBACK_DAYS', 20),
 
     // Cache ročních výsledků (Cache::flexible): doba „čerstvosti" a krajní doba
@@ -71,7 +71,7 @@ return [
     // zvoleno tak, aby při obnově byly rodičovské tabulky před závislými.
     'db_backup_table_groups' => [
         'edi' => ['edi_category', 'edi_head', 'edi_lines'],
-        'vysledky' => ['vkvpa_kola', 'vkvpa_data'],
+        'vysledky' => ['edi_rounds', 'edi_entries'],
         'ostatni' => ['vkvpa_prihlaseni', 'diskuse', 'diskuse_foto'],
     ],
 ];

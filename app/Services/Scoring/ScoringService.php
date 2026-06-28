@@ -7,9 +7,9 @@ namespace App\Services\Scoring;
 use App\Enums\QsoCountStatus;
 use App\Enums\Vykon;
 use App\Models\EdiCategory;
+use App\Models\EdiEntry;
 use App\Models\Edihead;
-use App\Models\VkvpaData;
-use App\Models\VkvpaKola;
+use App\Models\EdiRound;
 use App\Services\Edi\EdiLog;
 use App\Support\ContestWindow;
 use App\Support\Maidenhead;
@@ -30,21 +30,21 @@ final class ScoringService
     public function rankRound(int $koloId): void
     {
         DB::transaction(function () use ($koloId): void {
-            // Nepřevzaté (schvaleno=false) do žebříčku nepatří – vynulovat jim staré
+            // Nepřevzaté (approved=false) do žebříčku nepatří – vynulovat jim staré
             // pořadí, aby po odebrání převzetí nezůstalo viset zastaralé `poradi`.
-            VkvpaData::query()
-                ->where('id_kola', $koloId)
-                ->where('schvaleno', false)
-                ->where('poradi', '<>', 0)
-                ->update(['poradi' => 0]);
+            EdiEntry::query()
+                ->where('round_id', $koloId)
+                ->where('approved', false)
+                ->where('rank', '<>', 0)
+                ->update(['rank' => 0]);
 
             foreach (EdiCategory::query()->pluck('id') as $kategorieId) {
-                $entries = VkvpaData::query()
-                    ->where('id_kola', $koloId)
+                $entries = EdiEntry::query()
+                    ->where('round_id', $koloId)
                     ->approved()
-                    ->where('id_kategorie', $kategorieId)
-                    ->orderByDesc('body')
-                    ->get(['id', 'body']);
+                    ->where('category_id', $kategorieId)
+                    ->orderByDesc('points')
+                    ->get(['id', 'points']);
 
                 // Collect IDs grouped by rank first, then batch-update to avoid N+1.
                 $counter = 0;
@@ -52,15 +52,15 @@ final class ScoringService
                 /** @var array<int, int[]> $byRank */
                 $byRank = [];
                 foreach ($entries as $entry) {
-                    if ($entry->body !== $prevBody) {
+                    if ($entry->points !== $prevBody) {
                         $counter++;
-                        $prevBody = $entry->body;
+                        $prevBody = $entry->points;
                     }
                     $byRank[$counter][] = $entry->id;
                 }
 
                 foreach ($byRank as $rank => $ids) {
-                    VkvpaData::query()->whereIn('id', $ids)->update(['poradi' => $rank]);
+                    EdiEntry::query()->whereIn('id', $ids)->update(['rank' => $rank]);
                 }
             }
         });
@@ -71,19 +71,19 @@ final class ScoringService
 
     public function closeRound(int $koloId): void
     {
-        VkvpaKola::query()->whereKey($koloId)->update(['vyhodnoceno' => Carbon::now()]);
+        EdiRound::query()->whereKey($koloId)->update(['evaluated_at' => Carbon::now()]);
     }
 
     /**
-     * Automaticky vyhodnotí kolo, pokud na to dozrálo ({@see VkvpaKola::maBytVyhodnoceno()}:
+     * Automaticky vyhodnotí kolo, pokud na to dozrálo ({@see EdiRound::maBytVyhodnoceno()}:
      * po uzávěrce a buď všechny záznamy převzaté, nebo uplynula 20denní lhůta).
      * Přepočítá pořadí (a invaliduje cache ročních výsledků) a nastaví `vyhodnoceno`.
      *
      * @return bool true, pokud kolo bylo právě vyhodnoceno; false, pokud na to ještě nedozrálo
      */
-    public function finalizeIfDue(VkvpaKola $kolo): bool
+    public function finalizeIfDue(EdiRound $kolo): bool
     {
-        if (! $kolo->maBytVyhodnoceno()) {
+        if (! $kolo->shouldBeEvaluated()) {
             return false;
         }
 
@@ -100,8 +100,8 @@ final class ScoringService
      *  - boduZaQso = součet bodů za spojení – přepočítáno z lokátorů (vlastní
      *    čtverec 2 body, sousední 3, každý další pás o bod víc); hodnota
      *    `QSO-Points` z deníku se ignoruje,
-     *  - nasobice  = počet různých velkých čtverců včetně vlastního (vlastní vždy),
-     *  - body      = boduZaQso * nasobice.
+     *  - multiplier  = počet různých velkých čtverců včetně vlastního (vlastní vždy),
+     *  - body      = boduZaQso * multiplier.
      *
      * Započítávají se jen QSO uvnitř závodního okna (den závodu dle `TDate`
      * a čas 08:00–11:00 UTC). QSO mimo okno mají efektivně bodovou hodnotu 0.
@@ -113,7 +113,7 @@ final class ScoringService
         // fallback na den z TDate, když kolo neznáme. Bere se den konání, ne první
         // token TDate – u dvoudenního TDate (RRRRMMDD;RRRRMMDD) by jinak QSO ze
         // skutečného dne konání spadla jako „mimo den" a deník by dostal 0.
-        $den = $this->contestDay($head->id_kola, (string) $head->t_date)?->format('Y-m-d')
+        $den = $this->contestDay($head->round_id, (string) $head->t_date)?->format('Y-m-d')
             ?? ContestWindow::dateFromTDate((string) $head->t_date);
 
         $squares = $head->lines()
@@ -156,7 +156,7 @@ final class ScoringService
 
     /**
      * Společné jádro bodování: ze seznamu velkých čtverců (4 znaky, už
-     * odfiltrované na závodní okno a den) spočítá pocet/boduZaQso/nasobice.
+     * odfiltrované na závodní okno a den) spočítá pocet/boduZaQso/multiplier.
      *
      * @param  array<int, string>  $squares
      */
@@ -171,9 +171,9 @@ final class ScoringService
         if ($home !== '') {
             $unique[] = $home;
         }
-        $nasobice = count(array_unique($unique));
+        $multiplier = count(array_unique($unique));
 
-        return new EdiScore(pocet: $pocet, boduZaQso: $boduZaQso, nasobice: $nasobice);
+        return new EdiScore(qsoCount: $pocet, qsoPoints: $boduZaQso, multiplier: $multiplier);
     }
 
     /**
@@ -191,9 +191,9 @@ final class ScoringService
 
         // Doménově existuje jen jedno kolo v měsíci (3. neděle); kdyby jich
         // omylem bylo víc, řazení zaručí deterministickou volbu nejstaršího.
-        $id = VkvpaKola::query()
+        $id = EdiRound::query()
             ->inYearMonth($year, $month)
-            ->orderBy('datum_konani')
+            ->orderBy('starts_at')
             ->value('id');
 
         return is_numeric($id) ? (int) $id : null;
@@ -201,7 +201,7 @@ final class ScoringService
 
     /**
      * Autoritativní den závodu pro skórování: datum konání kola, do kterého deník
-     * patří. Přednost má předané `id_kola` (uložený deník), jinak se kolo dohledá
+     * patří. Přednost má předané `round_id` (uložený deník), jinak se kolo dohledá
      * podle TDate (rok+měsíc, {@see koloForTDate()}). Vrátí null, když odpovídající
      * kolo neexistuje – pak volající použije den odvozený přímo z TDate (fallback).
      *
@@ -215,16 +215,16 @@ final class ScoringService
             return null;
         }
 
-        $den = VkvpaKola::query()->whereKey($id)->value('datum_konani');
+        $den = EdiRound::query()->whereKey($id)->value('starts_at');
 
         return $den instanceof Carbon ? $den : null;
     }
 
     /**
-     * Roční výsledky: součet bodů přes kola roku (dle roku `datum_konani`),
+     * Roční výsledky: součet bodů přes kola roku (dle roku `starts_at`),
      * po kategoriích a značkách.
      *
-     * @return \Illuminate\Database\Eloquent\Collection<int, VkvpaData>
+     * @return \Illuminate\Database\Eloquent\Collection<int, EdiEntry>
      */
     public function yearlyResults(int $year, bool $qrpOnly = false, bool $lpOnly = false): Collection
     {
@@ -240,35 +240,35 @@ final class ScoringService
             $this->yearlyCacheKey($year, $qrpOnly, $lpOnly),
             [VkvpaSettings::yearlyCacheFresh(), VkvpaSettings::yearlyCacheStale()],
             fn (): array => $this->computeYearlyResults($year, $qrpOnly, $lpOnly)
-                ->map(static fn (VkvpaData $row): array => $row->getAttributes())
+                ->map(static fn (EdiEntry $row): array => $row->getAttributes())
                 ->all(),
         );
 
-        return VkvpaData::query()->hydrate($rows);
+        return EdiEntry::query()->hydrate($rows);
     }
 
     // Bodový výraz se započítáním pravidla NON_EDI_NULLIFY_FROM_KOLO (záznamy
     // bez EDI deníku v novějších kolech se počítají jako 0). Sdílený celkovým
     // součtem i měsíčním rozpadem; literal-string kvůli selectRaw na PHPStan L10.
-    private const BODY_EXPR = 'SUM(CASE WHEN vkvpa_data.edihead_id IS NULL AND vkvpa_data.id_kola >= ? THEN 0 ELSE vkvpa_data.body END)';
+    private const BODY_EXPR = 'SUM(CASE WHEN edi_entries.edi_head_id IS NULL AND edi_entries.round_id >= ? THEN 0 ELSE edi_entries.points END)';
 
     /**
-     * @return \Illuminate\Database\Eloquent\Collection<int, VkvpaData>
+     * @return \Illuminate\Database\Eloquent\Collection<int, EdiEntry>
      */
     private function computeYearlyResults(int $year, bool $qrpOnly, bool $lpOnly): Collection
     {
         $nullifyFrom = VkvpaSettings::nonEdiNullifyFromKolo();
 
-        $query = VkvpaData::query()
-            ->join('vkvpa_kola', 'vkvpa_data.id_kola', '=', 'vkvpa_kola.id')
-            ->where('vkvpa_data.schvaleno', true)
-            ->where('vkvpa_data.poradi', '<>', 0)
-            ->whereYear('vkvpa_kola.datum_konani', $year)
+        $query = EdiEntry::query()
+            ->join('edi_rounds', 'edi_entries.round_id', '=', 'edi_rounds.id')
+            ->where('edi_entries.approved', true)
+            ->where('edi_entries.rank', '<>', 0)
+            ->whereYear('edi_rounds.starts_at', $year)
             // MAX(jmeno): jméno se může mezi koly lišit, agregace potřebuje
             // deterministickou volbu přenositelnou na SQLite (testy).
-            ->selectRaw('vkvpa_data.id_kategorie as kategorie_id, vkvpa_data.znacka, MAX(vkvpa_data.jmeno) as jmeno')
+            ->selectRaw('edi_entries.category_id as kategorie_id, edi_entries.callsign, MAX(edi_entries.name) as name')
             ->selectRaw(self::BODY_EXPR.' as celkem', [$nullifyFrom])
-            ->groupBy('vkvpa_data.id_kategorie', 'vkvpa_data.znacka')
+            ->groupBy('edi_entries.category_id', 'edi_entries.callsign')
             ->orderByDesc('celkem');
 
         if ($qrpOnly) {
@@ -279,7 +279,7 @@ final class ScoringService
             $query->onlyLp();
         }
 
-        /** @var \Illuminate\Database\Eloquent\Collection<int, VkvpaData> $rows */
+        /** @var \Illuminate\Database\Eloquent\Collection<int, EdiEntry> $rows */
         $rows = $query->get();
 
         $this->attachMonthlyBreakdown($rows, $year, $qrpOnly, $lpOnly, $nullifyFrom);
@@ -295,29 +295,29 @@ final class ScoringService
      * tvořit dynamické SQL aliasy (PHPStan L10 vyžaduje literal-string v selectRaw);
      * kolo se pak v PHP mapuje na svůj měsíc (víc kol v měsíci se sečte).
      *
-     * @param  \Illuminate\Database\Eloquent\Collection<int, VkvpaData>  $rows
+     * @param  \Illuminate\Database\Eloquent\Collection<int, EdiEntry>  $rows
      */
     private function attachMonthlyBreakdown(Collection $rows, int $year, bool $qrpOnly, bool $lpOnly, int $nullifyFrom): void
     {
-        // id_kola → číslo měsíce (1..12).
+        // round_id → číslo měsíce (1..12).
         $koloMonth = [];
-        foreach (VkvpaKola::query()->whereYear('datum_konani', $year)->get(['id', 'datum_konani']) as $kolo) {
-            $koloMonth[$kolo->id] = (int) $kolo->datum_konani->format('n');
+        foreach (EdiRound::query()->whereYear('starts_at', $year)->get(['id', 'starts_at']) as $kolo) {
+            $koloMonth[$kolo->id] = (int) $kolo->starts_at->format('n');
         }
 
-        $breakdown = VkvpaData::query()
-            ->join('vkvpa_kola', 'vkvpa_data.id_kola', '=', 'vkvpa_kola.id')
-            ->where('vkvpa_data.schvaleno', true)
-            ->where('vkvpa_data.poradi', '<>', 0)
-            ->whereYear('vkvpa_kola.datum_konani', $year)
-            ->selectRaw('vkvpa_data.id_kategorie as kategorie_id, vkvpa_data.znacka, vkvpa_data.id_kola')
+        $breakdown = EdiEntry::query()
+            ->join('edi_rounds', 'edi_entries.round_id', '=', 'edi_rounds.id')
+            ->where('edi_entries.approved', true)
+            ->where('edi_entries.rank', '<>', 0)
+            ->whereYear('edi_rounds.starts_at', $year)
+            ->selectRaw('edi_entries.category_id as kategorie_id, edi_entries.callsign, edi_entries.round_id')
             ->selectRaw(self::BODY_EXPR.' as body', [$nullifyFrom])
             // Výkon za měsíc: v daném (kategorie, značka, kolo) je nejvýš jeden
             // záznam, MAX jen uspokojí GROUP BY (qrp/lp jsou 0/1). Aliasy záměrně
             // mimo názvy qrp/lp – ty model castuje na bool a intAttr() by je
             // přes is_numeric() přečetl jako 0.
-            ->selectRaw('MAX(vkvpa_data.qrp) as qrp_any, MAX(vkvpa_data.lp) as lp_any')
-            ->groupBy('vkvpa_data.id_kategorie', 'vkvpa_data.znacka', 'vkvpa_data.id_kola')
+            ->selectRaw('MAX(edi_entries.qrp) as qrp_any, MAX(edi_entries.lp) as lp_any')
+            ->groupBy('edi_entries.category_id', 'edi_entries.callsign', 'edi_entries.round_id')
             ->when($qrpOnly, fn ($q) => $q->onlyQrp())
             ->when($lpOnly, fn ($q) => $q->onlyLp())
             ->get();
@@ -328,11 +328,11 @@ final class ScoringService
         /** @var array<string, array<int, Vykon>> $vykonMap */
         $vykonMap = [];
         foreach ($breakdown as $b) {
-            $month = $koloMonth[self::intAttr($b, 'id_kola')] ?? null;
+            $month = $koloMonth[self::intAttr($b, 'round_id')] ?? null;
             if ($month === null) {
                 continue;
             }
-            $key = self::strAttr($b, 'kategorie_id').'|'.self::strAttr($b, 'znacka');
+            $key = self::strAttr($b, 'kategorie_id').'|'.self::strAttr($b, 'callsign');
             $map[$key][$month] = ($map[$key][$month] ?? 0) + self::intAttr($b, 'body');
 
             $vykon = Vykon::fromFlags(self::intAttr($b, 'qrp_any') === 1, self::intAttr($b, 'lp_any') === 1);
@@ -343,7 +343,7 @@ final class ScoringService
         }
 
         foreach ($rows as $row) {
-            $rowKey = self::strAttr($row, 'kategorie_id').'|'.self::strAttr($row, 'znacka');
+            $rowKey = self::strAttr($row, 'kategorie_id').'|'.self::strAttr($row, 'callsign');
             $perMonth = $map[$rowKey] ?? [];
             $perVykon = $vykonMap[$rowKey] ?? [];
             // Pevně 12 měsíčních sloupců (i nulových) – ať je rok vidět celý a aby
@@ -358,7 +358,7 @@ final class ScoringService
     }
 
     /** Atribut agregovaného řádku jako int (agregáty se vrací jako mixed). */
-    private static function intAttr(VkvpaData $model, string $key): int
+    private static function intAttr(EdiEntry $model, string $key): int
     {
         $value = $model->getAttribute($key);
 
@@ -366,7 +366,7 @@ final class ScoringService
     }
 
     /** Atribut agregovaného řádku jako string – složka klíče mapy. */
-    private static function strAttr(VkvpaData $model, string $key): string
+    private static function strAttr(EdiEntry $model, string $key): string
     {
         $value = $model->getAttribute($key);
 
@@ -398,10 +398,10 @@ final class ScoringService
 
     /**
      * Rok kola pro invalidaci cache – stejná konvence jako yearlyResults()
-     * (rok z `datum_konani`).
+     * (rok z `starts_at`).
      */
     private function yearOfRound(int $koloId): ?int
     {
-        return VkvpaKola::query()->whereKey($koloId)->first(['datum_konani'])?->datum_konani->year;
+        return EdiRound::query()->whereKey($koloId)->first(['starts_at'])?->starts_at->year;
     }
 }

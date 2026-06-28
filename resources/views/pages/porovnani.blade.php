@@ -68,7 +68,7 @@ window.__porovnaniConfig = {
       <div class="rounded-lg border border-line bg-surface p-3">
         <div class="text-sm font-semibold {{ $i === 0 ? 'text-brand' : 'text-heading' }} mb-1">{{ $s['call'] }}</div>
         <div class="text-xs text-muted">
-          {{ $s['qso'] }} {{ __('pages.porovnani.sum_qso') }} · {{ $s['nasobice'] }} {{ __('pages.porovnani.sum_mult') }} · <span class="font-bold">{{ $s['body'] }} {{ __('pages.porovnani.sum_points') }}</span>
+          {{ $s['qso'] }} {{ __('pages.porovnani.sum_qso') }} · {{ $s['multiplier'] }} {{ __('pages.porovnani.sum_mult') }} · <span class="font-bold">{{ $s['body'] }} {{ __('pages.porovnani.sum_points') }}</span>
         </div>
       </div>
       @endforeach

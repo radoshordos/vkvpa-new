@@ -38,7 +38,7 @@
                         <td class="mono font-bold">{{ $d->p_call ?: '—' }}</td>
                         <td class="whitespace-nowrap">{{ $datum }}</td>
                         <td class="mono text-sm">{{ $d->p_band ?: '—' }}</td>
-                        <td class="text-sm">{{ $kola->get($d->id_kola, '—') }}</td>
+                        <td class="text-sm">{{ $kola->get($d->round_id, '—') }}</td>
                         <td class="num">{{ $d->lines_count }}</td>
                         <td class="hidden whitespace-nowrap text-sm text-muted @[520px]:table-cell">{{ $d->stamp?->format('j. n. Y H:i') ?? '—' }}</td>
                         <td class="whitespace-nowrap text-sm">

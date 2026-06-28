@@ -40,8 +40,8 @@ Migrace tedy sestává ze dvou nezávislých částí:
 Obě omezení v PHP 8.5 padají (ověřeno níže testem na obou verzích PHP).
 Mezitím byl `LegacyJsonTableSeeder` přejmenován/zrefaktorován na
 `JsonTableSeeder` (7 potomků: `EdiheadTableSeeder`, `EdilinesTableSeeder`,
-`PrefixesTableSeeder`, `VkvpaDataTableSeeder`, `VkvpaKategorieTableSeeder`,
-`VkvpaKolaTableSeeder`, `VkvpaPrihlaseniTableSeeder`).
+`PrefixesTableSeeder`, `EdiEntryTableSeeder`, `VkvpaKategorieTableSeeder`,
+`EdiRoundTableSeeder`, `VkvpaPrihlaseniTableSeeder`).
 
 ## Krok A – verzovací bump
 
@@ -100,7 +100,7 @@ class EdiheadTableSeeder extends JsonTableSeeder
 ```
 
 Týká se: `EdiheadTableSeeder`, `EdilinesTableSeeder`, `PrefixesTableSeeder`,
-`VkvpaDataTableSeeder`, `VkvpaKategorieTableSeeder`, `VkvpaKolaTableSeeder`,
+`EdiEntryTableSeeder`, `VkvpaKategorieTableSeeder`, `EdiRoundTableSeeder`,
 `VkvpaPrihlaseniTableSeeder` (přidat `use Override;` + 2× atribut v každém).
 Je to přesný protipól commitu `fc1224f` a sjednotí styl s `#[Override]` na
 metodách, který projekt už všude jinde používá (modely, FormRequesty,

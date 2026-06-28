@@ -150,15 +150,15 @@
       {{-- Skóre --}}
       <div class="grid grid-cols-3 gap-3">
         <div class="rounded-lg border border-line bg-surface p-3 text-center">
-          <div class="text-2xl font-bold text-heading">{{ $score->pocet }}</div>
+          <div class="text-2xl font-bold text-heading">{{ $score->qsoCount }}</div>
           <div class="text-xs text-muted mt-0.5">{{ __('pages.generator.stat_qso') }}</div>
         </div>
         <div class="rounded-lg border border-line bg-surface p-3 text-center">
-          <div class="text-2xl font-bold text-heading">{{ $score->nasobice }}</div>
+          <div class="text-2xl font-bold text-heading">{{ $score->multiplier }}</div>
           <div class="text-xs text-muted mt-0.5">{{ __('pages.generator.stat_mult') }}</div>
         </div>
         <div class="rounded-lg border border-line bg-surface p-3 text-center">
-          <div class="text-2xl font-bold text-brand">{{ $score->body }}</div>
+          <div class="text-2xl font-bold text-brand">{{ $score->points }}</div>
           <div class="text-xs text-muted mt-0.5">{{ __('pages.generator.stat_points') }}</div>
         </div>
       </div>

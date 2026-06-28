@@ -76,7 +76,7 @@ function applyModeFilter() {
 
 // QSO, která přinesla nový násobič – zvýraznění při přehrávání (idx = pořadí
 // QSO v cfg.points).
-const nasobicByIdx = new Map((cfg.nasobice || []).map((n) => [n.idx, n]));
+const nasobicByIdx = new Map((cfg.multiplier || []).map((n) => [n.idx, n]));
 
 // Položky přehrávání: každé QSO = paprsek + špendlík, řízené časem.
 const playbackItems = [];
@@ -240,7 +240,7 @@ function applyTime(time) {
         if (c.t > time) break;
         last = c;
     }
-    skoreLabel.textContent = last ? `${last.body} ${t.score_pts} · ${last.nasobice} ${t.score_mult}` : `0 ${t.score_pts}`;
+    skoreLabel.textContent = last ? `${last.body} ${t.score_pts} · ${last.multiplier} ${t.score_mult}` : `0 ${t.score_pts}`;
 }
 
 let timer = null;

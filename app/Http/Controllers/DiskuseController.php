@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StorePrispevekRequest;
+use App\Models\EdiRound;
 use App\Models\Prispevek;
 use App\Models\PrispevekFoto;
-use App\Models\VkvpaKola;
 use App\Support\ObrazekProcessor;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,8 +23,8 @@ class DiskuseController extends Controller
     {
         $id = $request->integer('kolo', 0);
 
-        $kolo = ($id > 0 ? VkvpaKola::query()->find($id) : null)
-            ?? VkvpaKola::query()->orderByDesc('datum_konani')->first();
+        $kolo = ($id > 0 ? EdiRound::query()->find($id) : null)
+            ?? EdiRound::query()->orderByDesc('starts_at')->first();
 
         if (! $kolo) {
             return redirect()->route('home');
@@ -33,20 +33,20 @@ class DiskuseController extends Controller
         return redirect()->route('diskuse.show', $kolo->id);
     }
 
-    public function show(VkvpaKola $kolo): View
+    public function show(EdiRound $kolo): View
     {
-        $prispevky = Prispevek::where('kolo_id', $kolo->id)
+        $prispevky = Prispevek::where('round_id', $kolo->id)
             ->with('fotky:id,prispevek_id,sirka,vyska,poradi') // bez BLOBů
             ->orderBy('created_at')
             ->get();
 
-        $kola = VkvpaKola::query()
+        $kola = EdiRound::query()
             ->where(function ($query) use ($kolo): void {
-                $query->where('datum_konani', '>=', now()->subYear()->toDateString())
-                    ->orWhereHas('diskuse')
+                $query->where('starts_at', '>=', now()->subYear()->toDateString())
+                    ->orWhereHas('discussion')
                     ->orWhere('id', $kolo->id);
             })
-            ->orderByDesc('datum_konani')
+            ->orderByDesc('starts_at')
             ->get();
 
         return view('pages.diskuse', [
@@ -57,7 +57,7 @@ class DiskuseController extends Controller
         ]);
     }
 
-    public function store(StorePrispevekRequest $request, VkvpaKola $kolo): RedirectResponse
+    public function store(StorePrispevekRequest $request, EdiRound $kolo): RedirectResponse
     {
         /** @var array<int, UploadedFile> $soubory */
         $soubory = array_values(array_filter(
@@ -86,7 +86,7 @@ class DiskuseController extends Controller
 
         DB::transaction(function () use ($request, $kolo, $zpracovane): void {
             $prispevek = Prispevek::create([
-                'kolo_id' => $kolo->id,
+                'round_id' => $kolo->id,
                 'znacka' => $request->string('znacka')->value(),
                 'jmeno' => $request->filled('jmeno') ? $request->string('jmeno')->trim()->value() : null,
                 'text' => $request->string('text')->trim()->value(),
@@ -132,7 +132,7 @@ class DiskuseController extends Controller
 
     public function destroy(Prispevek $prispevek): RedirectResponse
     {
-        $koloId = $prispevek->kolo_id;
+        $koloId = $prispevek->round_id;
 
         // Fotky v `diskuse_foto` zmizí přes FK cascade (a v testovacím SQLite,
         // kde FK nejsou, je smaže relace ručně).

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Enums\KoloStav;
-use App\Models\VkvpaKola;
+use App\Models\EdiRound;
 use App\Services\Edi\KoloStatistiky;
 use App\Support\VkvpaSettings;
 use GdImage;
@@ -25,9 +25,9 @@ final class OgImageController extends Controller
 
     public function __construct(private readonly KoloStatistiky $statistiky) {}
 
-    public function kolo(VkvpaKola $kolo): Response
+    public function kolo(EdiRound $kolo): Response
     {
-        abort_unless($kolo->stav() === KoloStav::Vyhodnocene, 404);
+        abort_unless($kolo->state() === KoloStav::Vyhodnocene, 404);
 
         // PNG je binární; v databázové cache (utf8 sloupec `value`) by syrové
         // bajty selhaly (MySQL 1366 Incorrect string value), proto base64.
@@ -48,7 +48,7 @@ final class OgImageController extends Controller
         ]);
     }
 
-    private function render(VkvpaKola $kolo): string
+    private function render(EdiRound $kolo): string
     {
         $p = $this->statistiky->prehled($kolo);
 
@@ -69,7 +69,7 @@ final class OgImageController extends Controller
         $reg = base_path('resources/fonts/Roboto-Regular.ttf');
 
         imagettftext($im, 26, 0, 60, 100, $muted, $reg, 'VKV PROVOZNÍ AKTIV · STATISTIKY');
-        imagettftext($im, 120, 0, 56, 250, $white, $bold, $kolo->nazev);
+        imagettftext($im, 120, 0, 56, 250, $white, $bold, $kolo->name);
         imagettftext($im, 38, 0, 60, 320, $brand, $bold, 'Statistiky závodu');
 
         // Čtyři klíčová čísla v rovnoměrných sloupcích (menší font, ať se

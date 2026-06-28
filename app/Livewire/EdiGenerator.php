@@ -17,7 +17,7 @@ use App\Exceptions\UnknownSectionException;
 use App\Exceptions\UploadWindowClosedException;
 use App\Http\Requests\StoreHlaseniRequest;
 use App\Jobs\RankRoundJob;
-use App\Models\VkvpaKola;
+use App\Models\EdiRound;
 use App\Rules\ValidMaidenhead;
 use App\Rules\ValidPhone;
 use App\Services\Edi\EdiComposer;
@@ -87,9 +87,9 @@ class EdiGenerator extends Component
     public function mount(): void
     {
         // Předvyplníme den aktuálního průběžného kola (nejčastější případ).
-        $aktualni = VkvpaKola::aktualniProPrubezne();
+        $aktualni = EdiRound::currentForStandings();
         if ($aktualni !== null) {
-            $this->tdate = $aktualni->datum_konani->format('Y-m-d');
+            $this->tdate = $aktualni->starts_at->format('Y-m-d');
         }
 
         $this->qsos = [$this->prazdneQso()];
@@ -406,7 +406,7 @@ class EdiGenerator extends Component
                     'mail' => $this->rhbbs,
                     'telefon' => $this->rphon,
                     'soapbox' => mb_substr($this->remarks, 0, 250),
-                    'schvaleno' => $this->isAdmin(),
+                    'approved' => $this->isAdmin(),
                 ],
             );
         } catch (
@@ -424,11 +424,11 @@ class EdiGenerator extends Component
             return null;
         }
 
-        RankRoundJob::dispatchSync($row->id_kola);
+        RankRoundJob::dispatchSync($row->round_id);
 
         session()->flash('announcement', 'Hlášení bylo uloženo.');
 
-        return $this->redirectRoute('pribezne_vysledky', $this->isAdmin() ? ['kolo' => $row->id_kola] : [], navigate: false);
+        return $this->redirectRoute('pribezne_vysledky', $this->isAdmin() ? ['kolo' => $row->round_id] : [], navigate: false);
     }
 
     private function isAdmin(): bool

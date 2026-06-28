@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Models\EdiCategory;
+use App\Models\EdiEntry;
+use App\Models\EdiRound;
 use App\Models\Prispevek;
-use App\Models\VkvpaData;
-use App\Models\VkvpaKola;
 use App\Support\VkvpaSettings;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -19,13 +19,13 @@ class SecurityTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function kolo(): VkvpaKola
+    private function round(): EdiRound
     {
-        return VkvpaKola::create([
-            'datum_konani' => now()->subDay(),
-            'datum_uzaverky' => now()->addDays(5),
-            'nazev' => 'Testovací kolo',
-            'poznamka' => '',
+        return EdiRound::create([
+            'starts_at' => now()->subDay(),
+            'closes_at' => now()->addDays(5),
+            'name' => 'Testovací kolo',
+            'note' => '',
         ]);
     }
 
@@ -34,10 +34,10 @@ class SecurityTest extends TestCase
 
     public function test_xss_in_diskuse_text_is_escaped(): void
     {
-        $kolo = $this->kolo();
+        $kolo = $this->round();
 
         Prispevek::create([
-            'kolo_id' => $kolo->id,
+            'round_id' => $kolo->id,
             'znacka' => 'OK1XSS',
             'text' => '<script>alert("xss")</script>',
             'ip' => '127.0.0.1',
@@ -51,10 +51,10 @@ class SecurityTest extends TestCase
 
     public function test_xss_in_diskuse_callsign_is_escaped(): void
     {
-        $kolo = $this->kolo();
+        $kolo = $this->round();
 
         Prispevek::create([
-            'kolo_id' => $kolo->id,
+            'round_id' => $kolo->id,
             'znacka' => '<img src=x onerror=alert(1)>',
             'text' => 'Normální text',
             'ip' => '127.0.0.1',
@@ -67,20 +67,20 @@ class SecurityTest extends TestCase
 
     public function test_xss_in_vysledky_jmeno_is_escaped(): void
     {
-        $kolo = $this->kolo();
+        $kolo = $this->round();
         $kat = EdiCategory::create(['name' => '144 MHz', 'band' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
 
-        VkvpaData::create([
-            'id_kola' => $kolo->id,
-            'id_kategorie' => $kat->id,
-            'znacka' => 'OK1TST',
+        EdiEntry::create([
+            'round_id' => $kolo->id,
+            'category_id' => $kat->id,
+            'callsign' => 'OK1TST',
             'locator' => 'JN99AJ',
-            'mail' => 'test@example.com',
-            'jmeno' => '<script>alert(1)</script>',
-            'pocet' => 0,
-            'nasobice' => 0,
-            'body' => 0,
-            'schvaleno' => true,
+            'email' => 'test@example.com',
+            'name' => '<script>alert(1)</script>',
+            'qso_count' => 0,
+            'multiplier' => 0,
+            'points' => 0,
+            'approved' => true,
         ]);
 
         $this->get(route('vysledkova_listina', ['kolo' => $kolo->id]))
@@ -90,20 +90,20 @@ class SecurityTest extends TestCase
 
     public function test_xss_in_vysledky_soapbox_is_escaped(): void
     {
-        $kolo = $this->kolo();
+        $kolo = $this->round();
         $kat = EdiCategory::create(['name' => '144 MHz', 'band' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
 
-        VkvpaData::create([
-            'id_kola' => $kolo->id,
-            'id_kategorie' => $kat->id,
-            'znacka' => 'OK1TST',
+        EdiEntry::create([
+            'round_id' => $kolo->id,
+            'category_id' => $kat->id,
+            'callsign' => 'OK1TST',
             'locator' => 'JN99AJ',
-            'mail' => 'test@example.com',
+            'email' => 'test@example.com',
             'soapbox' => '"><script>alert(1)</script>',
-            'pocet' => 0,
-            'nasobice' => 0,
-            'body' => 0,
-            'schvaleno' => true,
+            'qso_count' => 0,
+            'multiplier' => 0,
+            'points' => 0,
+            'approved' => true,
         ]);
 
         $this->get(route('vysledkova_listina', ['kolo' => $kolo->id]))
@@ -151,7 +151,7 @@ class SecurityTest extends TestCase
 
     public function test_hlaseni_form_contains_csrf_token(): void
     {
-        $this->kolo(); // aktivní kolo zpřístupní podání hlášení
+        $this->round(); // aktivní kolo zpřístupní podání hlášení
 
         // Nové podání řeší Livewire komponent Prihlaska – CSRF nezajišťuje hidden
         // _token, ale Livewire token (data-csrf) ověřovaný na jeho update routě.
@@ -162,7 +162,7 @@ class SecurityTest extends TestCase
 
     public function test_diskuse_form_contains_csrf_token(): void
     {
-        $kolo = $this->kolo();
+        $kolo = $this->round();
 
         $this->get(route('diskuse.show', $kolo->id))
             ->assertOk()

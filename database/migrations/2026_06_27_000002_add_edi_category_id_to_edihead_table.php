@@ -19,7 +19,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('edi_head', function (Blueprint $table): void {
-            $table->integer('edi_category_id')->nullable()->after('id_kola');
+            $table->integer('edi_category_id')->nullable()->after('round_id');
             $table->index('edi_category_id', 'edihead_edi_category_id_idx');
         });
 

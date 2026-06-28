@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
-use App\Models\VkvpaKola;
+use App\Models\EdiRound;
 use App\Rules\ValidMaidenhead;
 use App\Rules\ValidPhone;
 use Illuminate\Contracts\Validation\Validator;
@@ -60,7 +60,7 @@ class StoreHlaseniRequest extends FormRequest
 
             $koloId = $this->integer('kolo');
             if ($koloId > 0 && ! $this->user()?->is_admin
-                && VkvpaKola::query()->find($koloId)?->prijimaHlaseni() !== true) {
+                && EdiRound::query()->find($koloId)?->acceptsReports() !== true) {
                 $v->errors()->add('kolo', 'Do tohoto kola nelze odeslat hlášení – nepřijímá hlášení. / Period is not accepting entries.');
             }
         });
@@ -87,7 +87,7 @@ class StoreHlaseniRequest extends FormRequest
         return [
             'id_zaznamu' => ['nullable', 'integer'],
             'edihead_id' => ['nullable', 'integer'],
-            'kolo' => ['required', 'integer', 'exists:vkvpa_kola,id'],
+            'kolo' => ['required', 'integer', 'exists:edi_rounds,id'],
             'kategorie' => ['nullable', 'integer', 'exists:edi_category,id'],
             'znacka' => ['required', 'string', 'max:10'],
             'locator' => ['required', 'string', 'max:6', new ValidMaidenhead],
@@ -97,8 +97,8 @@ class StoreHlaseniRequest extends FormRequest
             'email' => ['nullable', 'email', 'max:250'],
             'telefon' => ['nullable', 'string', 'max:20', new ValidPhone],
             'pocet' => ['nullable', 'integer', 'min:0'],
-            'bodu_za_qso' => ['nullable', 'integer', 'min:0'],
-            'nasobice' => ['nullable', 'integer', 'min:0'],
+            'qso_points' => ['nullable', 'integer', 'min:0'],
+            'multiplier' => ['nullable', 'integer', 'min:0'],
             'body' => ['nullable', 'integer', 'min:0'],
             'poznamka' => ['nullable', 'string', 'max:250'],
             'soapbox' => ['nullable', 'string', 'max:250'],

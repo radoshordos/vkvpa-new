@@ -3,8 +3,8 @@
      Leaflet vrstvy + Chart.js řídí statistiky.js. --}}
 @extends('layouts.app')
 
-@section('title', __('pages.stat.kolo_title', ['kolo' => $kolo->nazev]))
-@section('meta_description', __('pages.stat.kolo_meta', ['kolo' => $kolo->nazev]))
+@section('title', __('pages.stat.kolo_title', ['kolo' => $kolo->name]))
+@section('meta_description', __('pages.stat.kolo_meta', ['kolo' => $kolo->name]))
 @section('og_image', route('statistiky.kolo.og', ['kolo' => $kolo->id]))
 
 @push('head')
@@ -50,8 +50,8 @@ window.__statConfig = {
     <a href="{{ route('statistiky.index') }}" class="underline hover:text-heading">{{ __('pages.stat.index_heading') }}</a>
   </div>
   <div class="flex flex-wrap items-center gap-2">
-    <h1 class="text-xl font-bold text-heading sm:text-2xl">{{ __('pages.stat.kolo_heading', ['kolo' => $kolo->nazev]) }}</h1>
-    @foreach (['ucast' => 'badge_ucast', 'skore' => 'badge_skore', 'qso' => 'badge_qso', 'nasobice' => 'badge_nasobice'] as $flag => $key)
+    <h1 class="text-xl font-bold text-heading sm:text-2xl">{{ __('pages.stat.kolo_heading', ['kolo' => $kolo->name]) }}</h1>
+    @foreach (['ucast' => 'badge_ucast', 'skore' => 'badge_skore', 'qso' => 'badge_qso', 'multiplier' => 'badge_multiplier'] as $flag => $key)
       @if ($prehled['odznaky'][$flag])
         <span class="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">🏅 {{ __('pages.stat.'.$key) }}</span>
       @endif
@@ -154,7 +154,7 @@ window.__statConfig = {
   @foreach ([
     ['title' => __('pages.stat.top_points'), 'rows' => $prehled['topBody'],     'col' => 'body',     'unit' => __('pages.stat.unit_points')],
     ['title' => __('pages.stat.top_qso'),    'rows' => $prehled['topQso'],      'col' => 'pocet',    'unit' => 'QSO'],
-    ['title' => __('pages.stat.top_mult'),   'rows' => $prehled['topNasobice'], 'col' => 'nasobice', 'unit' => __('pages.stat.unit_mult')],
+    ['title' => __('pages.stat.top_mult'),   'rows' => $prehled['topNasobice'], 'col' => 'multiplier', 'unit' => __('pages.stat.unit_mult')],
   ] as $tbl)
   <div class="rounded-lg border border-line bg-surface p-3">
     <div class="text-sm font-semibold text-heading mb-2">{{ $tbl['title'] }}</div>

@@ -27,7 +27,7 @@
         <label class="label" for="kolo">{{ __('pages.vysledky.filter_round') }}</label>
         <select id="kolo" name="kolo" class="select w-auto" data-autosubmit>
             @foreach ($kola as $k)
-                <option value="{{ $k->id }}" @selected($kolo && $k->id === $kolo->id)>{{ $k->nazev }} ({{ $k->datum_konani?->format('j. n. Y') }})</option>
+                <option value="{{ $k->id }}" @selected($kolo && $k->id === $kolo->id)>{{ $k->name }} ({{ $k->starts_at?->format('j. n. Y') }})</option>
             @endforeach
         </select>
     </div>
@@ -65,8 +65,8 @@
         <p class="text-muted">{{ __('pages.vysledky.no_results') }}</p>
     @endif
 @else
-    @foreach ($radky->groupBy('id_kategorie') as $katId => $skupina)
-        <div class="section-head">{{ $kategorie[$katId]->nazev ?? ('Kategorie ' . $katId) }}</div>
+    @foreach ($radky->groupBy('category_id') as $katId => $skupina)
+        <div class="section-head">{{ $kategorie[$katId]->name ?? ('Kategorie ' . $katId) }}</div>
         <div class="table-wrap mb-4">
             <table class="data-table">
                 <thead>
@@ -86,31 +86,31 @@
                 <tbody>
                 @foreach ($skupina as $i => $r)
                     @php
-                        $poradi = $r->poradi > 0 ? $r->poradi : $i + 1;
-                        $bq = ($r->nasobice > 0 && $r->pocet > 0)
-                            ? $r->body / ($r->nasobice * $r->pocet)
+                        $poradi = $r->rank > 0 ? $r->rank : $i + 1;
+                        $bq = ($r->multiplier > 0 && $r->qso_count > 0)
+                            ? $r->points / ($r->multiplier * $r->qso_count)
                             : 0.0;
                         $sk = $skokani[$r->id] ?? ['delta' => null, 'top' => false];
                     @endphp
-                    <tr @class(['row-pending' => ! $r->schvaleno, 'group'])>
+                    <tr @class(['row-pending' => ! $r->approved, 'group'])>
                         <td class="num font-bold">{{ $poradi }}.</td>
                         <td>
                             @if ($isAdmin)
-                                <a href="{{ route('uzivatele.index', ['kolo' => $r->id_kola, 'q' => $r->znacka]) }}" class="link mono font-bold" title="{{ __('pages.vysledky.link_contact') }}">{{ $r->znacka }}</a>
-                            @elseif (preg_match('/^[A-Za-z0-9]+$/', $r->znacka))
-                                <a href="{{ route('statistiky.stanice', ['znacka' => $r->znacka]) }}" class="link mono font-bold" title="{{ __('pages.stat.stanice_subtitle') }}">{{ $r->znacka }}</a>
+                                <a href="{{ route('uzivatele.index', ['kolo' => $r->round_id, 'q' => $r->callsign]) }}" class="link mono font-bold" title="{{ __('pages.vysledky.link_contact') }}">{{ $r->callsign }}</a>
+                            @elseif (preg_match('/^[A-Za-z0-9]+$/', $r->callsign))
+                                <a href="{{ route('statistiky.stanice', ['znacka' => $r->callsign]) }}" class="link mono font-bold" title="{{ __('pages.stat.stanice_subtitle') }}">{{ $r->callsign }}</a>
                             @else
-                                <span class="mono font-bold">{{ $r->znacka }}</span>
+                                <span class="mono font-bold">{{ $r->callsign }}</span>
                             @endif
-                            <x-vykon-badge :vykon="$r->vykon()" /> @if ($sk['top'])<x-badge variant="skokan" class="ml-1" title="{{ __('pages.vysledky.skokan_title') }}">SKOKAN</x-badge>@endif
-                            @if ($r->jmeno)<br><span class="text-muted">{{ $r->jmeno }}</span>@endif
-                            @if ($r->timestamp)<br><span class="text-xs text-muted">{{ $r->timestamp->format('j. n. H:i') }}</span>@endif
+                            <x-vykon-badge :vykon="$r->power()" /> @if ($sk['top'])<x-badge variant="skokan" class="ml-1" title="{{ __('pages.vysledky.skokan_title') }}">SKOKAN</x-badge>@endif
+                            @if ($r->name)<br><span class="text-muted">{{ $r->name }}</span>@endif
+                            @if ($r->submitted_at)<br><span class="text-xs text-muted">{{ $r->submitted_at->format('j. n. H:i') }}</span>@endif
                         </td>
                         <td class="mono whitespace-nowrap">{{ $r->locator }}</td>
-                        <td class="num">{{ $r->pocet }}</td>
-                        <td class="num">{{ $r->nasobice }}</td>
+                        <td class="num">{{ $r->qso_count }}</td>
+                        <td class="num">{{ $r->multiplier }}</td>
                         <td class="num">
-                            <span class="font-bold text-warn">{{ $r->body }}</span><br>
+                            <span class="font-bold text-warn">{{ $r->points }}</span><br>
                             <span class="text-xs text-muted">{{ \Illuminate\Support\Number::format($bq, 1) }} b/QSO</span>
                             @if ($sk['delta'] !== null)
                                 <br>
@@ -123,14 +123,14 @@
                                 @endif
                             @endif
                         </td>
-                        <td class="text-danger">{{ $r->soapbox }}@if ($r->poznamka)<br><i class="text-muted">{{ $r->poznamka }}</i>@endif</td>
+                        <td class="text-danger">{{ $r->soapbox }}@if ($r->note)<br><i class="text-muted">{{ $r->note }}</i>@endif</td>
                         <td>
-                            @if ($r->edihead_id)
+                            @if ($r->edi_head_id)
                                 {{-- EDI · EDIR: admin vždy, ostatní jen mimo upload window --}}
                                 <div class="flex items-center gap-1">
                                     @if ($isAdmin || ! $uploadWindowOpen)
-                                        <x-edi-odkaz :head="$r->edihead_id" />
-                                        <x-edi-odkaz :head="$r->edihead_id" reduced />
+                                        <x-edi-odkaz :head="$r->edi_head_id" />
+                                        <x-edi-odkaz :head="$r->edi_head_id" reduced />
                                     @else
                                         <span class="action-link cursor-not-allowed opacity-50" title="{{ __('app.edi_restricted_body') }}">{{ __('app.edi_restricted_label') }}</span>
                                     @endif
@@ -138,13 +138,13 @@
                             @endif
                         </td>
                         <td>
-                            @if ($r->edihead_id)
+                            @if ($r->edi_head_id)
                                 {{-- Statistiky deníku – veřejné vždy --}}
-                                <x-vizualizace-odkaz :head="$r->edihead_id" />
+                                <x-vizualizace-odkaz :head="$r->edi_head_id" />
                             @endif
                         </td>
                         @if ($isAdmin)
-                            <td>@include('partials.zaznam-akce', ['r' => $r, 'bezEdi' => true, 'prijemOtevren' => $kolo->prijimaHlaseni()])</td>
+                            <td>@include('partials.zaznam-akce', ['r' => $r, 'bezEdi' => true, 'prijemOtevren' => $kolo->acceptsReports()])</td>
                         @endif
                     </tr>
                 @endforeach

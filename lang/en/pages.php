@@ -479,7 +479,7 @@ return [
         'badge_ucast' => 'Attendance record!',
         'badge_skore' => 'Score record!',
         'badge_qso' => 'QSO record!',
-        'badge_nasobice' => 'Multiplier record!',
+        'badge_multiplier' => 'Multiplier record!',
 
         'fact_active_square' => 'Most active square: :square (:count QSOs)',
         'fact_winner_margin' => 'Winner :call led by :margin pts',
@@ -491,7 +491,7 @@ return [
         'rec_ucast' => 'Record attendance',
         'rec_skore' => 'Highest score',
         'rec_qso' => 'Most QSOs',
-        'rec_nasobice' => 'Most multipliers',
+        'rec_multiplier' => 'Most multipliers',
         'rec_in_round' => 'round :kolo',
         'rec_stations_unit' => 'stations',
 

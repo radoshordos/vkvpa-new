@@ -6,8 +6,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\EdiCategory;
-use App\Models\VkvpaData;
-use App\Models\VkvpaKola;
+use App\Models\EdiEntry;
+use App\Models\EdiRound;
 use App\Services\Scoring\ScoringService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -23,18 +23,18 @@ final class DashboardController extends Controller
     {
         $rok = max(2000, min((int) $request->query('rok', now()->year), now()->year));
 
-        $kolaIds = VkvpaKola::whereYear('datum_konani', $rok)->pluck('id');
+        $kolaIds = EdiRound::whereYear('starts_at', $rok)->pluck('id');
 
-        $celkemKol = VkvpaKola::count();
+        $celkemKol = EdiRound::count();
         $kolaTento = $kolaIds->count();
-        $celkemZnacek = VkvpaData::approved()->distinct()->count('znacka');
-        $znackyTento = VkvpaData::approved()->whereIn('id_kola', $kolaIds)->distinct()->count('znacka');
+        $celkemZnacek = EdiEntry::approved()->distinct()->count('callsign');
+        $znackyTento = EdiEntry::approved()->whereIn('round_id', $kolaIds)->distinct()->count('callsign');
 
         // 1. Záznamy čekající na schválení
-        $cekajici = VkvpaData::whereIn('id_kola', $kolaIds)->where('schvaleno', false)->count();
+        $cekajici = EdiEntry::whereIn('round_id', $kolaIds)->where('approved', false)->count();
 
         // 3. Průměrné body a QSO pro rok – jeden SELECT místo dvou
-        $avgRow = VkvpaData::approved()->whereIn('id_kola', $kolaIds)
+        $avgRow = EdiEntry::approved()->whereIn('round_id', $kolaIds)
             ->toBase()
             ->selectRaw('AVG(body) as avg_body, AVG(pocet) as avg_pocet')
             ->first();
@@ -42,38 +42,38 @@ final class DashboardController extends Controller
         $avgQso = (int) round(is_numeric($avgRow?->avg_pocet) ? (float) $avgRow->avg_pocet : 0);
 
         // Trend – posledních 12 kol s počtem schválených účastníků
-        $trendKola = VkvpaKola::query()
-            ->withCount(['hlaseni as pocet' => fn (Builder $q) => $q->where('schvaleno', true)])
-            ->orderByDesc('datum_konani')
+        $trendKola = EdiRound::query()
+            ->withCount(['hlaseni as pocet' => fn (Builder $q) => $q->where('approved', true)])
+            ->orderByDesc('starts_at')
             ->limit(12)
-            ->get(['id', 'nazev', 'datum_konani'])
+            ->get(['id', 'name', 'starts_at'])
             ->reverse()
             ->values();
 
         // 4. Graf rok vs. rok – schválení účastníci per kolo pro předchozí rok
         //    (aktuální rok se čte z $kolaRoku, viz níže – sdílíme jeden dotaz)
-        $trendPredchoziRok = VkvpaKola::whereYear('datum_konani', $rok - 1)
-            ->withCount(['hlaseni as pocet' => fn (Builder $q) => $q->where('schvaleno', true)])
-            ->orderBy('datum_konani')
-            ->get(['id', 'nazev', 'datum_konani']);
+        $trendPredchoziRok = EdiRound::whereYear('starts_at', $rok - 1)
+            ->withCount(['hlaseni as pocet' => fn (Builder $q) => $q->where('approved', true)])
+            ->orderBy('starts_at')
+            ->get(['id', 'name', 'starts_at']);
 
         // Distribuce kategorií – schválené záznamy v tomto roce
-        $kategorieData = VkvpaData::query()
+        $kategorieData = EdiEntry::query()
             ->approved()
-            ->whereIn('id_kola', $kolaIds)
-            ->select('id_kategorie', DB::raw('count(*) as pocet'))
-            ->groupBy('id_kategorie')
+            ->whereIn('round_id', $kolaIds)
+            ->select('category_id', DB::raw('count(*) as pocet'))
+            ->groupBy('category_id')
             ->get();
 
         $kategorie = EdiCategory::query()->orderBy('id')->get()->keyBy('id');
 
         // 2. Přehled kol roku – počty přihlášených, schválených a čekajících
-        $kolaRoku = VkvpaKola::whereYear('datum_konani', $rok)
+        $kolaRoku = EdiRound::whereYear('starts_at', $rok)
             ->withCount([
                 'hlaseni as pocet_celkem',
-                'hlaseni as pocet_schvalenych' => fn (Builder $q) => $q->where('schvaleno', true),
+                'hlaseni as pocet_schvalenych' => fn (Builder $q) => $q->where('approved', true),
             ])
-            ->orderBy('datum_konani')
+            ->orderBy('starts_at')
             ->get();
 
         // Top 10 stanic roku (cached)

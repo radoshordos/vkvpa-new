@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\Enums;
 
-use App\Models\VkvpaData;
+use App\Models\EdiEntry;
 
 /**
  * Výkonová kategorie hlášení.
  *
- * Odvozuje se z příznaků `qrp`/`lp` na {@see VkvpaData} (ty zůstávají
+ * Odvozuje se z příznaků `qrp`/`lp` na {@see EdiEntry} (ty zůstávají
  * zdrojem pravdy v DB) – tento enum je jednotná reprezentace pro zobrazení i logiku.
  * QRP (≤5 W) je podmnožinou LP (<100 W); plný výkon je výchozí.
  */

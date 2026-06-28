@@ -71,7 +71,7 @@ window.__statConfig = {
         <td class="font-medium"><a class="underline hover:text-heading" href="{{ route('statistiky.kolo', ['kolo' => $h['koloId']]) }}">{{ $h['kolo'] }}</a></td>
         <td class="text-xs text-muted">{{ $h['kategorie'] }}</td>
         <td class="num">{{ $h['pocet'] }}</td>
-        <td class="num">{{ $h['nasobice'] }}</td>
+        <td class="num">{{ $h['multiplier'] }}</td>
         <td class="num font-bold">{{ $h['body'] }}</td>
         <td class="num">{{ $h['poradi'] > 0 ? $h['poradi'].'.' : '—' }}</td>
         <td>

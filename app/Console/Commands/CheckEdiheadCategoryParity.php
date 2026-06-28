@@ -14,33 +14,33 @@ use function Laravel\Prompts\table;
 use function Laravel\Prompts\warning;
 
 /**
- * Kontrola shody `edi_head.edi_category_id` ↔ `vkvpa_data.id_kategorie`.
+ * Kontrola shody `edi_head.edi_category_id` ↔ `edi_entries.category_id`.
  *
  * `edi_head.edi_category_id` je odvozený z textu EDI hlavičky (p_band/p_sect),
- * `vkvpa_data.id_kategorie` je kategorie, v níž příspěvek reálně soutěží (admin
+ * `edi_entries.category_id` je kategorie, v níž příspěvek reálně soutěží (admin
  * ji mohl přeřadit, hlavička mohla být chybná/prázdná). U propojených řádků by
  * měly souhlasit – tento příkaz rozdíly jen REPORTUJE (nepřepisuje data),
  * ať je vidět, kde se historicky rozcházejí.
  *
- * Pozn.: osiřelé edi_head (bez vkvpa_data) se nekontrolují – nemají s čím.
+ * Pozn.: osiřelé edi_head (bez edi_entries) se nekontrolují – nemají s čím.
  */
 class CheckEdiheadCategoryParity extends Command
 {
     protected $signature = 'vkvpa:check-edihead-category';
 
-    protected $description = 'Reportuje rozdíly edi_head.edi_category_id ↔ vkvpa_data.id_kategorie';
+    protected $description = 'Reportuje rozdíly edi_head.edi_category_id ↔ edi_entries.category_id';
 
     public function handle(): int
     {
-        intro('Kontrola shody edi_head.edi_category_id ↔ vkvpa_data.id_kategorie');
+        intro('Kontrola shody edi_head.edi_category_id ↔ edi_entries.category_id');
 
-        $pairs = DB::table('vkvpa_data as d')
+        $pairs = DB::table('edi_entries as d')
             ->join('edi_head as h', 'h.id', '=', 'd.edihead_id')
             ->selectRaw('COUNT(*) AS total')
-            ->selectRaw('SUM(h.edi_category_id = d.id_kategorie) AS shoda')
-            ->selectRaw('SUM(h.edi_category_id IS NOT NULL AND d.id_kategorie IS NOT NULL AND h.edi_category_id <> d.id_kategorie) AS rozdil')
-            ->selectRaw('SUM(h.edi_category_id IS NULL AND d.id_kategorie IS NOT NULL) AS head_null')
-            ->selectRaw('SUM(h.edi_category_id IS NOT NULL AND d.id_kategorie IS NULL) AS data_null')
+            ->selectRaw('SUM(h.edi_category_id = d.category_id) AS shoda')
+            ->selectRaw('SUM(h.edi_category_id IS NOT NULL AND d.category_id IS NOT NULL AND h.edi_category_id <> d.category_id) AS rozdil')
+            ->selectRaw('SUM(h.edi_category_id IS NULL AND d.category_id IS NOT NULL) AS head_null')
+            ->selectRaw('SUM(h.edi_category_id IS NOT NULL AND d.category_id IS NULL) AS data_null')
             ->first();
 
         $total = self::int($pairs->total ?? 0);
@@ -52,18 +52,18 @@ class CheckEdiheadCategoryParity extends Command
         table(
             ['Metrika', 'Počet'],
             [
-                ['Propojených párů (vkvpa_data ↔ edi_head)', (string) $total],
+                ['Propojených párů (edi_entries ↔ edi_head)', (string) $total],
                 ['Shoda kategorie', (string) $shoda],
                 ['Rozdíl (obě vyplněné, liší se)', (string) $rozdil],
-                ['edi_head NULL, vkvpa_data má kategorii', (string) $headNull],
-                ['edi_head má kategorii, vkvpa_data NULL', (string) $dataNull],
+                ['edi_head NULL, edi_entries má kategorii', (string) $headNull],
+                ['edi_head má kategorii, edi_entries NULL', (string) $dataNull],
             ],
         );
 
         if ($rozdil > 0) {
             warning('Rozdíly v zařazení (kategorie z hlavičky ≠ kategorie příspěvku):');
             table(
-                ['z hlavičky (edi_head)', 'příspěvek (vkvpa_data)', 'počet', 'příklad edi_head.id'],
+                ['z hlavičky (edi_head)', 'příspěvek (edi_entries)', 'počet', 'příklad edi_head.id'],
                 $this->mismatchBreakdown(),
             );
         }
@@ -75,7 +75,7 @@ class CheckEdiheadCategoryParity extends Command
         }
 
         note('Rozdíly jsou jen reportované, data se nepřepisují. edi_head.edi_category_id '
-            .'odráží text hlavičky, vkvpa_data.id_kategorie skutečné zařazení příspěvku.');
+            .'odráží text hlavičky, edi_entries.category_id skutečné zařazení příspěvku.');
 
         return self::SUCCESS;
     }
@@ -88,11 +88,11 @@ class CheckEdiheadCategoryParity extends Command
      */
     private function mismatchBreakdown(): array
     {
-        return DB::table('vkvpa_data as d')
+        return DB::table('edi_entries as d')
             ->join('edi_head as h', 'h.id', '=', 'd.edihead_id')
             ->join('edi_category as ch', 'ch.id', '=', 'h.edi_category_id')
-            ->join('edi_category as cd', 'cd.id', '=', 'd.id_kategorie')
-            ->whereColumn('h.edi_category_id', '<>', 'd.id_kategorie')
+            ->join('edi_category as cd', 'cd.id', '=', 'd.category_id')
+            ->whereColumn('h.edi_category_id', '<>', 'd.category_id')
             ->groupBy('ch.name', 'cd.name')
             ->selectRaw('ch.name AS head_name, cd.name AS data_name, COUNT(*) AS n, MIN(h.id) AS sample')
             ->orderByDesc('n')

@@ -2,7 +2,7 @@
     Odznak výkonové kategorie (QRP/LP). Plný výkon se nezobrazuje.
 
     Použití:
-      <x-vykon-badge :vykon="$r->vykon()" />
+      <x-vykon-badge :vykon="$r->power()" />
 
     Parametry:
       vykon – App\Enums\Vykon

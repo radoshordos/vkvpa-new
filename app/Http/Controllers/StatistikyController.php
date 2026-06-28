@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Enums\KoloStav;
-use App\Models\VkvpaData;
-use App\Models\VkvpaKola;
+use App\Models\EdiEntry;
+use App\Models\EdiRound;
 use App\Services\Edi\KoloStatistiky;
 use App\Services\Scoring\RekordyService;
 use App\Services\Scoring\StaniceProfil;
@@ -30,17 +30,17 @@ final class StatistikyController extends Controller
     {
         // „Účastníci" = počet unikátních značek kola (shodně s detailem i síní
         // slávy); jedna značka může mít víc záznamů (kategorií), proto distinct.
-        $kola = VkvpaKola::query()
-            ->whereNotNull('vyhodnoceno')
-            ->select(['id', 'nazev', 'datum_konani', 'vyhodnoceno'])
+        $kola = EdiRound::query()
+            ->whereNotNull('evaluated_at')
+            ->select(['id', 'name', 'starts_at', 'evaluated_at'])
             ->selectSub(
-                VkvpaData::query()
-                    ->whereColumn('id_kola', 'vkvpa_kola.id')
-                    ->where('schvaleno', true)
-                    ->selectRaw('COUNT(DISTINCT znacka)'),
+                EdiEntry::query()
+                    ->whereColumn('round_id', 'edi_rounds.id')
+                    ->where('approved', true)
+                    ->selectRaw('COUNT(DISTINCT callsign)'),
                 'ucastniku',
             )
-            ->orderByDesc('datum_konani')
+            ->orderByDesc('starts_at')
             ->get();
 
         return view('pages.statistiky.index', [
@@ -51,11 +51,11 @@ final class StatistikyController extends Controller
         ]);
     }
 
-    public function kolo(VkvpaKola $kolo): View
+    public function kolo(EdiRound $kolo): View
     {
         // Veřejně jen vyhodnocená kola – u rozpracovaných by se zveřejňovala
         // neúplná, měnící se data (a deníky soupeřů během příjmu hlášení).
-        abort_unless($kolo->stav() === KoloStav::Vyhodnocene, 404);
+        abort_unless($kolo->state() === KoloStav::Vyhodnocene, 404);
 
         return view('pages.statistiky.kolo', [
             'active' => 'statistiky.index',

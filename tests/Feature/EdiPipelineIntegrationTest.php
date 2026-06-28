@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Livewire\Prihlaska;
+use App\Models\EdiEntry;
 use App\Models\Edihead;
 use App\Models\Ediline;
+use App\Models\EdiRound;
 use App\Models\User;
-use App\Models\VkvpaData;
-use App\Models\VkvpaKola;
 use App\Services\Scoring\ScoringService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -22,7 +22,7 @@ use Tests\TestCase;
 /**
  * Integrační testy celého EDI pipeline přes Livewire komponent Prihlaska:
  *   nahrání souboru (náhled, BEZ zápisu) → „Odeslat" → EdiParser → EdiImportService
- *   → ScoringService → VkvpaData.
+ *   → ScoringService → EdiEntry.
  *
  * Ověřujeme, že náhled nic neuloží a že „Odeslat" předá správná data dál –
  * zvlášť scoring hodnoty.
@@ -64,14 +64,14 @@ class EdiPipelineIntegrationTest extends TestCase
         return $this->nahled($edi)->set('email', 'test@example.com')->call('odeslat');
     }
 
-    private function koloProBrezen2026(): VkvpaKola
+    private function koloProBrezen2026(): EdiRound
     {
-        return VkvpaKola::create([
-            'datum_konani' => '2026-03-15 08:00:00',
+        return EdiRound::create([
+            'starts_at' => '2026-03-15 08:00:00',
             // Uzávěrka v budoucnu → upload okno (stav Příjem) je otevřené.
-            'datum_uzaverky' => now()->addDay(),
-            'nazev' => '1. kolo 2026',
-            'poznamka' => '',
+            'closes_at' => now()->addDay(),
+            'name' => '1. kolo 2026',
+            'note' => '',
         ]);
     }
 
@@ -86,20 +86,20 @@ class EdiPipelineIntegrationTest extends TestCase
 
         $this->assertSame(0, Edihead::count(), 'Náhled nesmí nic importovat');
         $this->assertSame(0, Ediline::count());
-        $this->assertSame(0, VkvpaData::count());
+        $this->assertSame(0, EdiEntry::count());
     }
 
     // ------------------------------------------------------------------
     // Databázový stav po odeslání
 
-    public function test_submit_creates_edihead_edilines_and_vkvpa_data_rows(): void
+    public function test_submit_creates_edihead_edilines_and_edi_entries_rows(): void
     {
         $this->koloProBrezen2026();
         $this->odeslat()->assertRedirect(route('pribezne_vysledky'));
 
         $this->assertSame(1, Edihead::count(), 'Musí vzniknout 1 edihead');
         $this->assertSame(2, Ediline::count(), 'sample.edi má 2 QSO řádky');
-        $this->assertSame(1, VkvpaData::count(), 'Musí vzniknout 1 řádek');
+        $this->assertSame(1, EdiEntry::count(), 'Musí vzniknout 1 řádek');
     }
 
     // ------------------------------------------------------------------
@@ -108,19 +108,19 @@ class EdiPipelineIntegrationTest extends TestCase
     public function test_upload_rejected_when_round_is_closed(): void
     {
         // Uzávěrka v minulosti → stav Uzavřené, okno zavřené.
-        $this->koloProBrezen2026()->update(['datum_uzaverky' => now()->subDay()]);
+        $this->koloProBrezen2026()->update(['closes_at' => now()->subDay()]);
 
         $component = $this->nahled()->assertSet('mode', 'choose');
         $this->assertNotSame('', $component->get('errorMessage'), 'Náhled má zobrazit chybu zavřeného okna');
-        $this->assertSame(0, VkvpaData::count(), 'Mimo upload okno nesmí vzniknout záznam');
+        $this->assertSame(0, EdiEntry::count(), 'Mimo upload okno nesmí vzniknout záznam');
     }
 
     public function test_upload_rejected_when_round_is_evaluated(): void
     {
-        $this->koloProBrezen2026()->update(['vyhodnoceno' => now()]);
+        $this->koloProBrezen2026()->update(['evaluated_at' => now()]);
 
         $this->nahled()->assertSet('mode', 'choose');
-        $this->assertSame(0, VkvpaData::count(), 'Do vyhodnoceného kola nesmí vzniknout záznam');
+        $this->assertSame(0, EdiEntry::count(), 'Do vyhodnoceného kola nesmí vzniknout záznam');
     }
 
     public function test_submit_allowed_when_round_in_prijem_state(): void
@@ -129,22 +129,22 @@ class EdiPipelineIntegrationTest extends TestCase
         $this->koloProBrezen2026();
 
         $this->odeslat()->assertRedirect(route('pribezne_vysledky'));
-        $this->assertSame(1, VkvpaData::count(), 'Ve stavu Příjem se deník přijme');
+        $this->assertSame(1, EdiEntry::count(), 'Ve stavu Příjem se deník přijme');
     }
 
-    public function test_submit_sets_correct_scoring_values_in_vkvpa_data(): void
+    public function test_submit_sets_correct_scoring_values_in_edi_entries(): void
     {
         $this->koloProBrezen2026();
         $this->odeslat();
 
-        $row = VkvpaData::firstOrFail();
+        $row = EdiEntry::firstOrFail();
 
         // sample.edi: home JN99, QSO do JN99BP (vlastní, 2 b.) a JN89PV (soused, 3 b.)
-        // pocet=2, boduZaQso=5, nasobice=2 (JN89+JN99), body=10
-        $this->assertSame(2, $row->pocet, 'pocet QSO');
-        $this->assertSame(5, $row->bodu_za_qso, 'body za spojení');
-        $this->assertSame(2, $row->nasobice, 'násobič');
-        $this->assertSame(10, $row->body, 'celkové body');
+        // pocet=2, boduZaQso=5, multiplier=2 (JN89+JN99), body=10
+        $this->assertSame(2, $row->qso_count, 'pocet QSO');
+        $this->assertSame(5, $row->qso_points, 'body za spojení');
+        $this->assertSame(2, $row->multiplier, 'násobič');
+        $this->assertSame(10, $row->points, 'celkové body');
     }
 
     public function test_submit_scoring_matches_direct_service_calculation(): void
@@ -152,15 +152,15 @@ class EdiPipelineIntegrationTest extends TestCase
         $this->koloProBrezen2026();
         $this->odeslat();
 
-        $row = VkvpaData::firstOrFail();
-        $head = Edihead::findOrFail((int) $row->edihead_id);
+        $row = EdiEntry::firstOrFail();
+        $head = Edihead::findOrFail((int) $row->edi_head_id);
 
         $direct = app(ScoringService::class)->scoreEdi($head);
 
-        $this->assertSame($direct->pocet, $row->pocet);
-        $this->assertSame($direct->boduZaQso, $row->bodu_za_qso);
-        $this->assertSame($direct->nasobice, $row->nasobice);
-        $this->assertSame($direct->body, $row->body);
+        $this->assertSame($direct->qsoCount, $row->qso_count);
+        $this->assertSame($direct->qsoPoints, $row->qso_points);
+        $this->assertSame($direct->multiplier, $row->multiplier);
+        $this->assertSame($direct->points, $row->points);
     }
 
     public function test_submit_stores_edihead_id(): void
@@ -168,9 +168,9 @@ class EdiPipelineIntegrationTest extends TestCase
         $this->koloProBrezen2026();
         $this->odeslat();
 
-        $row = VkvpaData::firstOrFail();
-        $this->assertNotNull($row->edihead_id, 'edihead_id musí odkazovat na edihead');
-        $this->assertNotNull(Edihead::find($row->edihead_id), 'Edihead musí existovat');
+        $row = EdiEntry::firstOrFail();
+        $this->assertNotNull($row->edi_head_id, 'edihead_id musí odkazovat na edihead');
+        $this->assertNotNull(Edihead::find($row->edi_head_id), 'Edihead musí existovat');
     }
 
     public function test_submit_creates_pending_row_with_schvaleno_false(): void
@@ -178,8 +178,8 @@ class EdiPipelineIntegrationTest extends TestCase
         $this->koloProBrezen2026();
         $this->odeslat();
 
-        $row = VkvpaData::firstOrFail();
-        $this->assertFalse((bool) $row->schvaleno, 'Veřejné hlášení čeká na převzetí');
+        $row = EdiEntry::firstOrFail();
+        $this->assertFalse((bool) $row->approved, 'Veřejné hlášení čeká na převzetí');
     }
 
     public function test_submit_uses_edited_contact_email(): void
@@ -189,7 +189,7 @@ class EdiPipelineIntegrationTest extends TestCase
         // Závodník v náhledu přepíše kontaktní e-mail – uloží se upravená hodnota.
         $this->nahled()->set('email', 'novy@example.com')->call('odeslat');
 
-        $this->assertSame('novy@example.com', VkvpaData::firstOrFail()->mail);
+        $this->assertSame('novy@example.com', EdiEntry::firstOrFail()->email);
     }
 
     // ------------------------------------------------------------------
@@ -202,7 +202,7 @@ class EdiPipelineIntegrationTest extends TestCase
 
         $this->odeslat();
 
-        $row = VkvpaData::firstOrFail();
+        $row = EdiEntry::firstOrFail();
 
         // Nezveřejněný záznam není vidět pro anonymního uživatele.
         $this->get(route('vysledkova_listina', ['kolo' => $kolo->id]))

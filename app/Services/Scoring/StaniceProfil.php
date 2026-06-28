@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Scoring;
 
 use App\Models\EdiCategory;
-use App\Models\VkvpaData;
+use App\Models\EdiEntry;
 use App\Support\VkvpaSettings;
 use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\Cache;
@@ -13,9 +13,9 @@ use Illuminate\Support\Facades\Cache;
 /**
  * Veřejný profil stanice (značky) napříč všemi vyhodnocenými koly: souhrn,
  * historie účastí (kolo po kole) a trend bodů. Levné agregace z výsledkové
- * listiny (`vkvpa_data`); cachuje se per značka.
+ * listiny (`edi_entries`); cachuje se per značka.
  *
- * @phpstan-type ProfilRadek array{koloId: int, kolo: string, datum: string, kategorie: string, pocet: int, nasobice: int, body: int, poradi: int, edihead_id: int|null}
+ * @phpstan-type ProfilRadek array{koloId: int, kolo: string, datum: string, kategorie: string, pocet: int, multiplier: int, body: int, poradi: int, edihead_id: int|null}
  * @phpstan-type Profil array{
  *     znacka: string, pocetKol: int, bodyCelkem: int, qsoCelkem: int,
  *     nejlepsiPoradi: int|null, nejlepsiSkore: int,
@@ -54,22 +54,22 @@ final class StaniceProfil
         /** @var SupportCollection<int, string> $zkratky */
         $zkratky = EdiCategory::zkratkaMap();
 
-        $entries = VkvpaData::query()
-            ->join('vkvpa_kola', 'vkvpa_data.id_kola', '=', 'vkvpa_kola.id')
-            ->where('vkvpa_data.schvaleno', true)
-            ->whereNotNull('vkvpa_kola.vyhodnoceno')
-            ->where('vkvpa_data.znacka', $znacka)
-            ->orderBy('vkvpa_kola.datum_konani')
+        $entries = EdiEntry::query()
+            ->join('edi_rounds', 'edi_entries.round_id', '=', 'edi_rounds.id')
+            ->where('edi_entries.approved', true)
+            ->whereNotNull('edi_rounds.evaluated_at')
+            ->where('edi_entries.callsign', $znacka)
+            ->orderBy('edi_rounds.starts_at')
             ->get([
-                'vkvpa_data.id_kola as kolo_id',
-                'vkvpa_kola.nazev as nazev',
-                'vkvpa_kola.datum_konani as datum_konani',
-                'vkvpa_data.id_kategorie as id_kategorie',
-                'vkvpa_data.pocet as pocet',
-                'vkvpa_data.nasobice as nasobice',
-                'vkvpa_data.body as body',
-                'vkvpa_data.poradi as poradi',
-                'vkvpa_data.edihead_id as edihead_id',
+                'edi_entries.round_id as round_id',
+                'edi_rounds.name as nazev',
+                'edi_rounds.starts_at as starts_at',
+                'edi_entries.category_id as category_id',
+                'edi_entries.qso_count',
+                'edi_entries.multiplier as multiplier',
+                'edi_entries.points',
+                'edi_entries.rank',
+                'edi_entries.edi_head_id',
             ]);
 
         if ($entries->isEmpty()) {
@@ -86,10 +86,10 @@ final class StaniceProfil
         $bodyTrend = [];
 
         foreach ($entries as $e) {
-            $body = (int) $e->body;
-            $pocet = (int) $e->pocet;
-            $poradi = (int) $e->poradi;
-            $zkr = $e->id_kategorie !== null ? $zkratky->get($e->id_kategorie) : null;
+            $body = (int) $e->points;
+            $pocet = (int) $e->qso_count;
+            $poradi = (int) $e->rank;
+            $zkr = $e->category_id !== null ? $zkratky->get($e->category_id) : null;
 
             $bodyCelkem += $body;
             $qsoCelkem += $pocet;
@@ -100,15 +100,15 @@ final class StaniceProfil
 
             $nazev = self::strAttr($e, 'nazev');
             $historie[] = [
-                'koloId' => self::intAttr($e, 'kolo_id'),
+                'koloId' => self::intAttr($e, 'round_id'),
                 'kolo' => $nazev,
-                'datum' => substr(self::strAttr($e, 'datum_konani'), 0, 10),
+                'datum' => substr(self::strAttr($e, 'starts_at'), 0, 10),
                 'kategorie' => is_string($zkr) ? $zkr : '',
                 'pocet' => $pocet,
-                'nasobice' => (int) $e->nasobice,
+                'multiplier' => (int) $e->multiplier,
                 'body' => $body,
                 'poradi' => $poradi,
-                'edihead_id' => $e->edihead_id,
+                'edihead_id' => $e->edi_head_id,
             ];
             $labels[] = $nazev;
             $bodyTrend[] = $body;
@@ -127,7 +127,7 @@ final class StaniceProfil
     }
 
     /** Atribut řádku jako int (aliasované sloupce se vrací jako mixed). */
-    private static function intAttr(VkvpaData $model, string $key): int
+    private static function intAttr(EdiEntry $model, string $key): int
     {
         $value = $model->getAttribute($key);
 
@@ -135,7 +135,7 @@ final class StaniceProfil
     }
 
     /** Atribut řádku jako string. */
-    private static function strAttr(VkvpaData $model, string $key): string
+    private static function strAttr(EdiEntry $model, string $key): string
     {
         $value = $model->getAttribute($key);
 

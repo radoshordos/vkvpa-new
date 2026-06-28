@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Services\Scoring;
 
-use App\Models\VkvpaData;
+use App\Models\EdiEntry;
 use App\Support\VkvpaSettings;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 
 /**
  * All-time rekordy („síň slávy") napříč všemi vyhodnocenými koly – počítané
- * levně z výsledkové listiny (`vkvpa_data`): rekordní účast v kole, nejvyšší
+ * levně z výsledkové listiny (`edi_entries`): rekordní účast v kole, nejvyšší
  * skóre, nejvíc QSO a nejvíc násobičů jediného záznamu. ODX historie se zde
  * záměrně nepočítá (vyžadovalo by těžký sken všech `edilines`).
  *
@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Cache;
  * @phpstan-type Rekord array{znacka: string, kolo: string, koloId: int, value: int}
  * @phpstan-type RekordKola array{kolo: string, koloId: int, value: int}
  * @phpstan-type RekordOdx array{dist: int, call: string, wwl: string, home: string, homeCall: string, kolo: string, koloId: int}
- * @phpstan-type Vrcholy array{ucast: RekordKola|null, skore: Rekord|null, qso: Rekord|null, nasobice: Rekord|null}
+ * @phpstan-type Vrcholy array{ucast: RekordKola|null, skore: Rekord|null, qso: Rekord|null, multiplier: Rekord|null}
  */
 final class RekordyService
 {
@@ -40,9 +40,9 @@ final class RekordyService
             VkvpaSettings::roundStationsCacheTtl(),
             fn (): array => [
                 'ucast' => $this->maxUcast(),
-                'skore' => $this->maxZaznam('body'),
-                'qso' => $this->maxZaznam('pocet'),
-                'nasobice' => $this->maxZaznam('nasobice'),
+                'skore' => $this->maxZaznam('points'),
+                'qso' => $this->maxZaznam('qso_count'),
+                'multiplier' => $this->maxZaznam('multiplier'),
             ],
         );
 
@@ -83,7 +83,7 @@ final class RekordyService
     /**
      * Drží dané kolo některý z all-time rekordů? (pro odznaky na detailu kola)
      *
-     * @return array{ucast: bool, skore: bool, qso: bool, nasobice: bool}
+     * @return array{ucast: bool, skore: bool, qso: bool, multiplier: bool}
      */
     public function odznakyProKolo(int $koloId): array
     {
@@ -93,7 +93,7 @@ final class RekordyService
             'ucast' => $v['ucast'] !== null && $v['ucast']['koloId'] === $koloId,
             'skore' => $v['skore'] !== null && $v['skore']['koloId'] === $koloId,
             'qso' => $v['qso'] !== null && $v['qso']['koloId'] === $koloId,
-            'nasobice' => $v['nasobice'] !== null && $v['nasobice']['koloId'] === $koloId,
+            'multiplier' => $v['multiplier'] !== null && $v['multiplier']['koloId'] === $koloId,
         ];
     }
 
@@ -104,12 +104,12 @@ final class RekordyService
      */
     private function maxUcast(): ?array
     {
-        $row = VkvpaData::query()
-            ->join('vkvpa_kola', 'vkvpa_data.id_kola', '=', 'vkvpa_kola.id')
-            ->where('vkvpa_data.schvaleno', true)
-            ->whereNotNull('vkvpa_kola.vyhodnoceno')
-            ->groupBy('vkvpa_data.id_kola', 'vkvpa_kola.nazev')
-            ->selectRaw('vkvpa_data.id_kola as kolo_id, vkvpa_kola.nazev as nazev, COUNT(DISTINCT vkvpa_data.znacka) as value')
+        $row = EdiEntry::query()
+            ->join('edi_rounds', 'edi_entries.round_id', '=', 'edi_rounds.id')
+            ->where('edi_entries.approved', true)
+            ->whereNotNull('edi_rounds.evaluated_at')
+            ->groupBy('edi_entries.round_id', 'edi_rounds.name')
+            ->selectRaw('edi_entries.round_id as round_id, edi_rounds.name as nazev, COUNT(DISTINCT edi_entries.callsign) as value')
             ->orderByDesc('value')
             ->first();
 
@@ -119,13 +119,13 @@ final class RekordyService
 
         return [
             'kolo' => self::strAttr($row, 'nazev'),
-            'koloId' => self::intAttr($row, 'kolo_id'),
+            'koloId' => self::intAttr($row, 'round_id'),
             'value' => self::intAttr($row, 'value'),
         ];
     }
 
     /**
-     * Záznam s nejvyšší hodnotou sloupce ($col = body|pocet|nasobice).
+     * Záznam s nejvyšší hodnotou sloupce ($col = body|pocet|multiplier).
      *
      * @return Rekord|null
      */
@@ -133,20 +133,20 @@ final class RekordyService
     {
         // Literal-string select kvůli selectRaw (PHPStan L10).
         $select = match ($col) {
-            'pocet' => 'vkvpa_data.znacka as znacka, vkvpa_data.id_kola as kolo_id, vkvpa_kola.nazev as nazev, vkvpa_data.pocet as value',
-            'nasobice' => 'vkvpa_data.znacka as znacka, vkvpa_data.id_kola as kolo_id, vkvpa_kola.nazev as nazev, vkvpa_data.nasobice as value',
-            default => 'vkvpa_data.znacka as znacka, vkvpa_data.id_kola as kolo_id, vkvpa_kola.nazev as nazev, vkvpa_data.body as value',
+            'pocet' => 'edi_entries.callsign as znacka, edi_entries.round_id as round_id, edi_rounds.name as nazev, edi_entries.qso_count as value',
+            'multiplier' => 'edi_entries.callsign as znacka, edi_entries.round_id as round_id, edi_rounds.name as nazev, edi_entries.multiplier as value',
+            default => 'edi_entries.callsign as znacka, edi_entries.round_id as round_id, edi_rounds.name as nazev, edi_entries.points as value',
         };
         $orderCol = match ($col) {
-            'pocet' => 'vkvpa_data.pocet',
-            'nasobice' => 'vkvpa_data.nasobice',
-            default => 'vkvpa_data.body',
+            'pocet' => 'edi_entries.qso_count',
+            'multiplier' => 'edi_entries.multiplier',
+            default => 'edi_entries.points',
         };
 
-        $row = VkvpaData::query()
-            ->join('vkvpa_kola', 'vkvpa_data.id_kola', '=', 'vkvpa_kola.id')
-            ->where('vkvpa_data.schvaleno', true)
-            ->whereNotNull('vkvpa_kola.vyhodnoceno')
+        $row = EdiEntry::query()
+            ->join('edi_rounds', 'edi_entries.round_id', '=', 'edi_rounds.id')
+            ->where('edi_entries.approved', true)
+            ->whereNotNull('edi_rounds.evaluated_at')
             ->selectRaw($select)
             ->orderByDesc($orderCol)
             ->first();
@@ -158,7 +158,7 @@ final class RekordyService
         return [
             'znacka' => self::strAttr($row, 'znacka'),
             'kolo' => self::strAttr($row, 'nazev'),
-            'koloId' => self::intAttr($row, 'kolo_id'),
+            'koloId' => self::intAttr($row, 'round_id'),
             'value' => self::intAttr($row, 'value'),
         ];
     }

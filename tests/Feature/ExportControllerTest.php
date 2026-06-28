@@ -6,8 +6,8 @@ namespace Tests\Feature;
 
 use App\Http\Controllers\Admin\ExportController;
 use App\Models\Edihead;
+use App\Models\EdiRound;
 use App\Models\User;
-use App\Models\VkvpaKola;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
@@ -26,13 +26,13 @@ class ExportControllerTest extends TestCase
         return User::create(['name' => 'Admin', 'password' => Hash::make('x'), 'is_admin' => true]);
     }
 
-    private function makeKolo(): VkvpaKola
+    private function makeKolo(): EdiRound
     {
-        return VkvpaKola::create([
-            'datum_konani' => '2026-01-17 08:00:00',
-            'datum_uzaverky' => '2026-02-01 23:59:00',
-            'nazev' => 'Testovací kolo',
-            'poznamka' => '',
+        return EdiRound::create([
+            'starts_at' => '2026-01-17 08:00:00',
+            'closes_at' => '2026-02-01 23:59:00',
+            'name' => 'Testovací kolo',
+            'note' => '',
         ]);
     }
 
@@ -45,7 +45,7 @@ class ExportControllerTest extends TestCase
     {
         $kolo = $this->makeKolo();
         Edihead::create([
-            'id_kola' => $kolo->id, 't_date' => '20260117', 'p_call' => 'OK1ABC',
+            'round_id' => $kolo->id, 't_date' => '20260117', 'p_call' => 'OK1ABC',
             'p_wwlo' => 'JN79', 'p_sect' => '', 'p_band' => '144MHz', 'r_name' => 'X',
             's_powe' => 10, 'src' => 'PCall=OK1ABC',
         ]);
@@ -60,7 +60,7 @@ class ExportControllerTest extends TestCase
     {
         $kolo = $this->makeKolo();
         Edihead::create([
-            'id_kola' => $kolo->id, 't_date' => '20260117', 'p_call' => 'OK1ABC',
+            'round_id' => $kolo->id, 't_date' => '20260117', 'p_call' => 'OK1ABC',
             'p_wwlo' => 'JN79', 'p_sect' => '', 'p_band' => '144MHz', 'r_name' => 'X',
             's_powe' => 10, 'src' => 'PCall=OK1ABC',
         ]);

@@ -6,10 +6,10 @@ namespace Tests\Feature;
 
 use App\Http\Controllers\EdiVizualizaceController;
 use App\Models\EdiCategory;
+use App\Models\EdiEntry;
 use App\Models\Edihead;
+use App\Models\EdiRound;
 use App\Models\User;
-use App\Models\VkvpaData;
-use App\Models\VkvpaKola;
 use App\Services\Edi\EdiImportService;
 use App\Services\Edi\EdiParser;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -82,11 +82,11 @@ class EdiVizualizaceTest extends TestCase
         // Vizualizace je veřejná i během otevřeného upload okna – ukazuje jen
         // vlastní deník; citlivé vrstvy (roundStations, porovnání) se hlídají
         // samostatně (viz testy níže).
-        VkvpaKola::create([
-            'datum_konani' => '2026-03-15',
-            'datum_uzaverky' => now()->addDays(7)->toDateTimeString(),
-            'nazev' => '03/2026',
-            'poznamka' => '',
+        EdiRound::create([
+            'starts_at' => '2026-03-15',
+            'closes_at' => now()->addDays(7)->toDateTimeString(),
+            'name' => '03/2026',
+            'note' => '',
         ]);
 
         $head = $this->importSample();
@@ -100,16 +100,16 @@ class EdiVizualizaceTest extends TestCase
     {
         // Aktivní kolo (příjem hlášení) → admin smí vizualizaci zobrazit,
         // ale vrstva roundStations musí být prázdná.
-        $kolo = VkvpaKola::create([
-            'datum_konani' => '2026-03-15',
-            'datum_uzaverky' => now()->addDays(7)->toDateTimeString(),
-            'nazev' => '03/2026',
-            'poznamka' => '',
+        $kolo = EdiRound::create([
+            'starts_at' => '2026-03-15',
+            'closes_at' => now()->addDays(7)->toDateTimeString(),
+            'name' => '03/2026',
+            'note' => '',
         ]);
 
         $edi = (string) file_get_contents(__DIR__.'/../fixtures/sample.edi');
         $head = new EdiImportService()->import(new EdiParser()->parse($edi));
-        $head->update(['id_kola' => $kolo->id]);
+        $head->update(['round_id' => $kolo->id]);
 
         $html = $this->actingAs($this->admin())
             ->get(route('edi.vizualizace', $head->id))
@@ -123,17 +123,17 @@ class EdiVizualizaceTest extends TestCase
     public function test_round_stations_visible_after_round_evaluated(): void
     {
         // Vyhodnocené kolo → vrstva roundStations se smí zobrazit.
-        $kolo = VkvpaKola::create([
-            'datum_konani' => '2026-03-15',
-            'datum_uzaverky' => '2026-03-20 23:59:59',
-            'nazev' => '03/2026',
-            'poznamka' => '',
-            'vyhodnoceno' => '2026-03-21 10:00:00',
+        $kolo = EdiRound::create([
+            'starts_at' => '2026-03-15',
+            'closes_at' => '2026-03-20 23:59:59',
+            'name' => '03/2026',
+            'note' => '',
+            'evaluated_at' => '2026-03-21 10:00:00',
         ]);
 
         $edi = (string) file_get_contents(__DIR__.'/../fixtures/sample.edi');
         $head = new EdiImportService()->import(new EdiParser()->parse($edi));
-        $head->update(['id_kola' => $kolo->id]);
+        $head->update(['round_id' => $kolo->id]);
 
         $this->actingAs($this->user())
             ->get(route('edi.vizualizace', $head->id))
@@ -228,32 +228,32 @@ class EdiVizualizaceTest extends TestCase
      */
     private function seedEvaluatedRoundWithRivalEntry(): Edihead
     {
-        $kolo = VkvpaKola::create([
-            'datum_konani' => '2026-03-15',
-            'datum_uzaverky' => '2026-03-20 23:59:59',
-            'nazev' => '03/2026',
-            'poznamka' => '',
-            'vyhodnoceno' => '2026-03-21 10:00:00',
+        $kolo = EdiRound::create([
+            'starts_at' => '2026-03-15',
+            'closes_at' => '2026-03-20 23:59:59',
+            'name' => '03/2026',
+            'note' => '',
+            'evaluated_at' => '2026-03-21 10:00:00',
         ]);
 
         $head = $this->importSample();
-        $head->update(['id_kola' => $kolo->id]);
+        $head->update(['round_id' => $kolo->id]);
 
         $rival = Edihead::create([
-            'id_kola' => $kolo->id, 't_date' => '20260315', 'p_call' => 'OK1BBB', 'p_wwlo' => 'JN89',
+            'round_id' => $kolo->id, 't_date' => '20260315', 'p_call' => 'OK1BBB', 'p_wwlo' => 'JN89',
             'p_band' => '144 MHz', 'r_name' => 'B', 'r_emai' => 'b@b.cz', 's_powe' => 100,
         ]);
 
         $kategorie = EdiCategory::create(['name' => '144 MHz', 'band' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
 
         foreach ([[$head, 'OK2KJT'], [$rival, 'OK1BBB']] as [$h, $znacka]) {
-            VkvpaData::create([
-                'id_kola' => $kolo->id, 'id_kategorie' => $kategorie->id,
-                'qrp' => false, 'lp' => false, 'znacka' => $znacka, 'locator' => 'JN99AJ',
-                'pocet' => 2, 'bodu_za_qso' => 7, 'nasobice' => 2, 'body' => 14,
-                'jmeno' => 'Test', 'mail' => 't@t.cz', 'telefon' => '', 'poznamka' => '',
-                'soapbox' => '', 'ip' => '', 'edihead_id' => $h->id,
-                'poradi' => 1, 'schvaleno' => true, 'session_id' => '',
+            EdiEntry::create([
+                'round_id' => $kolo->id, 'category_id' => $kategorie->id,
+                'qrp' => false, 'lp' => false, 'callsign' => $znacka, 'locator' => 'JN99AJ',
+                'qso_count' => 2, 'qso_points' => 7, 'multiplier' => 2, 'points' => 14,
+                'name' => 'Test', 'email' => 't@t.cz', 'phone' => '', 'note' => '',
+                'soapbox' => '', 'ip' => '', 'edi_head_id' => $h->id,
+                'rank' => 1, 'approved' => true, 'session_id' => '',
             ]);
         }
 

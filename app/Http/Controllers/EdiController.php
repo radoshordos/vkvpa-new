@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Edihead;
-use App\Models\VkvpaKola;
+use App\Models\EdiRound;
 use App\Services\Edi\EdiReducer;
 use App\Support\FileName;
 use Illuminate\Http\Response;
@@ -61,8 +61,8 @@ class EdiController extends Controller
             return;
         }
 
-        $kolo = $head->id_kola !== null ? VkvpaKola::find($head->id_kola) : null;
-        if ($kolo?->prijimaHlaseni() === true) {
+        $kolo = $head->round_id !== null ? EdiRound::find($head->round_id) : null;
+        if ($kolo?->acceptsReports() === true) {
             abort(403);
         }
     }

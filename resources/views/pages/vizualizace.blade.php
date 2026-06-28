@@ -47,7 +47,7 @@ window.__vizConfig = {
     home: @json($home),
     window: @json($window),
     points: @json($mapPoints),
-    nasobice: @json($nasobice),
+    multiplier: @json($multiplier),
     squares: @json($squares),
     roundStations: @json($roundStations),
     cumulative: @json($cumulative),
@@ -171,7 +171,7 @@ window.__vizConfig = {
 {{-- ── Grafy: timeline s násobiči + vážená azimutová růžice ───────────── --}}
 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 mb-4">
   <div class="relative rounded-lg border border-line bg-surface p-3">
-    <button type="button" class="chart-png" data-chart-png="chartTimeline" data-nazev="timeline-nasobice" title="{{ __('pages.viz.chart_png_title') }}">⤓</button>
+    <button type="button" class="chart-png" data-chart-png="chartTimeline" data-nazev="timeline-multiplier" title="{{ __('pages.viz.chart_png_title') }}">⤓</button>
     <div class="h-72 sm:h-72"><canvas id="chartTimeline"></canvas></div>
   </div>
   <div class="relative rounded-lg border border-line bg-surface p-3">

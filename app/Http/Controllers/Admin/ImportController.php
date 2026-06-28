@@ -13,7 +13,7 @@ use App\Exceptions\TDateNotContestDayException;
 use App\Exceptions\UnknownBandException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\ImportZipRequest;
-use App\Models\VkvpaKola;
+use App\Models\EdiRound;
 use App\Services\Edi\EdiParser;
 use App\Support\VkvpaSettings;
 use Illuminate\Http\RedirectResponse;
@@ -110,14 +110,14 @@ class ImportController extends Controller
                 continue;
             }
 
-            $kolo = VkvpaKola::query()->find($data->id_kola);
+            $kolo = EdiRound::query()->find($data->round_id);
 
             $items[] = [
                 'file' => $name,
                 'status' => 'ok',
                 'znacka' => $pcall,
-                'kolo' => $kolo instanceof VkvpaKola ? $kolo->nazev : '—',
-                'body' => $data->body,
+                'kolo' => $kolo instanceof EdiRound ? $kolo->name : '—',
+                'body' => $data->points,
             ];
         }
         $zip->close();

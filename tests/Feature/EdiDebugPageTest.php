@@ -55,7 +55,7 @@ class EdiDebugPageTest extends TestCase
     {
         $src = (string) file_get_contents(__DIR__.'/../fixtures/sample.edi');
         $head = Edihead::create([
-            'id_kola' => 1,
+            'round_id' => 1,
             't_date' => '20260315',
             'p_call' => 'OK1AAA',
             'p_wwlo' => 'JN79',

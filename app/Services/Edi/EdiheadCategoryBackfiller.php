@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Naplní `edi_head.edi_category_id` 1:1 z kategorie příspěvku
- * (`vkvpa_data.id_kategorie`), která je autoritativní – EDI hlavička bývá
+ * (`edi_entries.category_id`), která je autoritativní – EDI hlavička bývá
  * prázdná, oříznutá nebo protiřečí skutečnému zařazení, takže se z ní kategorie
  * neodvozuje.
  *
@@ -27,14 +27,14 @@ final class EdiheadCategoryBackfiller
     /**
      * @return int počet reálně změněných řádků (v dry-run kolik BY se změnilo)
      */
-    public function mirrorVkvpaDataCategory(bool $dryRun = false): int
+    public function mirrorEdiEntryCategory(bool $dryRun = false): int
     {
         // pro každou hlavičku jednoznačná kategorie příspěvků, jinak null
         $desired = [];
-        DB::table('vkvpa_data')
-            ->whereNotNull('edihead_id')
-            ->groupBy('edihead_id')
-            ->selectRaw('edihead_id AS head_id, MIN(id_kategorie) AS kat, COUNT(DISTINCT id_kategorie) AS cnt')
+        DB::table('edi_entries')
+            ->whereNotNull('edi_head_id')
+            ->groupBy('edi_head_id')
+            ->selectRaw('edi_head_id AS head_id, MIN(category_id) AS kat, COUNT(DISTINCT category_id) AS cnt')
             ->get()
             ->each(function (object $r) use (&$desired): void {
                 $headId = self::toInt($r->head_id);
