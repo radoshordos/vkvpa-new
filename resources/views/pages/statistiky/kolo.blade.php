@@ -35,8 +35,6 @@ window.__statConfig = {
     kategorie: @json($prehled['kategorie']),
     trend: @json($prehled['trend']),
     t: {
-        ssb: @json(__('pages.stat.mode_ssb')),
-        cw: @json(__('pages.stat.mode_cw')),
         other: @json(__('pages.stat.country_other')),
         qsoCount: 'QSO',
         stations: @json(__('pages.stat.js_stations')),

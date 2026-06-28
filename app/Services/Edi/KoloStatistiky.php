@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Edi;
 
+use App\Enums\QsoMode;
 use App\Models\EdiCategory;
 use App\Models\EdiEntry;
 use App\Models\EdiRound;
@@ -36,7 +37,7 @@ use Illuminate\Support\Facades\DB;
  * @phpstan-type StatNazevPocet array{nazev: string, pocet: int}
  * @phpstan-type StatKat array{zkratka: string, nazev: string, pocet: int}
  * @phpstan-type StatTimeline array{labels: list<string>, counts: list<int>}
- * @phpstan-type StatMody array{ssb: int, cw: int, other: int}
+ * @phpstan-type StatMody list<array{mode: int, label: string, pocet: int}>
  * @phpstan-type StatTrend array{labels: list<string>, stanic: list<int>, qso: list<int>, body: list<int>}
  * @phpstan-type StatFakt array{key: string, params: array<string, string|int>}
  * @phpstan-type StatOdznaky array{ucast: bool, skore: bool, qso: bool, multiplier: bool}
@@ -71,7 +72,7 @@ final class KoloStatistiky
     {
         /** @var StatPrehled $data */
         $data = Cache::remember(
-            sprintf('vkvpa:kolo-stats:v3:%d', $kolo->id),
+            sprintf('vkvpa:kolo-stats:v4:%d', $kolo->id),
             VkvpaSettings::roundStationsCacheTtl(),
             fn (): array => $this->compute($kolo),
         );
@@ -135,7 +136,8 @@ final class KoloStatistiky
         /** @var array<string, int> $tokCount */
         $tokCount = [];
         $timeline = array_fill(0, $buckets, 0);
-        $mody = ['ssb' => 0, 'cw' => 0, 'other' => 0];
+        /** @var array<int, int> $modyCount  klíč = kód módu (QsoMode->value), hodnota = počet QSO */
+        $modyCount = [];
         /** @var StatOdx|null $odx */
         $odx = null;
 
@@ -162,15 +164,11 @@ final class KoloStatistiky
                 $counts[$sq] = ($counts[$sq] ?? 0) + 1;
             }
 
-            // Druh provozu: 1 = SSB, 2 = CW, jiné = ostatní.
-            $mode = is_numeric($r->mode_code) ? (int) $r->mode_code : 0;
-            if ($mode === 1) {
-                $mody['ssb']++;
-            } elseif ($mode === 2) {
-                $mody['cw']++;
-            } else {
-                $mody['other']++;
-            }
+            // Druh provozu: oficiální módy 1–6 každý zvlášť, cokoli jiného
+            // (vč. rozhozeného sloupce) padá do „Ostatní" – přes QsoMode, ať je
+            // to konzistentní s vizualizací deníku.
+            $mode = QsoMode::fromCode(is_numeric($r->mode_code) ? (int) $r->mode_code : 0)->value;
+            $modyCount[$mode] = ($modyCount[$mode] ?? 0) + 1;
 
             // Časová osa: 15min interval závodního okna.
             $min = self::minutesFromDateTime(is_scalar($r->qso_at) ? (string) $r->qso_at : '');
@@ -245,6 +243,14 @@ final class KoloStatistiky
         $labels = [];
         for ($i = 0; $i < $buckets; $i++) {
             $labels[] = DenikStatistiky::hhmm($fromMin + $i * 15);
+        }
+
+        // Druhy provozu: jen přítomné módy, kanonické pořadí (1–6 vzestupně,
+        // „Ostatní" = 0 na konec), s popiskem z QsoMode.
+        uksort($modyCount, static fn (int $a, int $b): int => ($a ?: 99) <=> ($b ?: 99));
+        $mody = [];
+        foreach ($modyCount as $mode => $pocet) {
+            $mody[] = ['mode' => $mode, 'label' => QsoMode::from($mode)->label(), 'pocet' => $pocet];
         }
 
         return [

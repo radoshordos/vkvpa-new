@@ -2,6 +2,7 @@ import L from 'leaflet';
 import { Chart, registerables } from 'chart.js';
 import { createOsmMap } from './leaflet-osm-map.js';
 import { applyChartTheme } from './chart-theme.js';
+import { modeColor, modeLabel } from './leaflet-mode-colors.js';
 
 Chart.register(...registerables);
 applyChartTheme();
@@ -100,13 +101,14 @@ chart('chartTimeline', {
     options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } },
 });
 
-// Druhy provozu (SSB / CW / ostatní).
-const mody = cfg.mody || { ssb: 0, cw: 0, other: 0 };
+// Druhy provozu: oficiální módy 1–6 + „Ostatní", barvy a popisky ze sdílené
+// palety (leaflet-mode-colors) – shodně s vizualizací deníku.
+const mody = arr(cfg.mody);
 chart('chartMody', {
     type: 'doughnut',
     data: {
-        labels: [t.ssb || 'SSB', t.cw || 'CW', t.other || 'Ostatní'],
-        datasets: [{ data: [mody.ssb, mody.cw, mody.other], backgroundColor: ['#3b82f6', '#f59e0b', '#94a3b8'], borderWidth: 0 }],
+        labels: mody.map((m) => (m.mode === 0 ? (t.other || 'Ostatní') : modeLabel(m.mode))),
+        datasets: [{ data: mody.map((m) => m.pocet), backgroundColor: mody.map((m) => modeColor(m.mode).fill), borderWidth: 0 }],
     },
     options: { plugins: { legend: { position: 'bottom' } }, cutout: '60%' },
 });
