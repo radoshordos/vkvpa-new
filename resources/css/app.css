@@ -109,9 +109,11 @@
 
     /* Nadpisy v obsahu – jednotné, nahrazují inline styly stránek. */
     .content h1 {
+        font-family: var(--font-sans);
         font-size: 1.35rem;
         line-height: 1.25;
         font-weight: 700;
+        letter-spacing: 0;
         color: var(--heading);
         padding-bottom: 0.35rem;
         margin-bottom: 0.9rem;
@@ -119,15 +121,21 @@
         text-wrap: balance;
     }
     .content h2 {
+        font-family: var(--font-sans);
         font-size: 1.1rem;
+        line-height: 1.25;
         font-weight: 600;
+        letter-spacing: 0;
         color: var(--heading);
         margin: 1.25rem 0 0.6rem;
         text-wrap: balance;
     }
     .content h3 {
+        font-family: var(--font-sans);
         font-size: 0.98rem;
+        line-height: 1.25;
         font-weight: 600;
+        letter-spacing: 0;
         color: var(--ink);
         margin: 1rem 0 0.4rem;
         text-wrap: balance;
@@ -458,10 +466,13 @@
 
     /* Kategorie / sekce ve výsledkové listině. */
     .section-head {
+        font-family: var(--font-sans);
         background-color: var(--brand);
         color: var(--brand-fg);
         font-weight: 700;
-        font-size: 0.95rem;
+        font-size: 1.1rem;
+        line-height: 1.25;
+        letter-spacing: 0;
         padding: 0.45rem 0.85rem;
         border-radius: 0.5rem;
         margin: 1.25rem 0 0.6rem;
