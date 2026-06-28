@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Edi;
 
+use App\Enums\QsoMode;
 use App\Models\EdiEntry;
 use App\Models\Edihead;
 use App\Models\EdiRound;
@@ -314,31 +315,37 @@ class DenikStatistiky
     }
 
     /**
-     * Souhrn po druzích provozu (SSB/CW/?): počet QSO, body, průměrná
-     * a maximální vzdálenost.
+     * Souhrn po druzích provozu: počet QSO, body, průměrná a maximální
+     * vzdálenost. Grupuje podle kódu módu ({@see QsoMode}), takže každý oficiální
+     * mód 1–6 má vlastní řádek (a barvu) a vše ostatní spadne do „Ostatní" (kód
+     * 0). Řádky jsou v kanonickém pořadí módů, „Ostatní" vždy poslední.
      *
      * @param  Collection<int, EnrichedQso>  $lines
-     * @return list<array{label: string, pocet: int, body: int, avgDist: int, maxDist: int}>
+     * @return list<array{mode: int, label: string, pocet: int, body: int, avgDist: int, maxDist: int}>
      */
     public function modeStats(Collection $lines): array
     {
-        /** @var array<string, array{label: string, pocet: int, body: int, dists: list<int>}> $by */
+        /** @var array<int, array{mode: int, label: string, pocet: int, body: int, dists: list<int>}> $by */
         $by = [];
 
         foreach ($lines as $l) {
-            $key = $l->mode->label();
-            $by[$key] ??= ['label' => $key, 'pocet' => 0, 'body' => 0, 'dists' => []];
-            $by[$key]['pocet']++;
-            $by[$key]['body'] += $l->points;
+            $mode = $l->mode->value;
+            $by[$mode] ??= ['mode' => $mode, 'label' => $l->mode->label(), 'pocet' => 0, 'body' => 0, 'dists' => []];
+            $by[$mode]['pocet']++;
+            $by[$mode]['body'] += $l->points;
             if ($l->dist !== null) {
-                $by[$key]['dists'][] = $l->dist;
+                $by[$mode]['dists'][] = $l->dist;
             }
         }
+
+        // Kanonické pořadí: 1–6 vzestupně, „Ostatní" (0) na konec.
+        uksort($by, fn (int $a, int $b): int => ($a ?: 99) <=> ($b ?: 99));
 
         $out = [];
 
         foreach ($by as $m) {
             $out[] = [
+                'mode' => $m['mode'],
                 'label' => $m['label'],
                 'pocet' => $m['pocet'],
                 'body' => $m['body'],

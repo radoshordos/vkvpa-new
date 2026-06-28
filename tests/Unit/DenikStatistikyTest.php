@@ -273,6 +273,23 @@ class DenikStatistikyTest extends TestCase
         $this->assertNotNull($cw);
         $this->assertSame(1, $cw['pocet']);
         $this->assertSame(0, $cw['avgDist']); // dist=null → 0
+
+        $this->assertSame(QsoMode::Ssb->value, $ssb['mode']);
+        $this->assertSame(QsoMode::Cw->value, $cw['mode']);
+    }
+
+    public function test_mode_stats_orders_canonically_with_other_last(): void
+    {
+        $lines = new Collection([
+            $this->qso('A', 'JN89PV', 3, 480, 100, null, QsoMode::Other),
+            $this->qso('B', 'JN79VS', 3, 481, 100, null, QsoMode::Cw),
+            $this->qso('C', 'JO89AA', 4, 482, 100, null, QsoMode::Ssb),
+        ]);
+
+        $modes = array_column($this->svc->modeStats($lines), 'mode');
+
+        // 1 (SSB) a 2 (CW) vzestupně, 0 (Ostatní) až na konci.
+        $this->assertSame([QsoMode::Ssb->value, QsoMode::Cw->value, QsoMode::Other->value], $modes);
     }
 
     // ---- podleZemi / podlePrefixu ---------------------------------------

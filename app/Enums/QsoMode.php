@@ -7,11 +7,12 @@ namespace App\Enums;
 /**
  * Druh provozu spojení (EDI sloupec „Mode-code").
  *
- * Hodnoty (`value`) odpovídají kódům standardu REG1TEST (IARU Region 1) a putují
- * i do JSON pro vizualizaci (barvení markerů). VKV PA prakticky využívá fone
- * (SSB) a CW; ostatní módy se vyskytují zřídka. Jakýkoli neznámý / chybějící kód
- * (typicky rozhozený sloupec v deníku, kam se vlilo RST apod.) se mapuje na
- * {@see self::Other} (v mapě šedá, popisek „?").
+ * Ve VKV PA jsou oficiálně povolené pouze kódy 1–6 standardu REG1TEST
+ * (IARU Region 1): SSB, CW, oba směry křížového provozu, AM a FM. Každý z nich
+ * má ve vizualizaci vlastní kontrastní barvu. Jakýkoli jiný kód – ať už další
+ * REG1TEST mód (MGM/SSTV/ATV) nebo rozhozený sloupec v deníku, kam se vlilo RST
+ * (`59`, `599` …) – se mapuje na {@see self::Other} („Ostatní", v mapě šedá,
+ * popisek „?"). Hodnota (`value`) putuje i do JSON pro barvení markerů.
  */
 enum QsoMode: int
 {
@@ -22,12 +23,9 @@ enum QsoMode: int
     case CwSsb = 4; // křížový provoz: vysílá CW, přijímá SSB
     case Am = 5;
     case Fm = 6;
-    case Mgm = 7;
-    case Sstv = 8;
-    case Atv = 9;
 
     /**
-     * Mapuje kód z deníku na enum; neznámý kód → {@see self::Other}.
+     * Mapuje kód z deníku na enum; cokoli mimo povolené 1–6 → {@see self::Other}.
      */
     public static function fromCode(int $code): self
     {
@@ -42,12 +40,10 @@ enum QsoMode: int
         return match ($this) {
             self::Ssb => 'SSB',
             self::Cw => 'CW',
-            self::SsbCw, self::CwSsb => 'SSB+CW',
+            self::SsbCw => 'SSB/CW',
+            self::CwSsb => 'CW/SSB',
             self::Am => 'AM',
             self::Fm => 'FM',
-            self::Mgm => 'RTTY/MGM',
-            self::Sstv => 'SSTV',
-            self::Atv => 'ATV',
             self::Other => '?',
         };
     }

@@ -20,14 +20,14 @@ class QsoModeTest extends TestCase
         $this->assertSame(QsoMode::CwSsb, QsoMode::fromCode(4));
         $this->assertSame(QsoMode::Am, QsoMode::fromCode(5));
         $this->assertSame(QsoMode::Fm, QsoMode::fromCode(6));
-        $this->assertSame(QsoMode::Mgm, QsoMode::fromCode(7));
-        $this->assertSame(QsoMode::Sstv, QsoMode::fromCode(8));
-        $this->assertSame(QsoMode::Atv, QsoMode::fromCode(9));
     }
 
-    public function test_unknown_or_missing_code_maps_to_other(): void
+    public function test_codes_outside_allowed_range_map_to_other(): void
     {
         $this->assertSame(QsoMode::Other, QsoMode::fromCode(0));
+        $this->assertSame(QsoMode::Other, QsoMode::fromCode(7));  // MGM – ve VKV PA nepovolené
+        $this->assertSame(QsoMode::Other, QsoMode::fromCode(8));  // SSTV
+        $this->assertSame(QsoMode::Other, QsoMode::fromCode(9));  // ATV
         $this->assertSame(QsoMode::Other, QsoMode::fromCode(59)); // rozhozený sloupec (RST)
         $this->assertSame(QsoMode::Other, QsoMode::fromCode(99));
     }
@@ -36,10 +36,10 @@ class QsoModeTest extends TestCase
     {
         $this->assertSame('SSB', QsoMode::Ssb->label());
         $this->assertSame('CW', QsoMode::Cw->label());
+        $this->assertSame('SSB/CW', QsoMode::SsbCw->label());
+        $this->assertSame('CW/SSB', QsoMode::CwSsb->label());
+        $this->assertSame('AM', QsoMode::Am->label());
         $this->assertSame('FM', QsoMode::Fm->label());
-        $this->assertSame('RTTY/MGM', QsoMode::Mgm->label());
-        $this->assertSame('SSB+CW', QsoMode::SsbCw->label());
-        $this->assertSame('SSB+CW', QsoMode::CwSsb->label());
         $this->assertSame('?', QsoMode::Other->label());
     }
 }
