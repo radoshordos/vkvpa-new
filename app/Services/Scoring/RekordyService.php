@@ -25,6 +25,8 @@ use Illuminate\Support\Facades\Cache;
 final class RekordyService
 {
     /** Cache all-time ODX – plní příkaz statistiky:precompute-odx, web jen čte. */
+    private const VRCHOLY_CACHE = 'vkvpa:rekordy:v2';
+
     private const ODX_CACHE = 'vkvpa:rekordy:odx:v1';
 
     /**
@@ -36,7 +38,7 @@ final class RekordyService
     {
         /** @var Vrcholy $v */
         $v = Cache::remember(
-            'vkvpa:rekordy:v1',
+            self::VRCHOLY_CACHE,
             VkvpaSettings::roundStationsCacheTtl(),
             fn (): array => [
                 'ucast' => $this->maxUcast(),
@@ -133,12 +135,12 @@ final class RekordyService
     {
         // Literal-string select kvůli selectRaw (PHPStan L10).
         $select = match ($col) {
-            'pocet' => 'edi_entries.callsign as znacka, edi_entries.round_id as round_id, edi_rounds.name as nazev, edi_entries.qso_count as value',
+            'qso_count' => 'edi_entries.callsign as znacka, edi_entries.round_id as round_id, edi_rounds.name as nazev, edi_entries.qso_count as value',
             'multiplier' => 'edi_entries.callsign as znacka, edi_entries.round_id as round_id, edi_rounds.name as nazev, edi_entries.multiplier as value',
             default => 'edi_entries.callsign as znacka, edi_entries.round_id as round_id, edi_rounds.name as nazev, edi_entries.points as value',
         };
         $orderCol = match ($col) {
-            'pocet' => 'edi_entries.qso_count',
+            'qso_count' => 'edi_entries.qso_count',
             'multiplier' => 'edi_entries.multiplier',
             default => 'edi_entries.points',
         };

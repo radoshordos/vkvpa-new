@@ -71,8 +71,8 @@ Route::get('/vysledky/rocni', [VysledkyController::class, 'rocni'])->name('rocni
 Route::get('/vysledky/{kolo?}', [VysledkyController::class, 'listina'])->name('vysledkova_listina')->whereNumber('kolo');
 
 // Veřejné statistiky kol (souhrn, mapy, žebříčky) – zveřejňují se jen
-// vyhodnocená kola (detail jinak vrací 404). /statistiky je rozcestník.
-Route::get('/statistiky', [StatistikyController::class, 'index'])->name('statistiky.index');
+// vyhodnocená kola (detail jinak vrací 404). /statistiky-kol je rozcestník.
+Route::get('/statistiky-kol', [StatistikyController::class, 'index'])->name('statistiky.index');
 // Literální segment „stanice" musí stát PŘED wildcard {kolo}.
 Route::get('/statistiky/stanice/{znacka}', [StatistikyController::class, 'stanice'])
     ->where('znacka', '[A-Za-z0-9]+')->name('statistiky.stanice');
