@@ -36,7 +36,7 @@ class AuthorizationEdgeCasesTest extends TestCase
             'name' => 'Testovací kolo',
             'note' => '',
         ]);
-        $kat = EdiCategory::create(['name' => '144 MHz SO', 'band' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
+        $kat = EdiCategory::create(['name' => '144 MHz SO', 'section' => 'SO', 'variant' => 'domestic']);
 
         return EdiEntry::create([
             'round_id' => $kolo->id,
@@ -168,7 +168,7 @@ class AuthorizationEdgeCasesTest extends TestCase
             'name' => 'Aktivní kolo',
             'note' => '',
         ]);
-        $kat = EdiCategory::create(['name' => 'A', 'band' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
+        $kat = EdiCategory::create(['name' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
 
         $this->post('/hlaseni', [
             'kolo' => $kolo->id,

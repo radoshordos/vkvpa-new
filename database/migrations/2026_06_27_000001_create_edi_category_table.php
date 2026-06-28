@@ -13,17 +13,17 @@ use Illuminate\Support\Facades\Schema;
  *
  * Kategorie závodu je zde rozložená do tří explicitních os místo toho, aby
  * byly „zašifrované" v textovém názvu/zkratce:
- *   band    – pásmo včetně jednotky ('144 MHz', '432 MHz', '1.3 GHz', … '122 GHz');
- *             shodné s výstupem CategoryResolver::band(), takže párování je triviální.
- *   band_id – normalizovaný FK do číselníku pásem `edi_bands` (zdroj pravdy);
- *             nullable, protože syntetické (testovací) řádky mívají neznámé pásmo.
+ *   band_id – normalizovaný FK do číselníku pásem `edi_bands` (jediný zdroj
+ *             pravdy o pásmu; název se čte přes relaci). Nullable, protože
+ *             syntetické (testovací) řádky mívají neznámé pásmo (NULL).
  *   section – sekce: 'SO' (single op) / 'MO' (multi op).
  *   variant – 'domestic' (tuzemská OK/OL) / 'dx' (zahraniční stanice).
  *
  * `dxid` váže DX řádek na jeho tuzemský protějšek (stejné band+section,
  * variant='domestic'); u tuzemských řádků je NULL. Self-FK na `edi_category.id`.
- * Přirozený klíč (band, section, variant) je unikátní – jedna kombinace =
- * jedna kategorie.
+ * Přirozený klíč (band_id, section, variant) je unikátní – jedna kombinace =
+ * jedna kategorie. NULL band_id se v unikátu chová jako různý (SQL), takže
+ * syntetické řádky bez pásma spolu nekolidují.
  */
 return new class extends Migration
 {
@@ -34,15 +34,13 @@ return new class extends Migration
             $table->collation = 'utf8mb4_unicode_ci';
 
             $table->integer('id', true);
-            $table->string('band', 10);                // pásmo s jednotkou ('144 MHz', '1.3 GHz', …)
-            $table->integer('band_id')->nullable();    // FK → edi_bands.id (zdroj pravdy); NULL = neznámé pásmo
+            $table->integer('band_id')->nullable();    // FK → edi_bands.id (zdroj pravdy o pásmu); NULL = neznámé
             $table->enum('section', ['SO', 'MO']);     // single op / multi op
             $table->enum('variant', ['domestic', 'dx']);
             $table->string('name', 50);                // čitelný název pro UI
             $table->integer('dxid')->nullable();       // tuzemský protějšek DX řádku; NULL = je tuzemská
 
-            $table->unique(['band', 'section', 'variant'], 'edi_category_band_section_variant_unique');
-            $table->index('band_id', 'edi_category_band_id_index');
+            $table->unique(['band_id', 'section', 'variant'], 'edi_category_band_section_variant_unique');
             $table->index('dxid', 'edi_category_dxid_index');
         });
 

@@ -32,7 +32,7 @@ final class CategoryResolver
 
     /**
      * Aliasy pásem (klíč = velkými písmeny, oříznuto) → kanonické pásmo
-     * s jednotkou, shodné se sloupcem `edi_category.band`.
+     * s jednotkou, shodné se sloupcem `edi_bands.name`.
      */
     private const array BANDS = [
         '144 MHZ' => '144 MHz', '145 MHZ' => '144 MHz', '144' => '144 MHz', '145' => '144 MHz',
@@ -103,7 +103,8 @@ final class CategoryResolver
     {
         /** @var array<string, int> */
         return Cache::rememberForever(self::CACHE_KEY, static fn (): array => EdiCategory::query()
-            ->get(['id', 'band', 'section', 'variant'])
+            ->join('edi_bands', 'edi_bands.id', '=', 'edi_category.band_id')
+            ->get(['edi_category.id', 'edi_bands.name as band', 'edi_category.section', 'edi_category.variant'])
             ->mapWithKeys(static fn (EdiCategory $c): array => [
                 "{$c->band}|{$c->section}|{$c->variant}" => $c->id,
             ])

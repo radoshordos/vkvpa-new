@@ -34,7 +34,7 @@ class ScoringServiceTest extends TestCase
 
     private function category(): EdiCategory
     {
-        return EdiCategory::create(['name' => 'A', 'band' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
+        return EdiCategory::create(['name' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
     }
 
     /**

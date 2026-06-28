@@ -244,7 +244,7 @@ class EdiVizualizaceTest extends TestCase
             'p_band' => '144 MHz', 'r_name' => 'B', 'r_emai' => 'b@b.cz', 's_powe' => 100,
         ]);
 
-        $kategorie = EdiCategory::create(['name' => '144 MHz', 'band' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
+        $kategorie = EdiCategory::create(['name' => '144 MHz', 'section' => 'SO', 'variant' => 'domestic']);
 
         foreach ([[$head, 'OK2KJT'], [$rival, 'OK1BBB']] as [$h, $znacka]) {
             EdiEntry::create([

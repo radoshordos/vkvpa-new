@@ -38,7 +38,7 @@ class SendEdiMailsListenerTest extends TestCase
             'name' => 'Testovací kolo',
             'note' => '',
         ]);
-        $kat = EdiCategory::create(['name' => '144 MHz', 'band' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
+        $kat = EdiCategory::create(['name' => '144 MHz', 'section' => 'SO', 'variant' => 'domestic']);
 
         $this->data = EdiEntry::create([
             'round_id' => $kolo->id,

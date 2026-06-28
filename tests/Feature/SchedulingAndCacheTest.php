@@ -33,7 +33,7 @@ class SchedulingAndCacheTest extends TestCase
 
     public function test_yearly_results_are_cached_until_rank_round_invalidates(): void
     {
-        $kat = EdiCategory::create(['name' => 'A', 'band' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
+        $kat = EdiCategory::create(['name' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
         $kolo = $this->round('1. kolo 2026', now()->addDay()->toDateTimeString());
 
         $row = EdiEntry::create([

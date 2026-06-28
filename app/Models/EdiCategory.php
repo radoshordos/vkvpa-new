@@ -19,26 +19,27 @@ use Override;
  * kategorií aplikace (dříve duplicitní `vkvpa_kategorie` byla zrušena).
  *
  * Místo textové zkratky/názvu nese dotazovatelné sloupce; pro zpětnou
- * kompatibilitu nabízí čtené atributy `nazev` (= `name`) a `zkratka`
- * (generovaná z os). `dxid` váže DX řádek na tuzemský protějšek (stejné
- * band+section, variant='domestic'); u tuzemských řádků je NULL.
+ * kompatibilitu nabízí čtené atributy `nazev` (= `name`), `band` (název pásma
+ * z číselníku `edi_bands`) a `zkratka` (generovaná z os). `dxid` váže DX řádek
+ * na tuzemský protějšek (stejné band+section, variant='domestic'); u tuzemských
+ * řádků je NULL.
  *
- * Pásmo je vedeno dvojicí: textový `band` ('144 MHz') pro čtení/zobrazení a
- * normalizovaný `band_id` (FK → `edi_bands`, zdroj pravdy) pro reálné kategorie;
- * u syntetických (testovacích) řádků s neznámým pásmem může být `band_id` NULL.
+ * Pásmo je normalizované: `band_id` (FK → `edi_bands`) je jediný zdroj pravdy,
+ * název se čte přes relaci `ediBand` (čtený atribut `band`). U syntetických
+ * (testovacích) řádků s neznámým pásmem je `band_id` NULL.
  *
  * @property int $id
- * @property string $band pásmo s jednotkou ('144 MHz', '432 MHz', '1.3 GHz', … '122 GHz')
  * @property int|null $band_id FK → edi_bands.id (číselník pásem); NULL u neznámého pásma
  * @property string $section 'SO' (single op) | 'MO' (multi op)
  * @property string $variant 'domestic' (tuzemská OK/OL) | 'dx' (zahraniční)
  * @property string $name čitelný název pro UI
  * @property int|null $dxid id tuzemského protějšku DX řádku; NULL = tato kategorie JE tuzemská
+ * @property-read string $band název pásma z `edi_bands` ('144 MHz', '1.3 GHz', …); čtený přes band_id
  * @property-read string $nazev alias pro `name` (zpětná kompatibilita)
  * @property-read string $zkratka generovaná zkratka ('144 SO', '144 SO DX')
  * @property-read EdiBand|null $ediBand pásmo z číselníku (přes band_id)
  */
-#[Fillable(['id', 'band', 'band_id', 'section', 'variant', 'name', 'dxid'])]
+#[Fillable(['id', 'band_id', 'section', 'variant', 'name', 'dxid'])]
 #[Table(name: 'edi_category', key: 'id')]
 #[WithoutTimestamps]
 class EdiCategory extends Model
@@ -107,6 +108,40 @@ class EdiCategory extends Model
     }
 
     /**
+     * Název pásma ('144 MHz', '1.3 GHz', …). Pokud byl dotaz JOINnut na
+     * `edi_bands` a alias `band` je v atributech (hromadné dotazy), vrátí ho
+     * přímo; jinak dohledá přes relaci `ediBand` (band_id). U neznámého pásma
+     * (band_id NULL) vrací prázdný řetězec.
+     *
+     * @return Attribute<string, never>
+     */
+    protected function band(): Attribute
+    {
+        return Attribute::get(function (mixed $value, array $attributes): string {
+            // Hromadné dotazy JOINují edi_bands a aliasují název jako 'band'
+            // (i NULL u neznámého pásma) – v tom případě relaci vůbec neřešíme.
+            if (array_key_exists('band', $attributes)) {
+                return is_string($value) ? $value : '';
+            }
+
+            if ($this->band_id === null) {
+                return '';
+            }
+
+            // Samostatný model: pokud je relace načtená, vezmi ji; jinak
+            // explicitní dotaz přes relaci (ne lazy-load, projde i s
+            // preventLazyLoading v testech).
+            if ($this->relationLoaded('ediBand')) {
+                return (string) $this->ediBand?->name;
+            }
+
+            $name = $this->ediBand()->value('name');
+
+            return is_string($name) ? $name : '';
+        });
+    }
+
+    /**
      * Generovaná zkratka z os, např. '144 SO' / '144 SO DX'.
      *
      * @return Attribute<string, never>
@@ -128,7 +163,9 @@ class EdiCategory extends Model
      */
     public static function zkratkaMap(): Collection
     {
-        return self::query()->get(['id', 'band', 'section', 'variant'])
+        return self::query()
+            ->leftJoin('edi_bands', 'edi_bands.id', '=', 'edi_category.band_id')
+            ->get(['edi_category.id', 'edi_bands.name as band', 'edi_category.section', 'edi_category.variant'])
             ->mapWithKeys(static fn (self $c): array => [$c->id => $c->zkratka]);
     }
 

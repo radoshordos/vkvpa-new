@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\EdiBand;
 use App\Models\EdiCategory;
 use App\Models\EdiEntry;
 use App\Models\EdiRound;
@@ -45,12 +46,36 @@ class KategorieControllerTest extends TestCase
         ], $overrides);
     }
 
+    /** id pásma z číselníku podle názvu ('47 GHz' → edi_bands.id). */
+    private function bandId(string $name): int
+    {
+        $id = EdiBand::query()->where('name', $name)->value('id');
+
+        return is_int($id) ? $id : 0;
+    }
+
+    /**
+     * Vytvoří kategorii přímo (mimo HTTP) – přeloží `band` název na `band_id`
+     * (textový sloupec band už neexistuje).
+     *
+     * @param  array<string, mixed>  $overrides
+     */
+    private function createCategory(array $overrides = []): EdiCategory
+    {
+        $data = $this->payload($overrides);
+        $band = $data['band'];
+        $data['band_id'] = $this->bandId(is_string($band) ? $band : '');
+        unset($data['band']);
+
+        return EdiCategory::create($data);
+    }
+
     // ------------------------------------------------------------------
     // index
 
     public function test_index_renders_for_admin(): void
     {
-        EdiCategory::create($this->payload(['band' => '47 GHz']));
+        $this->createCategory(['band' => '47 GHz']);
 
         $this->actingAs($this->admin())
             ->get(route('kategorie.index'))
@@ -73,7 +98,7 @@ class KategorieControllerTest extends TestCase
             'starts_at' => '2026-06-21 08:00:00',
             'closes_at' => '2026-06-26 23:59:59',
         ]);
-        $kat = EdiCategory::create($this->payload(['name' => '144 MHz SO', 'band' => '47 GHz']));
+        $kat = $this->createCategory(['name' => '144 MHz SO', 'band' => '47 GHz']);
 
         foreach (['OK1AAA', 'OK1BBB', 'OK1CCC'] as $znacka) {
             EdiEntry::create([
@@ -104,7 +129,7 @@ class KategorieControllerTest extends TestCase
 
         $this->assertDatabaseHas('edi_category', [
             'name' => '144 MHz single op',
-            'band' => '47 GHz',
+            'band_id' => $this->bandId('47 GHz'),
             'section' => 'SO',
             'variant' => 'domestic',
         ]);
@@ -112,7 +137,7 @@ class KategorieControllerTest extends TestCase
 
     public function test_store_creates_dx_kategorie_with_dxid(): void
     {
-        $domestic = EdiCategory::create($this->payload(['band' => '47 GHz']));
+        $domestic = $this->createCategory(['band' => '47 GHz']);
 
         $this->actingAs($this->admin())
             ->post(route('kategorie.store'), $this->payload([
@@ -156,7 +181,7 @@ class KategorieControllerTest extends TestCase
 
     public function test_store_rejects_duplicate_band_section_variant(): void
     {
-        EdiCategory::create($this->payload(['band' => '47 GHz']));
+        $this->createCategory(['band' => '47 GHz']);
 
         $this->actingAs($this->admin())
             ->post(route('kategorie.store'), $this->payload(['band' => '47 GHz']))
@@ -175,7 +200,7 @@ class KategorieControllerTest extends TestCase
         $this->post(route('kategorie.store'), $this->payload(['band' => '47 GHz']))
             ->assertRedirect(route('login'));
 
-        $this->assertDatabaseMissing('edi_category', ['band' => '47 GHz']);
+        $this->assertDatabaseMissing('edi_category', ['band_id' => $this->bandId('47 GHz')]);
     }
 
     // ------------------------------------------------------------------
@@ -183,7 +208,7 @@ class KategorieControllerTest extends TestCase
 
     public function test_edit_renders_form_with_existing_data(): void
     {
-        $kat = EdiCategory::create($this->payload(['name' => 'Mistrovska kategorie', 'band' => '47 GHz']));
+        $kat = $this->createCategory(['name' => 'Mistrovska kategorie', 'band' => '47 GHz']);
 
         $this->actingAs($this->admin())
             ->get(route('kategorie.edit', $kat->id))
@@ -193,7 +218,7 @@ class KategorieControllerTest extends TestCase
 
     public function test_edit_requires_admin(): void
     {
-        $kat = EdiCategory::create($this->payload(['band' => '47 GHz']));
+        $kat = $this->createCategory(['band' => '47 GHz']);
 
         $this->get(route('kategorie.edit', $kat->id))
             ->assertRedirect(route('login'));
@@ -201,7 +226,7 @@ class KategorieControllerTest extends TestCase
 
     public function test_update_saves_changes(): void
     {
-        $kat = EdiCategory::create($this->payload(['name' => 'Stary nazev', 'band' => '47 GHz']));
+        $kat = $this->createCategory(['name' => 'Stary nazev', 'band' => '47 GHz']);
 
         $this->actingAs($this->admin())
             ->patch(route('kategorie.update', $kat->id), $this->payload([
@@ -214,13 +239,13 @@ class KategorieControllerTest extends TestCase
         $this->assertDatabaseHas('edi_category', [
             'id' => $kat->id,
             'name' => 'Nový název',
-            'band' => '76 GHz',
+            'band_id' => $this->bandId('76 GHz'),
         ]);
     }
 
     public function test_update_requires_admin(): void
     {
-        $kat = EdiCategory::create($this->payload(['band' => '47 GHz']));
+        $kat = $this->createCategory(['band' => '47 GHz']);
 
         $this->patch(route('kategorie.update', $kat->id), $this->payload(['name' => 'Zmeneno', 'band' => '47 GHz']))
             ->assertRedirect(route('login'));
@@ -230,7 +255,7 @@ class KategorieControllerTest extends TestCase
 
     public function test_update_validates_required_fields(): void
     {
-        $kat = EdiCategory::create($this->payload(['band' => '47 GHz']));
+        $kat = $this->createCategory(['band' => '47 GHz']);
 
         $this->actingAs($this->admin())
             ->patch(route('kategorie.update', $kat->id), $this->payload([

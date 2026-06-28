@@ -26,7 +26,7 @@ class HlaseniTest extends TestCase
             'name' => 'Testovací kolo',
             'note' => '',
         ]);
-        $kat = EdiCategory::create(['name' => '144 MHz', 'band' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
+        $kat = EdiCategory::create(['name' => '144 MHz', 'section' => 'SO', 'variant' => 'domestic']);
 
         return [$kolo, $kat];
     }
@@ -271,7 +271,7 @@ class HlaseniTest extends TestCase
             'name' => 'Nadcházející kolo',
             'note' => '',
         ]);
-        $kat = EdiCategory::create(['name' => 'A', 'band' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
+        $kat = EdiCategory::create(['name' => 'A', 'section' => 'SO', 'variant' => 'domestic']);
 
         $this->post('/hlaseni', $this->payload($kolo->id, $kat->id))
             ->assertSessionHasErrors('kolo');

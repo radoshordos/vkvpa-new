@@ -11,12 +11,11 @@ use App\Services\Edi\CategoryResolver;
  * Naplní `edi_category` přemapováním 42 řádků z `vkvpa_kategorie`.
  *
  * Původní `id` se zachovávají (včetně historických mezer 37/40/41), aby šlo
- * případné `edi_entries.category_id` později přesměrovat 1:1. `band` nese
- * jednotku ('144 MHz' / '1.3 GHz') a `band_id` je normalizovaný FK do číselníku
- * `edi_bands` (párováno přes kanonický token); `name` se generuje jednotně z os
- * (odpadají historické překlepy). `dxid` u DX řádků ukazuje na tuzemský protějšek
- * se shodným band+section; u tuzemských řádků je NULL. Pásmo 122 GHz nemá DX.
- * Musí běžet AŽ PO {@see EdiBandTableSeeder}.
+ * případné `edi_entries.category_id` později přesměrovat 1:1. `band_id` je
+ * normalizovaný FK do číselníku `edi_bands` (párováno přes kanonický token);
+ * `name` se generuje jednotně z os (odpadají historické překlepy). `dxid` u DX
+ * řádků ukazuje na tuzemský protějšek se shodným band+section; u tuzemských
+ * řádků je NULL. Pásmo 122 GHz nemá DX. Musí běžet AŽ PO {@see EdiBandTableSeeder}.
  */
 class EdiCategoryTableSeeder extends JsonTableSeeder
 {
@@ -71,7 +70,7 @@ class EdiCategoryTableSeeder extends JsonTableSeeder
     ];
 
     /**
-     * @return list<array{id: int, band: string, band_id: int, section: string, variant: string, name: string, dxid: int|null}>
+     * @return list<array{id: int, band_id: int, section: string, variant: string, name: string, dxid: int|null}>
      */
     protected function rows(): array
     {
@@ -87,7 +86,6 @@ class EdiCategoryTableSeeder extends JsonTableSeeder
         foreach (self::MAP as $id => [$token, $section, $variant]) {
             $rows[] = [
                 'id' => $id,
-                'band' => self::BAND_LABELS[$token],
                 'band_id' => EdiBand::idForToken($token),
                 'section' => $section,
                 'variant' => $variant,
