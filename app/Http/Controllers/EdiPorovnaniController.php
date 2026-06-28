@@ -8,6 +8,7 @@ use App\Models\Edihead;
 use App\Services\Edi\DenikStatistiky;
 use App\Services\Edi\PorovnaniRivals;
 use App\Services\Edi\QsoGeometry;
+use App\Services\Edi\StatistikyInkubator;
 use App\Support\ContestWindow;
 use App\Support\Maidenhead;
 use Illuminate\Http\Request;
@@ -29,6 +30,7 @@ class EdiPorovnaniController extends Controller
         private readonly QsoGeometry $geometry,
         private readonly PorovnaniRivals $porovnani,
         private readonly DenikStatistiky $stats,
+        private readonly StatistikyInkubator $inkubator,
     ) {}
 
     public function show(Request $request, Edihead $head): View
@@ -91,6 +93,9 @@ class EdiPorovnaniController extends Controller
             'window' => ['from' => $fromMin, 'to' => $toMin],
             'rivals' => $rivals,
             'compare' => $compare,
+            // Animovaný „závod skóre" (já + TOP 5 pole) – nezávislý na výběru
+            // jednoho soupeře; null, dokud kolo není uzavřené nebo nemá soupeře.
+            'zavod' => $this->inkubator->zavodPole($head, $home, $homeSq),
             'cumulative' => $cumulative,
             'rivalCumulative' => $rivalCumulative,
             'timeline' => $timeline,

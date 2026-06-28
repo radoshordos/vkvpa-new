@@ -14,6 +14,7 @@
   @vite('resources/js/porovnani.js')
   <style>
     #por-mapa { height: 52vh; width: 100%; border-radius: .5rem; isolation: isolate; }
+    #race-cas { accent-color: var(--color-brand, #3b82f6); }
   </style>
 @endpush
 
@@ -27,6 +28,7 @@ window.__porovnaniConfig = {
     home: @json($home),
     window: @json($window),
     compare: @json($compare),
+    zavod: @json($zavod),
     cumulative: @json($cumulative),
     rivalCumulative: @json($rivalCumulative),
     timeline: @json($timeline),
@@ -58,6 +60,20 @@ window.__porovnaniConfig = {
       @endforeach
     </select>
   </form>
+
+  {{-- ── Závod skóre (animace po minutách) – já + TOP 5 pole kategorie ──── --}}
+  @if ($zavod !== null)
+    <div class="rounded-lg border border-line bg-surface p-3 mb-5">
+      <div class="text-sm font-semibold text-heading mb-2">Závod skóre — {{ $pcall }} vs. TOP pole kategorie</div>
+      <div class="flex items-center gap-3 mb-2 flex-wrap">
+        <button type="button" id="race-play" class="text-sm rounded border border-line bg-surface text-heading px-3 py-1 hover:bg-brand hover:text-white">▶ Přehrát</button>
+        <input type="range" id="race-cas" class="flex-1 min-w-40" min="{{ $window['from'] }}" max="{{ $window['to'] }}" value="{{ $window['to'] }}" step="1">
+        <span class="text-sm font-mono font-semibold text-heading" id="race-cas-label"></span>
+      </div>
+      <div class="h-72"><canvas id="chartZavod"></canvas></div>
+      <p class="text-xs text-muted mt-2">Kumulativní skóre rostoucí po minutách — kdo vedl kdy a kde tě soupeř předjel. Posuvníkem zastavíš čas.</p>
+    </div>
+  @endif
 
   @if ($compare === null)
     <p class="text-sm text-muted mb-4">{{ __('pages.porovnani.pick_hint') }}</p>

@@ -214,6 +214,92 @@ if (azimuthEl && cfg.compare && cfg.azimuth) {
     }));
 }
 
+// ── Závod skóre (animace po minutách) – já + TOP 5 pole kategorie ──────────
+// Surová kumulativní data (bod v čase každého QSO) na lineární časové ose;
+// posuvník po minutách prodlužuje schodové čáry minutu po minutě. Nezávislé
+// na výběru jednoho soupeře – server data vydá až po uzávěrce (cfg.zavod null).
+
+const zavodEl = document.getElementById('chartZavod');
+
+if (zavodEl && cfg.zavod) {
+    const palette = ['#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
+    const raceSeries = [{ call: cfg.pcall, raw: cfg.zavod.mine, color: '#3b82f6', mine: true }]
+        .concat(cfg.zavod.race.map((r, i) => ({ call: r.call, raw: r.body, color: palette[i % palette.length], mine: false })));
+
+    const seriesTo = (raw, time) => {
+        const pts = [{ x: cfg.window.from, y: 0 }];
+        let last = 0;
+        for (const p of raw) {
+            if (p.t > time) break;
+            pts.push({ x: p.t, y: p.body });
+            last = p.body;
+        }
+        pts.push({ x: time, y: last });
+        return pts;
+    };
+
+    const raceChart = new Chart(zavodEl, {
+        type: 'line',
+        data: {
+            datasets: raceSeries.map((s) => ({
+                label: s.call,
+                data: seriesTo(s.raw, cfg.window.to),
+                borderColor: s.color,
+                backgroundColor: s.color,
+                borderWidth: s.mine ? 3 : 1.5,
+                pointRadius: 0,
+                stepped: true,
+            })),
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            animation: false,
+            plugins: {
+                legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } },
+                title: { display: true, text: t.title_race || 'Závod skóre v čase', font: { size: 13 } },
+                tooltip: { callbacks: { title: (its) => (its.length ? hhmm(its[0].parsed.x) + ' UTC' : '') } },
+            },
+            scales: {
+                x: { type: 'linear', min: cfg.window.from, max: cfg.window.to, ticks: { stepSize: 15, callback: (v) => hhmm(v) }, grid: { display: false } },
+                y: { beginAtZero: true },
+            },
+        },
+    });
+    charts.push(raceChart);
+
+    const slider = document.getElementById('race-cas');
+    const label = document.getElementById('race-cas-label');
+    const playBtn = document.getElementById('race-play');
+
+    function applyRace(time) {
+        raceChart.data.datasets.forEach((ds, di) => { ds.data = seriesTo(raceSeries[di].raw, time); });
+        raceChart.update('none');
+        label.textContent = hhmm(time) + ' UTC';
+    }
+
+    let timer = null;
+    function stop() { if (timer) { clearInterval(timer); timer = null; } playBtn.textContent = '▶ Přehrát'; }
+    function raceTick() {
+        const time = Number(slider.value) + 1;
+        slider.value = String(time);
+        applyRace(time);
+        if (time >= cfg.window.to) stop();
+    }
+
+    slider.addEventListener('input', () => { stop(); applyRace(Number(slider.value)); });
+    playBtn.addEventListener('click', () => {
+        if (timer) { stop(); return; }
+        let time = Number(slider.value);
+        if (time >= cfg.window.to) time = cfg.window.from;
+        slider.value = String(time);
+        applyRace(time);
+        playBtn.textContent = '⏸ Pauza';
+        timer = setInterval(raceTick, 60);
+    });
+
+    applyRace(cfg.window.to);
+}
+
 // Živé přebarvení grafů při přepnutí denního/nočního režimu (třída .dark na <html>).
 new MutationObserver(() => {
     applyChartTheme();
