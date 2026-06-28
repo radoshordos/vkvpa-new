@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\Schema;
  * byly „zašifrované" v textovém názvu/zkratce:
  *   band    – pásmo včetně jednotky ('144 MHz', '432 MHz', '1.3 GHz', … '122 GHz');
  *             shodné s výstupem CategoryResolver::band(), takže párování je triviální.
+ *   band_id – normalizovaný FK do číselníku pásem `edi_bands` (zdroj pravdy);
+ *             nullable, protože syntetické (testovací) řádky mívají neznámé pásmo.
  *   section – sekce: 'SO' (single op) / 'MO' (multi op).
  *   variant – 'domestic' (tuzemská OK/OL) / 'dx' (zahraniční stanice).
  *
@@ -32,13 +34,15 @@ return new class extends Migration
             $table->collation = 'utf8mb4_unicode_ci';
 
             $table->integer('id', true);
-            $table->string('band', 10);             // pásmo s jednotkou ('144 MHz', '1.3 GHz', …)
-            $table->enum('section', ['SO', 'MO']);  // single op / multi op
+            $table->string('band', 10);                // pásmo s jednotkou ('144 MHz', '1.3 GHz', …)
+            $table->integer('band_id')->nullable();    // FK → edi_bands.id (zdroj pravdy); NULL = neznámé pásmo
+            $table->enum('section', ['SO', 'MO']);     // single op / multi op
             $table->enum('variant', ['domestic', 'dx']);
-            $table->string('name', 50);             // čitelný název pro UI
-            $table->integer('dxid')->nullable();    // tuzemský protějšek DX řádku; NULL = je tuzemská
+            $table->string('name', 50);                // čitelný název pro UI
+            $table->integer('dxid')->nullable();       // tuzemský protějšek DX řádku; NULL = je tuzemská
 
             $table->unique(['band', 'section', 'variant'], 'edi_category_band_section_variant_unique');
+            $table->index('band_id', 'edi_category_band_id_index');
             $table->index('dxid', 'edi_category_dxid_index');
         });
 
@@ -49,6 +53,12 @@ return new class extends Migration
                 $table->foreign('dxid', 'edi_category_dxid_foreign')
                     ->references('id')->on('edi_category')
                     ->nullOnDelete();
+
+                // band_id míří do číselníku pásem (edi_bands); mazání pásma se
+                // nesmí kaskádovat – restrictOnDelete (NULL je povolen u neznámého).
+                $table->foreign('band_id', 'edi_category_band_id_foreign')
+                    ->references('id')->on('edi_bands')
+                    ->restrictOnDelete();
             });
 
             // edi_category je jediný číselník kategorií (vkvpa_kategorie zrušena).

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Admin;
 
+use App\Models\EdiBand;
 use App\Models\EdiCategory;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -12,18 +13,39 @@ use Override;
 /**
  * Validace vytvoření i úpravy kategorie `edi_category` (pravidla jsou shodná).
  * Přístup řeší middleware „admin" na routě.
+ *
+ * Formulář posílá pásmo jako název (`band`, např. '144 MHz') z číselníku
+ * `edi_bands`; {@see self::toModel()} ho zapíše jako textový `band` a zároveň
+ * doplní normalizovaný `band_id` (FK do `edi_bands`).
  */
 class KategorieRequest extends FormRequest
 {
-    /** Povolená pásma (shodná se sloupcem `edi_category.band`). */
-    public const array BANDS = [
-        '144 MHz', '432 MHz', '1.3 GHz', '2.3 GHz', '3.4 GHz', '5.7 GHz',
-        '10 GHz', '24 GHz', '47 GHz', '76 GHz', '122 GHz',
-    ];
-
     public function authorize(): bool
     {
         return true;
+    }
+
+    /**
+     * Povolené názvy pásem z číselníku `edi_bands` (zdroj pravdy).
+     *
+     * @return array<int, string>
+     */
+    public static function bands(): array
+    {
+        return EdiBand::query()->orderBy('id')->get()
+            ->map(static fn (EdiBand $b): string => $b->name)
+            ->values()
+            ->all();
+    }
+
+    /** id pásma podle zaslaného názvu (`band`), nebo null když je neznámý. */
+    private function bandId(): ?int
+    {
+        $id = EdiBand::query()
+            ->where('name', $this->string('band')->value())
+            ->value('id');
+
+        return is_int($id) ? $id : null;
     }
 
     /**
@@ -39,7 +61,7 @@ class KategorieRequest extends FormRequest
             // automaticky). Při úpravě se ID nemění – pole se neposílá.
             'id' => ['nullable', 'integer', 'min:1', Rule::unique('edi_category', 'id')],
             'name' => ['required', 'string', 'max:50'],
-            'band' => ['required', Rule::in(self::BANDS)],
+            'band' => ['required', Rule::in(self::bands())],
             'section' => ['required', Rule::in(['SO', 'MO'])],
             // Přirozený klíč band+section+variant je unikátní (jedna kombinace =
             // jedna kategorie); kontrolujeme přes variant s where na band+section.
@@ -85,6 +107,7 @@ class KategorieRequest extends FormRequest
         $data = [
             'name' => $this->string('name')->value(),
             'band' => $this->string('band')->value(),
+            'band_id' => $this->bandId(),
             'section' => $this->string('section')->value(),
             'variant' => $this->string('variant')->value(),
             'dxid' => $this->filled('dxid') ? $this->integer('dxid') : null,
