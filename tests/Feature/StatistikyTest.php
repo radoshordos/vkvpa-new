@@ -225,6 +225,77 @@ class StatistikyTest extends TestCase
             ->assertSee(route('statistiky.stanice', ['znacka' => 'OK1AAA'], false));
     }
 
+    public function test_pasma_trend_aggregates_band_share_by_distinct_stations(): void
+    {
+        // Pásma i kategorie jsou předvyplněné kanonickým číselníkem (viz TestCase);
+        // band_id 1 = 144 MHz, 2 = 432 MHz (EdiBand::CANONICAL).
+        $kat144 = $this->category(1, 'SO', 'domestic');
+        $kat144mo = $this->category(1, 'MO', 'domestic'); // jiná kategorie téhož pásma
+        $kat432 = $this->category(2, 'SO', 'domestic');
+
+        $kolo1 = EdiRound::create(['starts_at' => '2026-02-15', 'closes_at' => '2026-02-20 23:59:59', 'name' => '02/2026', 'note' => '', 'evaluated_at' => '2026-02-21 10:00:00']);
+        $kolo2 = EdiRound::create(['starts_at' => '2026-03-15', 'closes_at' => '2026-03-20 23:59:59', 'name' => '03/2026', 'note' => '', 'evaluated_at' => '2026-03-21 10:00:00']);
+
+        // kolo1: 144 = OK1A ve dvou kategoriích téhož pásma (distinct 1) + OK1B
+        // = 2 stanice; 432 = OK1C = 1.
+        $this->bandEntry($kolo1, $kat144, 'OK1A');
+        $this->bandEntry($kolo1, $kat144mo, 'OK1A');
+        $this->bandEntry($kolo1, $kat144, 'OK1B');
+        $this->bandEntry($kolo1, $kat432, 'OK1C');
+        // kolo2: 144 = OK1A = 1; 432 = OK1B, OK1C, OK1D = 3.
+        $this->bandEntry($kolo2, $kat144, 'OK1A');
+        $this->bandEntry($kolo2, $kat432, 'OK1B');
+        $this->bandEntry($kolo2, $kat432, 'OK1C');
+        $this->bandEntry($kolo2, $kat432, 'OK1D');
+
+        $trend = app(KoloStatistiky::class)->prehled($kolo2)['pasmaTrend'];
+
+        $this->assertSame(['02/2026', '03/2026'], array_column($trend['rounds'], 'name'));
+        $this->assertSame([2026, 2026], array_column($trend['rounds'], 'year'));
+        // Pásma v kanonickém pořadí (band_id 1, 2).
+        $this->assertSame(['144', '432'], array_column($trend['bands'], 'token'));
+        // Počty různých značek na pásmu po kolech (distinct napříč duplicitami).
+        $this->assertSame([2, 1], $trend['stanice'][0]); // 144 MHz
+        $this->assertSame([1, 3], $trend['stanice'][1]); // 432 MHz
+    }
+
+    public function test_pasma_trend_renders_chart_on_round_page(): void
+    {
+        $kat = $this->category(1, 'SO', 'domestic');
+
+        $kolo = EdiRound::create(['starts_at' => '2026-03-15', 'closes_at' => '2026-03-20 23:59:59', 'name' => '03/2026', 'note' => '', 'evaluated_at' => '2026-03-21 10:00:00']);
+        $this->bandEntry($kolo, $kat, 'OK1AAA');
+
+        $this->get(route('statistiky.kolo', ['kolo' => $kolo->id]))
+            ->assertOk()
+            ->assertSee('chartPasma')
+            ->assertSee('data-pasma-years="1"', false)
+            ->assertSee(__('pages.stat.chart_pasma'));
+    }
+
+    /** Kategorie daného pásma/sekce/varianty z předseedovaného číselníku. */
+    private function category(int $bandId, string $section, string $variant): EdiCategory
+    {
+        return EdiCategory::query()
+            ->where('band_id', $bandId)
+            ->where('section', $section)
+            ->where('variant', $variant)
+            ->firstOrFail();
+    }
+
+    /** Převzatý záznam listiny s danou kategorií (a tím pásmem) pro daný callsign. */
+    private function bandEntry(EdiRound $kolo, EdiCategory $kat, string $callsign): void
+    {
+        EdiEntry::create([
+            'round_id' => $kolo->id, 'category_id' => $kat->id,
+            'qrp' => false, 'lp' => false, 'callsign' => $callsign, 'locator' => 'JN79AA',
+            'qso_count' => 1, 'qso_points' => 1, 'multiplier' => 1, 'points' => 1,
+            'name' => 'Test', 'email' => 't@t.cz', 'phone' => '', 'note' => '',
+            'soapbox' => '', 'ip' => '', 'edi_head_id' => null,
+            'rank' => 1, 'approved' => true, 'session_id' => '',
+        ]);
+    }
+
     /**
      * Vyhodnocené kolo se dvěma deníky (OK5BIG pracován napříč oběma) a dvěma
      * převzatými záznamy listiny pro žebříčky/souhrn.
