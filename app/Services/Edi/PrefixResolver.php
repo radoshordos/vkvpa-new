@@ -7,7 +7,7 @@ namespace App\Services\Edi;
 use App\Models\Prefix;
 
 /**
- * Přiřazení volací značky k zemi (DXCC) a prefixu z číselníku `prefixes`.
+ * Přiřazení volací značky k zemi (DXCC) a prefixu z číselníku `edi_prefixes`.
  *
  * Hledá nejdelší prefix z tabulky, kterým značka začíná (longest-match) –
  * tak 3znakové prefixy (HB9 vs HB0, OH0 vs OH, UA2 Kaliningrad vs UA1 evropské

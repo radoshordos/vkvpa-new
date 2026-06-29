@@ -51,7 +51,7 @@ class EdiVizualizaceController extends Controller
 
         $multiplier = $this->statistiky->noveNasobice($enriched, $homeSq);
 
-        // Rozpad QSO podle zemí/prefixů (číselník prefixes); koš pro neznámé
+        // Rozpad QSO podle zemí/prefixů (číselník edi_prefixes); koš pro neznámé
         // značky lokalizovaně.
         $prefixy = PrefixResolver::fromDatabase();
         $ostatni = (string) __('pages.viz.country_other');

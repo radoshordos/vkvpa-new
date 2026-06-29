@@ -10,7 +10,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('prefixes', function (Blueprint $table): void {
+        Schema::create('edi_prefixes', function (Blueprint $table): void {
             $table->charset = 'utf8mb4';
             $table->collation = 'utf8mb4_unicode_ci';
 
@@ -24,6 +24,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('prefixes');
+        Schema::dropIfExists('edi_prefixes');
     }
 };

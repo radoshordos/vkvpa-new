@@ -16,7 +16,7 @@ class SampleDatabaseSeeder extends Seeder
     {
         // Pořadí respektuje cizí klíče (na MySQL se vynucují) – rodičovské
         // tabulky se plní dřív než ty, které na ně odkazují: kola+kategorie →
-        // edihead → edilines/edi_entries → discussion_posts. prefixes je bez
+        // edihead → edilines/edi_entries → discussion_posts. edi_prefixes je bez
         // závislostí.
         $this->call([
             EdiRoundTableSeeder::class,
