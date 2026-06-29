@@ -402,7 +402,6 @@ return [
             'stations' => 'protistanic',
             'legend' => 'Legenda',
             'other' => 'Ostatní',
-            'new_mult_legend' => 'Nový násobič',
             'play' => '▶ Přehrát',
             'pause' => '⏸ Pauza',
             'score_pts' => 'b.',
