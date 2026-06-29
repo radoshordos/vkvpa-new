@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Enums\QsoMode;
-use App\Models\Edihead;
-use App\Models\Ediline;
+use App\Models\EdiHead;
+use App\Models\EdiLine;
 use App\Models\EdiRound;
 use App\Services\Edi\BigSquareCount;
 use App\Services\Edi\EdiImportService;
@@ -27,7 +27,7 @@ class QsoGeometryTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function importSample(): Edihead
+    private function importSample(): EdiHead
     {
         $edi = (string) file_get_contents(__DIR__.'/../fixtures/sample.edi');
 
@@ -135,7 +135,7 @@ class QsoGeometryTest extends TestCase
         // Nová stanice nad prahem přidaná po prvním čtení – do vypršení TTL
         // se vrací cachovaná vrstva (po uzávěrce se data reálně nemění).
         foreach (['0830', '0831', '0832', '0833', '0834'] as $t) {
-            Ediline::create(['edihead_id' => $headA->id, 'qso_at' => '2026-03-15 '.substr($t, 0, 2).':'.substr($t, 2, 2).':00', 'call_sign' => 'OK7NEW', 'received_wwl' => 'JO80AA']);
+            EdiLine::create(['edihead_id' => $headA->id, 'qso_at' => '2026-03-15 '.substr($t, 0, 2).':'.substr($t, 2, 2).':00', 'call_sign' => 'OK7NEW', 'received_wwl' => 'JO80AA']);
         }
         $this->assertCount(1, new QsoGeometry()->roundStations($headA));
 
@@ -196,20 +196,20 @@ class QsoGeometryTest extends TestCase
      * Dva deníky v jednom kole pro porovnání: OK5BIG udělali oba, OK9SML jen A,
      * OK7UNI jen B; navíc vzájemné spojení A↔B (z porovnání se vynechává).
      *
-     * @return array{Edihead, Edihead}
+     * @return array{EdiHead, EdiHead}
      */
     private function seedCompareLogs(int $idKola): array
     {
-        $headA = Edihead::create(['round_id' => $idKola, 't_date' => '20260315', 'p_call' => 'OK1AAA', 'p_wwlo' => 'JN79', 'p_band' => '144 MHz', 'r_name' => 'A', 'r_emai' => 'a@a.cz', 's_powe' => 100]);
-        $headB = Edihead::create(['round_id' => $idKola, 't_date' => '20260315', 'p_call' => 'OK1BBB', 'p_wwlo' => 'JN89', 'p_band' => '144 MHz', 'r_name' => 'B', 'r_emai' => 'b@b.cz', 's_powe' => 100]);
+        $headA = EdiHead::create(['round_id' => $idKola, 't_date' => '20260315', 'p_call' => 'OK1AAA', 'p_wwlo' => 'JN79', 'p_band' => '144 MHz', 'r_name' => 'A', 'r_emai' => 'a@a.cz', 's_powe' => 100]);
+        $headB = EdiHead::create(['round_id' => $idKola, 't_date' => '20260315', 'p_call' => 'OK1BBB', 'p_wwlo' => 'JN89', 'p_band' => '144 MHz', 'r_name' => 'B', 'r_emai' => 'b@b.cz', 's_powe' => 100]);
 
-        Ediline::create(['edihead_id' => $headA->id, 'qso_at' => '2026-03-15 08:10:00', 'call_sign' => 'OK5BIG', 'received_wwl' => 'JN99AA']);
-        Ediline::create(['edihead_id' => $headA->id, 'qso_at' => '2026-03-15 08:15:00', 'call_sign' => 'OK9SML', 'received_wwl' => 'JO60AA']);
-        Ediline::create(['edihead_id' => $headA->id, 'qso_at' => '2026-03-15 08:20:00', 'call_sign' => 'OK1BBB', 'received_wwl' => 'JN89AA']);
+        EdiLine::create(['edihead_id' => $headA->id, 'qso_at' => '2026-03-15 08:10:00', 'call_sign' => 'OK5BIG', 'received_wwl' => 'JN99AA']);
+        EdiLine::create(['edihead_id' => $headA->id, 'qso_at' => '2026-03-15 08:15:00', 'call_sign' => 'OK9SML', 'received_wwl' => 'JO60AA']);
+        EdiLine::create(['edihead_id' => $headA->id, 'qso_at' => '2026-03-15 08:20:00', 'call_sign' => 'OK1BBB', 'received_wwl' => 'JN89AA']);
 
-        Ediline::create(['edihead_id' => $headB->id, 'qso_at' => '2026-03-15 08:11:00', 'call_sign' => 'OK5BIG', 'received_wwl' => 'JN99AA']);
-        Ediline::create(['edihead_id' => $headB->id, 'qso_at' => '2026-03-15 08:16:00', 'call_sign' => 'OK7UNI', 'received_wwl' => 'JO70AA']);
-        Ediline::create(['edihead_id' => $headB->id, 'qso_at' => '2026-03-15 08:21:00', 'call_sign' => 'OK1AAA', 'received_wwl' => 'JN79AA']);
+        EdiLine::create(['edihead_id' => $headB->id, 'qso_at' => '2026-03-15 08:11:00', 'call_sign' => 'OK5BIG', 'received_wwl' => 'JN99AA']);
+        EdiLine::create(['edihead_id' => $headB->id, 'qso_at' => '2026-03-15 08:16:00', 'call_sign' => 'OK7UNI', 'received_wwl' => 'JO70AA']);
+        EdiLine::create(['edihead_id' => $headB->id, 'qso_at' => '2026-03-15 08:21:00', 'call_sign' => 'OK1AAA', 'received_wwl' => 'JN79AA']);
 
         return [$headA, $headB];
     }
@@ -219,22 +219,22 @@ class QsoGeometryTest extends TestCase
      * OK9SML jen 1 (neprojde), jedno OK5BIG QSO je mimo závodní okno.
      * Vrací deník A.
      */
-    private function seedRoundLogs(int $idKola): Edihead
+    private function seedRoundLogs(int $idKola): EdiHead
     {
-        $headA = Edihead::create(['round_id' => $idKola, 't_date' => '20260315', 'p_call' => 'OK1AAA', 'p_wwlo' => 'JN79', 'p_band' => '144 MHz', 'r_name' => 'A', 'r_emai' => 'a@a.cz', 's_powe' => 100]);
-        $headB = Edihead::create(['round_id' => $idKola, 't_date' => '20260315', 'p_call' => 'OK1BBB', 'p_wwlo' => 'JN89', 'p_band' => '144 MHz', 'r_name' => 'B', 'r_emai' => 'b@b.cz', 's_powe' => 100]);
+        $headA = EdiHead::create(['round_id' => $idKola, 't_date' => '20260315', 'p_call' => 'OK1AAA', 'p_wwlo' => 'JN79', 'p_band' => '144 MHz', 'r_name' => 'A', 'r_emai' => 'a@a.cz', 's_powe' => 100]);
+        $headB = EdiHead::create(['round_id' => $idKola, 't_date' => '20260315', 'p_call' => 'OK1BBB', 'p_wwlo' => 'JN89', 'p_band' => '144 MHz', 'r_name' => 'B', 'r_emai' => 'b@b.cz', 's_powe' => 100]);
 
         // OK5BIG: 3 QSO v deníku A + 2 v deníku B = 5 napříč kolem → projde (min 5).
         foreach (['0810', '0811', '0812'] as $t) {
-            Ediline::create(['edihead_id' => $headA->id, 'qso_at' => '2026-03-15 '.substr($t, 0, 2).':'.substr($t, 2, 2).':00', 'call_sign' => 'OK5BIG', 'received_wwl' => 'JN99AA']);
+            EdiLine::create(['edihead_id' => $headA->id, 'qso_at' => '2026-03-15 '.substr($t, 0, 2).':'.substr($t, 2, 2).':00', 'call_sign' => 'OK5BIG', 'received_wwl' => 'JN99AA']);
         }
         foreach (['0820', '0821'] as $t) {
-            Ediline::create(['edihead_id' => $headB->id, 'qso_at' => '2026-03-15 '.substr($t, 0, 2).':'.substr($t, 2, 2).':00', 'call_sign' => 'OK5BIG', 'received_wwl' => 'JN99AA']);
+            EdiLine::create(['edihead_id' => $headB->id, 'qso_at' => '2026-03-15 '.substr($t, 0, 2).':'.substr($t, 2, 2).':00', 'call_sign' => 'OK5BIG', 'received_wwl' => 'JN99AA']);
         }
         // OK9SML: jen 1 QSO → neprojde.
-        Ediline::create(['edihead_id' => $headA->id, 'qso_at' => '2026-03-15 08:15:00', 'call_sign' => 'OK9SML', 'received_wwl' => 'JO60AA']);
+        EdiLine::create(['edihead_id' => $headA->id, 'qso_at' => '2026-03-15 08:15:00', 'call_sign' => 'OK9SML', 'received_wwl' => 'JO60AA']);
         // Mimo závodní okno → nezapočítá se (OK5BIG by jinak měl 6).
-        Ediline::create(['edihead_id' => $headA->id, 'qso_at' => '2026-03-15 12:00:00', 'call_sign' => 'OK5BIG', 'received_wwl' => 'JN99AA']);
+        EdiLine::create(['edihead_id' => $headA->id, 'qso_at' => '2026-03-15 12:00:00', 'call_sign' => 'OK5BIG', 'received_wwl' => 'JN99AA']);
 
         return $headA;
     }

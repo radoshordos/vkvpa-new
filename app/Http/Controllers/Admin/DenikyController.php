@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Edihead;
+use App\Models\EdiHead;
 use App\Models\EdiRound;
 use Illuminate\View\View;
 
@@ -14,7 +14,7 @@ class DenikyController extends Controller
 {
     public function index(): View
     {
-        $deniky = Edihead::withCount('lines')
+        $deniky = EdiHead::withCount('lines')
             ->orderByDesc('stamp')
             ->paginate(50);
 

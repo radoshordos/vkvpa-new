@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use App\Models\Edihead;
+use App\Models\EdiHead;
 use App\Models\EdiRound;
 use App\Services\Edi\EdiImportService;
 use App\Services\Edi\EdiParser;
@@ -32,7 +32,7 @@ class SeoTest extends TestCase
         ]);
     }
 
-    private function importSample(): Edihead
+    private function importSample(): EdiHead
     {
         $edi = (string) file_get_contents(__DIR__.'/../fixtures/sample.edi');
 

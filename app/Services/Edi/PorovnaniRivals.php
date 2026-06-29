@@ -6,7 +6,7 @@ namespace App\Services\Edi;
 
 use App\Http\Controllers\EdiPorovnaniController;
 use App\Models\EdiEntry;
-use App\Models\Edihead;
+use App\Models\EdiHead;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 
@@ -30,9 +30,9 @@ final class PorovnaniRivals
      * podle značky. Bez kola, před uzávěrkou nebo bez schváleného záznamu
      * s kategorií se nenabízí nic.
      *
-     * @return EloquentCollection<int, Edihead>
+     * @return EloquentCollection<int, EdiHead>
      */
-    public function rivals(Edihead $head): EloquentCollection
+    public function rivals(EdiHead $head): EloquentCollection
     {
         $query = $this->rivalEntriesQuery($head);
 
@@ -40,7 +40,7 @@ final class PorovnaniRivals
             return new EloquentCollection;
         }
 
-        return Edihead::query()
+        return EdiHead::query()
             ->whereIn('id', $query->pluck('edi_head_id'))
             ->where('round_id', $head->round_id)
             ->orderBy('p_call')
@@ -52,7 +52,7 @@ final class PorovnaniRivals
      * varianta {@see rivals()} pro rozhodnutí, zda zobrazit odkaz na stránku
      * porovnání.
      */
-    public function hasRivals(Edihead $head): bool
+    public function hasRivals(EdiHead $head): bool
     {
         $query = $this->rivalEntriesQuery($head);
 
@@ -67,7 +67,7 @@ final class PorovnaniRivals
      *
      * @return Builder<EdiEntry>|null
      */
-    private function rivalEntriesQuery(Edihead $head): ?Builder
+    private function rivalEntriesQuery(EdiHead $head): ?Builder
     {
         if ($head->round_id === null || ! $this->geometry->roundResultsDisclosable($head)) {
             return null;

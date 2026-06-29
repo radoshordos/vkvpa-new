@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\EdiEntry;
-use App\Models\Edihead;
+use App\Models\EdiHead;
 use App\Models\EdiRound;
 use Illuminate\Http\Response;
 
@@ -85,11 +85,11 @@ class SitemapController extends Controller
             ->pluck('id');
 
         if ($uzavrenaKolaIds->isNotEmpty()) {
-            Edihead::query()
+            EdiHead::query()
                 ->whereIn('round_id', $uzavrenaKolaIds)
                 ->orderByDesc('id')
                 ->get(['id'])
-                ->each(function (Edihead $head) use (&$urls): void {
+                ->each(function (EdiHead $head) use (&$urls): void {
                     $urls[] = ['loc' => route('edi.vizualizace', $head->id), 'lastmod' => null, 'priority' => '0.5'];
                     $urls[] = ['loc' => route('edi.porovnani', $head->id), 'lastmod' => null, 'priority' => '0.3'];
                 });

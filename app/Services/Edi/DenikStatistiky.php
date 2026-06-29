@@ -6,7 +6,7 @@ namespace App\Services\Edi;
 
 use App\Enums\QsoMode;
 use App\Models\EdiEntry;
-use App\Models\Edihead;
+use App\Models\EdiHead;
 use App\Models\EdiRound;
 use App\Support\ContestWindow;
 use App\Support\Maidenhead;
@@ -411,7 +411,7 @@ class DenikStatistiky
      *
      * @return array{celkem: int, radky: list<array{call: string, cas: string, duvod: string}>}
      */
-    public function nezapocitana(Edihead $head): array
+    public function nezapocitana(EdiHead $head): array
     {
         $den = ContestWindow::dateFromTDate((string) $head->t_date);
         $from = ContestWindow::from();
@@ -453,7 +453,7 @@ class DenikStatistiky
      *
      * @return array{labels: list<string>, body: list<int|null>, poradi: list<int|null>}|null
      */
-    public function sezona(Edihead $head): ?array
+    public function sezona(EdiHead $head): ?array
     {
         if ($head->round_id === null) {
             return null;

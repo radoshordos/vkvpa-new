@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services\Edi;
 
-use App\Models\Edihead;
-use App\Models\Ediline;
+use App\Models\EdiHead;
+use App\Models\EdiLine;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -13,12 +13,12 @@ use Illuminate\Support\Facades\DB;
  */
 final class EdiImportService
 {
-    public function import(EdiLog $log, ?int $idKola = null): Edihead
+    public function import(EdiLog $log, ?int $idKola = null): EdiHead
     {
-        return DB::transaction(function () use ($log, $idKola): Edihead {
+        return DB::transaction(function () use ($log, $idKola): EdiHead {
             $h = $log->header;
 
-            $head = Edihead::create([
+            $head = EdiHead::create([
                 'round_id' => $idKola,
                 't_date' => $h->tDate(),
                 'p_call' => $h->pCall(),
@@ -54,7 +54,7 @@ final class EdiImportService
             }
 
             if ($rows !== []) {
-                Ediline::insert($rows);
+                EdiLine::insert($rows);
             }
 
             return $head;

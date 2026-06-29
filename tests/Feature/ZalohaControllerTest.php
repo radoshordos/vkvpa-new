@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Http\Controllers\Admin\ZalohaController;
-use App\Models\Edihead;
+use App\Models\EdiHead;
 use App\Models\EdiRound;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -35,7 +35,7 @@ class ZalohaControllerTest extends TestCase
             'note' => '',
         ]);
 
-        Edihead::create([
+        EdiHead::create([
             'round_id' => $kolo->id, 't_date' => '20260117', 'p_call' => "OK1'ABC",
             'p_wwlo' => 'JN79', 'p_sect' => '', 'p_band' => '144MHz', 'r_name' => 'X',
             's_powe' => 10, 'src' => 'PCall=OK1ABC',

@@ -46,7 +46,7 @@ use Override;
  * @property Carbon|null $submitted_at
  * @property-read EdiRound|null $round
  * @property-read EdiCategory|null $category
- * @property-read Edihead|null $ediHead
+ * @property-read EdiHead|null $ediHead
  *
  * Projekce z {@see ScoringService::yearlyResults()}:
  * @property-read int $kategorie_id
@@ -77,10 +77,10 @@ class EdiEntry extends Model
         return $this->belongsTo(EdiCategory::class, 'category_id', 'id');
     }
 
-    /** @return BelongsTo<Edihead, $this> */
+    /** @return BelongsTo<EdiHead, $this> */
     public function ediHead(): BelongsTo
     {
-        return $this->belongsTo(Edihead::class, 'edi_head_id');
+        return $this->belongsTo(EdiHead::class, 'edi_head_id');
     }
 
     /**

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Edi;
 
-use App\Models\Edihead;
+use App\Models\EdiHead;
 use App\Support\Maidenhead;
 use Illuminate\Support\Collection;
 
@@ -98,7 +98,7 @@ final class StatistikyInkubator
      *     missedStations: list<array{call: string, wwl: string, dist: int|null, kolik: int}>
      * }|null
      */
-    public function analyzaPole(Edihead $head, ?array $home, string $homeSq, int $fromMin, int $toMin): ?array
+    public function analyzaPole(EdiHead $head, ?array $home, string $homeSq, int $fromMin, int $toMin): ?array
     {
         $rivals = $this->rivals->rivals($head);
         if ($rivals->isEmpty()) {
@@ -180,7 +180,7 @@ final class StatistikyInkubator
      *     race: list<array{call: string, body: list<array{t: int, body: int}>}>
      * }|null
      */
-    public function zavodPole(Edihead $head, ?array $home, string $homeSq): ?array
+    public function zavodPole(EdiHead $head, ?array $home, string $homeSq): ?array
     {
         $rivals = $this->rivals->rivals($head);
         if ($rivals->isEmpty()) {

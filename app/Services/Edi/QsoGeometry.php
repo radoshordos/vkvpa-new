@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Services\Edi;
 
 use App\Enums\KoloStav;
-use App\Models\Edihead;
-use App\Models\Ediline;
+use App\Models\EdiHead;
+use App\Models\EdiLine;
 use App\Models\EdiRound;
 use App\Support\Maidenhead;
 use App\Support\VkvpaSettings;
@@ -35,7 +35,7 @@ final class QsoGeometry
      * @param  string  $orderColumn  sloupec řazení (např. 'qso_at' nebo 'received_wwl')
      * @return Collection<int, EnrichedQso>
      */
-    public function enrichedQsos(Edihead $head, ?array $home, string $orderColumn = 'qso_at'): Collection
+    public function enrichedQsos(EdiHead $head, ?array $home, string $orderColumn = 'qso_at'): Collection
     {
         $homeSq = Maidenhead::bigSquare((string) $head->p_wwlo);
 
@@ -43,7 +43,7 @@ final class QsoGeometry
             ->inContestWindow()
             ->orderBy($orderColumn)
             ->get(['lon', 'lat', 'call_sign', 'received_wwl', 'qso_at', 'mode_code'])
-            ->map(function (Ediline $l) use ($home, $head, $homeSq): ?EnrichedQso {
+            ->map(function (EdiLine $l) use ($home, $head, $homeSq): ?EnrichedQso {
                 $lat = $l->lat;
                 $lon = $l->lon;
                 $wwl = $l->receivedWwl;
@@ -97,7 +97,7 @@ final class QsoGeometry
      *
      * @return Collection<int, BigSquareCount>
      */
-    public function bigSquares(Edihead $head): Collection
+    public function bigSquares(EdiHead $head): Collection
     {
         $counts = [];
 
@@ -143,7 +143,7 @@ final class QsoGeometry
      *
      * @return Collection<int, array{lat: float, lon: float, call: string, wwl: string, count: int}>
      */
-    public function roundStations(Edihead $head, int $minQso = 5): Collection
+    public function roundStations(EdiHead $head, int $minQso = 5): Collection
     {
         if (! $this->roundResultsDisclosable($head)) {
             /** @var list<array{lat: float, lon: float, call: string, wwl: string, count: int}> $rows */
@@ -161,7 +161,7 @@ final class QsoGeometry
                 sprintf('vkvpa:round-stations:%d:%d', $head->round_id, $minQso),
                 VkvpaSettings::roundStationsCacheTtl(),
                 fn (): array => $this->computeRoundStations(
-                    Edihead::query()->where('round_id', $head->round_id)->pluck('id')->all(),
+                    EdiHead::query()->where('round_id', $head->round_id)->pluck('id')->all(),
                     $minQso,
                 ),
             );
@@ -182,7 +182,7 @@ final class QsoGeometry
     public function stationsForKolo(int $koloId, int $minQso = 1): array
     {
         return $this->computeRoundStations(
-            Edihead::query()->where('round_id', $koloId)->pluck('id')->all(),
+            EdiHead::query()->where('round_id', $koloId)->pluck('id')->all(),
             $minQso,
         );
     }
@@ -202,7 +202,7 @@ final class QsoGeometry
         $stations = [];
 
         foreach (
-            Ediline::query()
+            EdiLine::query()
                 ->whereIn('edihead_id', $headIds)
                 ->inContestWindow()
                 ->orderBy('qso_at')
@@ -269,7 +269,7 @@ final class QsoGeometry
      * @param  array{lat: float, lon: float}|null  $home  souřadnice domácího QTH tohoto deníku
      * @return array{onlyMine: list<CompareStation>, onlyRival: list<CompareStation>, both: list<CompareStation>}|null
      */
-    public function compareWith(Edihead $head, Edihead $rival, ?array $home): ?array
+    public function compareWith(EdiHead $head, EdiHead $rival, ?array $home): ?array
     {
         if ($head->round_id === null || $head->round_id !== $rival->round_id || $head->id === $rival->id) {
             return null;
@@ -302,7 +302,7 @@ final class QsoGeometry
      * @param  list<string>  $skipCalls  značky, které se vynechají
      * @return array<string, CompareStation>
      */
-    private function stationsByCall(Edihead $head, ?array $home, array $skipCalls): array
+    private function stationsByCall(EdiHead $head, ?array $home, array $skipCalls): array
     {
         $out = [];
 
@@ -376,7 +376,7 @@ final class QsoGeometry
      * Výsledek je memoizován per `round_id` pro trvání requestu – volání
      * `roundStations()` a dotaz controlleru na stav tak sdílí jeden SELECT.
      */
-    public function roundResultsDisclosable(Edihead $head): bool
+    public function roundResultsDisclosable(EdiHead $head): bool
     {
         $key = $head->round_id ?? -1;
 

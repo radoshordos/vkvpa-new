@@ -6,7 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\QsoMode;
 use App\Models\EdiEntry;
-use App\Models\Edihead;
+use App\Models\EdiHead;
 use App\Services\Edi\DenikStatistiky;
 use App\Services\Edi\EnrichedQso;
 use App\Services\Edi\PorovnaniRivals;
@@ -32,7 +32,7 @@ class EdiVizualizaceController extends Controller
         private readonly PorovnaniRivals $porovnani,
     ) {}
 
-    public function show(Edihead $head): View
+    public function show(EdiHead $head): View
     {
         // Vizualizace je veřejná vždy (zobrazuje jen vlastní deník účastníka);
         // citlivá vrstva roundStations se vydává až po uzavření kola

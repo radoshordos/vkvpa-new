@@ -6,7 +6,7 @@ namespace Tests\Feature;
 
 use App\Models\EdiCategory;
 use App\Models\EdiEntry;
-use App\Models\Edihead;
+use App\Models\EdiHead;
 use App\Models\EdiRound;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -183,9 +183,9 @@ class HlaseniTest extends TestCase
     }
 
     /** Vytvoří EDI hlavičku navázanou na kolo (pro testy podání s deníkem). */
-    private function ediHead(int $kolo): Edihead
+    private function ediHead(int $kolo): EdiHead
     {
-        return Edihead::create([
+        return EdiHead::create([
             'round_id' => $kolo, 't_date' => '20260315', 'p_call' => 'OK2KJT',
             'p_wwlo' => 'JN99', 'p_band' => '144 MHz', 'r_name' => 'Jan',
             'r_emai' => 'a@a.cz', 's_powe' => 100,

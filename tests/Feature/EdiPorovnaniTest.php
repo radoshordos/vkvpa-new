@@ -7,8 +7,8 @@ namespace Tests\Feature;
 use App\Http\Controllers\EdiPorovnaniController;
 use App\Models\EdiCategory;
 use App\Models\EdiEntry;
-use App\Models\Edihead;
-use App\Models\Ediline;
+use App\Models\EdiHead;
+use App\Models\EdiLine;
 use App\Models\EdiRound;
 use App\Models\User;
 use App\Services\Edi\EdiImportService;
@@ -27,7 +27,7 @@ class EdiPorovnaniTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function importSample(): Edihead
+    private function importSample(): EdiHead
     {
         $edi = (string) file_get_contents(__DIR__.'/../fixtures/sample.edi');
 
@@ -147,7 +147,7 @@ class EdiPorovnaniTest extends TestCase
      * Kolo se třemi deníky: sample.edi (OK2KJT) + soupeř OK1BBB v téže
      * kategorii A + OK7CCC v jiné kategorii B. Všechny záznamy schválené.
      *
-     * @return array{Edihead, Edihead, Edihead}
+     * @return array{EdiHead, EdiHead, EdiHead}
      */
     private function seedRound(bool $otevrene = false): array
     {
@@ -166,14 +166,14 @@ class EdiPorovnaniTest extends TestCase
         $head = $this->importSample();
         $head->update(['round_id' => $kolo->id]);
 
-        $rival = Edihead::create([
+        $rival = EdiHead::create([
             'round_id' => $kolo->id, 't_date' => '20260315', 'p_call' => 'OK1BBB', 'p_wwlo' => 'JN89',
             'p_band' => '144 MHz', 'r_name' => 'B', 'r_emai' => 'b@b.cz', 's_powe' => 100,
         ]);
-        Ediline::create(['edihead_id' => $rival->id, 'qso_at' => '2026-03-15 08:30:00', 'call_sign' => 'OK2IMH', 'received_wwl' => 'JN99BP']);
-        Ediline::create(['edihead_id' => $rival->id, 'qso_at' => '2026-03-15 08:31:00', 'call_sign' => 'OK9ZZZ', 'received_wwl' => 'JO60AA']);
+        EdiLine::create(['edihead_id' => $rival->id, 'qso_at' => '2026-03-15 08:30:00', 'call_sign' => 'OK2IMH', 'received_wwl' => 'JN99BP']);
+        EdiLine::create(['edihead_id' => $rival->id, 'qso_at' => '2026-03-15 08:31:00', 'call_sign' => 'OK9ZZZ', 'received_wwl' => 'JO60AA']);
 
-        $other = Edihead::create([
+        $other = EdiHead::create([
             'round_id' => $kolo->id, 't_date' => '20260315', 'p_call' => 'OK7CCC', 'p_wwlo' => 'JO70AA',
             'p_band' => '432 MHz', 'r_name' => 'C', 'r_emai' => 'c@c.cz', 's_powe' => 100,
         ]);

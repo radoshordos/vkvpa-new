@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Edi;
 
-use App\Models\Edihead;
+use App\Models\EdiHead;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -45,7 +45,7 @@ final class EdiheadCategoryBackfiller
         /** @var array<int|string, list<int>> $updates  cílová kategorie (int) nebo 'null' => [head_id, …] */
         $updates = [];
 
-        Edihead::query()
+        EdiHead::query()
             ->select(['id', 'edi_category_id'])
             ->orderBy('id')
             ->chunkById(self::CHUNK, function ($heads) use ($desired, &$changed, &$updates): void {

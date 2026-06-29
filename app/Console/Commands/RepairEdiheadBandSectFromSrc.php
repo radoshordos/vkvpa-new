@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
-use App\Models\Edihead;
+use App\Models\EdiHead;
 use App\Services\Edi\EdiParser;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -39,7 +39,7 @@ class RepairEdiheadBandSectFromSrc extends Command
         $changed = 0;
         $failed = 0;
 
-        Edihead::query()
+        EdiHead::query()
             ->select(['id', 'p_band', 'p_sect', 'src'])
             ->where(fn ($q) => $q->where('p_band', '')->orWhere('p_sect', ''))
             ->whereNotNull('src')
