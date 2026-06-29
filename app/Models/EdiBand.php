@@ -13,7 +13,7 @@ use InvalidArgumentException;
 
 /**
  * Číselník pásem (band). Vytažený z denormalizovaného textového sloupce
- * `edi_category.band`; kategorie na něj ukazuje přes `edi_category.band_id`.
+ * `edi_categories.band`; kategorie na něj ukazuje přes `edi_categories.band_id`.
  *
  * Pásmo je statický číselník – kanonický seznam žije v {@see self::CANONICAL}
  * a slouží jako jediný zdroj pravdy pro seeder i validaci admin formuláře.

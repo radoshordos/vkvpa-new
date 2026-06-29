@@ -12,7 +12,7 @@ use Tests\TestCase;
 /**
  * Určení kategorie z hlavičky EDI: pásmo (PBand) + sekce (PSect) + DX (prefix PCall).
  *
- * Resolver páruje id přes číselník `edi_category` (naseedovaný v base TestCase).
+ * Resolver páruje id přes číselník `edi_categories` (naseedovaný v base TestCase).
  *
  * @see CategoryResolver
  */

@@ -4,7 +4,7 @@
 
 <h1>{{ __('admin.kategorie_add') }}</h1>
 
-{{-- Formulář pro přidání nové kategorie (edi_category) --}}
+{{-- Formulář pro přidání nové kategorie (edi_categories) --}}
 <div class="card max-w-2xl p-5">
     <x-form-errors class="mt-3" />
 

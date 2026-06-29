@@ -11,7 +11,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * edi_head.edi_category_id se nastavuje 1:1 z edi_entries.category_id.
+ * edi_heads.edi_category_id se nastavuje 1:1 z edi_entries.category_id.
  * Osiřelé (bez příspěvku) i víceznačné (víc kategorií) deníky → NULL.
  *
  * @see EdiheadCategoryBackfiller

@@ -10,7 +10,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Číselník pásem `edi_bands` a jeho provázání na `edi_category.band_id`.
+ * Číselník pásem `edi_bands` a jeho provázání na `edi_categories.band_id`.
  */
 class EdiBandTest extends TestCase
 {

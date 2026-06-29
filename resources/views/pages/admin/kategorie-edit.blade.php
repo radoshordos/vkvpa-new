@@ -4,7 +4,7 @@
 
 <h1>{{ __('admin.kategorie_edit') }}: <span class="mono">{{ $editKategorie->name }}</span></h1>
 
-{{-- Editační formulář kategorie (edi_category: band × section × variant) --}}
+{{-- Editační formulář kategorie (edi_categories: band × section × variant) --}}
 <div class="card max-w-2xl p-5 border-l-4 border-brand">
     <x-form-errors class="mt-3" />
 

@@ -34,7 +34,7 @@ class SampleDatabaseSeeder extends Seeder
         // ale plný src – doplníme sloupce přeparsováním hlavičky (kvalita dat).
         Artisan::call('vkvpa:repair-edihead-band-sect');
 
-        // edi_head.edi_category_id snapshot nenese – nastavíme ho 1:1 z
+        // edi_heads.edi_category_id snapshot nenese – nastavíme ho 1:1 z
         // autoritativní kategorie příspěvku (edi_entries.category_id); osiřelé
         // i víceznačné deníky zůstávají NULL. Musí běžet až po edi_entries.
         app(EdiheadCategoryBackfiller::class)->mirrorEdiEntryCategory();

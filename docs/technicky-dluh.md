@@ -171,9 +171,9 @@ Důsledky:
 - **Cache ročních výsledků** – `Cache::flexible` s **cílenou** invalidací v
   `rankRound()`; korektní stale-while-revalidate.
 - **Kategorie `CategoryResolver`** – párují se z normalizovaného číselníku
-  `edi_category` (pásmo × sekce × varianta) přes cachovanou mapu, žádná hardcoded
-  matice ID v kódu. `edi_category` je **jediný** číselník kategorií (duplicitní
-  `vkvpa_kategorie` byla zrušena; `edi_entries.category_id` má FK na `edi_category`).
+  `edi_categories` (pásmo × sekce × varianta) přes cachovanou mapu, žádná hardcoded
+  matice ID v kódu. `edi_categories` je **jediný** číselník kategorií (duplicitní
+  `vkvpa_kategorie` byla zrušena; `edi_entries.category_id` má FK na `edi_categories`).
 - **Value objekty** EDI (`EdiLog`, `EdiHeader`, `EdiQso`) – neměnné, bez DB/IO.
 - **Bilingvní vrstva** `lang/cs` + `lang/en` – kompletní.
 - **Centralizovaná konfigurace** `config/vkvpa.php` + typový `VkvpaSettings`.

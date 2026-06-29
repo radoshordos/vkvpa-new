@@ -11,11 +11,11 @@ use Illuminate\Validation\Rule;
 use Override;
 
 /**
- * Validace vytvoření i úpravy kategorie `edi_category` (pravidla jsou shodná).
+ * Validace vytvoření i úpravy kategorie `edi_categories` (pravidla jsou shodná).
  * Přístup řeší middleware „admin" na routě.
  *
  * Formulář posílá pásmo jako název (`band`, např. '144 MHz') z číselníku
- * `edi_bands`; {@see self::toModel()} ho přeloží na `edi_category.band_id`
+ * `edi_bands`; {@see self::toModel()} ho přeloží na `edi_categories.band_id`
  * (textový sloupec už neexistuje).
  */
 class KategorieRequest extends FormRequest
@@ -59,7 +59,7 @@ class KategorieRequest extends FormRequest
         return [
             // Volitelně lze při zakládání zadat konkrétní ID (jinak se přidělí
             // automaticky). Při úpravě se ID nemění – pole se neposílá.
-            'id' => ['nullable', 'integer', 'min:1', Rule::unique('edi_category', 'id')],
+            'id' => ['nullable', 'integer', 'min:1', Rule::unique('edi_categories', 'id')],
             'name' => ['required', 'string', 'max:50'],
             'band' => ['required', Rule::in(self::bands())],
             'section' => ['required', Rule::in(['SO', 'MO'])],
@@ -67,13 +67,13 @@ class KategorieRequest extends FormRequest
             // = jedna kategorie); kontrolujeme přes variant s where na band_id+section.
             'variant' => [
                 'required', Rule::in(['domestic', 'dx']),
-                Rule::unique('edi_category', 'variant')
+                Rule::unique('edi_categories', 'variant')
                     ->where('band_id', $this->bandId())
                     ->where('section', $this->string('section')->value())
                     ->ignore($ignoreId),
             ],
             // NULL = tato kategorie je tuzemská; jinak id tuzemského protějšku DX řádku
-            'dxid' => ['nullable', 'integer', Rule::exists('edi_category', 'id')],
+            'dxid' => ['nullable', 'integer', Rule::exists('edi_categories', 'id')],
         ];
     }
 

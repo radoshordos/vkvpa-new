@@ -31,7 +31,7 @@ class KategorieControllerTest extends TestCase
     }
 
     /**
-     * Validní data formuláře (edi_category). Lze přepsat jednotlivé klíče.
+     * Validní data formuláře (edi_categories). Lze přepsat jednotlivé klíče.
      *
      * @param  array<string, mixed>  $overrides
      * @return array<string, mixed>
@@ -127,7 +127,7 @@ class KategorieControllerTest extends TestCase
             ->assertRedirect(route('kategorie.index'))
             ->assertSessionHas('announcement');
 
-        $this->assertDatabaseHas('edi_category', [
+        $this->assertDatabaseHas('edi_categories', [
             'name' => '144 MHz single op',
             'band_id' => $this->bandId('47 GHz'),
             'section' => 'SO',
@@ -148,7 +148,7 @@ class KategorieControllerTest extends TestCase
             ]))
             ->assertRedirect(route('kategorie.index'));
 
-        $this->assertDatabaseHas('edi_category', [
+        $this->assertDatabaseHas('edi_categories', [
             'name' => '47 GHz single op DX',
             'variant' => 'dx',
             'dxid' => $domestic->id,
@@ -200,7 +200,7 @@ class KategorieControllerTest extends TestCase
         $this->post(route('kategorie.store'), $this->payload(['band' => '47 GHz']))
             ->assertRedirect(route('login'));
 
-        $this->assertDatabaseMissing('edi_category', ['band_id' => $this->bandId('47 GHz')]);
+        $this->assertDatabaseMissing('edi_categories', ['band_id' => $this->bandId('47 GHz')]);
     }
 
     // ------------------------------------------------------------------
@@ -236,7 +236,7 @@ class KategorieControllerTest extends TestCase
             ->assertRedirect(route('kategorie.index'))
             ->assertSessionHas('announcement');
 
-        $this->assertDatabaseHas('edi_category', [
+        $this->assertDatabaseHas('edi_categories', [
             'id' => $kat->id,
             'name' => 'Nový název',
             'band_id' => $this->bandId('76 GHz'),
@@ -250,7 +250,7 @@ class KategorieControllerTest extends TestCase
         $this->patch(route('kategorie.update', $kat->id), $this->payload(['name' => 'Zmeneno', 'band' => '47 GHz']))
             ->assertRedirect(route('login'));
 
-        $this->assertDatabaseMissing('edi_category', ['name' => 'Zmeneno']);
+        $this->assertDatabaseMissing('edi_categories', ['name' => 'Zmeneno']);
     }
 
     public function test_update_validates_required_fields(): void

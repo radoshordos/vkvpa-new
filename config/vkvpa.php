@@ -70,7 +70,7 @@ return [
     // (např. `users`) tabulky podvržením POST dat. Pořadí v rámci skupin je
     // zvoleno tak, aby při obnově byly rodičovské tabulky před závislými.
     'db_backup_table_groups' => [
-        'edi' => ['edi_category', 'edi_head', 'edi_lines'],
+        'edi' => ['edi_categories', 'edi_heads', 'edi_lines'],
         'vysledky' => ['edi_rounds', 'edi_entries'],
         'ostatni' => ['login_tokens', 'discussion_posts', 'discussion_post_photos'],
     ],

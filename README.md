@@ -172,7 +172,7 @@ Hlášení se od běžných závodníků přijímají ve stavech `Aktivni` a `Pr
 
 **EDI schéma** (`edihead`, `edilines`): odvozeno z původního systému, ale plně normalizováno na `snake_case` názvy sloupců (`mode_code`, `received_wwl`, `qso_points`, `t_date`, `p_call` apod.) – přistupuje se k nim jako k běžným Eloquent atributům, žádný magický `$line->{'...'}` přístup ani potlačení `property.notFound`. Oba modely mají `#[WithoutTimestamps]` (vlastní časové sloupce `stamp`, `d_cas`). Model `Ediline` navíc nabízí **PHP 8.4 property hooks** (`$receivedWwl`, `$qsoPoints`, `$modeCode`, `$mode`, `$newWwl`), které surové sloupce normalizují/castují.
 
-**Aplikační schéma** (`vkvpa_*`): `EdiEntry` (závodní záznamy/výsledky), `EdiRound` (kola závodu), `LoginToken` (tabulka `login_tokens`, jednorázové magic-link přihlašovací tokeny), `DiscussionPost` (diskuze ke kolům, tabulka `discussion_posts`; fotky binárně v `discussion_post_photos` přes `DiscussionPostPhoto`). Kategorie je `edi_category` (model `EdiCategory`) – **jediný** číselník kategorií; `EdiEntry.category_id` je FK na `edi_category.id` (původní duplicitní tabulka `vkvpa_kategorie` byla zrušena).
+**Aplikační schéma** (`vkvpa_*`): `EdiEntry` (závodní záznamy/výsledky), `EdiRound` (kola závodu), `LoginToken` (tabulka `login_tokens`, jednorázové magic-link přihlašovací tokeny), `DiscussionPost` (diskuze ke kolům, tabulka `discussion_posts`; fotky binárně v `discussion_post_photos` přes `DiscussionPostPhoto`). Kategorie je `edi_categories` (model `EdiCategory`) – **jediný** číselník kategorií; `EdiEntry.category_id` je FK na `edi_categories.id` (původní duplicitní tabulka `vkvpa_kategorie` byla zrušena).
 
 ### Eloquent strict mode
 
@@ -447,8 +447,8 @@ Jedna migrace na tabulku – každá `create_*` migrace nese finální schéma t
 | `create_edi_rounds_table` | Kola závodu (`starts_at` jako datetime = start závodu 08:00 UTC) |
 | `create_edihead_table` | Hlavičky EDI logů (EDI schéma, snake_case) |
 | `create_edilines_table` | QSO záznamy (EDI schéma; FK na `edihead` deklarovaný inline) |
-| `create_edi_entries_table` | Závodní záznamy / výsledky (FK na kolo, edihead; FK na kategorii se přidává v `create_edi_category_table`) |
-| `create_edi_category_table` | Jediný číselník kategorií (pásmo × sekce × varianta); přidává i FK `edi_entries.category_id` → `edi_category` |
+| `create_edi_entries_table` | Závodní záznamy / výsledky (FK na kolo, edihead; FK na kategorii se přidává v `create_edi_categories_table`) |
+| `create_edi_categories_table` | Jediný číselník kategorií (pásmo × sekce × varianta); přidává i FK `edi_entries.category_id` → `edi_categories` |
 | `create_diskuse_table` | Diskuzní příspěvky ke kolům |
 | `create_login_tokens_table` | Dočasné přihlašovací tokeny (magic-link) |
 | `create_prefixes_table` | Mapování prefixů na země (DXCC) |
@@ -613,7 +613,7 @@ Všechny enumy jsou v `app/Enums/`. Backed enumy nesou hodnotu (`value`), která
 ### Rozlišení kategorií
 
 `CategoryResolver::resolve(pcall, pBand, pSect)` určuje kategorii (id z číselníku
-`edi_category`, přes cachovanou mapu `band|section|variant`):
+`edi_categories`, přes cachovanou mapu `band|section|variant`):
 
 - **Pásmo** – aliasy: `144`/`145 MHz → "144"`, `432`/`435 MHz → "432"`, atd.
 - **Sekce** – `MO` (multi operátor), `SO` (single), nebo `null`

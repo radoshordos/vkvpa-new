@@ -21,14 +21,14 @@ use Illuminate\Support\Facades\Cache;
  *   3. DX      podle prefixu značky `PCall` – nezačíná-li na „OK" ani „OL“ (= cizí
  *              stanice), použije se DX varianta kategorie.
  *
- * Výsledkem je id záznamu z tabulky `edi_category` (viz seed), nebo null,
- * když sekci/kombinaci nelze určit. `edi_category` je jediný číselník kategorií
+ * Výsledkem je id záznamu z tabulky `edi_categories` (viz seed), nebo null,
+ * když sekci/kombinaci nelze určit. `edi_categories` je jediný číselník kategorií
  * (na něj míří FK `edi_entries.category_id`).
  */
 final class CategoryResolver
 {
     /** Cache klíč mapy „band|section|variant" → id (číselník je statický). */
-    private const string CACHE_KEY = 'edi_category_map';
+    private const string CACHE_KEY = 'edi_categories_map';
 
     /**
      * Aliasy pásem (klíč = velkými písmeny, oříznuto) → kanonické pásmo
@@ -49,7 +49,7 @@ final class CategoryResolver
     ];
 
     /**
-     * Vrátí všechna id kategorií z tabulky `edi_category`.
+     * Vrátí všechna id kategorií z tabulky `edi_categories`.
      *
      * @return list<int>
      */
@@ -64,7 +64,7 @@ final class CategoryResolver
         return array_values($ids);
     }
 
-    /** Zahodí cachovanou mapu kategorií (volat po reseedu/úpravě `edi_category`). */
+    /** Zahodí cachovanou mapu kategorií (volat po reseedu/úpravě `edi_categories`). */
     public static function forgetCache(): void
     {
         Cache::forget(self::CACHE_KEY);
@@ -93,7 +93,7 @@ final class CategoryResolver
     }
 
     /**
-     * Mapa „band|section|variant" → id z `edi_category`, cachovaná napořád
+     * Mapa „band|section|variant" → id z `edi_categories`, cachovaná napořád
      * (číselník je statický). Drží jen skaláry, takže projde i přes
      * `cache.serializable_classes=false`.
      *
@@ -103,8 +103,8 @@ final class CategoryResolver
     {
         /** @var array<string, int> */
         return Cache::rememberForever(self::CACHE_KEY, static fn (): array => EdiCategory::query()
-            ->join('edi_bands', 'edi_bands.id', '=', 'edi_category.band_id')
-            ->get(['edi_category.id', 'edi_bands.name as band', 'edi_category.section', 'edi_category.variant'])
+            ->join('edi_bands', 'edi_bands.id', '=', 'edi_categories.band_id')
+            ->get(['edi_categories.id', 'edi_bands.name as band', 'edi_categories.section', 'edi_categories.variant'])
             ->mapWithKeys(static fn (EdiCategory $c): array => [
                 "{$c->band}|{$c->section}|{$c->variant}" => $c->id,
             ])

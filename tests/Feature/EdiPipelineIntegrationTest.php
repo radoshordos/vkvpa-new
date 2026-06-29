@@ -198,7 +198,7 @@ class EdiPipelineIntegrationTest extends TestCase
     public function test_entry_hidden_before_approval_visible_after(): void
     {
         $kolo = $this->koloProBrezen2026();
-        // kategorie id 2 (144 MHz multi op) už je v edi_category naseedovaná (TestCase)
+        // kategorie id 2 (144 MHz multi op) už je v edi_categories naseedovaná (TestCase)
 
         $this->odeslat();
 

@@ -40,7 +40,7 @@ use Override;
  * @property-read EdiBand|null $ediBand pásmo z číselníku (přes band_id)
  */
 #[Fillable(['id', 'band_id', 'section', 'variant', 'name', 'dxid'])]
-#[Table(name: 'edi_category', key: 'id')]
+#[Table(name: 'edi_categories', key: 'id')]
 #[WithoutTimestamps]
 class EdiCategory extends Model
 {
@@ -164,8 +164,8 @@ class EdiCategory extends Model
     public static function zkratkaMap(): Collection
     {
         return self::query()
-            ->leftJoin('edi_bands', 'edi_bands.id', '=', 'edi_category.band_id')
-            ->get(['edi_category.id', 'edi_bands.name as band', 'edi_category.section', 'edi_category.variant'])
+            ->leftJoin('edi_bands', 'edi_bands.id', '=', 'edi_categories.band_id')
+            ->get(['edi_categories.id', 'edi_bands.name as band', 'edi_categories.section', 'edi_categories.variant'])
             ->mapWithKeys(static fn (self $c): array => [$c->id => $c->zkratka]);
     }
 

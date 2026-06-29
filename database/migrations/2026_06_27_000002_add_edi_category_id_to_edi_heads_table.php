@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Propojení hlavičky deníku na normalizovanou kategorii (`edi_category`).
+ * Propojení hlavičky deníku na normalizovanou kategorii (`edi_categories`).
  *
  * Zatím čistě strukturální krok: sloupec je nullable a u všech existujících
  * řádků zůstává NULL. Naplnění (párování deníku na band × section × variant)
@@ -18,7 +18,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('edi_head', function (Blueprint $table): void {
+        Schema::table('edi_heads', function (Blueprint $table): void {
             $table->integer('edi_category_id')->nullable()->after('round_id');
             $table->index('edi_category_id', 'edihead_edi_category_id_idx');
         });
@@ -29,16 +29,16 @@ return new class extends Migration
             return;
         }
 
-        Schema::table('edi_head', function (Blueprint $table): void {
+        Schema::table('edi_heads', function (Blueprint $table): void {
             $table->foreign('edi_category_id', 'edihead_edi_category_id_fk')
-                ->references('id')->on('edi_category')
+                ->references('id')->on('edi_categories')
                 ->nullOnDelete();
         });
     }
 
     public function down(): void
     {
-        Schema::table('edi_head', function (Blueprint $table): void {
+        Schema::table('edi_heads', function (Blueprint $table): void {
             if (DB::getDriverName() !== 'sqlite') {
                 $table->dropForeign('edihead_edi_category_id_fk');
             }

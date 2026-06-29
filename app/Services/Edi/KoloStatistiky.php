@@ -151,8 +151,8 @@ final class KoloStatistiky
         $odx = null;
 
         $rows = DB::table('edi_lines')
-            ->join('edi_head', 'edi_lines.edihead_id', '=', 'edi_head.id')
-            ->where('edi_head.round_id', $koloId)
+            ->join('edi_heads', 'edi_lines.edihead_id', '=', 'edi_heads.id')
+            ->where('edi_heads.round_id', $koloId)
             ->whereTime('edi_lines.qso_at', '>=', ContestWindow::fromSqlTime())
             ->whereTime('edi_lines.qso_at', '<=', ContestWindow::toSqlTime())
             ->get([
@@ -162,8 +162,8 @@ final class KoloStatistiky
                 'edi_lines.call_sign as call_sign',
                 'edi_lines.mode_code as mode_code',
                 'edi_lines.qso_at as qso_at',
-                'edi_head.p_wwlo as home_wwl',
-                'edi_head.p_call as home_call',
+                'edi_heads.p_wwlo as home_wwl',
+                'edi_heads.p_call as home_call',
             ]);
 
         foreach ($rows as $r) {
