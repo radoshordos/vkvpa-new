@@ -63,6 +63,15 @@ class ApiVysledkyTest extends TestCase
             ->assertHeader('X-RateLimit-Limit', 60);
     }
 
+    public function test_api_routes_have_security_headers(): void
+    {
+        $this->getJson('/api/kola')
+            ->assertOk()
+            ->assertHeader('X-Content-Type-Options', 'nosniff')
+            ->assertHeader('X-Frame-Options', 'SAMEORIGIN')
+            ->assertHeader('Content-Security-Policy');
+    }
+
     // ── /api/vysledky/{kolo} ─────────────────────────────────────────────
 
     public function test_vysledky_kolo_returns_kolo_and_data(): void
@@ -149,10 +158,45 @@ class ApiVysledkyTest extends TestCase
             ->assertSee('swagger-ui');
     }
 
+    public function test_api_docs_inline_script_uses_csp_nonce(): void
+    {
+        $response = $this->get('/api/docs')
+            ->assertOk()
+            ->assertHeader('Content-Security-Policy');
+
+        $csp = (string) $response->headers->get('Content-Security-Policy');
+        $scriptSrc = $this->cspDirective($csp, 'script-src');
+        $nonce = $this->cspNonce($scriptSrc);
+
+        $this->assertStringNotContainsString("'unsafe-inline'", $scriptSrc);
+        $response->assertSee('nonce="'.$nonce.'"', false);
+    }
+
     public function test_api_docs_spec_returns_yaml(): void
     {
         $this->get('/api/docs/spec')
             ->assertOk()
             ->assertHeader('Content-Type', 'application/yaml');
+    }
+
+    private function cspDirective(string $csp, string $name): string
+    {
+        foreach (explode(';', $csp) as $directive) {
+            $directive = trim($directive);
+            if (str_starts_with($directive, $name.' ')) {
+                return $directive;
+            }
+        }
+
+        $this->fail("CSP directive {$name} was not present.");
+    }
+
+    private function cspNonce(string $scriptSrc): string
+    {
+        if (preg_match("/'nonce-([^']+)'/", $scriptSrc, $matches) !== 1) {
+            $this->fail('CSP script-src nonce was not present.');
+        }
+
+        return $matches[1];
     }
 }

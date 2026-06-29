@@ -4,17 +4,14 @@ declare(strict_types=1);
 
 namespace App\Services\Edi;
 
-use App\Http\Controllers\EdiStatInkubatorController;
 use App\Models\Edihead;
 use App\Support\Maidenhead;
 use Illuminate\Support\Collection;
 
 /**
- * INKUBÁTOR – prototypy nových statistik pro stránku „Statistiky-inkubátor"
- * ({@see EdiStatInkubatorController}). Slouží jako
- * hřiště, ze kterého se vybrané funkce po odladění přesunou do
- * {@see DenikStatistiky}. Nic z toho zatím není napojené na produkční
- * vizualizaci.
+ * Shared statistical helpers that originally lived in the removed incubator page.
+ * Public routing to that page is gone; comparison still uses the race-against-field
+ * data from this service.
  *
  * Funkce závislé na cizích denících (porovnání s polem kategorie, promarněné
  * příležitosti) ctí stejné férovostní pravidlo jako zbytek aplikace: pole se

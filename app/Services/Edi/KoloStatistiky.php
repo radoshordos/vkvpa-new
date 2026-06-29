@@ -62,9 +62,8 @@ final class KoloStatistiky
 
     /**
      * Celý přehled kola jako pole (cachuje se – `cache.serializable_classes`
-     * je false, proto jen pole/skaláry). Data vyhodnoceného kola se prakticky
-     * nemění, takže stačí TTL bez cílené invalidace (shodně s
-     * {@see QsoGeometry::roundStations()}).
+     * je false, proto jen pole/skaláry). Cache se zahazuje při přepočtu
+     * pořadí kola, aby veřejný detail nezůstal na starých bodech.
      *
      * @return StatPrehled
      */
@@ -72,12 +71,22 @@ final class KoloStatistiky
     {
         /** @var StatPrehled $data */
         $data = Cache::remember(
-            sprintf('vkvpa:kolo-stats:v4:%d', $kolo->id),
+            self::cacheKey($kolo->id),
             VkvpaSettings::roundStationsCacheTtl(),
             fn (): array => $this->compute($kolo),
         );
 
         return $data;
+    }
+
+    public static function cacheKey(int $koloId): string
+    {
+        return sprintf('vkvpa:kolo-stats:v4:%d', $koloId);
+    }
+
+    public function forgetRound(int $koloId): void
+    {
+        Cache::forget(self::cacheKey($koloId));
     }
 
     /**

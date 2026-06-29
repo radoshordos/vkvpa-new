@@ -80,7 +80,6 @@ window.__vizConfig = {
   @if ($porovnaniDostupne)
     <a href="{{ route('edi.porovnani', ['head' => $head]) }}" class="underline hover:text-heading">{{ __('pages.viz.compare_link') }}</a> ·
   @endif
-  <a href="{{ route('edi.stat.inkubator', ['head' => $head]) }}" class="underline hover:text-heading">statistiky-inkubátor 🧪</a>
 </p>
 @if ($roundDataPending)
   <p class="text-sm text-muted mb-4 -mt-3">{{ __('pages.viz.round_pending') }}</p>

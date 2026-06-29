@@ -11,6 +11,7 @@ use App\Models\EdiEntry;
 use App\Models\Edihead;
 use App\Models\EdiRound;
 use App\Services\Edi\EdiLog;
+use App\Services\Edi\KoloStatistiky;
 use App\Support\ContestWindow;
 use App\Support\Maidenhead;
 use App\Support\VkvpaSettings;
@@ -65,8 +66,10 @@ final class ScoringService
             }
         });
 
-        // Pořadí (a tím roční součty) se změnilo → zahodit cache ročních výsledků daného roku.
+        // Pořadí a veřejné souhrny se změnily → zahodit navázané cache.
         $this->forgetYearlyCache($this->yearOfRound($koloId));
+        app(KoloStatistiky::class)->forgetRound($koloId);
+        app(RekordyService::class)->forgetVrcholyCache();
     }
 
     public function closeRound(int $koloId): void

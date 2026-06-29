@@ -10,10 +10,12 @@ use App\Models\EdiEntry;
 use App\Models\Edihead;
 use App\Models\EdiRound;
 use App\Models\User;
+use App\Services\Edi\DenikStatistiky;
 use App\Services\Edi\EdiImportService;
 use App\Services\Edi\EdiParser;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
 /**
@@ -201,6 +203,86 @@ class EdiVizualizaceTest extends TestCase
         $compact = str_replace(' ', '', $html);
         $this->assertStringContainsString('"body":[14]', $compact);
         $this->assertStringContainsString('"poradi":[1]', $compact);
+    }
+
+    public function test_sezona_trend_uses_round_start_year_not_round_name(): void
+    {
+        $kategorie = EdiCategory::create(['name' => '144 MHz', 'section' => 'SO', 'variant' => 'domestic']);
+        $round2026 = EdiRound::create([
+            'starts_at' => '2026-01-18',
+            'closes_at' => '2026-01-23 23:59:59',
+            'name' => '01/2025',
+            'note' => '',
+            'evaluated_at' => '2026-01-24 10:00:00',
+        ]);
+        $round2025 = EdiRound::create([
+            'starts_at' => '2025-12-21',
+            'closes_at' => '2025-12-26 23:59:59',
+            'name' => '12/2026',
+            'note' => '',
+            'evaluated_at' => '2025-12-27 10:00:00',
+        ]);
+
+        $head = Edihead::create([
+            'round_id' => $round2026->id,
+            't_date' => '20260118',
+            'p_call' => 'OK1AAA',
+            'p_wwlo' => 'JN79',
+            'p_band' => '144 MHz',
+            'r_name' => 'A',
+            'r_emai' => 'a@a.cz',
+            's_powe' => 100,
+        ]);
+
+        $createEntry = function (EdiRound $kolo, int $body, ?int $headId) use ($kategorie): void {
+            EdiEntry::create([
+                'round_id' => $kolo->id,
+                'category_id' => $kategorie->id,
+                'qrp' => false,
+                'lp' => false,
+                'callsign' => 'OK1AAA',
+                'locator' => 'JN79AA',
+                'qso_count' => 1,
+                'qso_points' => 1,
+                'multiplier' => 1,
+                'points' => $body,
+                'name' => 'Test',
+                'email' => 't@t.cz',
+                'phone' => '',
+                'note' => '',
+                'soapbox' => '',
+                'ip' => '',
+                'edi_head_id' => $headId,
+                'rank' => 1,
+                'approved' => true,
+                'session_id' => '',
+            ]);
+        };
+        $createEntry($round2026, 100, $head->id);
+        $createEntry($round2025, 999, null);
+
+        $sezona = app(DenikStatistiky::class)->sezona($head);
+
+        if ($sezona === null) {
+            $this->fail('Expected season statistics for the seeded entry.');
+        }
+
+        $this->assertSame(['01/2025'], $sezona['labels']);
+        $this->assertSame([100], $sezona['body']);
+        $this->assertSame([1], $sezona['poradi']);
+    }
+
+    public function test_removed_inkubator_route_is_not_linked_from_vizualizace(): void
+    {
+        $head = $this->importSample();
+
+        $html = $this->actingAs($this->user())
+            ->get(route('edi.vizualizace', $head->id))
+            ->assertOk()
+            ->getContent() ?: '';
+
+        $this->assertFalse(Route::has('edi.stat.inkubator'));
+        $this->assertStringNotContainsString('statistiky-inkubator', $html);
     }
 
     public function test_compare_moved_to_standalone_page(): void

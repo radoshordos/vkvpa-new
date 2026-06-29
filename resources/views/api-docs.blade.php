@@ -20,8 +20,8 @@
 </head>
 <body>
 <div id="swagger-ui"></div>
-<script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
-<script>
+<script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js" @cspNonce></script>
+<script @cspNonce>
 SwaggerUIBundle({
     url: "{{ route('api.docs.spec') }}",
     dom_id: '#swagger-ui',

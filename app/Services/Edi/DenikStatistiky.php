@@ -447,7 +447,7 @@ class DenikStatistiky
 
     /**
      * Celoroční trend stanice: body a pořadí ve všech kolech roku, do kterého
-     * patří kolo tohoto deníku. Rok se bere z konce názvu kola (stejná
+     * patří kolo tohoto deníku. Rok se bere ze `starts_at` kola (stejná
      * konvence jako roční výsledky); záznamy z veřejné výsledkové listiny
      * (jen schválené). Null, když deník nemá kolo nebo stanice nemá záznamy.
      *
@@ -460,14 +460,15 @@ class DenikStatistiky
         }
 
         $kolo = EdiRound::query()->find($head->round_id);
-        if ($kolo === null || preg_match('/(\d{4})\s*$/', $kolo->name, $m) !== 1) {
+        if ($kolo === null) {
             return null;
         }
 
+        $year = $kolo->starts_at->year;
         $kola = EdiRound::query()
-            ->where('name', 'like', '%'.$m[1])
+            ->whereYear('starts_at', $year)
             ->orderBy('starts_at')
-            ->get(['id', 'name']);
+            ->get(['id', 'name', 'starts_at']);
 
         $entries = EdiEntry::query()
             ->approved()

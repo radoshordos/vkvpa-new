@@ -15,7 +15,8 @@ use Illuminate\Support\Facades\Cache;
  * skóre, nejvíc QSO a nejvíc násobičů jediného záznamu. ODX historie se zde
  * záměrně nepočítá (vyžadovalo by těžký sken všech `edilines`).
  *
- * Mění se jen při vyhodnocení nového kola, proto stačí TTL cache.
+ * Mění se při vyhodnocení nebo přepočtu kola, proto má cílenou invalidaci
+ * z {@see ScoringService::rankRound()}.
  *
  * @phpstan-type Rekord array{znacka: string, kolo: string, koloId: int, value: int}
  * @phpstan-type RekordKola array{kolo: string, koloId: int, value: int}
@@ -24,9 +25,10 @@ use Illuminate\Support\Facades\Cache;
  */
 final class RekordyService
 {
-    /** Cache all-time ODX – plní příkaz statistiky:precompute-odx, web jen čte. */
+    /** Cache all-time vrcholů počítaných z výsledkové listiny. */
     private const VRCHOLY_CACHE = 'vkvpa:rekordy:v2';
 
+    /** Cache all-time ODX – plní příkaz statistiky:precompute-odx, web jen čte. */
     private const ODX_CACHE = 'vkvpa:rekordy:odx:v1';
 
     /**
@@ -49,6 +51,11 @@ final class RekordyService
         );
 
         return $v;
+    }
+
+    public function forgetVrcholyCache(): void
+    {
+        Cache::forget(self::VRCHOLY_CACHE);
     }
 
     /**

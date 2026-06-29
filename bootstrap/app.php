@@ -21,9 +21,14 @@ return Application::configure(basePath: dirname(__DIR__))
             SetLocale::class,
             SecurityHeaders::class,
         ]);
-        $middleware->api(prepend: [
-            HandleCors::class,
-        ]);
+        $middleware->api(
+            prepend: [
+                HandleCors::class,
+            ],
+            append: [
+                SecurityHeaders::class,
+            ],
+        );
         $middleware->alias([
             'admin' => EnsureAdmin::class,
         ]);

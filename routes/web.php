@@ -18,7 +18,6 @@ use App\Http\Controllers\DiskuseController;
 use App\Http\Controllers\EdiController;
 use App\Http\Controllers\EdiGeneratorController;
 use App\Http\Controllers\EdiPorovnaniController;
-use App\Http\Controllers\EdiStatInkubatorController;
 use App\Http\Controllers\EdiVizualizaceController;
 use App\Http\Controllers\HlaseniController;
 use App\Http\Controllers\HomeController;
@@ -109,11 +108,6 @@ Route::get('/edi/{head}/vizualizace', [EdiVizualizaceController::class, 'show'])
 // Porovnání dvou deníků (hráč vs. hráč) z téhož kola a téže kategorie –
 // mapa rozdílů v protistanicích + překryvný graf průběhu skóre.
 Route::get('/edi/{head}/porovnani', [EdiPorovnaniController::class, 'show'])->name('edi.porovnani');
-
-// INKUBÁTOR statistik – hřiště s prototypy nových grafů a analýz nad deníkem
-// (vs. pole kategorie, závod skóre, promarněné příležitosti, heatmapa směr×čas,
-// rate sheet). Osvědčené funkce se odsud přesunou do Vizualizace.
-Route::get('/edi/{head}/statistiky-inkubator', [EdiStatInkubatorController::class, 'show'])->name('edi.stat.inkubator');
 
 // Samostatný EDI Visualizer (veřejný) – kdokoli nahraje svůj EDI deník
 // a dostane trvalý sdílecí odkaz s mapou spojení (inspirováno původním

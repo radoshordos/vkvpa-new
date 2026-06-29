@@ -10,7 +10,9 @@ use App\Models\EdiEntry;
 use App\Models\Edihead;
 use App\Models\Ediline;
 use App\Models\EdiRound;
+use App\Services\Edi\KoloStatistiky;
 use App\Services\Scoring\RekordyService;
+use App\Services\Scoring\ScoringService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
@@ -132,6 +134,32 @@ class StatistikyTest extends TestCase
 
         $this->assertNotNull($rekordy['qso']);
         $this->assertSame(5, $rekordy['qso']['value']);
+    }
+
+    public function test_rank_round_invalidates_round_statistics_and_record_cache(): void
+    {
+        $kolo = $this->seedEvaluatedRound();
+        $statistiky = app(KoloStatistiky::class);
+        $rekordy = app(RekordyService::class);
+
+        $initial = $rekordy->vrcholy();
+
+        $this->assertSame(110, $statistiky->prehled($kolo)['bodyCelkem']);
+        $this->assertNotNull($initial['skore']);
+        $this->assertSame(80, $initial['skore']['value']);
+
+        EdiEntry::query()
+            ->where('round_id', $kolo->id)
+            ->where('callsign', 'OK1AAA')
+            ->update(['points' => 120]);
+
+        app(ScoringService::class)->rankRound($kolo->id);
+
+        $updated = $rekordy->vrcholy();
+
+        $this->assertSame(150, $statistiky->prehled($kolo)['bodyCelkem']);
+        $this->assertNotNull($updated['skore']);
+        $this->assertSame(120, $updated['skore']['value']);
     }
 
     public function test_og_image_renders_png_for_evaluated_round(): void

@@ -113,5 +113,11 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci --ignore-scripts
 
+      - name: Check frontend scripts
+        run: npm run lint:js
+
+      - name: Run frontend smoke tests
+        run: npm run test:js
+
       - name: Build frontend assets
         run: npm run build
