@@ -30,9 +30,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('edi_categories', function (Blueprint $table): void {
-            $table->charset = 'utf8mb4';
-            $table->collation = 'utf8mb4_unicode_ci';
-
             $table->integer('id', true);
             $table->integer('band_id')->nullable();    // FK → edi_bands.id (zdroj pravdy o pásmu); NULL = neznámé
             $table->enum('section', ['SO', 'MO']);     // single op / multi op

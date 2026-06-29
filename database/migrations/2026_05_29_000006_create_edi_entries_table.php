@@ -12,9 +12,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('edi_entries', function (Blueprint $table): void {
-            $table->charset = 'utf8mb4';
-            $table->collation = 'utf8mb4_unicode_ci';
-
             // Sloupce s explicitním DEFAULT jsou NOT NULL – aplikace do nich
             // NULL nikdy neukládá, prázdný řetězec/0/false vyjadřuje „nevyplněno".
             $table->integer('id', true);

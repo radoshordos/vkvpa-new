@@ -11,9 +11,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('login_tokens', function (Blueprint $table): void {
-            $table->charset = 'utf8mb4';
-            $table->collation = 'utf8mb4_unicode_ci';
-
             $table->id();
             // Přihlašovací tokeny musí být unikátní – kolize tokenu by jinak
             // umožnila neoprávněné přihlášení. Šířka 64 pojme celý SHA-256 hash
