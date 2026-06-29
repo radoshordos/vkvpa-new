@@ -272,6 +272,75 @@ class EdiVizualizaceTest extends TestCase
         $this->assertSame([1], $sezona['poradi']);
     }
 
+    public function test_sezona_trend_filters_by_deniks_category(): void
+    {
+        $catA = EdiCategory::create(['name' => '144 MHz', 'section' => 'SO', 'variant' => 'domestic']);
+        $catB = EdiCategory::create(['name' => '432 MHz', 'section' => 'SO', 'variant' => 'domestic']);
+
+        $round1 = EdiRound::create([
+            'starts_at' => '2026-01-18', 'closes_at' => '2026-01-23 23:59:59',
+            'name' => '01', 'note' => '', 'evaluated_at' => '2026-01-24 10:00:00',
+        ]);
+        $round2 = EdiRound::create([
+            'starts_at' => '2026-02-15', 'closes_at' => '2026-02-20 23:59:59',
+            'name' => '02', 'note' => '', 'evaluated_at' => '2026-02-21 10:00:00',
+        ]);
+
+        $head = EdiHead::create([
+            'round_id' => $round1->id, 't_date' => '20260118', 'p_call' => 'OK1AAA', 'p_wwlo' => 'JN79',
+            'p_band' => '144 MHz', 'r_name' => 'A', 'r_emai' => 'a@a.cz', 's_powe' => 100,
+        ]);
+
+        $createEntry = function (EdiRound $kolo, EdiCategory $cat, int $body, int $rank, ?int $headId): void {
+            EdiEntry::create([
+                'round_id' => $kolo->id, 'category_id' => $cat->id,
+                'qrp' => false, 'lp' => false, 'callsign' => 'OK1AAA', 'locator' => 'JN79AA',
+                'qso_count' => 1, 'qso_points' => 1, 'multiplier' => 1, 'points' => $body,
+                'name' => 'Test', 'email' => 't@t.cz', 'phone' => '', 'note' => '',
+                'soapbox' => '', 'ip' => '', 'edi_head_id' => $headId,
+                'rank' => $rank, 'approved' => true, 'session_id' => '',
+            ]);
+        };
+
+        // Deník patří do kategorie A. V kole 2 jela stanice v obou kategoriích –
+        // trend musí vzít záznam kategorie A (body 200/pořadí 2), nikoli cizí
+        // kategorii B (body 999/pořadí 1), která má vyšší id a dřív „vyhrávala".
+        $createEntry($round1, $catA, 100, 1, $head->id);
+        $createEntry($round2, $catA, 200, 2, null);
+        $createEntry($round2, $catB, 999, 1, null);
+
+        $sezona = app(DenikStatistiky::class)->sezona($head);
+
+        $this->assertNotNull($sezona);
+        $this->assertSame(['01', '02'], $sezona['labels']);
+        $this->assertSame([100, 200], $sezona['body']);
+        $this->assertSame([1, 2], $sezona['poradi']);
+    }
+
+    public function test_sezona_trend_hidden_when_denik_has_no_category(): void
+    {
+        $kolo = EdiRound::create([
+            'starts_at' => '2026-01-18', 'closes_at' => '2026-01-23 23:59:59',
+            'name' => '01', 'note' => '', 'evaluated_at' => '2026-01-24 10:00:00',
+        ]);
+
+        $head = EdiHead::create([
+            'round_id' => $kolo->id, 't_date' => '20260118', 'p_call' => 'OK1AAA', 'p_wwlo' => 'JN79',
+            'p_band' => '144 MHz', 'r_name' => 'A', 'r_emai' => 'a@a.cz', 's_powe' => 100,
+        ]);
+
+        EdiEntry::create([
+            'round_id' => $kolo->id, 'category_id' => null,
+            'qrp' => false, 'lp' => false, 'callsign' => 'OK1AAA', 'locator' => 'JN79AA',
+            'qso_count' => 1, 'qso_points' => 1, 'multiplier' => 1, 'points' => 100,
+            'name' => 'Test', 'email' => 't@t.cz', 'phone' => '', 'note' => '',
+            'soapbox' => '', 'ip' => '', 'edi_head_id' => $head->id,
+            'rank' => 1, 'approved' => true, 'session_id' => '',
+        ]);
+
+        $this->assertNull(app(DenikStatistiky::class)->sezona($head));
+    }
+
     public function test_removed_inkubator_route_is_not_linked_from_vizualizace(): void
     {
         $head = $this->importSample();
