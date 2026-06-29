@@ -491,6 +491,8 @@ return [
         'odx_heading' => 'Longest QSO of the round (ODX)',
         'odx_line' => ':home (:homeloc) → :call (:wwl) · :dist km',
 
+        'top_heading' => 'Round TOP rankings',
+        'band_all' => 'All',
         'top_points' => 'TOP points',
         'top_qso' => 'TOP QSO count',
         'top_mult' => 'TOP multipliers',

@@ -493,6 +493,8 @@ return [
         'odx_heading' => 'Nejdelší spojení kola (ODX)',
         'odx_line' => ':home (:homeloc) → :call (:wwl) · :dist km',
 
+        'top_heading' => 'TOP žebříčky kola',
+        'band_all' => 'Vše',
         'top_points' => 'TOP body',
         'top_qso' => 'TOP počet QSO',
         'top_mult' => 'TOP násobiče',
