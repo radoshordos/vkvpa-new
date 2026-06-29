@@ -35,7 +35,7 @@ final class EdiImportService
             $rows = [];
             foreach ($log->qsos as $q) {
                 $rows[] = [
-                    'edihead_id' => $head->id,
+                    'edi_head_id' => $head->id,
                     'qso_at' => $q->qsoAt(),
                     'call_sign' => $q->callSign,
                     'mode_code' => $this->intOrNull($q->modeCode),

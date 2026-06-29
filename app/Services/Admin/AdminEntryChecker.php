@@ -46,7 +46,7 @@ final class AdminEntryChecker
             return $findings; // ruční hlášení bez EDI – EDI kontroly přeskočit
         }
 
-        $head = EdiHead::with(['lines' => static fn (HasMany $q) => $q->select('edihead_id', 'call_sign', 'qso_at', 'received_wwl', 'mode_code')])
+        $head = EdiHead::with(['lines' => static fn (HasMany $q) => $q->select('edi_head_id', 'call_sign', 'qso_at', 'received_wwl', 'mode_code')])
             ->find($entry->edi_head_id);
 
         if ($head === null) {

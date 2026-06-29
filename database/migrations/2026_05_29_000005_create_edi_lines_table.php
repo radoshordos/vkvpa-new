@@ -15,7 +15,7 @@ return new class extends Migration
             $table->collation = 'utf8mb4_unicode_ci';
 
             $table->integer('id', true);
-            $table->integer('edihead_id');
+            $table->integer('edi_head_id');
             // Datum+čas QSO v UTC – kanonický zdroj časování spojení (původní
             // textové sloupce date 'YYMMDD' + time 'HHMM' byly nahrazeny tímto).
             $table->dateTime('qso_at')->nullable();
@@ -36,10 +36,10 @@ return new class extends Migration
             $table->decimal('lon', 9, 6)->nullable();
             $table->decimal('lat', 8, 6)->nullable();
 
-            $table->index('edihead_id', 'edihead_id');
-            $table->index('received_wwl', 'received_wwl');
-            $table->index(['edihead_id', 'qso_at'], 'edilines_edihead_id_qso_at_idx');
-            $table->foreign('edihead_id', 'edilines_ibfk_1')->references('id')->on('edi_heads');
+            $table->index('edi_head_id', 'edi_lines_edi_head_id_index');
+            $table->index('received_wwl', 'edi_lines_received_wwl_index');
+            $table->index(['edi_head_id', 'qso_at'], 'edi_lines_edi_head_id_qso_at_idx');
+            $table->foreign('edi_head_id', 'edi_lines_edi_head_id_foreign')->references('id')->on('edi_heads');
         });
     }
 

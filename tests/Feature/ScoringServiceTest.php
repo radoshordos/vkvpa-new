@@ -133,11 +133,11 @@ class ScoringServiceTest extends TestCase
         EdiLine::insert($this->withExchange([
             // 2 QSO uvnitř okna (cizí čtverce JN89, JO70) → počítají se.
             // QSO-Points v deníku jsou schválně chybné – přepočítáme je z lokátorů.
-            ['edihead_id' => $head->id, 'qso_at' => '2026-01-18 08:30:00', 'call_sign' => 'A', 'received_wwl' => 'JN89AA', 'qso_points' => 99],
-            ['edihead_id' => $head->id, 'qso_at' => '2026-01-18 09:30:00', 'call_sign' => 'B', 'received_wwl' => 'JO70AA', 'qso_points' => 99],
+            ['edi_head_id' => $head->id, 'qso_at' => '2026-01-18 08:30:00', 'call_sign' => 'A', 'received_wwl' => 'JN89AA', 'qso_points' => 99],
+            ['edi_head_id' => $head->id, 'qso_at' => '2026-01-18 09:30:00', 'call_sign' => 'B', 'received_wwl' => 'JO70AA', 'qso_points' => 99],
             // mimo čas (12:30) a mimo den (17.) → nezapočítají se.
-            ['edihead_id' => $head->id, 'qso_at' => '2026-01-18 12:30:00', 'call_sign' => 'C', 'received_wwl' => 'JN88AA', 'qso_points' => 1],
-            ['edihead_id' => $head->id, 'qso_at' => '2026-01-17 09:00:00', 'call_sign' => 'D', 'received_wwl' => 'JN77AA', 'qso_points' => 1],
+            ['edi_head_id' => $head->id, 'qso_at' => '2026-01-18 12:30:00', 'call_sign' => 'C', 'received_wwl' => 'JN88AA', 'qso_points' => 1],
+            ['edi_head_id' => $head->id, 'qso_at' => '2026-01-17 09:00:00', 'call_sign' => 'D', 'received_wwl' => 'JN77AA', 'qso_points' => 1],
         ]));
 
         $score = app(ScoringService::class)->scoreEdi($head);
@@ -161,9 +161,9 @@ class ScoringServiceTest extends TestCase
         EdiLine::insert($this->withExchange([
             // vlastní čtverec JN99 (2 body) + 2× cizí JN89 (3 body) ve stejném čtverci.
             // QSO-Points v deníku jsou schválně 0 – přepočítáme je z lokátorů.
-            ['edihead_id' => $head->id, 'qso_at' => '2026-01-18 08:30:00', 'call_sign' => 'A', 'received_wwl' => 'JN99XX', 'qso_points' => 0],
-            ['edihead_id' => $head->id, 'qso_at' => '2026-01-18 09:00:00', 'call_sign' => 'B', 'received_wwl' => 'JN89AA', 'qso_points' => 0],
-            ['edihead_id' => $head->id, 'qso_at' => '2026-01-18 09:30:00', 'call_sign' => 'C', 'received_wwl' => 'JN89BB', 'qso_points' => 0],
+            ['edi_head_id' => $head->id, 'qso_at' => '2026-01-18 08:30:00', 'call_sign' => 'A', 'received_wwl' => 'JN99XX', 'qso_points' => 0],
+            ['edi_head_id' => $head->id, 'qso_at' => '2026-01-18 09:00:00', 'call_sign' => 'B', 'received_wwl' => 'JN89AA', 'qso_points' => 0],
+            ['edi_head_id' => $head->id, 'qso_at' => '2026-01-18 09:30:00', 'call_sign' => 'C', 'received_wwl' => 'JN89BB', 'qso_points' => 0],
         ]));
 
         $score = app(ScoringService::class)->scoreEdi($head);
@@ -195,9 +195,9 @@ class ScoringServiceTest extends TestCase
         ]);
         EdiLine::insert($this->withExchange([
             // QSO ze dne konání (21.) v okně → započítá se.
-            ['edihead_id' => $head->id, 'qso_at' => '2026-06-21 08:30:00', 'call_sign' => 'A', 'received_wwl' => 'JN89AA', 'qso_points' => 0],
+            ['edi_head_id' => $head->id, 'qso_at' => '2026-06-21 08:30:00', 'call_sign' => 'A', 'received_wwl' => 'JN89AA', 'qso_points' => 0],
             // QSO z prvního dne TDate (20.), který NENÍ den konání → mimo den, vyřazeno.
-            ['edihead_id' => $head->id, 'qso_at' => '2026-06-20 08:30:00', 'call_sign' => 'B', 'received_wwl' => 'JO70AA', 'qso_points' => 0],
+            ['edi_head_id' => $head->id, 'qso_at' => '2026-06-20 08:30:00', 'call_sign' => 'B', 'received_wwl' => 'JO70AA', 'qso_points' => 0],
         ]));
 
         $score = app(ScoringService::class)->scoreEdi($head);
@@ -219,10 +219,10 @@ class ScoringServiceTest extends TestCase
         $k2 = $this->round('2. kolo 2026'); // ID=2, na prahu → non-EDI nulifikace
 
         $e1 = $this->entry($k1->id, $kat->id, 'OK1A', 100);
-        $e1->update(['rank' => 1]); // edihead_id=NULL (default) → pod prahem, počítá se
+        $e1->update(['rank' => 1]); // edi_head_id=NULL (default) → pod prahem, počítá se
 
         $e2 = $this->entry($k2->id, $kat->id, 'OK1A', 200);
-        $e2->update(['rank' => 1]); // edihead_id=NULL (default) → na/nad prahem → 0 bodů
+        $e2->update(['rank' => 1]); // edi_head_id=NULL (default) → na/nad prahem → 0 bodů
 
         $res = app(ScoringService::class)->yearlyResults(2026);
 
@@ -258,9 +258,9 @@ class ScoringServiceTest extends TestCase
             'p_sect' => '', 'p_band' => '', 'r_name' => '', 'r_phon' => '', 'r_emai' => '', 's_powe' => 100,
         ]);
         EdiLine::insert([
-            ['edihead_id' => $head->id, 'qso_at' => '2026-01-18 07:59:00', 'call_sign' => 'A', 'received_wwl' => 'JN89AA', 'qso_points' => 3],
-            ['edihead_id' => $head->id, 'qso_at' => '2026-01-18 11:01:00', 'call_sign' => 'B', 'received_wwl' => 'JO70AA', 'qso_points' => 4],
-            ['edihead_id' => $head->id, 'qso_at' => '2026-01-18 12:30:00', 'call_sign' => 'C', 'received_wwl' => 'JN88AA', 'qso_points' => 3],
+            ['edi_head_id' => $head->id, 'qso_at' => '2026-01-18 07:59:00', 'call_sign' => 'A', 'received_wwl' => 'JN89AA', 'qso_points' => 3],
+            ['edi_head_id' => $head->id, 'qso_at' => '2026-01-18 11:01:00', 'call_sign' => 'B', 'received_wwl' => 'JO70AA', 'qso_points' => 4],
+            ['edi_head_id' => $head->id, 'qso_at' => '2026-01-18 12:30:00', 'call_sign' => 'C', 'received_wwl' => 'JN88AA', 'qso_points' => 3],
         ]);
 
         $score = app(ScoringService::class)->scoreEdi($head);
@@ -280,10 +280,10 @@ class ScoringServiceTest extends TestCase
             'p_sect' => '', 'p_band' => '', 'r_name' => '', 'r_phon' => '', 'r_emai' => '', 's_powe' => 100,
         ]);
         EdiLine::insert($this->withExchange([
-            ['edihead_id' => $head->id, 'qso_at' => '2026-01-18 07:59:00', 'call_sign' => 'A', 'received_wwl' => 'JN89AA', 'qso_points' => 0],
-            ['edihead_id' => $head->id, 'qso_at' => '2026-01-18 08:00:00', 'call_sign' => 'B', 'received_wwl' => 'JO70AA', 'qso_points' => 0],
-            ['edihead_id' => $head->id, 'qso_at' => '2026-01-18 11:00:00', 'call_sign' => 'C', 'received_wwl' => 'JN88AA', 'qso_points' => 0],
-            ['edihead_id' => $head->id, 'qso_at' => '2026-01-18 11:01:00', 'call_sign' => 'D', 'received_wwl' => 'JN77AA', 'qso_points' => 0],
+            ['edi_head_id' => $head->id, 'qso_at' => '2026-01-18 07:59:00', 'call_sign' => 'A', 'received_wwl' => 'JN89AA', 'qso_points' => 0],
+            ['edi_head_id' => $head->id, 'qso_at' => '2026-01-18 08:00:00', 'call_sign' => 'B', 'received_wwl' => 'JO70AA', 'qso_points' => 0],
+            ['edi_head_id' => $head->id, 'qso_at' => '2026-01-18 11:00:00', 'call_sign' => 'C', 'received_wwl' => 'JN88AA', 'qso_points' => 0],
+            ['edi_head_id' => $head->id, 'qso_at' => '2026-01-18 11:01:00', 'call_sign' => 'D', 'received_wwl' => 'JN77AA', 'qso_points' => 0],
         ]));
 
         $score = app(ScoringService::class)->scoreEdi($head);
@@ -304,7 +304,7 @@ class ScoringServiceTest extends TestCase
             'p_sect' => '', 'p_band' => '', 'r_name' => '', 'r_phon' => '', 'r_emai' => '', 's_powe' => 100,
         ]);
         EdiLine::insert($this->withExchange([
-            ['edihead_id' => $head->id, 'qso_at' => '2026-01-18 08:30:00', 'call_sign' => 'A', 'received_wwl' => 'JN89AA', 'qso_points' => 0],
+            ['edi_head_id' => $head->id, 'qso_at' => '2026-01-18 08:30:00', 'call_sign' => 'A', 'received_wwl' => 'JN89AA', 'qso_points' => 0],
         ]));
 
         $score = app(ScoringService::class)->scoreEdi($head);

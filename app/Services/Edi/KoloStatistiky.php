@@ -151,7 +151,7 @@ final class KoloStatistiky
         $odx = null;
 
         $rows = DB::table('edi_lines')
-            ->join('edi_heads', 'edi_lines.edihead_id', '=', 'edi_heads.id')
+            ->join('edi_heads', 'edi_lines.edi_head_id', '=', 'edi_heads.id')
             ->where('edi_heads.round_id', $koloId)
             ->whereTime('edi_lines.qso_at', '>=', ContestWindow::fromSqlTime())
             ->whereTime('edi_lines.qso_at', '<=', ContestWindow::toSqlTime())

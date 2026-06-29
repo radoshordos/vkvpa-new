@@ -21,7 +21,7 @@ use Override;
  * Jednotlivé spojení (QSO) v deníku EDI.
  *
  * @property int $id
- * @property int $edihead_id
+ * @property int $edi_head_id
  * @property Carbon|null $qso_at
  * @property string|null $call_sign
  * @property int|null $mode_code
@@ -42,7 +42,7 @@ use Override;
  * @property-read EdiHead|null $head
  */
 #[Fillable([
-    'edihead_id', 'qso_at', 'call_sign', 'mode_code', 'sent_rst',
+    'edi_head_id', 'qso_at', 'call_sign', 'mode_code', 'sent_rst',
     'sent_qso_number', 'received_rst', 'received_qso_number',
     'received_exchange', 'received_wwl', 'qso_points',
     'new_exchange_n', 'new_wwl_n', 'new_dxcc_n',
@@ -59,7 +59,7 @@ class EdiLine extends Model
      */
     public function head(): BelongsTo
     {
-        return $this->belongsTo(EdiHead::class, 'edihead_id');
+        return $this->belongsTo(EdiHead::class, 'edi_head_id');
     }
 
     /** Přijatý lokátor protistanice (prázdný string pokud chybí). */
@@ -132,7 +132,7 @@ class EdiLine extends Model
     protected function casts(): array
     {
         return [
-            'edihead_id' => 'integer',
+            'edi_head_id' => 'integer',
             'qso_at' => 'datetime',
             'mode_code' => 'integer',
             'sent_qso_number' => 'integer',

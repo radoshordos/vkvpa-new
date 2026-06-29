@@ -57,7 +57,7 @@ final class QsoGeometry
 
                 if ($lat === null || $lon === null) {
                     Log::debug('qso_geometry.skip', [
-                        'edihead_id' => $head->id,
+                        'edi_head_id' => $head->id,
                         'call' => (string) $l->call_sign,
                         'wwl' => $wwl,
                     ]);
@@ -114,7 +114,7 @@ final class QsoGeometry
             $center = Maidenhead::bigSquareCenter((string) $sq);
 
             if ($center === null) {
-                Log::debug('qso_geometry.square.skip', ['edihead_id' => $head->id, 'square' => $sq]);
+                Log::debug('qso_geometry.square.skip', ['edi_head_id' => $head->id, 'square' => $sq]);
 
                 continue;
             }
@@ -203,7 +203,7 @@ final class QsoGeometry
 
         foreach (
             EdiLine::query()
-                ->whereIn('edihead_id', $headIds)
+                ->whereIn('edi_head_id', $headIds)
                 ->inContestWindow()
                 ->orderBy('qso_at')
                 ->get(['call_sign', 'received_wwl', 'lon', 'lat']) as $l

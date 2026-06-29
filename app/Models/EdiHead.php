@@ -58,7 +58,7 @@ class EdiHead extends Model
      */
     public function lines(): HasMany
     {
-        return $this->hasMany(EdiLine::class, 'edihead_id');
+        return $this->hasMany(EdiLine::class, 'edi_head_id');
     }
 
     /**

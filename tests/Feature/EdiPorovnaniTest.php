@@ -170,8 +170,8 @@ class EdiPorovnaniTest extends TestCase
             'round_id' => $kolo->id, 't_date' => '20260315', 'p_call' => 'OK1BBB', 'p_wwlo' => 'JN89',
             'p_band' => '144 MHz', 'r_name' => 'B', 'r_emai' => 'b@b.cz', 's_powe' => 100,
         ]);
-        EdiLine::create(['edihead_id' => $rival->id, 'qso_at' => '2026-03-15 08:30:00', 'call_sign' => 'OK2IMH', 'received_wwl' => 'JN99BP']);
-        EdiLine::create(['edihead_id' => $rival->id, 'qso_at' => '2026-03-15 08:31:00', 'call_sign' => 'OK9ZZZ', 'received_wwl' => 'JO60AA']);
+        EdiLine::create(['edi_head_id' => $rival->id, 'qso_at' => '2026-03-15 08:30:00', 'call_sign' => 'OK2IMH', 'received_wwl' => 'JN99BP']);
+        EdiLine::create(['edi_head_id' => $rival->id, 'qso_at' => '2026-03-15 08:31:00', 'call_sign' => 'OK9ZZZ', 'received_wwl' => 'JO60AA']);
 
         $other = EdiHead::create([
             'round_id' => $kolo->id, 't_date' => '20260315', 'p_call' => 'OK7CCC', 'p_wwlo' => 'JO70AA',
