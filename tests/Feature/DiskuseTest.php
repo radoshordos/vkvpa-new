@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\DiscussionPost;
 use App\Models\EdiRound;
-use App\Models\Prispevek;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -55,7 +55,7 @@ class DiskuseTest extends TestCase
     public function test_show_renders_view_with_prispevky(): void
     {
         $kolo = $this->round();
-        Prispevek::create(['round_id' => $kolo->id, 'znacka' => 'OK1AB', 'text' => 'Ahoj ze závodu!', 'ip' => '127.0.0.1']);
+        DiscussionPost::create(['round_id' => $kolo->id, 'callsign' => 'OK1AB', 'body' => 'Ahoj ze závodu!', 'ip_address' => '127.0.0.1']);
 
         $this->get(route('diskuse.show', $kolo->id))
             ->assertOk()
@@ -87,7 +87,7 @@ class DiskuseTest extends TestCase
             'name' => '01/2023',
             'note' => '',
         ]);
-        Prispevek::create(['round_id' => $stareS->id, 'znacka' => 'OK1AB', 'text' => 'Starý příspěvek.', 'ip' => '127.0.0.1']);
+        DiscussionPost::create(['round_id' => $stareS->id, 'callsign' => 'OK1AB', 'body' => 'Starý příspěvek.', 'ip_address' => '127.0.0.1']);
 
         $kola = $this->get(route('diskuse.show', $aktualni->id))
             ->assertOk()
@@ -130,9 +130,9 @@ class DiskuseTest extends TestCase
         ])->assertRedirect(route('diskuse.show', $kolo->id))
             ->assertSessionHas('success');
 
-        $this->assertDatabaseHas('diskuse', [
+        $this->assertDatabaseHas('discussion_posts', [
             'round_id' => $kolo->id,
-            'znacka' => 'OK1TEST',
+            'callsign' => 'OK1TEST',
         ]);
     }
 
@@ -145,7 +145,7 @@ class DiskuseTest extends TestCase
             'text' => 'Text příspěvku.',
         ]);
 
-        $this->assertDatabaseHas('diskuse', ['znacka' => 'OK1LOWER']);
+        $this->assertDatabaseHas('discussion_posts', ['callsign' => 'OK1LOWER']);
     }
 
     public function test_store_accepts_optional_jmeno(): void
@@ -158,7 +158,7 @@ class DiskuseTest extends TestCase
             'text' => 'Příspěvek s jménem.',
         ]);
 
-        $this->assertDatabaseHas('diskuse', ['znacka' => 'OK1A', 'jmeno' => 'Jan Novák']);
+        $this->assertDatabaseHas('discussion_posts', ['callsign' => 'OK1A', 'name' => 'Jan Novák']);
     }
 
     public function test_store_saves_photo_into_database(): void
@@ -171,16 +171,16 @@ class DiskuseTest extends TestCase
             'fotky' => [UploadedFile::fake()->image('foto.jpg', 1200, 800)],
         ])->assertRedirect();
 
-        $prispevek = Prispevek::where('znacka', 'OK1FOTO')->firstOrFail();
-        $this->assertCount(1, $prispevek->fotky);
+        $prispevek = DiscussionPost::where('callsign', 'OK1FOTO')->firstOrFail();
+        $this->assertCount(1, $prispevek->photos);
 
-        $foto = $prispevek->fotky->first();
+        $foto = $prispevek->photos->first();
         $this->assertNotNull($foto);
-        $this->assertSame('image/jpeg', $foto->mime);
+        $this->assertSame('image/jpeg', $foto->mime_type);
         $this->assertNotEmpty($foto->data);
-        $this->assertNotEmpty($foto->nahled);
-        $this->assertGreaterThan(0, $foto->sirka);
-        $this->assertGreaterThan(0, $foto->vyska);
+        $this->assertNotEmpty($foto->thumbnail);
+        $this->assertGreaterThan(0, $foto->width);
+        $this->assertGreaterThan(0, $foto->height);
     }
 
     public function test_store_saves_multiple_photos_in_order(): void
@@ -197,9 +197,9 @@ class DiskuseTest extends TestCase
             ],
         ])->assertRedirect();
 
-        $prispevek = Prispevek::where('znacka', 'OK1MULTI')->firstOrFail();
-        $this->assertCount(3, $prispevek->fotky);
-        $this->assertSame([0, 1, 2], $prispevek->fotky->pluck('poradi')->all());
+        $prispevek = DiscussionPost::where('callsign', 'OK1MULTI')->firstOrFail();
+        $this->assertCount(3, $prispevek->photos);
+        $this->assertSame([0, 1, 2], $prispevek->photos->pluck('position')->all());
     }
 
     public function test_store_rejects_more_than_max_photos(): void
@@ -217,7 +217,7 @@ class DiskuseTest extends TestCase
             'fotky' => $fotky,
         ])->assertSessionHasErrors('fotky');
 
-        $this->assertDatabaseMissing('diskuse', ['znacka' => 'OK1MAX']);
+        $this->assertDatabaseMissing('discussion_posts', ['callsign' => 'OK1MAX']);
     }
 
     public function test_store_downscales_large_photo(): void
@@ -230,10 +230,10 @@ class DiskuseTest extends TestCase
             'fotky' => [UploadedFile::fake()->image('big.jpg', 4000, 3000)],
         ])->assertRedirect();
 
-        $foto = Prispevek::where('znacka', 'OK1BIG')->firstOrFail()->fotky->first();
+        $foto = DiscussionPost::where('callsign', 'OK1BIG')->firstOrFail()->photos->first();
         $this->assertNotNull($foto);
-        $this->assertLessThanOrEqual(2000, $foto->sirka);
-        $this->assertLessThanOrEqual(2000, $foto->vyska);
+        $this->assertLessThanOrEqual(2000, $foto->width);
+        $this->assertLessThanOrEqual(2000, $foto->height);
     }
 
     public function test_foto_route_serves_image_from_db(): void
@@ -246,7 +246,7 @@ class DiskuseTest extends TestCase
             'fotky' => [UploadedFile::fake()->image('s.jpg', 600, 600)],
         ]);
 
-        $foto = Prispevek::where('znacka', 'OK1SERVE')->firstOrFail()->fotky->firstOrFail();
+        $foto = DiscussionPost::where('callsign', 'OK1SERVE')->firstOrFail()->photos->firstOrFail();
 
         $this->get(route('diskuse.foto', $foto->id))
             ->assertOk()
@@ -312,14 +312,14 @@ class DiskuseTest extends TestCase
     public function test_admin_can_delete_prispevek(): void
     {
         $kolo = $this->round();
-        $p = Prispevek::create(['round_id' => $kolo->id, 'znacka' => 'OK1DEL', 'text' => 'Smažitelný.', 'ip' => '127.0.0.1']);
+        $p = DiscussionPost::create(['round_id' => $kolo->id, 'callsign' => 'OK1DEL', 'body' => 'Smažitelný.', 'ip_address' => '127.0.0.1']);
 
         $this->actingAs($this->admin())
             ->delete(route('diskuse.destroy', $p->id))
             ->assertRedirect(route('diskuse.show', $kolo->id))
             ->assertSessionHas('success');
 
-        $this->assertDatabaseMissing('diskuse', ['id' => $p->id]);
+        $this->assertDatabaseMissing('discussion_posts', ['id' => $p->id]);
     }
 
     public function test_admin_delete_removes_photos_from_db(): void
@@ -332,24 +332,24 @@ class DiskuseTest extends TestCase
             'fotky' => [UploadedFile::fake()->image('foto.jpg', 600, 400)],
         ]);
 
-        $p = Prispevek::where('znacka', 'OK1FOTO')->firstOrFail();
-        $this->assertCount(1, $p->fotky);
+        $p = DiscussionPost::where('callsign', 'OK1FOTO')->firstOrFail();
+        $this->assertCount(1, $p->photos);
 
         $this->actingAs($this->admin())
             ->delete(route('diskuse.destroy', $p->id));
 
-        $this->assertDatabaseMissing('diskuse', ['id' => $p->id]);
-        $this->assertDatabaseMissing('diskuse_foto', ['prispevek_id' => $p->id]);
+        $this->assertDatabaseMissing('discussion_posts', ['id' => $p->id]);
+        $this->assertDatabaseMissing('discussion_post_photos', ['discussion_post_id' => $p->id]);
     }
 
     public function test_guest_cannot_delete_prispevek(): void
     {
         $kolo = $this->round();
-        $p = Prispevek::create(['round_id' => $kolo->id, 'znacka' => 'OK1ND', 'text' => 'Nesmažitelný hostem.', 'ip' => '127.0.0.1']);
+        $p = DiscussionPost::create(['round_id' => $kolo->id, 'callsign' => 'OK1ND', 'body' => 'Nesmažitelný hostem.', 'ip_address' => '127.0.0.1']);
 
         $this->delete(route('diskuse.destroy', $p->id))
             ->assertRedirect(route('login'));
 
-        $this->assertDatabaseHas('diskuse', ['id' => $p->id]);
+        $this->assertDatabaseHas('discussion_posts', ['id' => $p->id]);
     }
 }

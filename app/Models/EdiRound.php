@@ -29,7 +29,7 @@ use Override;
  * @property Carbon|null $evaluated_at
  * @property string $note
  * @property-read Collection<int, EdiEntry> $entries
- * @property-read Collection<int, Prispevek> $discussion
+ * @property-read Collection<int, DiscussionPost> $discussion
  */
 #[Fillable(['starts_at', 'closes_at', 'name', 'note', 'evaluated_at'])]
 #[Table(name: 'edi_rounds', key: 'id')]
@@ -42,10 +42,10 @@ class EdiRound extends Model
         return $this->hasMany(EdiEntry::class, 'round_id', 'id');
     }
 
-    /** @return HasMany<Prispevek, $this> */
+    /** @return HasMany<DiscussionPost, $this> */
     public function discussion(): HasMany
     {
-        return $this->hasMany(Prispevek::class, 'round_id', 'id');
+        return $this->hasMany(DiscussionPost::class, 'round_id', 'id');
     }
 
     /**

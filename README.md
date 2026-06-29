@@ -172,7 +172,7 @@ Hlášení se od běžných závodníků přijímají ve stavech `Aktivni` a `Pr
 
 **EDI schéma** (`edihead`, `edilines`): odvozeno z původního systému, ale plně normalizováno na `snake_case` názvy sloupců (`mode_code`, `received_wwl`, `qso_points`, `t_date`, `p_call` apod.) – přistupuje se k nim jako k běžným Eloquent atributům, žádný magický `$line->{'...'}` přístup ani potlačení `property.notFound`. Oba modely mají `#[WithoutTimestamps]` (vlastní časové sloupce `stamp`, `d_cas`). Model `Ediline` navíc nabízí **PHP 8.4 property hooks** (`$receivedWwl`, `$qsoPoints`, `$modeCode`, `$mode`, `$newWwl`), které surové sloupce normalizují/castují.
 
-**Aplikační schéma** (`vkvpa_*`): `EdiEntry` (závodní záznamy/výsledky), `EdiRound` (kola závodu), `VkvpaPrihlaseni` (přihlašovací tokeny), `Prispevek` (diskuze ke kolům). Kategorie je `edi_category` (model `EdiCategory`) – **jediný** číselník kategorií; `EdiEntry.category_id` je FK na `edi_category.id` (původní duplicitní tabulka `vkvpa_kategorie` byla zrušena).
+**Aplikační schéma** (`vkvpa_*`): `EdiEntry` (závodní záznamy/výsledky), `EdiRound` (kola závodu), `VkvpaPrihlaseni` (přihlašovací tokeny), `DiscussionPost` (diskuze ke kolům, tabulka `discussion_posts`; fotky binárně v `discussion_post_photos` přes `DiscussionPostPhoto`). Kategorie je `edi_category` (model `EdiCategory`) – **jediný** číselník kategorií; `EdiEntry.category_id` je FK na `edi_category.id` (původní duplicitní tabulka `vkvpa_kategorie` byla zrušena).
 
 ### Eloquent strict mode
 
@@ -460,7 +460,7 @@ EdiRound ──► EdiEntry ◄── EdiCategory
                 │
                 └──► Edihead ──► Ediline[]
 
-EdiRound ──► Prispevek[]
+EdiRound ──► DiscussionPost[] ──► DiscussionPostPhoto[]
 ```
 
 | Model | Klíčové vztahy a atributy |
@@ -468,10 +468,11 @@ EdiRound ──► Prispevek[]
 | `EdiEntry` | `belongsTo(EdiRound, EdiCategory, Edihead)` |
 | `Edihead` | `hasMany(Ediline)`, `belongsTo(EdiCategory)`, `#[WithoutTimestamps]` |
 | `Ediline` | `belongsTo(Edihead)`, nestandardní názvy sloupců, `#[WithoutTimestamps]`; PHP 8.4 property hooks: `$receivedWwl`, `$qsoPoints`, `$modeCode`, `$mode`, `$newWwl` |
-| `EdiRound` | `hasMany(EdiEntry, Prispevek)`, `stav(): KoloStav`, `isActive()`, scope `active()` |
+| `EdiRound` | `hasMany(EdiEntry, DiscussionPost)`, `stav(): KoloStav`, `isActive()`, scope `active()` |
 | `EdiCategory` | `hasMany(EdiEntry)` (`hlaseni`), `domestic()`/`domesticCounterpart()`; jediný číselník kategorií, accessory `nazev`/`zkratka` |
 | `VkvpaPrihlaseni` | tokeny s TTL = `vkvpa.token_ttl_days` (výchozí: 5 dní) |
-| `Prispevek` | `belongsTo(EdiRound)` – diskuzní příspěvky |
+| `DiscussionPost` | `belongsTo(EdiRound)`, `hasMany(DiscussionPostPhoto)` – diskuzní příspěvky (tabulka `discussion_posts`) |
+| `DiscussionPostPhoto` | `belongsTo(DiscussionPost)` – fotky příspěvku binárně v `discussion_post_photos` |
 | `User` | přihlašování přes `name` (ne email), `is_admin` boolean |
 
 ---
@@ -844,7 +845,7 @@ Každé závodní kolo má vlastní diskuzní vlákno dostupné na `/diskuse/{ko
 
 - Příspěvky může přidávat kdokoli (throttle: `diskuse`, ochrana před spamem)
 - Příspěvky moderuje admin (smazání přes `DELETE /admin/diskuse/{prispevek}`)
-- Model `Prispevek` patří pod `EdiRound`
+- Model `DiscussionPost` patří pod `EdiRound`
 - Výchozí redirect `/diskuse` → nejnovější kolo
 
 ---

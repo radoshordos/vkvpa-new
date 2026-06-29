@@ -11,18 +11,18 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('diskuse', function (Blueprint $table): void {
+        Schema::create('discussion_posts', function (Blueprint $table): void {
             $table->id();
             // SIGNED INT kvůli shodě typu s edi_rounds.id (MySQL FK vyžaduje
             // shodné znaménko).
             $table->integer('round_id');
-            $table->string('znacka', 20);
-            $table->string('jmeno', 100)->nullable();
-            $table->text('text');
-            // Fotografie už nejsou na disku jako jediná cesta v tomto sloupci –
-            // ukládají se binárně do podřízené tabulky `diskuse_foto` (1:N),
-            // takže jich může být víc na jeden příspěvek.
-            $table->string('ip', 45)->nullable();
+            $table->string('callsign', 20);
+            $table->string('name', 100)->nullable();
+            $table->text('body');
+            // Fotografie se ukládají binárně do podřízené tabulky
+            // `discussion_post_photos` (1:N), takže jich může být víc na jeden
+            // příspěvek.
+            $table->string('ip_address', 45)->nullable();
             // DATETIME (ne TIMESTAMP) – nezávislé na session time_zone serveru.
             $table->dateTime('created_at')->useCurrent();
 
@@ -36,8 +36,8 @@ return new class extends Migration
         }
 
         // Kola se nikdy nemažou → RESTRICT.
-        Schema::table('diskuse', function (Blueprint $table): void {
-            $table->foreign('round_id', 'diskuse_round_id_fk')
+        Schema::table('discussion_posts', function (Blueprint $table): void {
+            $table->foreign('round_id', 'discussion_posts_round_id_fk')
                 ->references('id')->on('edi_rounds')
                 ->restrictOnDelete();
         });
@@ -45,6 +45,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('diskuse');
+        Schema::dropIfExists('discussion_posts');
     }
 };

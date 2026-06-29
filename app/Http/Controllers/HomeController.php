@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Enums\KoloStav;
+use App\Models\DiscussionPost;
 use App\Models\EdiCategory;
 use App\Models\EdiEntry;
 use App\Models\EdiRound;
-use App\Models\Prispevek;
 use Illuminate\Support\Carbon;
 use Illuminate\View\View;
 
@@ -47,8 +47,8 @@ class HomeController extends Controller
 
         // Diskuse: počet příspěvků ke kolu v hero + poslední 3 příspěvky
         // napříč koly (mezi koly je diskuse aktuálního kola prázdná).
-        $diskuseCount = $kolo ? Prispevek::query()->where('round_id', $kolo->id)->count() : 0;
-        $posledniPrispevky = Prispevek::query()
+        $diskuseCount = $kolo ? DiscussionPost::query()->where('round_id', $kolo->id)->count() : 0;
+        $posledniPrispevky = DiscussionPost::query()
             ->with('round')
             ->orderByDesc('created_at')
             ->orderByDesc('id')
