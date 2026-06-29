@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Edihead;
+use App\Models\EdiHead;
 use App\Models\EdiRound;
 use App\Support\FileName;
 use Illuminate\Http\Response;
@@ -26,7 +26,7 @@ class ExportController extends Controller
     public function index(): Response
     {
         // Počet deníků se zdrojovým EDI souborem na jedno kolo.
-        $pocty = Edihead::query()
+        $pocty = EdiHead::query()
             ->whereNotNull('src')
             ->whereRaw("TRIM(src) <> ''")
             ->selectRaw('round_id, COUNT(*) AS pocet')
@@ -55,7 +55,7 @@ class ExportController extends Controller
      */
     public function download(EdiRound $kolo): BinaryFileResponse|StreamedResponse
     {
-        $deniky = Edihead::query()
+        $deniky = EdiHead::query()
             ->where('round_id', $kolo->id)
             ->whereNotNull('src')
             ->whereRaw("TRIM(src) <> ''")

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Models\Edihead;
+use App\Models\EdiHead;
 use App\Services\Edi\DenikStatistiky;
 use App\Services\Edi\PorovnaniRivals;
 use App\Services\Edi\QsoGeometry;
@@ -33,7 +33,7 @@ class EdiPorovnaniController extends Controller
         private readonly StatistikyInkubator $inkubator,
     ) {}
 
-    public function show(Request $request, Edihead $head): View
+    public function show(Request $request, EdiHead $head): View
     {
         $home = Maidenhead::toLatLon((string) $head->p_wwlo);
         $homeSq = Maidenhead::bigSquare((string) $head->p_wwlo);

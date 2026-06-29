@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use App\Models\Edihead;
-use App\Models\Ediline;
+use App\Models\EdiHead;
+use App\Models\EdiLine;
 use App\Services\Edi\EdiImportService;
 use App\Services\Edi\EdiParser;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -25,13 +25,13 @@ class EdiImportTest extends TestCase
         $log = new EdiParser()->parse($edi);
         $head = new EdiImportService()->import($log);
 
-        $this->assertInstanceOf(Edihead::class, $head);
+        $this->assertInstanceOf(EdiHead::class, $head);
         $this->assertSame('OK2KJT', $head->p_call);
         $this->assertSame(800, (int) $head->s_powe);
 
-        $this->assertSame(2, Ediline::where('edihead_id', $head->id)->count());
+        $this->assertSame(2, EdiLine::where('edi_head_id', $head->id)->count());
 
-        $first = Ediline::where('edihead_id', $head->id)->orderBy('id')->first();
+        $first = EdiLine::where('edi_head_id', $head->id)->orderBy('id')->first();
         $this->assertNotNull($first);
         $this->assertSame('OK2IMH', $first->call_sign);
         $this->assertSame('JN99BP', $first->receivedWwl);
@@ -64,9 +64,9 @@ class EdiImportTest extends TestCase
         $log = new EdiParser()->parse($edi);
         $head = new EdiImportService()->import($log);
 
-        $this->assertInstanceOf(Edihead::class, $head);
+        $this->assertInstanceOf(EdiHead::class, $head);
         $this->assertSame('OK1TEST', $head->p_call);
-        $this->assertSame(0, Ediline::where('edihead_id', $head->id)->count());
+        $this->assertSame(0, EdiLine::where('edi_head_id', $head->id)->count());
     }
 
     public function test_raw_source_is_persisted(): void

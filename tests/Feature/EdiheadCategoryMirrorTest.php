@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Models\EdiEntry;
-use App\Models\Edihead;
+use App\Models\EdiHead;
 use App\Services\Edi\EdiheadCategoryBackfiller;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * edi_head.edi_category_id se nastavuje 1:1 z edi_entries.category_id.
+ * edi_heads.edi_category_id se nastavuje 1:1 z edi_entries.category_id.
  * Osiřelé (bez příspěvku) i víceznačné (víc kategorií) deníky → NULL.
  *
  * @see EdiheadCategoryBackfiller
@@ -67,9 +67,9 @@ class EdiheadCategoryMirrorTest extends TestCase
         ]);
     }
 
-    private function makeHead(string $pCall, ?int $ediCategoryId = null): Edihead
+    private function makeHead(string $pCall, ?int $ediCategoryId = null): EdiHead
     {
-        return Edihead::create([
+        return EdiHead::create([
             'edi_category_id' => $ediCategoryId,
             't_date' => '20240101;20240101',
             'p_call' => $pCall,

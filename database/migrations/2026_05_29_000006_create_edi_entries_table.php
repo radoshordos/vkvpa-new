@@ -34,7 +34,7 @@ return new class extends Migration
             $table->string('note', 250)->default('');
             $table->string('soapbox', 250)->default('');
             $table->string('ip', 64)->default('');
-            // NULL = hlášení bez deníku, jinak FK na edi_head. Smazání deníku
+            // NULL = hlášení bez deníku, jinak FK na edi_heads. Smazání deníku
             // odpojí jen vazbu – výsledkový řádek (body jsou denormalizované)
             // zůstává, stejně jako při mazání v adminu.
             $table->integer('edi_head_id')->nullable();
@@ -65,10 +65,10 @@ return new class extends Migration
             $table->foreign('round_id', 'edi_entries_round_id_fk')
                 ->references('id')->on('edi_rounds')
                 ->restrictOnDelete();
-            // FK category_id → edi_category se přidává až v migraci, která
-            // edi_category vytváří (2026_06_27_000001) – ta tabulka tu ještě neexistuje.
+            // FK category_id → edi_categories se přidává až v migraci, která
+            // edi_categories vytváří (2026_06_27_000001) – ta tabulka tu ještě neexistuje.
             $table->foreign('edi_head_id', 'edi_entries_edi_head_id_fk')
-                ->references('id')->on('edi_head')
+                ->references('id')->on('edi_heads')
                 ->nullOnDelete();
         });
     }

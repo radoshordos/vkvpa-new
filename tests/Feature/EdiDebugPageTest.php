@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Http\Controllers\Admin\EdiDebugController;
-use App\Models\Edihead;
+use App\Models\EdiHead;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -54,7 +54,7 @@ class EdiDebugPageTest extends TestCase
     public function test_show_from_db_hides_upload_form(): void
     {
         $src = (string) file_get_contents(__DIR__.'/../fixtures/sample.edi');
-        $head = Edihead::create([
+        $head = EdiHead::create([
             'round_id' => 1,
             't_date' => '20260315',
             'p_call' => 'OK1AAA',

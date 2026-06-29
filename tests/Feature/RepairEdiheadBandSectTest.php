@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use App\Models\Edihead;
+use App\Models\EdiHead;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Tests\TestCase;
@@ -47,9 +47,9 @@ class RepairEdiheadBandSectTest extends TestCase
         self::assertSame('', $noSrc->p_sect);
     }
 
-    private function makeHead(string $pBand, string $pSect, ?string $src): Edihead
+    private function makeHead(string $pBand, string $pSect, ?string $src): EdiHead
     {
-        return Edihead::create([
+        return EdiHead::create([
             't_date' => '20260315;20260315',
             'p_call' => 'OK2KJT',
             'p_wwlo' => 'JN99AJ',

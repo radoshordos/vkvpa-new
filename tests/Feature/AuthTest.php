@@ -7,6 +7,7 @@ namespace Tests\Feature;
 use App\Models\LoginToken;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
@@ -27,7 +28,7 @@ class AuthTest extends TestCase
     }
 
     /** Uloží token jako SHA-256 hash (stejně jako SendEdiMailsListener). */
-    private function createToken(string $plaintext, mixed $createdAt = null, ?int $userId = null): void
+    private function createToken(string $plaintext, ?Carbon $createdAt = null, ?int $userId = null): void
     {
         $loginToken = new LoginToken([
             'token' => hash('sha256', $plaintext),

@@ -21,7 +21,7 @@ use Override;
  * Jednotlivé spojení (QSO) v deníku EDI.
  *
  * @property int $id
- * @property int $edihead_id
+ * @property int $edi_head_id
  * @property Carbon|null $qso_at
  * @property string|null $call_sign
  * @property int|null $mode_code
@@ -39,10 +39,10 @@ use Override;
  * @property int|null $sqr
  * @property float|null $lon
  * @property float|null $lat
- * @property-read Edihead|null $head
+ * @property-read EdiHead|null $head
  */
 #[Fillable([
-    'edihead_id', 'qso_at', 'call_sign', 'mode_code', 'sent_rst',
+    'edi_head_id', 'qso_at', 'call_sign', 'mode_code', 'sent_rst',
     'sent_qso_number', 'received_rst', 'received_qso_number',
     'received_exchange', 'received_wwl', 'qso_points',
     'new_exchange_n', 'new_wwl_n', 'new_dxcc_n',
@@ -50,16 +50,16 @@ use Override;
 ])]
 #[Table(name: 'edi_lines')]
 #[WithoutTimestamps]
-class Ediline extends Model
+class EdiLine extends Model
 {
     /**
      * Hlavička deníku, ke kterému spojení patří.
      *
-     * @return BelongsTo<Edihead, $this>
+     * @return BelongsTo<EdiHead, $this>
      */
     public function head(): BelongsTo
     {
-        return $this->belongsTo(Edihead::class, 'edihead_id');
+        return $this->belongsTo(EdiHead::class, 'edi_head_id');
     }
 
     /** Přijatý lokátor protistanice (prázdný string pokud chybí). */
@@ -101,7 +101,7 @@ class Ediline extends Model
      * bez ohledu na den. Filtruje přes qso_at (`whereTime` je přenositelný mezi
      * MySQL a SQLite); řádky bez qso_at se nezapočítají.
      *
-     * @param  Builder<Ediline>  $query
+     * @param  Builder<EdiLine>  $query
      */
     #[Scope]
     protected function inContestWindow(Builder $query): void
@@ -117,7 +117,7 @@ class Ediline extends Model
      * neplatné a do skóre se nezapočítává (shodně s
      * {@see QsoCountStatus::IncompleteExchange}).
      *
-     * @param  Builder<Ediline>  $query
+     * @param  Builder<EdiLine>  $query
      */
     #[Scope]
     protected function completeExchange(Builder $query): void
@@ -132,7 +132,7 @@ class Ediline extends Model
     protected function casts(): array
     {
         return [
-            'edihead_id' => 'integer',
+            'edi_head_id' => 'integer',
             'qso_at' => 'datetime',
             'mode_code' => 'integer',
             'sent_qso_number' => 'integer',

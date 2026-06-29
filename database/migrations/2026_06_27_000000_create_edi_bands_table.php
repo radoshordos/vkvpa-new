@@ -8,14 +8,14 @@ use Illuminate\Support\Facades\Schema;
 
 /**
  * `edi_bands` – číselník pásem (band). Vytažený z denormalizovaného textového
- * sloupce `edi_category.band`, na který nyní `edi_category.band_id` ukazuje FK.
+ * sloupce `edi_categories.band`, na který nyní `edi_categories.band_id` ukazuje FK.
  *
  *   token – kanonický token pásma bez jednotky ('144', '432', '1.3', … '122');
  *           shodný s prvním tokenem `name` a s výstupem CategoryResolver::band().
  *   name  – čitelný štítek s jednotkou ('144 MHz', '1.3 GHz', … '122 GHz').
  *
  * Pořadí pásem (144 → 122 GHz) odpovídá rostoucímu `id`, takže `orderBy('id')`
- * dává přirozené řazení i bez zvláštního sloupce. Vytváří se PŘED `edi_category`
+ * dává přirozené řazení i bez zvláštního sloupce. Vytváří se PŘED `edi_categories`
  * (000001), aby na něj šel navázat cizí klíč.
  */
 return new class extends Migration

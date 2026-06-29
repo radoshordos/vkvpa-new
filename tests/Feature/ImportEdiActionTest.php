@@ -14,8 +14,8 @@ use App\Exceptions\TDateNotContestDayException;
 use App\Exceptions\UnknownBandException;
 use App\Exceptions\UploadWindowClosedException;
 use App\Models\EdiEntry;
-use App\Models\Edihead;
-use App\Models\Ediline;
+use App\Models\EdiHead;
+use App\Models\EdiLine;
 use App\Models\EdiRound;
 use App\Services\Edi\EdiLog;
 use App\Services\Edi\EdiParser;
@@ -83,8 +83,8 @@ class ImportEdiActionTest extends TestCase
         $this->assertSame($this->round->id, $data->round_id);
         $this->assertNotNull($data->edi_head_id);
 
-        $this->assertSame(1, Edihead::count());
-        $this->assertSame(2, Ediline::count());
+        $this->assertSame(1, EdiHead::count());
+        $this->assertSame(2, EdiLine::count());
         $this->assertSame(1, EdiEntry::count());
     }
 
@@ -129,7 +129,7 @@ class ImportEdiActionTest extends TestCase
         $this->assertSame($this->round->id, $preview->idKola);
         $this->assertGreaterThan(0, $preview->idKategorie);
 
-        $this->assertSame(0, Edihead::count(), 'Náhled nesmí zapisovat do DB');
+        $this->assertSame(0, EdiHead::count(), 'Náhled nesmí zapisovat do DB');
         $this->assertSame(0, EdiEntry::count());
     }
 

@@ -7,7 +7,7 @@ namespace Tests\Feature;
 use App\Livewire\Prihlaska;
 use App\Models\EdiCategory;
 use App\Models\EdiEntry;
-use App\Models\Edihead;
+use App\Models\EdiHead;
 use App\Models\EdiRound;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -62,7 +62,7 @@ class PrihlaskaTest extends TestCase
             ->set('upload', $this->file('[REG1TEST;1]', 'denik.pdf'))
             ->assertHasErrors('upload');
 
-        $this->assertSame(0, Edihead::count());
+        $this->assertSame(0, EdiHead::count());
     }
 
     public function test_corrupt_edi_content_stays_in_choose_with_error(): void
@@ -72,7 +72,7 @@ class PrihlaskaTest extends TestCase
             ->assertSet('mode', 'choose');
 
         $this->assertNotSame('', $component->get('errorMessage'));
-        $this->assertSame(0, Edihead::count());
+        $this->assertSame(0, EdiHead::count());
     }
 
     // ── EDI: business validace (náhled nic neuloží) ──────────────────────────
@@ -87,7 +87,7 @@ class PrihlaskaTest extends TestCase
             ->set('upload', $this->file($edi))
             ->assertSet('mode', 'choose');
 
-        $this->assertSame(0, Edihead::count());
+        $this->assertSame(0, EdiHead::count());
     }
 
     public function test_edi_with_tdate_not_matching_qsos_is_rejected(): void
@@ -100,7 +100,7 @@ class PrihlaskaTest extends TestCase
             ->set('upload', $this->file($edi))
             ->assertSet('mode', 'choose');
 
-        $this->assertSame(0, Edihead::count());
+        $this->assertSame(0, EdiHead::count());
     }
 
     public function test_edi_rejected_when_no_round_exists(): void
@@ -111,7 +111,7 @@ class PrihlaskaTest extends TestCase
             ->set('upload', $this->file($edi))
             ->assertSet('mode', 'choose');
 
-        $this->assertSame(0, Edihead::count());
+        $this->assertSame(0, EdiHead::count());
     }
 
     public function test_duplicate_edi_is_rejected(): void
@@ -131,7 +131,7 @@ class PrihlaskaTest extends TestCase
             ->set('upload', $this->file($edi))
             ->assertSet('mode', 'choose');
 
-        $this->assertSame(1, Edihead::count());
+        $this->assertSame(1, EdiHead::count());
     }
 
     public function test_edi_tdate_range_accepted_when_one_day_is_third_sunday(): void
@@ -160,7 +160,7 @@ class PrihlaskaTest extends TestCase
             ->call('odeslat')
             ->assertRedirect(route('pribezne_vysledky'));
 
-        $this->assertSame(1, Edihead::count());
+        $this->assertSame(1, EdiHead::count());
     }
 
     public function test_edi_review_shows_per_qso_breakdown_and_files(): void

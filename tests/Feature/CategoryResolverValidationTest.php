@@ -10,7 +10,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Integrita číselníku `edi_category` (jediný číselník kategorií aplikace).
+ * Integrita číselníku `edi_categories` (jediný číselník kategorií aplikace).
  */
 class CategoryResolverValidationTest extends TestCase
 {
@@ -23,7 +23,7 @@ class CategoryResolverValidationTest extends TestCase
         $this->assertSame(
             count($ids),
             count(array_unique($ids)),
-            'edi_category obsahuje duplicitní id kategorií.',
+            'edi_categories obsahuje duplicitní id kategorií.',
         );
     }
 

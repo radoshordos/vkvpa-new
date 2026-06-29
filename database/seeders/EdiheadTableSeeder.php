@@ -6,7 +6,7 @@ namespace Database\Seeders;
 
 class EdiheadTableSeeder extends JsonTableSeeder
 {
-    protected string $table = 'edi_head';
+    protected string $table = 'edi_heads';
 
     protected ?int $autoIncrement = 23379;
 }

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Models\Edihead;
+use App\Models\EdiHead;
 use App\Models\EdiRound;
 use App\Services\Edi\EdiReducer;
 use App\Support\FileName;
@@ -28,7 +28,7 @@ class EdiController extends Controller
      *   – deník kola s právě otevřeným upload oknem: 403 Omezeno,
      *   – jinak (uzavřená/vyhodnocená kola): povolen i nepřihlášeným.
      */
-    public function zobrazit(Edihead $head): Response
+    public function zobrazit(EdiHead $head): Response
     {
         $this->assertEdiAccess($head);
 
@@ -39,7 +39,7 @@ class EdiController extends Controller
      * Zobrazí REDUKOVANÝ EDI soubor (oříznutý na závodní okno 08:00–11:00 UTC).
      * Stejná přístupová pravidla jako {@see zobrazit()}.
      */
-    public function zobrazitRedukovany(Edihead $head): Response
+    public function zobrazitRedukovany(EdiHead $head): Response
     {
         $this->assertEdiAccess($head);
 
@@ -55,7 +55,7 @@ class EdiController extends Controller
      * hlášení neunikaly deníky soupeřů. Deníky uzavřených/vyhodnocených kol
      * zůstávají veřejně přístupné i během okna jiného (probíhajícího) kola.
      */
-    private function assertEdiAccess(Edihead $head): void
+    private function assertEdiAccess(EdiHead $head): void
     {
         if (auth()->user()?->is_admin) {
             return;
@@ -75,7 +75,7 @@ class EdiController extends Controller
         'PAdr1', 'PAdr2', 'RAdr1', 'RAdr2', 'RPoCo', 'RCity', 'RPhon', 'RHBBS',
     ];
 
-    private function ediResponse(Edihead $head, string $content, string $pcall, string $variant): Response
+    private function ediResponse(EdiHead $head, string $content, string $pcall, string $variant): Response
     {
         if (trim($content) === '') {
             abort(404, 'EDI soubor není pro tento deník k dispozici.');

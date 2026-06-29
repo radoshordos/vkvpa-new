@@ -38,7 +38,7 @@ use Override;
  * @property string|null $s_rcr
  * @property Carbon|null $stamp
  * @property Carbon|null $d_cas
- * @property-read Collection<int, Ediline> $lines
+ * @property-read Collection<int, EdiLine> $lines
  * @property-read int $lines_count
  * @property-read EdiCategory|null $category
  */
@@ -47,18 +47,18 @@ use Override;
     'r_name', 'r_emai', 'r_phon', 's_powe', 's_tx_eq', 's_ante',
     'src', 'remarks', 's_rcr',
 ])]
-#[Table(name: 'edi_head')]
+#[Table(name: 'edi_heads')]
 #[WithoutTimestamps]
-class Edihead extends Model
+class EdiHead extends Model
 {
     /**
      * Jednotlivá spojení (QSO) tohoto deníku.
      *
-     * @return HasMany<Ediline, $this>
+     * @return HasMany<EdiLine, $this>
      */
     public function lines(): HasMany
     {
-        return $this->hasMany(Ediline::class, 'edihead_id');
+        return $this->hasMany(EdiLine::class, 'edi_head_id');
     }
 
     /**

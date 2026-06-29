@@ -6,7 +6,7 @@ namespace Tests\Feature;
 
 use App\Models\EdiCategory;
 use App\Models\EdiEntry;
-use App\Models\Edihead;
+use App\Models\EdiHead;
 use App\Models\EdiRound;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -132,7 +132,7 @@ class VysledkyListinaTest extends TestCase
 
     private function entryWithEdi(int $kolo, int $kat, string $znacka): EdiEntry
     {
-        $head = Edihead::create([
+        $head = EdiHead::create([
             'round_id' => $kolo, 't_date' => '20260315;20260315', 'p_call' => $znacka,
             'p_wwlo' => 'JN99AJ', 'p_sect' => '', 'p_band' => '', 'r_name' => 'X',
             'r_phon' => '', 'r_emai' => '', 's_powe' => 100, 'src' => 'x',

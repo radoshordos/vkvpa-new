@@ -11,7 +11,7 @@ use App\Support\AdminLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
-/** Administrace – Kategorie (`edi_category`). */
+/** Administrace – Kategorie (`edi_categories`). */
 class KategorieController extends Controller
 {
     public function index(): View

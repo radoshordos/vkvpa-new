@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
-use App\Models\Edihead;
+use App\Models\EdiHead;
 use App\Services\Edi\EdiParser;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -19,14 +19,14 @@ use function Laravel\Prompts\outro;
  * Některá kola (např. 01–03/2026) byla naimportována bez naparsovaných sloupců –
  * `p_band`/`p_sect` jsou prázdné, ale `src` nese plnou REG1TEST hlavičku. Tenhle
  * příkaz z `src` vytáhne hodnoty a doplní JEN prázdné sloupce (existující data
- * nepřepisuje) – čistě kvalita dat, na edi_head.edi_category_id (které se bere
+ * nepřepisuje) – čistě kvalita dat, na edi_heads.edi_category_id (které se bere
  * 1:1 z edi_entries) to nemá vliv. Idempotentní.
  */
 class RepairEdiheadBandSectFromSrc extends Command
 {
     protected $signature = 'vkvpa:repair-edihead-band-sect {--dry-run : Jen spočítej, nezapisuj}';
 
-    protected $description = 'Doplní prázdné edi_head.p_band/p_sect přeparsováním src';
+    protected $description = 'Doplní prázdné edi_heads.p_band/p_sect přeparsováním src';
 
     public function handle(EdiParser $parser): int
     {
@@ -39,7 +39,7 @@ class RepairEdiheadBandSectFromSrc extends Command
         $changed = 0;
         $failed = 0;
 
-        Edihead::query()
+        EdiHead::query()
             ->select(['id', 'p_band', 'p_sect', 'src'])
             ->where(fn ($q) => $q->where('p_band', '')->orWhere('p_sect', ''))
             ->whereNotNull('src')
@@ -68,7 +68,7 @@ class RepairEdiheadBandSectFromSrc extends Command
 
                     $changed++;
                     if (! $dryRun) {
-                        DB::table('edi_head')->where('id', $head->id)->update($update);
+                        DB::table('edi_heads')->where('id', $head->id)->update($update);
                     }
                 }
             });

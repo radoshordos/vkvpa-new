@@ -11,7 +11,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('edi_head', function (Blueprint $table): void {
+        Schema::create('edi_heads', function (Blueprint $table): void {
             $table->charset = 'utf8mb4';
             $table->collation = 'utf8mb4_unicode_ci';
 
@@ -36,7 +36,7 @@ return new class extends Migration
             $table->dateTime('d_cas')->nullable()->useCurrent();
             $table->longText('s_rcr')->nullable();
 
-            $table->index('round_id', 'edi_head_round_id_idx');
+            $table->index('round_id', 'edi_heads_round_id_idx');
             $table->index('p_call', 'edihead_pcall_idx');
         });
 
@@ -47,8 +47,8 @@ return new class extends Migration
         }
 
         // Kola se nikdy nemažou → RESTRICT brání tichému smazání navázaných deníků.
-        Schema::table('edi_head', function (Blueprint $table): void {
-            $table->foreign('round_id', 'edi_head_round_id_fk')
+        Schema::table('edi_heads', function (Blueprint $table): void {
+            $table->foreign('round_id', 'edi_heads_round_id_fk')
                 ->references('id')->on('edi_rounds')
                 ->restrictOnDelete();
         });
@@ -56,6 +56,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('edi_head');
+        Schema::dropIfExists('edi_heads');
     }
 };

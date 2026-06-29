@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace App\Services\Edi;
 
-use App\Models\Edihead;
+use App\Models\EdiHead;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Naplní `edi_head.edi_category_id` 1:1 z kategorie příspěvku
+ * Naplní `edi_heads.edi_category_id` 1:1 z kategorie příspěvku
  * (`edi_entries.category_id`), která je autoritativní – EDI hlavička bývá
  * prázdná, oříznutá nebo protiřečí skutečnému zařazení, takže se z ní kategorie
  * neodvozuje.
  *
- * Pravidlo pro každý řádek `edi_head`:
+ * Pravidlo pro každý řádek `edi_heads`:
  *   - právě jeden příspěvek (resp. víc příspěvků téže kategorie) → ta kategorie,
  *   - víc příspěvků v různých kategoriích (nejednoznačné) → NULL,
  *   - žádný příspěvek (osiřelý deník) → NULL.
@@ -45,7 +45,7 @@ final class EdiheadCategoryBackfiller
         /** @var array<int|string, list<int>> $updates  cílová kategorie (int) nebo 'null' => [head_id, …] */
         $updates = [];
 
-        Edihead::query()
+        EdiHead::query()
             ->select(['id', 'edi_category_id'])
             ->orderBy('id')
             ->chunkById(self::CHUNK, function ($heads) use ($desired, &$changed, &$updates): void {
@@ -66,7 +66,7 @@ final class EdiheadCategoryBackfiller
             foreach ($updates as $key => $headIds) {
                 $value = $key === 'null' ? null : (int) $key;
                 foreach (array_chunk($headIds, self::CHUNK) as $batch) {
-                    DB::table('edi_head')->whereIn('id', $batch)->update(['edi_category_id' => $value]);
+                    DB::table('edi_heads')->whereIn('id', $batch)->update(['edi_category_id' => $value]);
                 }
             }
         }

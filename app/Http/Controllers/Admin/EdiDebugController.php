@@ -8,7 +8,7 @@ use App\Exceptions\EdiParseException;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\EdiController;
 use App\Http\Requests\Admin\EdiDebugUploadRequest;
-use App\Models\Edihead;
+use App\Models\EdiHead;
 use App\Services\Edi\EdiLog;
 use App\Services\Edi\EdiParser;
 use App\Services\Scoring\EdiScoreDebugger;
@@ -48,7 +48,7 @@ class EdiDebugController extends Controller
     }
 
     /** Rozpad bodování deníku uloženého v databázi (sloupec `src`). */
-    public function show(Edihead $head): View|RedirectResponse
+    public function show(EdiHead $head): View|RedirectResponse
     {
         $src = (string) $head->src;
 
@@ -89,7 +89,7 @@ class EdiDebugController extends Controller
                 ->with('lineErrors', $ediParseException->lineErrors);
         }
 
-        $edihead = Edihead::where('p_call', $log->header->pCall())
+        $edihead = EdiHead::where('p_call', $log->header->pCall())
             ->where('t_date', $log->header->tDate())
             ->latest('id')
             ->first();

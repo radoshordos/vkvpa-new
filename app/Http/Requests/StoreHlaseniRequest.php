@@ -88,7 +88,7 @@ class StoreHlaseniRequest extends FormRequest
             'id_zaznamu' => ['nullable', 'integer'],
             'edihead_id' => ['nullable', 'integer'],
             'kolo' => ['required', 'integer', 'exists:edi_rounds,id'],
-            'kategorie' => ['nullable', 'integer', 'exists:edi_category,id'],
+            'kategorie' => ['nullable', 'integer', 'exists:edi_categories,id'],
             'znacka' => ['required', 'string', 'max:10'],
             'locator' => ['required', 'string', 'max:6', new ValidMaidenhead],
             'jmeno' => ['required', 'string', 'max:60'],

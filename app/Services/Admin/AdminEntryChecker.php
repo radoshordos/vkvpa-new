@@ -7,8 +7,8 @@ namespace App\Services\Admin;
 use App\Enums\QsoMode;
 use App\Enums\Severity;
 use App\Models\EdiEntry;
-use App\Models\Edihead;
-use App\Models\Ediline;
+use App\Models\EdiHead;
+use App\Models\EdiLine;
 use App\Services\Edi\DenikStatistiky;
 use App\Support\ContestWindow;
 use App\Support\Finding;
@@ -46,7 +46,7 @@ final class AdminEntryChecker
             return $findings; // ruční hlášení bez EDI – EDI kontroly přeskočit
         }
 
-        $head = Edihead::with(['lines' => static fn (HasMany $q) => $q->select('edihead_id', 'call_sign', 'qso_at', 'received_wwl', 'mode_code')])
+        $head = EdiHead::with(['lines' => static fn (HasMany $q) => $q->select('edi_head_id', 'call_sign', 'qso_at', 'received_wwl', 'mode_code')])
             ->find($entry->edi_head_id);
 
         if ($head === null) {
@@ -101,7 +101,7 @@ final class AdminEntryChecker
     // ── Self-QSO ─────────────────────────────────────────────────────────────
 
     /** @return list<Finding> */
-    private function selfQsoWarnings(Edihead $head): array
+    private function selfQsoWarnings(EdiHead $head): array
     {
         $myCall = strtoupper(trim((string) $head->p_call));
         $findings = [];
@@ -125,13 +125,13 @@ final class AdminEntryChecker
      * Detekuje podezřele vysoký počet QSO v krátkém okně.
      * Práh: > 15 QSO za 10 minut. Klouzavé okno nad seřazenými časy.
      *
-     * @param  Collection<int, Ediline>  $lines
+     * @param  Collection<int, EdiLine>  $lines
      */
     private function operatingRateWarning(Collection $lines): ?Finding
     {
         /** @var list<int> $times */
         $times = $lines
-            ->map(static fn (Ediline $l): int => $l->timeMinutes)
+            ->map(static fn (EdiLine $l): int => $l->timeMinutes)
             ->filter(static fn (int $t): bool => $t > 0)
             ->sort()
             ->values()
@@ -174,7 +174,7 @@ final class AdminEntryChecker
      * vlastní log v tomto kole – admin může porovnat záznamy ručně.
      * (Plná automatická křížová kontrola závisí na dostupnosti všech logů.)
      */
-    private function crossCheckWarning(Edihead $head, int $koloId): ?Finding
+    private function crossCheckWarning(EdiHead $head, int $koloId): ?Finding
     {
         if ($koloId === 0) {
             return null;
@@ -192,7 +192,7 @@ final class AdminEntryChecker
             return null;
         }
 
-        $count = Edihead::query()
+        $count = EdiHead::query()
             ->whereIn('p_call', $workedCalls)
             ->where('round_id', $koloId)
             ->where('p_call', '!=', strtoupper(trim((string) $head->p_call)))
@@ -213,7 +213,7 @@ final class AdminEntryChecker
 
     // ── Neplatný domácí lokátor ───────────────────────────────────────────────
 
-    private function invalidHomeLocatorWarning(Edihead $head): ?Finding
+    private function invalidHomeLocatorWarning(EdiHead $head): ?Finding
     {
         $pWWLo = trim((string) $head->p_wwlo);
 
@@ -236,12 +236,12 @@ final class AdminEntryChecker
 
     // ── Duplicitní spojení ────────────────────────────────────────────────────
 
-    /** @param Collection<int, Ediline> $lines */
+    /** @param Collection<int, EdiLine> $lines */
     private function duplicateCallsWarning(Collection $lines): ?Finding
     {
         // array_count_values is typed array<string,int> by PHPStan stubs → safe at level 10.
         $calls = $lines
-            ->map(static fn (Ediline $l): string => strtoupper(trim((string) $l->call_sign)))
+            ->map(static fn (EdiLine $l): string => strtoupper(trim((string) $l->call_sign)))
             ->filter(static fn (string $c): bool => $c !== '')
             ->values()
             ->all();
@@ -271,17 +271,17 @@ final class AdminEntryChecker
 
     // ── Neplatné lokátory protistanice ───────────────────────────────────────
 
-    /** @param Collection<int, Ediline> $lines */
+    /** @param Collection<int, EdiLine> $lines */
     private function invalidLocatorsWarning(Collection $lines): ?Finding
     {
         $invalid = $lines
-            ->filter(static function (Ediline $l): bool {
+            ->filter(static function (EdiLine $l): bool {
                 $wwl = trim((string) $l->received_wwl);
 
                 return $wwl !== '' && ! Maidenhead::isValidLocator($wwl);
             })
             ->take(8)
-            ->map(static function (Ediline $l): string {
+            ->map(static function (EdiLine $l): string {
                 $call = strtoupper(trim((string) $l->call_sign));
                 $wwl = trim((string) $l->received_wwl);
 
@@ -307,11 +307,11 @@ final class AdminEntryChecker
      * nebo rozhozený sloupec s RST) se mapuje na {@see QsoMode::Other} a počítá
      * se jako „Ostatní". Jen informativní – body to neovlivní.
      *
-     * @param  Collection<int, Ediline>  $lines
+     * @param  Collection<int, EdiLine>  $lines
      */
     private function invalidModeCodesWarning(Collection $lines): ?Finding
     {
-        $invalid = $lines->filter(static fn (Ediline $l): bool => $l->mode === QsoMode::Other);
+        $invalid = $lines->filter(static fn (EdiLine $l): bool => $l->mode === QsoMode::Other);
         $total = $invalid->count();
 
         if ($total === 0) {
@@ -320,7 +320,7 @@ final class AdminEntryChecker
 
         $sample = $invalid
             ->take(8)
-            ->map(static function (Ediline $l): string {
+            ->map(static function (EdiLine $l): string {
                 $call = strtoupper(trim((string) $l->call_sign));
 
                 return ($call !== '' ? $call : '?').': '.$l->modeCode;
@@ -338,13 +338,13 @@ final class AdminEntryChecker
 
     // ── QSO mimo závodní okno ────────────────────────────────────────────────
 
-    /** @param Collection<int, Ediline> $lines */
+    /** @param Collection<int, EdiLine> $lines */
     private function outOfWindowWarning(Collection $lines): ?Finding
     {
         $from = ContestWindow::from();
         $to = ContestWindow::to();
 
-        $count = $lines->filter(static function (Ediline $l) use ($from, $to): bool {
+        $count = $lines->filter(static function (EdiLine $l) use ($from, $to): bool {
             $hhmm = $l->qso_at?->utc()->format('Hi');
 
             return $hhmm !== null && ! ($hhmm >= $from && $hhmm <= $to);

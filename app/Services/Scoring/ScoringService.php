@@ -8,7 +8,7 @@ use App\Enums\QsoCountStatus;
 use App\Enums\Vykon;
 use App\Models\EdiCategory;
 use App\Models\EdiEntry;
-use App\Models\Edihead;
+use App\Models\EdiHead;
 use App\Models\EdiRound;
 use App\Services\Edi\EdiLog;
 use App\Services\Edi\KoloStatistiky;
@@ -109,7 +109,7 @@ final class ScoringService
      * Započítávají se jen QSO uvnitř závodního okna (den závodu dle `TDate`
      * a čas 08:00–11:00 UTC). QSO mimo okno mají efektivně bodovou hodnotu 0.
      */
-    public function scoreEdi(Edihead $head): EdiScore
+    public function scoreEdi(EdiHead $head): EdiScore
     {
         $home = Maidenhead::bigSquare((string) $head->p_wwlo);
         // Den závodu = datum konání kola, do kterého deník patří (autoritativní);

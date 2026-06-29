@@ -7,8 +7,8 @@ namespace Tests\Feature;
 use App\Enums\Severity;
 use App\Models\EdiCategory;
 use App\Models\EdiEntry;
-use App\Models\Edihead;
-use App\Models\Ediline;
+use App\Models\EdiHead;
+use App\Models\EdiLine;
 use App\Models\EdiRound;
 use App\Services\Admin\AdminEntryChecker;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -64,9 +64,9 @@ class AdminEntryCheckerTest extends TestCase
         ], $overrides));
     }
 
-    private function ediHead(EdiRound $kolo, string $pCall = 'OK1TEST'): Edihead
+    private function ediHead(EdiRound $kolo, string $pCall = 'OK1TEST'): EdiHead
     {
-        return Edihead::create([
+        return EdiHead::create([
             'round_id' => $kolo->id,
             'p_call' => $pCall,
             'p_wwlo' => 'JN79FX',
@@ -77,10 +77,10 @@ class AdminEntryCheckerTest extends TestCase
         ]);
     }
 
-    private function ediline(Edihead $head, string $callSign, string $time = '0900', int $modeCode = 1): Ediline
+    private function ediline(EdiHead $head, string $callSign, string $time = '0900', int $modeCode = 1): EdiLine
     {
-        return Ediline::create([
-            'edihead_id' => $head->id,
+        return EdiLine::create([
+            'edi_head_id' => $head->id,
             'call_sign' => $callSign,
             'qso_at' => '2026-03-15 '.substr($time, 0, 2).':'.substr($time, 2, 2).':00',
             'received_wwl' => 'JN89QL',
@@ -253,7 +253,7 @@ class AdminEntryCheckerTest extends TestCase
     {
         $kolo = $this->round();
         $kat = $this->kat();
-        $head = Edihead::create([
+        $head = EdiHead::create([
             'round_id' => $kolo->id,
             'p_call' => 'OK1TEST',
             'p_wwlo' => 'ZZ99AJ',  // neplatný lokátor
@@ -275,7 +275,7 @@ class AdminEntryCheckerTest extends TestCase
     {
         $kolo = $this->round();
         $kat = $this->kat();
-        $head = Edihead::create([
+        $head = EdiHead::create([
             'round_id' => $kolo->id,
             'p_call' => 'OK1TEST',
             'p_wwlo' => '',  // prázdný lokátor
@@ -316,8 +316,8 @@ class AdminEntryCheckerTest extends TestCase
         $kolo = $this->round();
         $kat = $this->kat();
         $head = $this->ediHead($kolo);
-        Ediline::create([
-            'edihead_id' => $head->id,
+        EdiLine::create([
+            'edi_head_id' => $head->id,
             'call_sign' => 'OK2BAD',
             'qso_at' => '2026-03-15 09:00:00',
             'received_wwl' => 'ZZ99XX',  // neplatný Maidenhead

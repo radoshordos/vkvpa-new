@@ -8,7 +8,7 @@ use App\Http\Requests\StoreHlaseniRequest;
 use App\Jobs\RankRoundJob;
 use App\Models\EdiCategory;
 use App\Models\EdiEntry;
-use App\Models\Edihead;
+use App\Models\EdiHead;
 use App\Models\EdiRound;
 use App\Services\Admin\AdminEntryChecker;
 use Illuminate\Database\Eloquent\Builder;
@@ -167,6 +167,6 @@ class HlaseniController extends Controller
     {
         $id = $this->intFrom($value);
 
-        return $id > 0 && Edihead::query()->whereKey($id)->exists() ? $id : null;
+        return $id > 0 && EdiHead::query()->whereKey($id)->exists() ? $id : null;
     }
 }

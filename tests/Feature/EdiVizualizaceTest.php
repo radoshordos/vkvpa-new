@@ -7,7 +7,7 @@ namespace Tests\Feature;
 use App\Http\Controllers\EdiVizualizaceController;
 use App\Models\EdiCategory;
 use App\Models\EdiEntry;
-use App\Models\Edihead;
+use App\Models\EdiHead;
 use App\Models\EdiRound;
 use App\Models\User;
 use App\Services\Edi\DenikStatistiky;
@@ -27,7 +27,7 @@ class EdiVizualizaceTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function importSample(): Edihead
+    private function importSample(): EdiHead
     {
         $edi = (string) file_get_contents(__DIR__.'/../fixtures/sample.edi');
 
@@ -223,7 +223,7 @@ class EdiVizualizaceTest extends TestCase
             'evaluated_at' => '2025-12-27 10:00:00',
         ]);
 
-        $head = Edihead::create([
+        $head = EdiHead::create([
             'round_id' => $round2026->id,
             't_date' => '20260118',
             'p_call' => 'OK1AAA',
@@ -320,7 +320,7 @@ class EdiVizualizaceTest extends TestCase
      * Vyhodnocené kolo se dvěma deníky (OK2KJT ze sample.edi + soupeř OK1BBB)
      * a schválenými záznamy listiny v téže kategorii – porovnání je dostupné.
      */
-    private function seedEvaluatedRoundWithRivalEntry(): Edihead
+    private function seedEvaluatedRoundWithRivalEntry(): EdiHead
     {
         $kolo = EdiRound::create([
             'starts_at' => '2026-03-15',
@@ -333,7 +333,7 @@ class EdiVizualizaceTest extends TestCase
         $head = $this->importSample();
         $head->update(['round_id' => $kolo->id]);
 
-        $rival = Edihead::create([
+        $rival = EdiHead::create([
             'round_id' => $kolo->id, 't_date' => '20260315', 'p_call' => 'OK1BBB', 'p_wwlo' => 'JN89',
             'p_band' => '144 MHz', 'r_name' => 'B', 'r_emai' => 'b@b.cz', 's_powe' => 100,
         ]);

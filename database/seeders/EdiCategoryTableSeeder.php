@@ -8,7 +8,7 @@ use App\Models\EdiBand;
 use App\Services\Edi\CategoryResolver;
 
 /**
- * Naplní `edi_category` přemapováním 42 řádků z `vkvpa_kategorie`.
+ * Naplní `edi_categories` přemapováním 42 řádků z `vkvpa_kategorie`.
  *
  * Původní `id` se zachovávají (včetně historických mezer 37/40/41), aby šlo
  * případné `edi_entries.category_id` později přesměrovat 1:1. `band_id` je
@@ -19,7 +19,7 @@ use App\Services\Edi\CategoryResolver;
  */
 class EdiCategoryTableSeeder extends JsonTableSeeder
 {
-    protected string $table = 'edi_category';
+    protected string $table = 'edi_categories';
 
     protected ?int $autoIncrement = 46;
 

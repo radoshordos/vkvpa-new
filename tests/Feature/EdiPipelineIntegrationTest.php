@@ -6,8 +6,8 @@ namespace Tests\Feature;
 
 use App\Livewire\Prihlaska;
 use App\Models\EdiEntry;
-use App\Models\Edihead;
-use App\Models\Ediline;
+use App\Models\EdiHead;
+use App\Models\EdiLine;
 use App\Models\EdiRound;
 use App\Models\User;
 use App\Services\Scoring\ScoringService;
@@ -84,8 +84,8 @@ class EdiPipelineIntegrationTest extends TestCase
 
         $this->nahled()->assertSet('mode', 'edi-review');
 
-        $this->assertSame(0, Edihead::count(), 'Náhled nesmí nic importovat');
-        $this->assertSame(0, Ediline::count());
+        $this->assertSame(0, EdiHead::count(), 'Náhled nesmí nic importovat');
+        $this->assertSame(0, EdiLine::count());
         $this->assertSame(0, EdiEntry::count());
     }
 
@@ -97,8 +97,8 @@ class EdiPipelineIntegrationTest extends TestCase
         $this->koloProBrezen2026();
         $this->odeslat()->assertRedirect(route('pribezne_vysledky'));
 
-        $this->assertSame(1, Edihead::count(), 'Musí vzniknout 1 edihead');
-        $this->assertSame(2, Ediline::count(), 'sample.edi má 2 QSO řádky');
+        $this->assertSame(1, EdiHead::count(), 'Musí vzniknout 1 edihead');
+        $this->assertSame(2, EdiLine::count(), 'sample.edi má 2 QSO řádky');
         $this->assertSame(1, EdiEntry::count(), 'Musí vzniknout 1 řádek');
     }
 
@@ -153,7 +153,7 @@ class EdiPipelineIntegrationTest extends TestCase
         $this->odeslat();
 
         $row = EdiEntry::firstOrFail();
-        $head = Edihead::findOrFail((int) $row->edi_head_id);
+        $head = EdiHead::findOrFail((int) $row->edi_head_id);
 
         $direct = app(ScoringService::class)->scoreEdi($head);
 
@@ -170,7 +170,7 @@ class EdiPipelineIntegrationTest extends TestCase
 
         $row = EdiEntry::firstOrFail();
         $this->assertNotNull($row->edi_head_id, 'edihead_id musí odkazovat na edihead');
-        $this->assertNotNull(Edihead::find($row->edi_head_id), 'Edihead musí existovat');
+        $this->assertNotNull(EdiHead::find($row->edi_head_id), 'EdiHead musí existovat');
     }
 
     public function test_submit_creates_pending_row_with_schvaleno_false(): void
@@ -198,7 +198,7 @@ class EdiPipelineIntegrationTest extends TestCase
     public function test_entry_hidden_before_approval_visible_after(): void
     {
         $kolo = $this->koloProBrezen2026();
-        // kategorie id 2 (144 MHz multi op) už je v edi_category naseedovaná (TestCase)
+        // kategorie id 2 (144 MHz multi op) už je v edi_categories naseedovaná (TestCase)
 
         $this->odeslat();
 

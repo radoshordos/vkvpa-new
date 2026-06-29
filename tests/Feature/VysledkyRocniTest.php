@@ -8,7 +8,7 @@ use App\Http\Controllers\VysledkyController;
 use App\Models\EdiBand;
 use App\Models\EdiCategory;
 use App\Models\EdiEntry;
-use App\Models\Edihead;
+use App\Models\EdiHead;
 use App\Models\EdiRound;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -244,7 +244,7 @@ class VysledkyRocniTest extends TestCase
     {
         $kat = $this->kat('144 MHz single op');
         $kolo = $this->round('2026');
-        $head = Edihead::create([
+        $head = EdiHead::create([
             'round_id' => $kolo->id,
             't_date' => '20260118',
             'p_call' => 'OK1DOL',

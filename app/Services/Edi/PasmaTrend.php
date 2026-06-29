@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\Model;
  *
  * Pro každé vyhodnocené kolo počítá počet různých značek na pásmu
  * (`COUNT(DISTINCT callsign)`) z převzatých záznamů listiny; pásmo se bere
- * z normalizovaného číselníku přes `edi_category.band_id` (ne z nespolehlivé
+ * z normalizovaného číselníku přes `edi_categories.band_id` (ne z nespolehlivé
  * hlavičky deníku), záznamy s neznámým pásmem (`band_id` NULL) se vynechají.
  * Jedna stanice může jet víc pásem, takže součet napříč pásmy bývá > počet
  * unikátních značek kola – základ pro 100% podíl je právě tento součet.
@@ -45,12 +45,12 @@ final class PasmaTrend
         }
 
         $rows = EdiEntry::query()
-            ->join('edi_category', 'edi_entries.category_id', '=', 'edi_category.id')
+            ->join('edi_categories', 'edi_entries.category_id', '=', 'edi_categories.id')
             ->where('edi_entries.approved', true)
             ->whereIn('edi_entries.round_id', $kola->pluck('id'))
-            ->whereNotNull('edi_category.band_id')
-            ->groupBy('edi_entries.round_id', 'edi_category.band_id')
-            ->selectRaw('edi_entries.round_id as round_id, edi_category.band_id as band_id, COUNT(DISTINCT edi_entries.callsign) as stanic')
+            ->whereNotNull('edi_categories.band_id')
+            ->groupBy('edi_entries.round_id', 'edi_categories.band_id')
+            ->selectRaw('edi_entries.round_id as round_id, edi_categories.band_id as band_id, COUNT(DISTINCT edi_entries.callsign) as stanic')
             ->get();
 
         if ($rows->isEmpty()) {

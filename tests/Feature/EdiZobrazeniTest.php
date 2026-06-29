@@ -6,7 +6,7 @@ namespace Tests\Feature;
 
 use App\Http\Controllers\EdiController;
 use App\Models\EdiEntry;
-use App\Models\Edihead;
+use App\Models\EdiHead;
 use App\Models\EdiRound;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -23,7 +23,7 @@ class EdiZobrazeniTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function denik(?int $idKola = null): Edihead
+    private function denik(?int $idKola = null): EdiHead
     {
         $raw = implode("\n", [
             '[REG1TEST;1]',
@@ -34,7 +34,7 @@ class EdiZobrazeniTest extends TestCase
             '[END;]',
         ])."\n";
 
-        return Edihead::create([
+        return EdiHead::create([
             'round_id' => $idKola,
             't_date' => '20260315;20260315', 'p_call' => 'OK2KJT', 'p_wwlo' => 'JN99AJ',
             'p_sect' => '', 'p_band' => '', 'r_name' => 'X', 'r_phon' => '', 'r_emai' => '',
