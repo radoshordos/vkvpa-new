@@ -6,7 +6,7 @@ namespace Tests\Feature;
 
 use App\Models\Prefix;
 use App\Services\Edi\PrefixResolver;
-use Database\Seeders\PrefixesTableSeeder;
+use Database\Seeders\EdiPrefixTableSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -17,7 +17,7 @@ class PrefixesDataTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed(PrefixesTableSeeder::class);
+        $this->seed(EdiPrefixTableSeeder::class);
     }
 
     public function test_swapped_baltic_countries_are_fixed(): void

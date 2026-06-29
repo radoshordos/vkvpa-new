@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
-class EdiheadTableSeeder extends JsonTableSeeder
+class EdiHeadTableSeeder extends JsonTableSeeder
 {
     protected string $table = 'edi_heads';
 

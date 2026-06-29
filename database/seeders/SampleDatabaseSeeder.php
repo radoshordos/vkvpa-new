@@ -22,11 +22,11 @@ class SampleDatabaseSeeder extends Seeder
             EdiRoundTableSeeder::class,
             EdiBandTableSeeder::class,
             EdiCategoryTableSeeder::class,
-            EdiheadTableSeeder::class,
-            EdilinesTableSeeder::class,
+            EdiHeadTableSeeder::class,
+            EdiLineTableSeeder::class,
             EdiEntryTableSeeder::class,
             DiscussionSeeder::class,
-            PrefixesTableSeeder::class,
+            EdiPrefixTableSeeder::class,
         ]);
 
         // Některá kola (01–03/2026) mají ve snapshotu prázdné p_band/p_sect,
