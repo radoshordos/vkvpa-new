@@ -50,6 +50,8 @@ use Illuminate\Support\Facades\DB;
  *     timeline: StatTimeline, mody: StatMody, zeme: list<StatNazevPocet>, prefixy: list<StatNazevPocet>,
  *     kategorie: list<StatKat>, tok: list<StatTok>,
  *     topBody: list<StatTop>, topQso: list<StatTop>, topNasobice: list<StatTop>,
+ *     pasma: list<array{id: int, label: string}>,
+ *     topPodlePasma: array<int, array{body: list<StatTop>, qso: list<StatTop>, mult: list<StatTop>}>,
  *     trend: StatTrend, zajimavosti: list<StatFakt>, odznaky: StatOdznaky
  * }
  */
@@ -81,7 +83,7 @@ final class KoloStatistiky
 
     public static function cacheKey(int $koloId): string
     {
-        return sprintf('vkvpa:kolo-stats:v6:%d', $koloId);
+        return sprintf('vkvpa:kolo-stats:v7:%d', $koloId);
     }
 
     public function forgetRound(int $koloId): void
@@ -95,7 +97,7 @@ final class KoloStatistiky
     private function compute(EdiRound $kolo): array
     {
         $a = $this->analyzaQso($kolo->id);
-        [$souhrn, $kategorie, $topBody, $topQso, $topNasobice] = $this->vysledky($kolo->id);
+        [$souhrn, $kategorie, $topAll, $pasma, $topPodlePasma] = $this->vysledky($kolo->id);
 
         return [
             'pocetStanic' => $souhrn['pocetStanic'],
@@ -113,11 +115,13 @@ final class KoloStatistiky
             'prefixy' => $a['prefixy'],
             'kategorie' => $kategorie,
             'tok' => $a['tok'],
-            'topBody' => $topBody,
-            'topQso' => $topQso,
-            'topNasobice' => $topNasobice,
+            'topBody' => $topAll['body'],
+            'topQso' => $topAll['qso'],
+            'topNasobice' => $topAll['mult'],
+            'pasma' => $pasma,
+            'topPodlePasma' => $topPodlePasma,
             'trend' => $this->trend($kolo),
-            'zajimavosti' => $this->zajimavosti($kolo, $a['ctverce'], $topBody),
+            'zajimavosti' => $this->zajimavosti($kolo, $a['ctverce'], $topAll['body']),
             'odznaky' => $this->rekordy->odznakyProKolo($kolo->id),
         ];
     }
@@ -275,16 +279,22 @@ final class KoloStatistiky
 
     /**
      * Souhrnná čísla, kategorie a TOP žebříčky z převzatých záznamů listiny.
+     * TOP žebříčky se vrací jednou pro celé kolo (`all`) a zvlášť pro každé
+     * pásmo přítomné v kole, aby šly na veřejné stránce filtrovat.
      *
      * @return array{
      *     0: array{pocetStanic: int, pocetZaznamu: int, pocetQso: int, bodyCelkem: int},
-     *     1: list<StatKat>, 2: list<StatTop>, 3: list<StatTop>, 4: list<StatTop>
+     *     1: list<StatKat>,
+     *     2: array{body: list<StatTop>, qso: list<StatTop>, mult: list<StatTop>},
+     *     3: list<array{id: int, label: string}>,
+     *     4: array<int, array{body: list<StatTop>, qso: list<StatTop>, mult: list<StatTop>}>
      * }
      */
     private function vysledky(int $koloId): array
     {
         /** @var SupportCollection<int, string> $zkratky */
         $zkratky = EdiCategory::zkratkaMap();
+        $bandMap = $this->bandMap();
 
         $entries = EdiEntry::query()
             ->where('round_id', $koloId)
@@ -298,13 +308,89 @@ final class KoloStatistiky
             'bodyCelkem' => (int) $entries->sum(fn (EdiEntry $e): int => $e->points),
         ];
 
+        // Pásma přítomná v kole (id → název), vzestupně podle id pásma.
+        /** @var array<int, string> $pasmaMap */
+        $pasmaMap = [];
+        foreach ($entries as $e) {
+            $band = $this->bandOf($bandMap, $e->category_id);
+            if ($band !== null) {
+                $pasmaMap[$band['id']] = $band['label'];
+            }
+        }
+        ksort($pasmaMap);
+
+        $pasma = [];
+        $topPodlePasma = [];
+        foreach ($pasmaMap as $id => $label) {
+            $pasma[] = ['id' => $id, 'label' => $label];
+            /** @var EloquentCollection<int, EdiEntry> $vBand */
+            $vBand = $entries
+                ->filter(fn (EdiEntry $e): bool => ($this->bandOf($bandMap, $e->category_id)['id'] ?? null) === $id)
+                ->values();
+            $topPodlePasma[$id] = $this->topTrojice($vBand, $zkratky);
+        }
+
         return [
             $souhrn,
             $this->category($koloId),
-            $this->topN($entries, $zkratky, 'body'),
-            $this->topN($entries, $zkratky, 'pocet'),
-            $this->topN($entries, $zkratky, 'multiplier'),
+            $this->topTrojice($entries, $zkratky),
+            $pasma,
+            $topPodlePasma,
         ];
+    }
+
+    /**
+     * TOP 10 žebříčky (body / QSO / násobiče) z dané sady záznamů.
+     *
+     * @param  EloquentCollection<int, EdiEntry>  $entries
+     * @param  SupportCollection<int, string>  $zkratky
+     * @return array{body: list<StatTop>, qso: list<StatTop>, mult: list<StatTop>}
+     */
+    private function topTrojice(EloquentCollection $entries, SupportCollection $zkratky): array
+    {
+        return [
+            'body' => $this->topN($entries, $zkratky, 'body'),
+            'qso' => $this->topN($entries, $zkratky, 'pocet'),
+            'mult' => $this->topN($entries, $zkratky, 'multiplier'),
+        ];
+    }
+
+    /**
+     * Mapa id kategorie → pásmo ({id, label}) z číselníku. Kategorie bez pásma
+     * (band_id NULL) v mapě nejsou.
+     *
+     * @return array<int, array{id: int, label: string}>
+     */
+    private function bandMap(): array
+    {
+        /** @var array<int, array{id: int, label: string}> $out */
+        $out = [];
+        $rows = DB::table('edi_categories')
+            ->join('edi_bands', 'edi_bands.id', '=', 'edi_categories.band_id')
+            ->get(['edi_categories.id as id', 'edi_categories.band_id as band_id', 'edi_bands.name as label']);
+
+        foreach ($rows as $r) {
+            if (! is_numeric($r->id) || ! is_numeric($r->band_id)) {
+                continue;
+            }
+            $out[(int) $r->id] = [
+                'id' => (int) $r->band_id,
+                'label' => is_scalar($r->label) ? (string) $r->label : '',
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
+     * Pásmo kategorie podle mapy ({id, label}) nebo null (bez kategorie/pásma).
+     *
+     * @param  array<int, array{id: int, label: string}>  $bandMap
+     * @return array{id: int, label: string}|null
+     */
+    private function bandOf(array $bandMap, ?int $categoryId): ?array
+    {
+        return $categoryId !== null ? ($bandMap[$categoryId] ?? null) : null;
     }
 
     /**

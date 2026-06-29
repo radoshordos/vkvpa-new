@@ -147,12 +147,33 @@ window.__statConfig = {
   <div class="h-64"><canvas id="chartTrend"></canvas></div>
 </div>
 
-{{-- ── TOP žebříčky kola ───────────────────────────────────────────────── --}}
-<div class="grid grid-cols-1 gap-4 lg:grid-cols-3 mb-5">
+{{-- ── TOP žebříčky kola (filtrovatelné podle pásma) ────────────────────── --}}
+@php
+  // Skupiny žebříčků: „Vše" + jedna za každé pásmo přítomné v kole.
+  $topGroups = [['key' => 'all', 'tops' => ['body' => $prehled['topBody'], 'qso' => $prehled['topQso'], 'mult' => $prehled['topNasobice']]]];
+  foreach ($prehled['pasma'] as $p) {
+      $topGroups[] = ['key' => (string) $p['id'], 'tops' => $prehled['topPodlePasma'][$p['id']]];
+  }
+@endphp
+
+<div class="mb-3 flex flex-wrap items-center gap-3">
+  <h2 class="text-lg font-bold text-heading">{{ __('pages.stat.top_heading') }}</h2>
+  @if ($prehled['pasma'] !== [])
+  <select id="topBandFilter" class="select w-auto" aria-label="{{ __('pages.stat.top_heading') }}">
+    <option value="all">{{ __('pages.stat.band_all') }}</option>
+    @foreach ($prehled['pasma'] as $p)
+      <option value="{{ $p['id'] }}">{{ $p['label'] }}</option>
+    @endforeach
+  </select>
+  @endif
+</div>
+
+@foreach ($topGroups as $g)
+<div class="grid grid-cols-1 gap-4 lg:grid-cols-3 mb-5" data-top-band="{{ $g['key'] }}" @unless ($g['key'] === 'all') hidden @endunless>
   @foreach ([
-    ['title' => __('pages.stat.top_points'), 'rows' => $prehled['topBody'],     'col' => 'body',     'unit' => __('pages.stat.unit_points')],
-    ['title' => __('pages.stat.top_qso'),    'rows' => $prehled['topQso'],      'col' => 'pocet',    'unit' => 'QSO'],
-    ['title' => __('pages.stat.top_mult'),   'rows' => $prehled['topNasobice'], 'col' => 'multiplier', 'unit' => __('pages.stat.unit_mult')],
+    ['title' => __('pages.stat.top_points'), 'rows' => $g['tops']['body'], 'col' => 'body',       'unit' => __('pages.stat.unit_points')],
+    ['title' => __('pages.stat.top_qso'),    'rows' => $g['tops']['qso'],  'col' => 'pocet',      'unit' => 'QSO'],
+    ['title' => __('pages.stat.top_mult'),   'rows' => $g['tops']['mult'], 'col' => 'multiplier', 'unit' => __('pages.stat.unit_mult')],
   ] as $tbl)
   <div class="rounded-lg border border-line bg-surface p-3">
     <div class="text-sm font-semibold text-heading mb-2">{{ $tbl['title'] }}</div>
@@ -183,5 +204,15 @@ window.__statConfig = {
   </div>
   @endforeach
 </div>
+@endforeach
+
+<script @cspNonce>
+  document.getElementById('topBandFilter')?.addEventListener('change', function () {
+    var val = this.value;
+    document.querySelectorAll('[data-top-band]').forEach(function (el) {
+      el.hidden = el.getAttribute('data-top-band') !== val;
+    });
+  });
+</script>
 
 @endsection
