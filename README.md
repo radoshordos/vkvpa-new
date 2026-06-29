@@ -172,7 +172,7 @@ Hlášení se od běžných závodníků přijímají ve stavech `Aktivni` a `Pr
 
 **EDI schéma** (`edihead`, `edilines`): odvozeno z původního systému, ale plně normalizováno na `snake_case` názvy sloupců (`mode_code`, `received_wwl`, `qso_points`, `t_date`, `p_call` apod.) – přistupuje se k nim jako k běžným Eloquent atributům, žádný magický `$line->{'...'}` přístup ani potlačení `property.notFound`. Oba modely mají `#[WithoutTimestamps]` (vlastní časové sloupce `stamp`, `d_cas`). Model `Ediline` navíc nabízí **PHP 8.4 property hooks** (`$receivedWwl`, `$qsoPoints`, `$modeCode`, `$mode`, `$newWwl`), které surové sloupce normalizují/castují.
 
-**Aplikační schéma** (`vkvpa_*`): `EdiEntry` (závodní záznamy/výsledky), `EdiRound` (kola závodu), `VkvpaPrihlaseni` (přihlašovací tokeny), `DiscussionPost` (diskuze ke kolům, tabulka `discussion_posts`; fotky binárně v `discussion_post_photos` přes `DiscussionPostPhoto`). Kategorie je `edi_category` (model `EdiCategory`) – **jediný** číselník kategorií; `EdiEntry.category_id` je FK na `edi_category.id` (původní duplicitní tabulka `vkvpa_kategorie` byla zrušena).
+**Aplikační schéma** (`vkvpa_*`): `EdiEntry` (závodní záznamy/výsledky), `EdiRound` (kola závodu), `LoginToken` (tabulka `login_tokens`, jednorázové magic-link přihlašovací tokeny), `DiscussionPost` (diskuze ke kolům, tabulka `discussion_posts`; fotky binárně v `discussion_post_photos` přes `DiscussionPostPhoto`). Kategorie je `edi_category` (model `EdiCategory`) – **jediný** číselník kategorií; `EdiEntry.category_id` je FK na `edi_category.id` (původní duplicitní tabulka `vkvpa_kategorie` byla zrušena).
 
 ### Eloquent strict mode
 
@@ -450,7 +450,7 @@ Jedna migrace na tabulku – každá `create_*` migrace nese finální schéma t
 | `create_edi_entries_table` | Závodní záznamy / výsledky (FK na kolo, edihead; FK na kategorii se přidává v `create_edi_category_table`) |
 | `create_edi_category_table` | Jediný číselník kategorií (pásmo × sekce × varianta); přidává i FK `edi_entries.category_id` → `edi_category` |
 | `create_diskuse_table` | Diskuzní příspěvky ke kolům |
-| `create_vkvpa_prihlaseni_table` | Dočasné přihlašovací tokeny |
+| `create_login_tokens_table` | Dočasné přihlašovací tokeny (magic-link) |
 | `create_prefixes_table` | Mapování prefixů na země (DXCC) |
 
 ### Modely a vztahy
@@ -470,7 +470,7 @@ EdiRound ──► DiscussionPost[] ──► DiscussionPostPhoto[]
 | `Ediline` | `belongsTo(Edihead)`, nestandardní názvy sloupců, `#[WithoutTimestamps]`; PHP 8.4 property hooks: `$receivedWwl`, `$qsoPoints`, `$modeCode`, `$mode`, `$newWwl` |
 | `EdiRound` | `hasMany(EdiEntry, DiscussionPost)`, `stav(): KoloStav`, `isActive()`, scope `active()` |
 | `EdiCategory` | `hasMany(EdiEntry)` (`hlaseni`), `domestic()`/`domesticCounterpart()`; jediný číselník kategorií, accessory `nazev`/`zkratka` |
-| `VkvpaPrihlaseni` | tokeny s TTL = `vkvpa.token_ttl_days` (výchozí: 5 dní) |
+| `LoginToken` | jednorázové přihlašovací tokeny (tabulka `login_tokens`) s TTL = `vkvpa.token_ttl_days` (výchozí: 5 dní) |
 | `DiscussionPost` | `belongsTo(EdiRound)`, `hasMany(DiscussionPostPhoto)` – diskuzní příspěvky (tabulka `discussion_posts`) |
 | `DiscussionPostPhoto` | `belongsTo(DiscussionPost)` – fotky příspěvku binárně v `discussion_post_photos` |
 | `User` | přihlašování přes `name` (ne email), `is_admin` boolean |
@@ -504,7 +504,7 @@ EdiRound ──► DiscussionPost[] ──► DiscussionPostPhoto[]
 | GET | `/lang/{locale}` | closure | `lang.switch` |
 | GET | `/login` | `AuthController@showLoginForm` | `login` |
 | POST | `/login` | `AuthController@login` | – |
-| GET | `/login/token/{kod}` | `AuthController@loginViaToken` | `login.token` |
+| GET | `/login/token/{token}` | `AuthController@loginViaToken` | `login.token` |
 | POST | `/logout` | `AuthController@logout` | `logout` |
 | GET | `/mail-image` | `MailImageController@show` | `mail.image` |
 | GET | `/robots.txt` | `SitemapController@robots` | `robots` |
@@ -557,7 +557,7 @@ EdiRound ──► DiscussionPost[] ──► DiscussionPostPhoto[]
 Přihlášení je session-based se dvěma způsoby vstupu:
 
 1. **Standardní formulář** na `/login` – přihlášení přes `name` + heslo
-2. **Token login** na `/login/token/{kod}` – jednorázový alfanumerický kód s TTL 5 dní (konfigurovatelné přes `vkvpa.token_ttl_days`)
+2. **Token login** na `/login/token/{token}` – jednorázový alfanumerický kód s TTL 5 dní (konfigurovatelné přes `vkvpa.token_ttl_days`)
 
 Admin trasy jsou chráněny middleware `EnsureAdmin` (`middleware('admin')`). Admin práva se řídí atributem `User::is_admin` (boolean).
 

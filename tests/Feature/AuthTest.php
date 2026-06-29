@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\LoginToken;
 use App\Models\User;
-use App\Models\VkvpaPrihlaseni;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
@@ -27,13 +27,19 @@ class AuthTest extends TestCase
     }
 
     /** Uloží token jako SHA-256 hash (stejně jako SendEdiMailsListener). */
-    private function createToken(string $plaintext, mixed $time = null, ?int $userId = null): void
+    private function createToken(string $plaintext, mixed $createdAt = null, ?int $userId = null): void
     {
-        VkvpaPrihlaseni::create([
-            'time' => $time ?? now(),
-            'kod' => hash('sha256', $plaintext),
+        $loginToken = new LoginToken([
+            'token' => hash('sha256', $plaintext),
             'user_id' => $userId,
         ]);
+
+        // Vlastní created_at (test expirace) – jinak ho Eloquent nastaví na now().
+        if ($createdAt !== null) {
+            $loginToken->created_at = $createdAt;
+        }
+
+        $loginToken->save();
     }
 
     public function test_login_form_renders(): void
@@ -89,12 +95,12 @@ class AuthTest extends TestCase
         $admin = $this->admin();
         $this->createToken('abc123', userId: $admin->id);
 
-        $this->get(route('login.token', ['kod' => 'abc123']))
+        $this->get(route('login.token', ['token' => 'abc123']))
             ->assertRedirect(route('admin.dashboard'));
 
         $this->assertAuthenticatedAs($admin);
         $this->assertSame($admin->name, session('prihlasen'));
-        $this->assertSame(0, VkvpaPrihlaseni::count()); // token smazán po použití
+        $this->assertSame(0, LoginToken::count()); // token smazán po použití
     }
 
     public function test_token_without_user_id_is_rejected(): void
@@ -102,7 +108,7 @@ class AuthTest extends TestCase
         $this->admin();
         $this->createToken('nulltoken', userId: null);
 
-        $this->get(route('login.token', ['kod' => 'nulltoken']))
+        $this->get(route('login.token', ['token' => 'nulltoken']))
             ->assertRedirect(route('login'))
             ->assertSessionHasErrors('username');
 
@@ -113,7 +119,7 @@ class AuthTest extends TestCase
     {
         $this->admin();
 
-        $this->get(route('login.token', ['kod' => 'neplatny']))
+        $this->get(route('login.token', ['token' => 'neplatny']))
             ->assertRedirect(route('login'))
             ->assertSessionHasErrors('username');
 
@@ -125,12 +131,12 @@ class AuthTest extends TestCase
         $this->admin();
         $this->createToken('stary123', now()->subDays(6));
 
-        $this->get(route('login.token', ['kod' => 'stary123']))
+        $this->get(route('login.token', ['token' => 'stary123']))
             ->assertRedirect(route('login'))
             ->assertSessionHasErrors('username');
 
         $this->assertGuest();
-        $this->assertSame(0, VkvpaPrihlaseni::count()); // expirovaný token uklizen
+        $this->assertSame(0, LoginToken::count()); // expirovaný token uklizen
     }
 
     public function test_token_with_confirm_redirects_to_record(): void
@@ -138,7 +144,7 @@ class AuthTest extends TestCase
         $admin = $this->admin();
         $this->createToken('xyz789', userId: $admin->id);
 
-        $this->get(route('login.token', ['kod' => 'xyz789', 'confirm' => 42]))
+        $this->get(route('login.token', ['token' => 'xyz789', 'confirm' => 42]))
             ->assertRedirect(route('hlaseni.index', ['id' => 42]));
 
         $this->assertAuthenticatedAs($admin);

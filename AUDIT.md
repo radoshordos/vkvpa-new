@@ -130,15 +130,15 @@ zakládá rovnou převzatý záznam. Ověřeno v `HlaseniController`.
 
 ### 3. Magic-link token přihlašoval „prvního admina"
 
-**Soubor:** `AuthController`, migrace `vkvpa_prihlaseni`
+**Soubor:** `AuthController`, migrace `login_tokens`
 
 Jednorázový kód nebyl svázán s konkrétním uživatelem (přihlásil vždy prvního
-admina – ztráta auditní stopy). Latentně byl sloupec `kod` typu `varchar(32)`,
+admina – ztráta auditní stopy). Latentně byl sloupec `token` typu `varchar(32)`,
 ač se ukládá SHA-256 (64 znaků) → v MySQL by se hash ořezával.
 
-**Náprava:** přidán `vkvpa_prihlaseni.user_id`; token se váže na konkrétního
+**Náprava:** přidán `login_tokens.user_id`; token se váže na konkrétního
 administrátora (s ověřením práv a zpětnou kompatibilitou), konzumace
-v transakci s `lockForUpdate`. Sloupec `kod` rozšířen na `varchar(64)`.
+v transakci s `lockForUpdate`. Sloupec `token` rozšířen na `varchar(64)`.
 Kryptografie OK: `Str::password(32)` (CSPRNG), SHA-256 hash, jednorázové,
 TTL 5 dní, rate limit 10/min.
 
