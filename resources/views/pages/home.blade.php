@@ -274,11 +274,11 @@
         @foreach ($posledniPrispevky as $p)
         <a href="{{ route('diskuse.show', $p->round_id) }}" class="card block p-4 hover:border-brand hover:bg-surface-2 transition-colors">
             <div class="flex items-baseline justify-between gap-2">
-                <span class="mono text-sm font-bold">{{ $p->znacka }}</span>
+                <span class="mono text-sm font-bold">{{ $p->callsign }}</span>
                 <span class="text-xs text-muted">{{ $p->created_at->locale(app()->getLocale())->diffForHumans() }}</span>
             </div>
             <div class="mt-0.5 text-xs text-muted">{{ $p->round->name }}</div>
-            <p class="mt-2 text-sm">{{ \Illuminate\Support\Str::limit($p->text, 120) }}</p>
+            <p class="mt-2 text-sm">{{ \Illuminate\Support\Str::limit($p->body, 120) }}</p>
         </a>
         @endforeach
     </div>

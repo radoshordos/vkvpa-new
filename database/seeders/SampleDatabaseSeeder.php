@@ -17,8 +17,8 @@ class SampleDatabaseSeeder extends Seeder
     {
         // Pořadí respektuje cizí klíče (na MySQL se vynucují) – rodičovské
         // tabulky se plní dřív než ty, které na ně odkazují: kola+kategorie →
-        // edihead → edilines/edi_entries → diskuse. prihlaseni (user_id NULL) a
-        // prefixes jsou bez závislostí.
+        // edihead → edilines/edi_entries → discussion_posts. prihlaseni
+        // (user_id NULL) a prefixes jsou bez závislostí.
         $this->call([
             EdiRoundTableSeeder::class,
             EdiBandTableSeeder::class,
@@ -26,7 +26,7 @@ class SampleDatabaseSeeder extends Seeder
             EdiheadTableSeeder::class,
             EdilinesTableSeeder::class,
             EdiEntryTableSeeder::class,
-            DiskuseSeeder::class,
+            DiscussionSeeder::class,
             VkvpaPrihlaseniTableSeeder::class,
             PrefixesTableSeeder::class,
         ]);

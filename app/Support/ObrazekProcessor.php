@@ -51,9 +51,10 @@ final class ObrazekProcessor
     }
 
     /**
-     * Zpracuje soubor a vrátí data připravená pro uložení do `diskuse_foto`.
+     * Zpracuje soubor a vrátí data připravená pro uložení do
+     * `discussion_post_photos`.
      *
-     * @return array{mime: string, data: string, nahled: string, sirka: int, vyska: int, velikost: int}
+     * @return array{mime_type: string, data: string, thumbnail: string, width: int, height: int, size_bytes: int}
      *
      * @throws RuntimeException pokud soubor nelze dekódovat jako obrázek
      */
@@ -78,12 +79,12 @@ final class ObrazekProcessor
         }
 
         return [
-            'mime' => $mime,
+            'mime_type' => $mime,
             'data' => $dataHlavni,
-            'nahled' => $dataNahled,
-            'sirka' => $hlavni->width(),
-            'vyska' => $hlavni->height(),
-            'velikost' => strlen($dataHlavni),
+            'thumbnail' => $dataNahled,
+            'width' => $hlavni->width(),
+            'height' => $hlavni->height(),
+            'size_bytes' => strlen($dataHlavni),
         ];
     }
 

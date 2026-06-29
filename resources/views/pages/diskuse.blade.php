@@ -47,9 +47,9 @@
             <div class="card p-4">
                 <div class="flex items-start justify-between gap-2">
                     <div class="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
-                        <span class="mono font-bold text-heading">{{ $p->znacka }}</span>
-                        @if ($p->jmeno)
-                            <span class="text-sm text-muted">{{ $p->jmeno }}</span>
+                        <span class="mono font-bold text-heading">{{ $p->callsign }}</span>
+                        @if ($p->name)
+                            <span class="text-sm text-muted">{{ $p->name }}</span>
                         @endif
                         <span class="text-xs text-muted">{{ $p->created_at?->format('j. n. Y H:i') }}</span>
                     </div>
@@ -58,21 +58,21 @@
                             @csrf
                             @method('DELETE')
                             <button type="button" class="btn btn-danger btn-sm"
-                                    data-confirm-znacka="{{ $p->znacka }}"
+                                    data-confirm-znacka="{{ $p->callsign }}"
                                     title="{{ __('pages.diskuse.btn_delete') }}">{{ __('pages.diskuse.btn_delete') }}</button>
                         </form>
                     @endif
                 </div>
-                <p class="mt-2 whitespace-pre-wrap break-words">{{ $p->text }}</p>
-                @if ($p->fotky->isNotEmpty())
+                <p class="mt-2 whitespace-pre-wrap break-words">{{ $p->body }}</p>
+                @if ($p->photos->isNotEmpty())
                     <div class="mt-3 flex flex-wrap gap-2">
-                        @foreach ($p->fotky as $f)
+                        @foreach ($p->photos as $f)
                             <a href="{{ route('diskuse.foto', $f->id) }}"
                                class="block overflow-hidden rounded-lg shadow-sm"
                                data-lightbox
                                aria-label="{{ __('pages.diskuse.photo_open') }}">
                                 <img src="{{ route('diskuse.foto.nahled', $f->id) }}"
-                                     alt="Fotografie od {{ $p->znacka }}"
+                                     alt="Fotografie od {{ $p->callsign }}"
                                      loading="lazy"
                                      class="h-28 w-28 object-cover transition hover:opacity-90 sm:h-32 sm:w-32">
                             </a>

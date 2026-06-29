@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\DiscussionPost;
 use App\Models\EdiCategory;
 use App\Models\EdiEntry;
 use App\Models\EdiRound;
-use App\Models\Prispevek;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
@@ -147,7 +147,7 @@ class HomePageTest extends TestCase
     {
         Carbon::setTestNow('2026-06-22 12:00:00');
         $kolo = $this->round();
-        Prispevek::create(['round_id' => $kolo->id, 'znacka' => 'OK1XYZ', 'text' => 'Pěkné podmínky dnes ráno!', 'ip' => '127.0.0.1']);
+        DiscussionPost::create(['round_id' => $kolo->id, 'callsign' => 'OK1XYZ', 'body' => 'Pěkné podmínky dnes ráno!', 'ip_address' => '127.0.0.1']);
 
         $this->get(route('home'))
             ->assertOk()

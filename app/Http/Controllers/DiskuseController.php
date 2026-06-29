@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StorePrispevekRequest;
+use App\Models\DiscussionPost;
+use App\Models\DiscussionPostPhoto;
 use App\Models\EdiRound;
-use App\Models\Prispevek;
-use App\Models\PrispevekFoto;
 use App\Support\ObrazekProcessor;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -35,8 +35,8 @@ class DiskuseController extends Controller
 
     public function show(EdiRound $kolo): View
     {
-        $prispevky = Prispevek::where('round_id', $kolo->id)
-            ->with('fotky:id,prispevek_id,sirka,vyska,poradi') // bez BLOBů
+        $prispevky = DiscussionPost::where('round_id', $kolo->id)
+            ->with('photos:id,discussion_post_id,width,height,position') // bez BLOBů
             ->orderBy('created_at')
             ->get();
 
@@ -75,7 +75,7 @@ class DiskuseController extends Controller
                     continue;
                 }
                 $data = $processor->zpracuj($path);
-                $data['poradi'] = $poradi;
+                $data['position'] = $poradi;
                 $zpracovane[] = $data;
             }
         } catch (RuntimeException) {
@@ -85,16 +85,16 @@ class DiskuseController extends Controller
         }
 
         DB::transaction(function () use ($request, $kolo, $zpracovane): void {
-            $prispevek = Prispevek::create([
+            $post = DiscussionPost::create([
                 'round_id' => $kolo->id,
-                'znacka' => $request->string('znacka')->value(),
-                'jmeno' => $request->filled('jmeno') ? $request->string('jmeno')->trim()->value() : null,
-                'text' => $request->string('text')->trim()->value(),
-                'ip' => $request->ip(),
+                'callsign' => $request->string('znacka')->value(),
+                'name' => $request->filled('jmeno') ? $request->string('jmeno')->trim()->value() : null,
+                'body' => $request->string('text')->trim()->value(),
+                'ip_address' => $request->ip(),
             ]);
 
             foreach ($zpracovane as $foto) {
-                $prispevek->fotky()->create($foto);
+                $post->photos()->create($foto);
             }
         });
 
@@ -107,15 +107,15 @@ class DiskuseController extends Controller
      * Servíruje hlavní obrázek z DB. Obsah je neměnný (adresovaný ID), proto
      * dlouhá cache.
      */
-    public function foto(PrispevekFoto $foto): Response
+    public function foto(DiscussionPostPhoto $foto): Response
     {
-        return $this->obrazek($foto->mime, $foto->data);
+        return $this->obrazek($foto->mime_type, $foto->data);
     }
 
     /** Servíruje náhled (thumbnail) z DB. */
-    public function nahled(PrispevekFoto $foto): Response
+    public function nahled(DiscussionPostPhoto $foto): Response
     {
-        return $this->obrazek($foto->mime, $foto->nahled);
+        return $this->obrazek($foto->mime_type, $foto->thumbnail);
     }
 
     private function obrazek(string $mime, string $data): Response
@@ -130,14 +130,14 @@ class DiskuseController extends Controller
         ]);
     }
 
-    public function destroy(Prispevek $prispevek): RedirectResponse
+    public function destroy(DiscussionPost $prispevek): RedirectResponse
     {
         $koloId = $prispevek->round_id;
 
-        // Fotky v `diskuse_foto` zmizí přes FK cascade (a v testovacím SQLite,
-        // kde FK nejsou, je smaže relace ručně).
+        // Fotky v `discussion_post_photos` zmizí přes FK cascade (a v testovacím
+        // SQLite, kde FK nejsou, je smaže relace ručně).
         DB::transaction(function () use ($prispevek): void {
-            $prispevek->fotky()->delete();
+            $prispevek->photos()->delete();
             $prispevek->delete();
         });
 

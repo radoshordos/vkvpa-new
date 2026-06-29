@@ -18,17 +18,17 @@ use Override;
  *
  * @property int $id
  * @property int $round_id
- * @property string $znacka
- * @property string|null $jmeno
- * @property string $text
- * @property string|null $ip
+ * @property string $callsign
+ * @property string|null $name
+ * @property string $body
+ * @property string|null $ip_address
  * @property Carbon $created_at
  * @property-read EdiRound $round
- * @property-read Collection<int, PrispevekFoto> $fotky
+ * @property-read Collection<int, DiscussionPostPhoto> $photos
  */
-#[Fillable(['round_id', 'znacka', 'jmeno', 'text', 'ip'])]
-#[Table(name: 'diskuse', key: 'id')]
-class Prispevek extends Model
+#[Fillable(['round_id', 'callsign', 'name', 'body', 'ip_address'])]
+#[Table(name: 'discussion_posts', key: 'id')]
+class DiscussionPost extends Model
 {
     public const UPDATED_AT = null;
 
@@ -38,10 +38,10 @@ class Prispevek extends Model
         return $this->belongsTo(EdiRound::class, 'round_id');
     }
 
-    /** @return HasMany<PrispevekFoto, $this> */
-    public function fotky(): HasMany
+    /** @return HasMany<DiscussionPostPhoto, $this> */
+    public function photos(): HasMany
     {
-        return $this->hasMany(PrispevekFoto::class, 'prispevek_id')->orderBy('poradi');
+        return $this->hasMany(DiscussionPostPhoto::class, 'discussion_post_id')->orderBy('position');
     }
 
     #[Override]

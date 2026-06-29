@@ -72,6 +72,6 @@ return [
     'db_backup_table_groups' => [
         'edi' => ['edi_category', 'edi_head', 'edi_lines'],
         'vysledky' => ['edi_rounds', 'edi_entries'],
-        'ostatni' => ['vkvpa_prihlaseni', 'diskuse', 'diskuse_foto'],
+        'ostatni' => ['vkvpa_prihlaseni', 'discussion_posts', 'discussion_post_photos'],
     ],
 ];
