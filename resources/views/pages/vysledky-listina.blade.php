@@ -31,6 +31,31 @@
             @endforeach
         </select>
     </div>
+    <div class="field mb-0">
+        <label class="label" for="band_id">{{ __('pages.vysledky.filter_band') }}</label>
+        <select id="band_id" name="band_id" class="select w-auto" data-autosubmit>
+            <option value="0" @selected(($bandId ?? 0) === 0)>{{ __('pages.vysledky.filter_all') }}</option>
+            @foreach ($bands as $band)
+                <option value="{{ $band->id }}" @selected(($bandId ?? 0) === $band->id)>{{ $band->name }}</option>
+            @endforeach
+        </select>
+    </div>
+    <div class="field mb-0">
+        <label class="label" for="section">{{ __('pages.vysledky.filter_section') }}</label>
+        <select id="section" name="section" class="select w-auto" data-autosubmit>
+            <option value="" @selected(($section ?? '') === '')>{{ __('pages.vysledky.filter_all') }}</option>
+            <option value="SO" @selected(($section ?? '') === 'SO')>SO</option>
+            <option value="MO" @selected(($section ?? '') === 'MO')>MO</option>
+        </select>
+    </div>
+    <div class="field mb-0">
+        <label class="label" for="variant">{{ __('pages.vysledky.filter_variant') }}</label>
+        <select id="variant" name="variant" class="select w-auto" data-autosubmit>
+            <option value="" @selected(($variant ?? '') === '')>{{ __('pages.vysledky.filter_all') }}</option>
+            <option value="domestic" @selected(($variant ?? '') === 'domestic')>{{ __('pages.vysledky.variant_domestic') }}</option>
+            <option value="dx" @selected(($variant ?? '') === 'dx')>DX</option>
+        </select>
+    </div>
     @if ($isAdmin)
         <div class="field mb-0">
             <label class="label" for="prevzeti">{{ __('pages.vysledky.filter_prevzeti') }}</label>

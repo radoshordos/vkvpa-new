@@ -36,6 +36,22 @@ class VysledkyController extends Controller
 
         // Hledat / Search – filtruje podle značky nebo lokátoru ve vybraném kole.
         $hledat = $request->string('hledat')->trim()->value();
+        $bands = EdiBand::query()->orderBy('id')->get()->keyBy('id');
+        $bandId = $request->integer('band_id');
+        $section = strtoupper($request->string('section')->trim()->value());
+        $variant = strtolower($request->string('variant')->trim()->value());
+
+        if (! $bands->has($bandId)) {
+            $bandId = 0;
+        }
+
+        if (! in_array($section, ['SO', 'MO'], true)) {
+            $section = '';
+        }
+
+        if (! in_array($variant, ['domestic', 'dx'], true)) {
+            $variant = '';
+        }
 
         // Veřejnost vidí jen převzaté (approved=1); admin vidí i nepřevzaté
         // (meruňkové) záznamy, aby je mohl tlačítkem „P" převzít.
@@ -60,6 +76,9 @@ class VysledkyController extends Controller
                 ->when($prevzeti === 'no', fn ($q) => $q->where('approved', false))
                 ->when($request->boolean('qrp'), fn ($q) => $q->onlyQrp())
                 ->when($request->boolean('lp'), fn ($q) => $q->onlyLp())
+                ->when($bandId !== 0, fn ($q) => $q->whereRelation('category', 'band_id', $bandId))
+                ->when($section !== '', fn ($q) => $q->whereRelation('category', 'section', $section))
+                ->when($variant !== '', fn ($q) => $q->whereRelation('category', 'variant', $variant))
                 ->when($hledat !== '', fn ($q) => $q->where(
                     fn ($w) => $w->where('callsign', 'like', sprintf('%%%s%%', $hledat))
                         ->orWhere('locator', 'like', sprintf('%%%s%%', $hledat)),
@@ -80,9 +99,13 @@ class VysledkyController extends Controller
                 ->reject(fn (EdiRound $k): bool => $k->state() === KoloStav::Nadchazejici)
                 ->values(),
             'kolo' => $kolo,
+            'bands' => $bands,
             'kategorie' => EdiCategory::query()->orderBy('id')->get()->keyBy('id'),
             'radky' => $radky,
             'skokani' => $skokani,
+            'bandId' => $bandId,
+            'section' => $section,
+            'variant' => $variant,
             'hledat' => $hledat,
             'prevzeti' => $prevzeti,
             'limitReached' => $radky->count() >= $maxRows,

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\EdiBand;
 use App\Models\EdiCategory;
 use App\Models\EdiEntry;
 use App\Models\EdiHead;
@@ -30,9 +31,14 @@ class VysledkyListinaTest extends TestCase
         ]);
     }
 
-    private function kat(string $nazev): EdiCategory
+    private function kat(string $nazev, ?int $bandId = null, string $section = 'SO', string $variant = 'domestic'): EdiCategory
     {
-        return EdiCategory::create(['name' => $nazev, 'section' => 'SO', 'variant' => 'domestic']);
+        return EdiCategory::create([
+            'name' => $nazev,
+            'band_id' => $bandId,
+            'section' => $section,
+            'variant' => $variant,
+        ]);
     }
 
     private function entry(int $kolo, int $kat, string $znacka, int $pocet, int $nas, int $body, int $poradi): EdiEntry
@@ -73,6 +79,61 @@ class VysledkyListinaTest extends TestCase
             ->assertOk()
             ->assertSee('OK1DOL')
             ->assertDontSee('OK2VZE');
+    }
+
+    public function test_band_id_filter_uses_category_band(): void
+    {
+        $kolo = $this->round();
+        $band144 = EdiBand::query()->findOrFail(1);
+        $band432 = EdiBand::query()->findOrFail(2);
+        $kat144 = EdiCategory::query()
+            ->where('band_id', $band144->id)
+            ->where('section', 'SO')
+            ->where('variant', 'domestic')
+            ->firstOrFail();
+        $kat432 = EdiCategory::query()
+            ->where('band_id', $band432->id)
+            ->where('section', 'SO')
+            ->where('variant', 'domestic')
+            ->firstOrFail();
+
+        $this->entry($kolo->id, $kat144->id, 'OK1VHF', 10, 5, 100, 1);
+        $this->entry($kolo->id, $kat432->id, 'OK1UHF', 10, 5, 90, 1);
+
+        $this->get(route('vysledkova_listina', ['kolo' => $kolo->id, 'band_id' => $band144->id]))
+            ->assertOk()
+            ->assertSee('OK1VHF')
+            ->assertDontSee('OK1UHF');
+    }
+
+    public function test_section_filter_uses_category_section(): void
+    {
+        $kolo = $this->round();
+        $single = $this->kat('144 MHz single op', section: 'SO');
+        $multi = $this->kat('144 MHz multi op', section: 'MO');
+
+        $this->entry($kolo->id, $single->id, 'OK1SO', 10, 5, 100, 1);
+        $this->entry($kolo->id, $multi->id, 'OK1MO', 10, 5, 90, 1);
+
+        $this->get(route('vysledkova_listina', ['kolo' => $kolo->id, 'section' => 'MO']))
+            ->assertOk()
+            ->assertSee('OK1MO')
+            ->assertDontSee('OK1SO');
+    }
+
+    public function test_variant_filter_uses_category_variant(): void
+    {
+        $kolo = $this->round();
+        $domestic = $this->kat('144 MHz single op', variant: 'domestic');
+        $dx = $this->kat('144 MHz single op DX', variant: 'dx');
+
+        $this->entry($kolo->id, $domestic->id, 'OK1DOM', 10, 5, 100, 1);
+        $this->entry($kolo->id, $dx->id, 'DL1DX', 10, 5, 90, 1);
+
+        $this->get(route('vysledkova_listina', ['kolo' => $kolo->id, 'variant' => 'dx']))
+            ->assertOk()
+            ->assertSee('DL1DX')
+            ->assertDontSee('OK1DOM');
     }
 
     public function test_unapproved_rows_are_hidden_from_public(): void
