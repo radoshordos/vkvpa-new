@@ -8,6 +8,12 @@
 > (`EdiVizualizaceController` – nově největší soubor v `app/`), akce
 > `ImportEdiAction`, modernizace na events/jobs a typed config, a accessor metody
 > na `Ediline`. Tento dokument přepočítává dluh na **aktuální** stav.
+>
+> **Aktualizace 2026-06-29:** projekt nově cílí na **PHP 8.5** (`composer.json: ^8.5`,
+> kód využívá pipe operátor `|>`) – původní hodnocení proběhlo ještě na 8.4.19.
+> Aktuální baseline: **522 testů / 1848 asercí**, PHPStan level 10 bez chyb, Pint
+> čistý. Tabulky `edi_category`/`edi_head` byly přejmenovány na Laravel konvenci
+> (`edi_categories`/`edi_heads`); model FK sloupce a casing tříd řeší navazující práce.
 
 ## Shrnutí
 
