@@ -64,17 +64,17 @@ class EdiLine extends Model
 
     /** Přijatý lokátor protistanice (prázdný string pokud chybí). */
     public string $receivedWwl {
-        get => trim((string) ($this->{'received_wwl'} ?? ''));
+        get => trim((string) ($this->received_wwl ?? ''));
     }
 
     /** Body za spojení z deníku (EDI qso_points; ve skóre se ignoruje). */
     public int $qsoPoints {
-        get => (int) ($this->{'qso_points'} ?? 0);
+        get => (int) ($this->qso_points ?? 0);
     }
 
     /** Kód druhu provozu z deníku: 1 = SSB, 2 = CW, 0/jiné = neznámý. */
     public int $modeCode {
-        get => (int) ($this->{'mode_code'} ?? 0);
+        get => (int) ($this->mode_code ?? 0);
     }
 
     /** Druh provozu jako enum (neznámý/chybějící kód → QsoMode::Other). */
@@ -84,7 +84,7 @@ class EdiLine extends Model
 
     /** Opravený lokátor (new_wwl_n, prázdný string pokud chybí). */
     public string $newWwl {
-        get => trim((string) ($this->{'new_wwl_n'} ?? ''));
+        get => trim((string) ($this->new_wwl_n ?? ''));
     }
 
     /** Čas QSO jako minuty od půlnoci (UTC); 0 když qso_at chybí. */

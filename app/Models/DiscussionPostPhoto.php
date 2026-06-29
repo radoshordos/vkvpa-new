@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -27,18 +28,13 @@ use Override;
  * @property-read DiscussionPost $post
  */
 #[Fillable(['discussion_post_id', 'mime_type', 'data', 'thumbnail', 'width', 'height', 'size_bytes', 'position'])]
+// Binární sloupce nikdy neserializujeme (toArray/toJson) – jsou velké a patří
+// jen do servírovací odpovědi.
+#[Hidden(['data', 'thumbnail'])]
 #[Table(name: 'discussion_post_photos', key: 'id')]
 class DiscussionPostPhoto extends Model
 {
     public const UPDATED_AT = null;
-
-    /**
-     * Binární sloupce nikdy neserializujeme (toArray/toJson) – jsou velké a
-     * patří jen do servírovací odpovědi.
-     *
-     * @var list<string>
-     */
-    protected $hidden = ['data', 'thumbnail'];
 
     /** @return BelongsTo<DiscussionPost, $this> */
     public function post(): BelongsTo
