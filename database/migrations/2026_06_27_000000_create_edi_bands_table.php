@@ -23,9 +23,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('edi_bands', function (Blueprint $table): void {
-            $table->charset = 'utf8mb4';
-            $table->collation = 'utf8mb4_unicode_ci';
-
             $table->integer('id', true);
             $table->string('token', 8);   // kanonický token bez jednotky ('144', '1.3', …)
             $table->string('name', 10);   // čitelný štítek s jednotkou ('144 MHz', '1.3 GHz', …)
