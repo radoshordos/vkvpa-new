@@ -504,6 +504,7 @@ return [
         'chart_trend' => 'Trend posledních kol',
         'chart_pasma' => 'Podíl pásem v čase',
         'pasma_year' => '{1} :count rok|[2,4] :count roky|[5,*] :count let',
+        'pasma_all' => 'Vše',
 
         'badge_ucast' => 'Rekord účasti!',
         'badge_skore' => 'Rekord skóre!',
@@ -542,6 +543,15 @@ return [
         'col_mult' => 'Násob.',
         'col_points' => 'Body',
         'col_place' => 'Pořadí',
+    ],
+
+    'trendy' => [
+        'title' => 'Dlouhodobé trendy – VKV PA',
+        'meta' => 'Dlouhodobé trendy VKV Provozního aktivu: jak se v čase mění podíl jednotlivých pásem mezi stanicemi napříč všemi vyhodnocenými koly.',
+        'heading' => 'Dlouhodobé trendy',
+        'subtitle' => 'Jak se v čase mění obliba pásem napříč všemi vyhodnocenými koly.',
+        'pasma_note' => 'Podíl podle počtu různých stanic na pásmu; základ 100 % je součet stanic přes pásma (jedna stanice může jet víc pásem). Pásmo se bere z kategorie záznamu.',
+        'empty' => 'Zatím nejsou data – žádné vyhodnocené kolo.',
     ],
 
 ];
