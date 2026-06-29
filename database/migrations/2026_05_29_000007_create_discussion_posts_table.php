@@ -37,7 +37,7 @@ return new class extends Migration
 
         // Kola se nikdy nemažou → RESTRICT.
         Schema::table('discussion_posts', function (Blueprint $table): void {
-            $table->foreign('round_id', 'discussion_posts_round_id_fk')
+            $table->foreign('round_id', 'discussion_posts_round_id_foreign')
                 ->references('id')->on('edi_rounds')
                 ->restrictOnDelete();
         });

@@ -48,7 +48,7 @@ return new class extends Migration
 
         // Kola se nikdy nemažou → RESTRICT brání tichému smazání navázaných deníků.
         Schema::table('edi_heads', function (Blueprint $table): void {
-            $table->foreign('round_id', 'edi_heads_round_id_fk')
+            $table->foreign('round_id', 'edi_heads_round_id_foreign')
                 ->references('id')->on('edi_rounds')
                 ->restrictOnDelete();
         });

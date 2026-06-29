@@ -62,12 +62,12 @@ return new class extends Migration
 
         Schema::table('edi_entries', function (Blueprint $table): void {
             // Kola se nikdy nemažou → RESTRICT (CASCADE by při omylu smazal výsledky).
-            $table->foreign('round_id', 'edi_entries_round_id_fk')
+            $table->foreign('round_id', 'edi_entries_round_id_foreign')
                 ->references('id')->on('edi_rounds')
                 ->restrictOnDelete();
             // FK category_id → edi_categories se přidává až v migraci, která
             // edi_categories vytváří (2026_06_27_000001) – ta tabulka tu ještě neexistuje.
-            $table->foreign('edi_head_id', 'edi_entries_edi_head_id_fk')
+            $table->foreign('edi_head_id', 'edi_entries_edi_head_id_foreign')
                 ->references('id')->on('edi_heads')
                 ->nullOnDelete();
         });

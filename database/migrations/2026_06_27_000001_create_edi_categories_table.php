@@ -63,7 +63,7 @@ return new class extends Migration
             // FK edi_entries.category_id sem patří až teď – edi_entries (000006)
             // se vytváří dřív, ale edi_categories až tady.
             Schema::table('edi_entries', function (Blueprint $table): void {
-                $table->foreign('category_id', 'edi_entries_category_id_fk')
+                $table->foreign('category_id', 'edi_entries_category_id_foreign')
                     ->references('id')->on('edi_categories')
                     ->restrictOnDelete();
             });
@@ -74,7 +74,7 @@ return new class extends Migration
     {
         if (DB::getDriverName() !== 'sqlite') {
             Schema::table('edi_entries', function (Blueprint $table): void {
-                $table->dropForeign('edi_entries_category_id_fk');
+                $table->dropForeign('edi_entries_category_id_foreign');
             });
         }
 
