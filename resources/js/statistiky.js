@@ -2,6 +2,7 @@ import L from 'leaflet';
 import { Chart, registerables } from 'chart.js';
 import { createOsmMap } from './leaflet-osm-map.js';
 import { applyChartTheme } from './chart-theme.js';
+import { fitMapToBounds, pushPointBounds } from './leaflet-qso-map.js';
 import { modeColor, modeLabel } from './leaflet-mode-colors.js';
 
 Chart.register(...registerables);
@@ -34,7 +35,7 @@ if (document.getElementById('stat-mapa')) {
         L.circleMarker([s.lat, s.lon], { radius, color: '#1d4ed8', weight: 1, fillColor: '#3b82f6', fillOpacity: 0.6 })
             .addTo(staniceLayer)
             .bindPopup(`<strong>${s.call}</strong><br>${s.wwl} · ${s.count}×`);
-        bounds.push([s.lat, s.lon]);
+        pushPointBounds(bounds, s);
     });
 
     const ctverceLayer = L.layerGroup();
@@ -45,7 +46,7 @@ if (document.getElementById('stat-mapa')) {
         L.rectangle([[c.lat - 0.5, c.lon - 1], [c.lat + 0.5, c.lon + 1]], { color: '#b45309', weight: 1, fillColor: heatColor(x), fillOpacity: 0.45 })
             .addTo(ctverceLayer)
             .bindPopup(`<strong>${c.square}</strong><br>${c.count}×`);
-        bounds.push([c.lat, c.lon]);
+        pushPointBounds(bounds, c);
     });
 
     const ucastniciLayer = L.layerGroup();
@@ -67,11 +68,7 @@ if (document.getElementById('stat-mapa')) {
     });
 
     staniceLayer.addTo(map);
-    if (bounds.length > 0) {
-        map.fitBounds(bounds, { padding: [20, 20] });
-    } else {
-        map.setView([49.8, 15.5], 6);
-    }
+    fitMapToBounds(map, bounds, { padding: [20, 20], fallbackCenter: [49.8, 15.5] });
 
     const layers = { stanice: staniceLayer, ctverce: ctverceLayer, ucastnici: ucastniciLayer, tok: tokLayer };
     const tabs = document.querySelectorAll('[data-stat-layer]');

@@ -1,6 +1,14 @@
 import L from 'leaflet';
 import { Chart, registerables } from 'chart.js';
 import { createOsmMap } from './leaflet-osm-map.js';
+import {
+    createHomeMarker,
+    createQsoMarker,
+    createQsoRay,
+    fitMapToBounds,
+    pushPointBounds,
+    qsoPopupHtml,
+} from './leaflet-qso-map.js';
 import { modeColor, modeLabel } from './leaflet-mode-colors.js';
 import { applyChartTheme } from './chart-theme.js';
 import { redrawMaidenheadGrid } from './maidenhead-grid.js';
@@ -22,10 +30,8 @@ const bounds = [];
 // Domácí stanoviště
 let homeMarker = null;
 if (cfg.home) {
-    homeMarker = L.circleMarker([cfg.home.lat, cfg.home.lon], {
-        radius: 8, color: '#1d4ed8', fillColor: '#3b82f6', fillOpacity: 0.9, weight: 2,
-    }).addTo(map).bindPopup(`<strong>${cfg.pcall}</strong><br>${cfg.homeLoc}`);
-    bounds.push([cfg.home.lat, cfg.home.lon]);
+    homeMarker = createHomeMarker(cfg.home, `<strong>${cfg.pcall}</strong><br>${cfg.homeLoc}`).addTo(map);
+    pushPointBounds(bounds, cfg.home);
 }
 
 // Vrstva: ježek (čáry + body)
@@ -81,28 +87,22 @@ const playbackItems = [];
 const spendlikMarkers = [];
 
 cfg.points.forEach(function (p, idx) {
-    bounds.push([p.lat, p.lon]);
-    const mc = modeColor(p.mode);
+    pushPointBounds(bounds, p);
 
     // ježek: čára + barevný bod dle modu
     const jezekMembers = [];
     if (cfg.home) {
-        jezekMembers.push(L.polyline([[cfg.home.lat, cfg.home.lon], [p.lat, p.lon]], {
-            color: mc.fill, weight: 1.2, opacity: 0.55,
-        }));
+        jezekMembers.push(createQsoRay(cfg.home, p));
     }
-    jezekMembers.push(L.circleMarker([p.lat, p.lon], {
-        radius: 5, color: mc.stroke, fillColor: mc.fill, fillOpacity: 0.9, weight: 1.5,
-    }).bindPopup(`<strong>${p.call}</strong> <span style="font-size:.8em;opacity:.7">${modeLabel(p.mode)}</span><br>${p.wwl}<br>${p.points} ${t.pts}`));
+    jezekMembers.push(createQsoMarker(p).bindPopup(qsoPopupHtml(p, { pointsLabel: t.pts })));
     addModeEntry(jezekLayer, p.mode, jezekMembers);
 
     // špendlíky – taktéž rozlišené barevně
-    const popupSpend = `<strong>${p.call}</strong> <span style="font-size:.8em;opacity:.7">${modeLabel(p.mode)}</span><br>${p.wwl}`
-        + (p.dist !== null ? `<br>${p.dist} km` : '')
-        + (p.azimut !== null ? `<br>${t.azimuth} ${p.azimut}°` : '');
-    const spendlik = L.circleMarker([p.lat, p.lon], {
-        radius: 5, color: mc.stroke, fillColor: mc.fill, fillOpacity: 0.9, weight: 1.5,
-    }).bindPopup(popupSpend);
+    const spendlik = createQsoMarker(p).bindPopup(qsoPopupHtml(p, {
+        includeDistance: true,
+        includeAzimuth: true,
+        azimuthLabel: t.azimuth,
+    }));
     spendlikMarkers.push(spendlik);
     addModeEntry(spendlikyLayer, p.mode, [spendlik]);
 
@@ -110,18 +110,16 @@ cfg.points.forEach(function (p, idx) {
     const nn = nasobicByIdx.get(idx);
     const group = [];
     if (cfg.home) {
-        group.push(L.polyline([[cfg.home.lat, cfg.home.lon], [p.lat, p.lon]], {
-            color: mc.fill, weight: 1.2, opacity: 0.55,
-        }));
+        group.push(createQsoRay(cfg.home, p));
     }
-    group.push(L.circleMarker([p.lat, p.lon], nn
-        ? { radius: 7, color: mc.stroke, fillColor: mc.fill, fillOpacity: 0.9, weight: 2 }
-        : { radius: 5, color: mc.stroke, fillColor: mc.fill, fillOpacity: 0.9, weight: 1.5 },
-    ).bindPopup(`<strong>${p.call}</strong> <span style="font-size:.8em;opacity:.7">${modeLabel(p.mode)}</span><br>${p.wwl}<br>${hhmm(p.time)} UTC`
-        + (p.dist !== null ? `<br>${p.dist} km` : '')
-        + (p.azimut !== null ? `<br>${t.azimuth} ${p.azimut}°` : '')
-        + `<br>${p.points} ${t.pts}`
-        + (nn ? `<br>🆕 ${t.new_mult} ${nn.square} (${nn.poradi}.)` : '')));
+    group.push(createQsoMarker(p, nn ? { radius: 7, weight: 2 } : {}).bindPopup(qsoPopupHtml(p, {
+        afterLocator: [`${hhmm(p.time)} UTC`],
+        includeDistance: true,
+        includeAzimuth: true,
+        azimuthLabel: t.azimuth,
+        pointsLabel: t.pts,
+        extraLines: nn ? [`🆕 ${t.new_mult} ${nn.square} (${nn.poradi}.)`] : [],
+    })));
     playbackItems.push({ t: p.time, mode: modeGroup(p.mode), group, shown: false });
 });
 
@@ -194,19 +192,15 @@ if (cfg.home) {
 
 // Paprsky z QTH do protistanic + špendlíky barevně dle druhu provozu.
 cfg.points.forEach(function (p) {
-    const mc = modeColor(p.mode);
     const members = [];
     if (cfg.home) {
-        members.push(L.polyline([[cfg.home.lat, cfg.home.lon], [p.lat, p.lon]], {
-            color: '#cc0000', weight: 1, opacity: 0.35,
-        }));
+        members.push(createQsoRay(cfg.home, p, { color: '#cc0000', weight: 1, opacity: 0.35 }));
     }
-    const popup = `<strong>${p.call}</strong> <span style="font-size:.8em;opacity:.7">${modeLabel(p.mode)}</span><br>${p.wwl}`
-        + (p.dist !== null ? `<br>${p.dist} km` : '')
-        + (p.azimut !== null ? `<br>${t.azimuth} ${p.azimut}°` : '');
-    members.push(L.circleMarker([p.lat, p.lon], {
-        radius: 4, color: mc.stroke, fillColor: mc.fill, fillOpacity: 0.85, weight: 1.5,
-    }).bindPopup(popup));
+    members.push(createQsoMarker(p, { radius: 4, fillOpacity: 0.85 }).bindPopup(qsoPopupHtml(p, {
+        includeDistance: true,
+        includeAzimuth: true,
+        azimuthLabel: t.azimuth,
+    })));
     addModeEntry(crkLayer, p.mode, members);
 });
 
@@ -278,11 +272,7 @@ playBtn.addEventListener('click', function () {
 });
 
 // Výřez nastavíme dřív, než zapneme vrstvu – mřížka CRK čte map.getBounds().
-if (bounds.length > 0) {
-    map.fitBounds(bounds, { padding: [24, 24] });
-} else {
-    map.setView([50, 15], 6);
-}
+fitMapToBounds(map, bounds);
 
 // Přepínání vrstev přes tlačítka.
 const layers = { jezek: jezekLayer, spendliky: spendlikyLayer, lokatory: lokatoryLayer, ctverce: ctverceLayer, crk: crkLayer, playback: playbackLayer };
