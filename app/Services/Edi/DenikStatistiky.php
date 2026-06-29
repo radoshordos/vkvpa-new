@@ -449,7 +449,11 @@ class DenikStatistiky
      * Celoroční trend stanice: body a pořadí ve všech kolech roku, do kterého
      * patří kolo tohoto deníku. Rok se bere ze `starts_at` kola (stejná
      * konvence jako roční výsledky); záznamy z veřejné výsledkové listiny
-     * (jen schválené). Null, když deník nemá kolo nebo stanice nemá záznamy.
+     * (jen schválené). Filtruje se na kategorii tohoto deníku – `rank` je
+     * přidělován hustě v rámci kategorie ({@see ScoringService::rankRound()}),
+     * takže míchat kategorie/pásma by dávalo nesouměřitelná pořadí. Null, když
+     * deník nemá kolo, jeho záznam nemá známou kategorii, nebo stanice v dané
+     * kategorii nemá žádné záznamy.
      *
      * @return array{labels: list<string>, body: list<int|null>, poradi: list<int|null>}|null
      */
@@ -464,6 +468,15 @@ class DenikStatistiky
             return null;
         }
 
+        // Kategorii nese záznam hlášení (EdiEntry), ne hlavička deníku. Bez
+        // známé kategorie nelze férově porovnat pořadí napříč koly → skryjeme.
+        $categoryId = EdiEntry::query()
+            ->where('edi_head_id', $head->id)
+            ->value('category_id');
+        if ($categoryId === null) {
+            return null;
+        }
+
         $year = $kolo->starts_at->year;
         $kola = EdiRound::query()
             ->whereYear('starts_at', $year)
@@ -473,6 +486,7 @@ class DenikStatistiky
         $entries = EdiEntry::query()
             ->approved()
             ->where('callsign', (string) $head->p_call)
+            ->where('category_id', $categoryId)
             ->whereIn('round_id', $kola->pluck('id'))
             ->orderBy('id')
             ->get(['round_id', 'points', 'rank'])

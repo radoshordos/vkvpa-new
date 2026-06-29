@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Edi;
 
 use App\Enums\KoloStav;
+use App\Models\EdiEntry;
 use App\Models\EdiHead;
 use App\Models\EdiLine;
 use App\Models\EdiRound;
@@ -130,16 +131,21 @@ final class QsoGeometry
      * stanice z kola" kombinované mapy (obdoba „show all logged calls" na
      * vkvzavody.crk.cz).
      *
-     * Agreguje protistanice napříč všemi deníky téhož kola (`round_id`); když
-     * deník kolo nemá (null), počítá jen z něj. Každá značka je zastoupena
+     * Agreguje protistanice z deníků téhož kola (`round_id`) **a téhož pásma** –
+     * kolo je vícepásmové (závodník běžně jede víc pásem naráz), takže smícháním
+     * pásem by se na mapě 144 MHz deníku objevily i stanice jen z 432 MHz/10 GHz
+     * apod. Pásmo se bere z kategorie napojeného záznamu (`edi_categories.band_id`).
+     * Když deník kolo nemá (null), počítá jen z něj. Každá značka je zastoupena
      * jednou, se souřadnicemi a lokátorem prvního platného výskytu a s počtem
-     * spojení napříč všemi deníky kola. Jen QSO uvnitř závodního okna.
+     * spojení napříč deníky daného pásma. Jen QSO uvnitř závodního okna.
      *
      * Pozor – fér­ovost: cizí stanice z kola se zveřejní až po uzávěrce, resp.
      * vyhodnocení kola ({@see KoloStav::Uzavrene}/{@see KoloStav::Vyhodnocene}).
      * Mapa i vizualizace jsou veřejné a běžný účastník je vidí hned po uploadu;
      * během příjmu hlášení by tato vrstva odhalovala deníky soupeřů, proto se
      * v tom případě vrací prázdná kolekce (vlastní deník bez kola se zobrazí).
+     * Stejně tak když pásmo deníku nelze určit (deník bez napojeného záznamu /
+     * kategorie – typicky historická data) se vrací prázdno, ať se pásma nemíchají.
      *
      * @return Collection<int, array{lat: float, lon: float, call: string, wwl: string, count: int}>
      */
@@ -151,23 +157,64 @@ final class QsoGeometry
         } elseif ($head->round_id === null) {
             // Deník bez kola agreguje jen sám sebe – levné, bez cache.
             $rows = $this->computeRoundStations([$head->id], $minQso);
+        } elseif (($bandId = $this->headBandId($head)) === null) {
+            // Bez známého pásma (deník bez napojeného záznamu/kategorie) nelze
+            // pásmo oddělit – cizí pásma míchat nechceme, vrstvu skryjeme.
+            $rows = [];
         } else {
             // Vrstva se vydává až po uzávěrce kola a od té chvíle se data
             // prakticky nemění → stačí TTL, cílená invalidace není potřeba.
             // Cachují se jen pole (cache.serializable_classes je false,
             // objekty by se z cache vrátily jako __PHP_Incomplete_Class).
+            $roundId = $head->round_id;
             /** @var list<array{lat: float, lon: float, call: string, wwl: string, count: int}> $rows */
             $rows = Cache::remember(
-                sprintf('vkvpa:round-stations:%d:%d', $head->round_id, $minQso),
+                sprintf('vkvpa:round-stations:%d:%d:%d', $roundId, $bandId, $minQso),
                 VkvpaSettings::roundStationsCacheTtl(),
                 fn (): array => $this->computeRoundStations(
-                    EdiHead::query()->where('round_id', $head->round_id)->pluck('id')->all(),
+                    $this->roundHeadIdsForBand($roundId, $bandId),
                     $minQso,
                 ),
             );
         }
 
         return collect($rows);
+    }
+
+    /**
+     * Pásmo deníku (`edi_categories.band_id`) z kategorie jeho záznamu hlášení.
+     * Hlavička `EdiHead` pásmo normalizovaně nenese (jen rozsypaný `p_band`),
+     * kategorii drží napojený {@see EdiEntry}. Null, když záznam/kategorie/pásmo
+     * chybí.
+     */
+    private function headBandId(EdiHead $head): ?int
+    {
+        $bandId = EdiEntry::query()
+            ->join('edi_categories', 'edi_categories.id', '=', 'edi_entries.category_id')
+            ->where('edi_entries.edi_head_id', $head->id)
+            ->value('edi_categories.band_id');
+
+        return is_numeric($bandId) ? (int) $bandId : null;
+    }
+
+    /**
+     * Id deníků daného kola na daném pásmu (přes kategorii záznamu hlášení).
+     *
+     * @return list<int>
+     */
+    private function roundHeadIdsForBand(int $roundId, int $bandId): array
+    {
+        /** @var list<int> $ids */
+        $ids = EdiEntry::query()
+            ->join('edi_categories', 'edi_categories.id', '=', 'edi_entries.category_id')
+            ->where('edi_entries.round_id', $roundId)
+            ->where('edi_categories.band_id', $bandId)
+            ->whereNotNull('edi_entries.edi_head_id')
+            ->distinct()
+            ->pluck('edi_entries.edi_head_id')
+            ->all();
+
+        return $ids;
     }
 
     /**
