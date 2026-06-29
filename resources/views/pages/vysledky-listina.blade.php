@@ -127,7 +127,7 @@
                             @else
                                 <span class="mono font-bold">{{ $r->callsign }}</span>
                             @endif
-                            <x-vykon-badge :vykon="$r->power()" /> @if ($sk['top'])<x-badge variant="skokan" class="ml-1" title="{{ __('pages.vysledky.skokan_title') }}">SKOKAN</x-badge>@endif
+                            <x-vykon-badge :vykon="$r->power()" /> @if ($sk['top'])<x-badge variant="skokan" class="ml-1" title="{{ __('pages.vysledky.skokan_title') }}" aria-label="{{ __('pages.vysledky.skokan_title') }}"><x-icon name="rocket" class="h-3.5 w-3.5" /></x-badge>@endif
                             @if ($r->name)<br><span class="text-muted">{{ $r->name }}</span>@endif
                             @if ($r->submitted_at)<br><span class="text-xs text-muted">{{ $r->submitted_at->format('j. n. H:i') }}</span>@endif
                         </td>
