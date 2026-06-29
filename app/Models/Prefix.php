@@ -11,6 +11,10 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * Číselník prefixů (přiřazení prefix → země pro DXCC).
+ *
+ * @property int $id
+ * @property string $prefix
+ * @property string $country
  */
 #[Fillable(['prefix', 'country'])]
 #[Table(name: 'edi_prefixes', key: 'id')]

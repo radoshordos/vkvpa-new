@@ -109,6 +109,7 @@ return [
         'last_evaluated_heading' => 'Poslední vyhodnocené kolo',
         'discussion_heading' => 'Z diskuse',
         'discussion_all' => 'celá diskuse →',
+        'discussion_photos' => '{1} :count fotka|[2,4] :count fotky|[5,*] :count fotek',
         'local_time_suffix' => 'místního času',
         'live_heading' => 'Průběžné výsledky',
         'live_refresh_in' => 'Aktualizace za',

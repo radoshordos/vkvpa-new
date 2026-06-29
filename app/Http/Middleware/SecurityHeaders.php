@@ -43,7 +43,7 @@ class SecurityHeaders
             "default-src 'self'",
             "script-src 'self' 'unsafe-eval' 'nonce-{$nonce}' cdn.jsdelivr.net",
             "style-src 'self' 'unsafe-inline' cdn.jsdelivr.net",
-            "img-src 'self' data: https://tile.openstreetmap.org",
+            "img-src 'self' data: blob: https://tile.openstreetmap.org",
             "font-src 'self' data:",
             "connect-src 'self' https://tile.openstreetmap.org",
             "frame-ancestors 'self'",

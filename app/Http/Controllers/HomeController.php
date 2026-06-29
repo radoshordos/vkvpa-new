@@ -50,6 +50,7 @@ class HomeController extends Controller
         $diskuseCount = $kolo ? DiscussionPost::query()->where('round_id', $kolo->id)->count() : 0;
         $posledniPrispevky = DiscussionPost::query()
             ->with('round')
+            ->withCount('photos')
             ->orderByDesc('created_at')
             ->orderByDesc('id')
             ->limit(3)
