@@ -19,8 +19,7 @@ use function Laravel\Prompts\outro;
  * Některá kola (např. 01–03/2026) byla naimportována bez naparsovaných sloupců –
  * `p_band`/`p_sect` jsou prázdné, ale `src` nese plnou REG1TEST hlavičku. Tenhle
  * příkaz z `src` vytáhne hodnoty a doplní JEN prázdné sloupce (existující data
- * nepřepisuje) – čistě kvalita dat, na edi_heads.edi_category_id (které se bere
- * 1:1 z edi_entries) to nemá vliv. Idempotentní.
+ * nepřepisuje) – čistě kvalita dat. Idempotentní.
  */
 class RepairEdiheadBandSectFromSrc extends Command
 {

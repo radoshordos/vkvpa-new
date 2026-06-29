@@ -46,7 +46,7 @@ return new class extends Migration
 
         // Smazání příspěvku odstraní i jeho fotky.
         Schema::table('discussion_post_photos', function (Blueprint $table): void {
-            $table->foreign('discussion_post_id', 'discussion_post_photos_post_id_fk')
+            $table->foreign('discussion_post_id', 'discussion_post_photos_discussion_post_id_foreign')
                 ->references('id')->on('discussion_posts')
                 ->cascadeOnDelete();
         });
