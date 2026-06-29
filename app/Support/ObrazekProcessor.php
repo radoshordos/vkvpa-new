@@ -6,6 +6,8 @@ namespace App\Support;
 
 use Intervention\Image\Drivers\Gd\Driver as GdDriver;
 use Intervention\Image\Drivers\Imagick\Driver as ImagickDriver;
+use Intervention\Image\Encoders\JpegEncoder;
+use Intervention\Image\Encoders\PngEncoder;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Interfaces\ImageInterface;
 use RuntimeException;
@@ -66,12 +68,12 @@ final class ObrazekProcessor
         $nahled = $this->nacti($cesta)->coverDown(self::NAHLED_HRANA, self::NAHLED_HRANA);
 
         if ($jePng) {
-            $dataHlavni = (string) $hlavni->toPng();
-            $dataNahled = (string) $nahled->toPng();
+            $dataHlavni = $hlavni->encode(new PngEncoder)->toString();
+            $dataNahled = $nahled->encode(new PngEncoder)->toString();
             $mime = 'image/png';
         } else {
-            $dataHlavni = (string) $hlavni->toJpeg(self::JPEG_KVALITA);
-            $dataNahled = (string) $nahled->toJpeg(self::JPEG_KVALITA);
+            $dataHlavni = $hlavni->encode(new JpegEncoder(quality: self::JPEG_KVALITA))->toString();
+            $dataNahled = $nahled->encode(new JpegEncoder(quality: self::JPEG_KVALITA))->toString();
             $mime = 'image/jpeg';
         }
 
@@ -94,7 +96,7 @@ final class ObrazekProcessor
     private function nacti(string $cesta): ImageInterface
     {
         try {
-            return $this->manager->read($cesta)->orient();
+            return $this->manager->decodePath($cesta)->orient();
         } catch (Throwable $e) {
             throw new RuntimeException('Soubor se nepodařilo načíst jako obrázek.', 0, $e);
         }
