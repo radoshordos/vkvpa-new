@@ -17,6 +17,7 @@ return [
     'results' => 'Results',
     'year_results' => 'Year results',
     'statistics' => 'Round statistics',
+    'trends' => 'Long-term trends',
     'discussion' => 'Discussion',
     'rules_cz' => 'Contest rules',
     'history' => 'Contest history',

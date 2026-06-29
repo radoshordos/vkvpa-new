@@ -498,6 +498,7 @@ return [
         'chart_trend' => 'Recent rounds trend',
         'chart_pasma' => 'Band share over time',
         'pasma_year' => '{1} :count year|[2,*] :count years',
+        'pasma_all' => 'All',
 
         'badge_ucast' => 'Attendance record!',
         'badge_skore' => 'Score record!',
@@ -536,6 +537,15 @@ return [
         'col_mult' => 'Mult.',
         'col_points' => 'Points',
         'col_place' => 'Place',
+    ],
+
+    'trendy' => [
+        'title' => 'Long-term trends – VKV PA',
+        'meta' => 'Long-term trends of the VKV Provozní aktiv: how the share of individual bands among stations changes over time across all evaluated rounds.',
+        'heading' => 'Long-term trends',
+        'subtitle' => 'How band popularity changes over time across all evaluated rounds.',
+        'pasma_note' => 'Share by the number of distinct stations per band; the 100% base is the sum of stations across bands (one station can operate several bands). The band is taken from the entry category.',
+        'empty' => 'No data yet – no evaluated round.',
     ],
 
 ];

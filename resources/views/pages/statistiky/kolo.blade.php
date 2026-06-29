@@ -34,7 +34,6 @@ window.__statConfig = {
     prefixy: @json($prehled['prefixy']),
     kategorie: @json($prehled['kategorie']),
     trend: @json($prehled['trend']),
-    pasmaTrend: @json($prehled['pasmaTrend']),
     t: {
         other: @json(__('pages.stat.country_other')),
         qsoCount: 'QSO',
@@ -147,21 +146,6 @@ window.__statConfig = {
   <div class="text-sm font-semibold text-heading mb-2">{{ __('pages.stat.chart_trend') }}</div>
   <div class="h-64"><canvas id="chartTrend"></canvas></div>
 </div>
-
-{{-- ── Podíl pásem v čase (100% skládaný plošný + přepínač roků) ────────── --}}
-@if ($prehled['pasmaTrend']['rounds'] !== [])
-<div class="rounded-lg border border-line bg-surface p-3 mb-5">
-  <div class="flex items-center gap-2 mb-2 flex-wrap">
-    <span class="text-sm font-semibold text-heading">{{ __('pages.stat.chart_pasma') }}</span>
-    <span class="ml-auto flex gap-1">
-      <button class="map-tab" data-pasma-years="1">{{ trans_choice('pages.stat.pasma_year', 1) }}</button>
-      <button class="map-tab active" data-pasma-years="2">{{ trans_choice('pages.stat.pasma_year', 2) }}</button>
-      <button class="map-tab" data-pasma-years="3">{{ trans_choice('pages.stat.pasma_year', 3) }}</button>
-    </span>
-  </div>
-  <div class="h-72"><canvas id="chartPasma"></canvas></div>
-</div>
-@endif
 
 {{-- ── TOP žebříčky kola ───────────────────────────────────────────────── --}}
 <div class="grid grid-cols-1 gap-4 lg:grid-cols-3 mb-5">

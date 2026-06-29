@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Services\Edi;
 
 use App\Enums\QsoMode;
-use App\Models\EdiBand;
 use App\Models\EdiCategory;
 use App\Models\EdiEntry;
 use App\Models\EdiRound;
@@ -40,7 +39,6 @@ use Illuminate\Support\Facades\DB;
  * @phpstan-type StatTimeline array{labels: list<string>, counts: list<int>}
  * @phpstan-type StatMody list<array{mode: int, label: string, pocet: int}>
  * @phpstan-type StatTrend array{labels: list<string>, stanic: list<int>, qso: list<int>, body: list<int>}
- * @phpstan-type StatPasmaTrend array{rounds: list<array{name: string, year: int}>, bands: list<array{token: string, name: string}>, stanice: list<list<int>>}
  * @phpstan-type StatFakt array{key: string, params: array<string, string|int>}
  * @phpstan-type StatOdznaky array{ucast: bool, skore: bool, qso: bool, multiplier: bool}
  * @phpstan-type StatTok array{from: string, to: string, fromLat: float, fromLon: float, toLat: float, toLon: float, count: int}
@@ -52,7 +50,7 @@ use Illuminate\Support\Facades\DB;
  *     timeline: StatTimeline, mody: StatMody, zeme: list<StatNazevPocet>, prefixy: list<StatNazevPocet>,
  *     kategorie: list<StatKat>, tok: list<StatTok>,
  *     topBody: list<StatTop>, topQso: list<StatTop>, topNasobice: list<StatTop>,
- *     trend: StatTrend, pasmaTrend: StatPasmaTrend, zajimavosti: list<StatFakt>, odznaky: StatOdznaky
+ *     trend: StatTrend, zajimavosti: list<StatFakt>, odznaky: StatOdznaky
  * }
  */
 final class KoloStatistiky
@@ -83,7 +81,7 @@ final class KoloStatistiky
 
     public static function cacheKey(int $koloId): string
     {
-        return sprintf('vkvpa:kolo-stats:v5:%d', $koloId);
+        return sprintf('vkvpa:kolo-stats:v6:%d', $koloId);
     }
 
     public function forgetRound(int $koloId): void
@@ -119,7 +117,6 @@ final class KoloStatistiky
             'topQso' => $topQso,
             'topNasobice' => $topNasobice,
             'trend' => $this->trend($kolo),
-            'pasmaTrend' => $this->pasmaTrend($kolo),
             'zajimavosti' => $this->zajimavosti($kolo, $a['ctverce'], $topBody),
             'odznaky' => $this->rekordy->odznakyProKolo($kolo->id),
         ];
@@ -415,96 +412,6 @@ final class KoloStatistiky
         }
 
         return ['labels' => $labels, 'stanic' => $stanic, 'qso' => $qso, 'body' => $body];
-    }
-
-    /**
-     * Podíl pásem v čase: pro každé vyhodnocené kolo posledních 3 let (končící
-     * tímto kolem) počet různých značek na pásmu. Pásmo se bere z normalizovaného
-     * číselníku (`edi_entries.category_id → edi_category.band_id → edi_bands`), ne
-     * z nespolehlivé hlavičky deníku; záznamy s neznámým pásmem (`band_id` NULL)
-     * se vynechají. Jedna stanice může mít víc pásem, takže součet napříč pásmy
-     * bývá > počet unikátních značek kola – základ pro 100% podíl je právě tento
-     * součet. Vrací absolutní počty stanic + rok u každého kola; procenta a 100%
-     * skládání dopočítá front-end, přepínač 1/2/3 roky jen filtruje osu X podle
-     * roku kola (proto se posílají data za celé 3leté okno).
-     *
-     * @return StatPasmaTrend
-     */
-    private function pasmaTrend(EdiRound $kolo): array
-    {
-        // Začátek okna = 1. ledna roku o 2 zpět (přepínač pokryje až 3 roky).
-        $minDate = $kolo->starts_at->copy()->startOfYear()->subYears(2);
-
-        /** @var EloquentCollection<int, EdiRound> $kola */
-        $kola = EdiRound::query()
-            ->whereNotNull('evaluated_at')
-            ->where('starts_at', '<=', $kolo->starts_at)
-            ->where('starts_at', '>=', $minDate)
-            ->orderBy('starts_at')
-            ->get(['id', 'name', 'starts_at']);
-
-        if ($kola->isEmpty()) {
-            return ['rounds' => [], 'bands' => [], 'stanice' => []];
-        }
-
-        $rows = EdiEntry::query()
-            ->join('edi_category', 'edi_entries.category_id', '=', 'edi_category.id')
-            ->where('edi_entries.approved', true)
-            ->whereIn('edi_entries.round_id', $kola->pluck('id'))
-            ->whereNotNull('edi_category.band_id')
-            ->groupBy('edi_entries.round_id', 'edi_category.band_id')
-            ->selectRaw('edi_entries.round_id as round_id, edi_category.band_id as band_id, COUNT(DISTINCT edi_entries.callsign) as stanic')
-            ->get();
-
-        if ($rows->isEmpty()) {
-            return ['rounds' => [], 'bands' => [], 'stanice' => []];
-        }
-
-        // counts[round_id][band_id] = počet různých značek; bandSet = přítomná pásma.
-        /** @var array<int, array<int, int>> $counts */
-        $counts = [];
-        /** @var array<int, true> $bandSet */
-        $bandSet = [];
-        foreach ($rows as $r) {
-            $rid = self::intAttr($r, 'round_id');
-            $bid = self::intAttr($r, 'band_id');
-            $counts[$rid][$bid] = self::intAttr($r, 'stanic');
-            $bandSet[$bid] = true;
-        }
-
-        // Pásma v kanonickém pořadí (id vzestupně = 144 MHz → 122 GHz), jen přítomná.
-        $bandMeta = EdiBand::query()
-            ->whereIn('id', array_keys($bandSet))
-            ->orderBy('id')
-            ->get(['id', 'token', 'name']);
-
-        // Kola s alespoň jedním pásmem (kolo bez dat by 100% sloupec rozbilo).
-        /** @var list<array{name: string, year: int}> $rounds */
-        $rounds = [];
-        /** @var list<int> $roundIds */
-        $roundIds = [];
-        foreach ($kola as $k) {
-            if (! isset($counts[$k->id])) {
-                continue;
-            }
-            $rounds[] = ['name' => (string) $k->name, 'year' => (int) $k->starts_at->year];
-            $roundIds[] = $k->id;
-        }
-
-        /** @var list<array{token: string, name: string}> $bands */
-        $bands = [];
-        /** @var list<list<int>> $stanice */
-        $stanice = [];
-        foreach ($bandMeta as $b) {
-            $bands[] = ['token' => (string) $b->token, 'name' => (string) $b->name];
-            $rada = [];
-            foreach ($roundIds as $rid) {
-                $rada[] = $counts[$rid][$b->id] ?? 0;
-            }
-            $stanice[] = $rada;
-        }
-
-        return ['rounds' => $rounds, 'bands' => $bands, 'stanice' => $stanice];
     }
 
     /**

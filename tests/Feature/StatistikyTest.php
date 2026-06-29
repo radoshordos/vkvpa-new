@@ -11,6 +11,7 @@ use App\Models\Edihead;
 use App\Models\Ediline;
 use App\Models\EdiRound;
 use App\Services\Edi\KoloStatistiky;
+use App\Services\Edi\PasmaTrend;
 use App\Services\Scoring\RekordyService;
 use App\Services\Scoring\ScoringService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -248,18 +249,39 @@ class StatistikyTest extends TestCase
         $this->bandEntry($kolo2, $kat432, 'OK1C');
         $this->bandEntry($kolo2, $kat432, 'OK1D');
 
-        $trend = app(KoloStatistiky::class)->prehled($kolo2)['pasmaTrend'];
+        $trend = app(PasmaTrend::class)->vsechna();
 
         $this->assertSame(['02/2026', '03/2026'], array_column($trend['rounds'], 'name'));
         $this->assertSame([2026, 2026], array_column($trend['rounds'], 'year'));
-        // Pásma v kanonickém pořadí (band_id 1, 2).
+        // Pásma v kanonickém pořadí (band_id 1, 2) – s plnými názvy (jednotky).
         $this->assertSame(['144', '432'], array_column($trend['bands'], 'token'));
+        $this->assertSame(['144 MHz', '432 MHz'], array_column($trend['bands'], 'name'));
         // Počty různých značek na pásmu po kolech (distinct napříč duplicitami).
         $this->assertSame([2, 1], $trend['stanice'][0]); // 144 MHz
         $this->assertSame([1, 3], $trend['stanice'][1]); // 432 MHz
     }
 
-    public function test_pasma_trend_renders_chart_on_round_page(): void
+    public function test_trends_page_renders_band_chart_with_units(): void
+    {
+        $kat = $this->category(1, 'SO', 'domestic');
+
+        $kolo = EdiRound::create(['starts_at' => '2026-03-15', 'closes_at' => '2026-03-20 23:59:59', 'name' => '03/2026', 'note' => '', 'evaluated_at' => '2026-03-21 10:00:00']);
+        $this->bandEntry($kolo, $kat, 'OK1AAA');
+
+        $html = $this->get(route('statistiky.trendy'))
+            ->assertOk()
+            ->assertSee('chartPasma')
+            ->assertSee('data-pasma-years="0"', false) // přepínač „vše"
+            ->assertSee(__('pages.stat.chart_pasma'))
+            ->assertSee(__('pages.trendy.heading'))
+            ->getContent() ?: '';
+
+        // Data grafu (config) nesou plný název pásma s jednotkou – legenda z něj
+        // skládá popisek „144 MHz".
+        $this->assertStringContainsString('144 MHz', $html);
+    }
+
+    public function test_round_page_no_longer_shows_band_chart(): void
     {
         $kat = $this->category(1, 'SO', 'domestic');
 
@@ -268,9 +290,7 @@ class StatistikyTest extends TestCase
 
         $this->get(route('statistiky.kolo', ['kolo' => $kolo->id]))
             ->assertOk()
-            ->assertSee('chartPasma')
-            ->assertSee('data-pasma-years="1"', false)
-            ->assertSee(__('pages.stat.chart_pasma'));
+            ->assertDontSee('chartPasma');
     }
 
     /** Kategorie daného pásma/sekce/varianty z předseedovaného číselníku. */

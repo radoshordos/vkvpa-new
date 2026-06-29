@@ -8,6 +8,7 @@ use App\Enums\KoloStav;
 use App\Models\EdiEntry;
 use App\Models\EdiRound;
 use App\Services\Edi\KoloStatistiky;
+use App\Services\Edi\PasmaTrend;
 use App\Services\Scoring\RekordyService;
 use App\Services\Scoring\StaniceProfil;
 use Illuminate\Database\Eloquent\Builder;
@@ -79,6 +80,14 @@ final class StatistikyController extends Controller
             'active' => 'statistiky.index',
             'kolo' => $kolo,
             'prehled' => $this->statistiky->prehled($kolo),
+        ]);
+    }
+
+    public function trendy(PasmaTrend $pasma): View
+    {
+        return view('pages.statistiky.trendy', [
+            'active' => 'statistiky.trendy',
+            'pasmaTrend' => $pasma->vsechna(),
         ]);
     }
 
