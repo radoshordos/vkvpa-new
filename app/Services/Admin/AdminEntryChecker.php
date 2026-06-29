@@ -154,7 +154,7 @@ final class AdminEntryChecker
 
         if ($max > self::RATE_THRESHOLD) {
             return new Finding(
-                Severity::Warning,
+                Severity::Info,
                 sprintf(
                     'Neobvyklé tempo provozu: %d QSO za %d minut (%s). Může naznačovat upravený nebo automaticky generovaný log.',
                     $max,
