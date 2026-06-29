@@ -105,6 +105,6 @@ class SkokanTest extends TestCase
         $this->get(route('vysledkova_listina', ['kolo' => $this->r2->id]))
             ->assertOk()
             ->assertSee('+50')
-            ->assertSee('SKOKAN');
+            ->assertSee('badge-skokan'); // odznak „skokan" je teď jazykově nezávislá ikona (raketa)
     }
 }
