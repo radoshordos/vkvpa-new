@@ -34,7 +34,7 @@ new Chart(document.getElementById('chartKola'), {
     },
 });
 
-// Graf: distribuce kategorií
+// Graf: distribuce pásem
 const palette = ['#6366f1', '#8b5cf6', '#a78bfa', '#c4b5fd', '#ddd6fe', '#ede9fe', '#4f46e5', '#7c3aed'];
 
 new Chart(document.getElementById('chartKategorie'), {

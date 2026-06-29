@@ -62,6 +62,10 @@ class ZalohaControllerTest extends TestCase
         $this->actingAs($this->admin())
             ->get(route('zaloha.index'))
             ->assertOk()
+            ->assertSee('migrations')
+            ->assertSee('users')
+            ->assertSee('edi_bands')
+            ->assertSee('edi_prefixes')
             ->assertSee('edi_heads')
             ->assertSee('edi_rounds');
     }
@@ -105,12 +109,34 @@ class ZalohaControllerTest extends TestCase
         $this->assertStringContainsString('Testovací kolo', $sql);
     }
 
+    public function test_download_streams_recovery_metadata_and_lookup_tables(): void
+    {
+        $response = $this->actingAs($this->admin())
+            ->post(route('zaloha.download'), [
+                'tables' => ['migrations', 'users', 'login_tokens', 'edi_bands', 'edi_categories', 'edi_prefixes'],
+            ]);
+
+        $response->assertOk();
+
+        $sql = $response->streamedContent();
+
+        $this->assertStringContainsString('DROP TABLE IF EXISTS `migrations`;', $sql);
+        $this->assertStringContainsString('DROP TABLE IF EXISTS `users`;', $sql);
+        $this->assertStringContainsString('DROP TABLE IF EXISTS `login_tokens`;', $sql);
+        $this->assertStringContainsString('DROP TABLE IF EXISTS `edi_bands`;', $sql);
+        $this->assertStringContainsString('DROP TABLE IF EXISTS `edi_categories`;', $sql);
+        $this->assertStringContainsString('DROP TABLE IF EXISTS `edi_prefixes`;', $sql);
+        $this->assertStringContainsString('INSERT INTO `users`', $sql);
+        $this->assertStringContainsString('INSERT INTO `edi_bands`', $sql);
+        $this->assertStringContainsString('INSERT INTO `edi_categories`', $sql);
+    }
+
     public function test_download_rejects_table_outside_allowlist(): void
     {
         $this->seedKolo();
 
         $this->actingAs($this->admin())
-            ->post(route('zaloha.download'), ['tables' => ['users']])
+            ->post(route('zaloha.download'), ['tables' => ['sessions']])
             ->assertSessionHasErrors('tables.0');
     }
 

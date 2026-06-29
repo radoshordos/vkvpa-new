@@ -13,7 +13,7 @@ use Override;
  * Validace výběru tabulek pro SQL zálohu.
  *
  * `tables` smí obsahovat jen názvy z allowlistu (`vkvpa.db_backup_table_groups`),
- * takže ani podvržený POST neumožní dump libovolné (např. `users`) tabulky.
+ * takže ani podvržený POST neumožní dump libovolné (např. `sessions`) tabulky.
  * Přístup řeší middleware „admin" na routě.
  */
 class SqlZalohaRequest extends FormRequest

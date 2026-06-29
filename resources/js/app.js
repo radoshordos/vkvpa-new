@@ -86,14 +86,39 @@ document.addEventListener('change', (e) => {
     });
 });
 
+function refreshCheckAll(form) {
+    if (!(form instanceof HTMLFormElement)) return;
+    const items = Array.from(form.querySelectorAll('[data-check-item]'))
+        .filter((item) => item instanceof HTMLInputElement);
+    if (!items.length) return;
+
+    const checked = items.filter((item) => item.checked).length;
+    form.querySelectorAll('[data-check-all]').forEach((master) => {
+        if (!(master instanceof HTMLInputElement)) return;
+        master.checked = checked === items.length;
+        master.indeterminate = checked > 0 && checked < items.length;
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('form').forEach((form) => refreshCheckAll(form));
+});
+
 // <input type=checkbox data-check-all> – zaškrtne/odškrtne všechny
 // [data-check-item] ve stejném formuláři (hromadný výběr tabulek pro zálohu).
 document.addEventListener('change', (e) => {
     const el = e.target instanceof HTMLInputElement ? e.target.closest('[data-check-all]') : null;
     if (!el || !el.form) return;
     el.form.querySelectorAll('[data-check-item]').forEach((item) => {
-        item.checked = el.checked;
+        if (item instanceof HTMLInputElement) item.checked = el.checked;
     });
+    refreshCheckAll(el.form);
+});
+
+document.addEventListener('change', (e) => {
+    const el = e.target instanceof HTMLInputElement ? e.target.closest('[data-check-item]') : null;
+    if (!el || !el.form) return;
+    refreshCheckAll(el.form);
 });
 
 // <input type=file data-file-zone="id" data-file-name="id"> – zvýrazní

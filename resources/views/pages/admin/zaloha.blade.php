@@ -8,6 +8,13 @@
     {!! __('admin.zaloha_desc') !!}
 </p>
 
+@php
+    $backupTables = \App\Support\VkvpaSettings::dbBackupTables();
+    $selectedTables = collect(old('tables', $backupTables));
+    $allTablesSelected = $backupTables !== []
+        && collect($backupTables)->every(static fn (string $table): bool => $selectedTables->contains($table));
+@endphp
+
 <form method="POST" action="{{ route('zaloha.download') }}" class="max-w-xl">
     @csrf
 
@@ -16,7 +23,7 @@
     @enderror
 
     <label class="mb-3 flex items-center gap-2 text-sm font-medium">
-        <input type="checkbox" data-check-all checked>
+        <input type="checkbox" data-check-all @checked($allTablesSelected)>
         {{ __('admin.zaloha_select_all') }}
     </label>
 
@@ -29,7 +36,7 @@
                     <span class="flex items-center gap-2">
                         <input type="checkbox" name="tables[]" value="{{ $row['name'] }}"
                                data-check-item
-                               @checked(collect(old('tables', \App\Support\VkvpaSettings::dbBackupTables()))->contains($row['name']))>
+                               @checked($selectedTables->contains($row['name']))>
                         <code class="text-sm">{{ $row['name'] }}</code>
                     </span>
                     <span class="text-sm text-muted">{{ number_format($row['count'], 0, ',', ' ') }}&nbsp;{{ __('admin.zaloha_col_rows') }}</span>
@@ -46,6 +53,7 @@
     <button type="submit" class="btn-primary">{{ __('admin.zaloha_btn_download') }}</button>
 
     <p class="mt-3 max-w-prose text-xs text-muted">{{ __('admin.zaloha_hint') }}</p>
+    <p class="mt-2 max-w-prose text-xs text-muted">{!! __('admin.zaloha_files_hint') !!}</p>
 </form>
 
 @endsection

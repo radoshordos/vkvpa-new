@@ -67,11 +67,13 @@ return [
 
     // SQL záloha (admin → Záloha DB): tabulky povolené pro export, seskupené
     // pro UI. Jen tyto tabulky lze dumpnout – allowlist brání exportu libovolné
-    // (např. `users`) tabulky podvržením POST dat. Pořadí v rámci skupin je
+    // (např. `sessions`) tabulky podvržením POST dat. Pořadí v rámci skupin je
     // zvoleno tak, aby při obnově byly rodičovské tabulky před závislými.
     'db_backup_table_groups' => [
-        'edi' => ['edi_categories', 'edi_heads', 'edi_lines'],
-        'vysledky' => ['edi_rounds', 'edi_entries'],
-        'ostatni' => ['login_tokens', 'discussion_posts', 'discussion_post_photos'],
+        'system' => ['migrations', 'users', 'login_tokens'],
+        'lookup' => ['edi_bands', 'edi_categories', 'edi_prefixes'],
+        'edi' => ['edi_rounds', 'edi_heads', 'edi_lines'],
+        'vysledky' => ['edi_entries'],
+        'ostatni' => ['discussion_posts', 'discussion_post_photos'],
     ],
 ];

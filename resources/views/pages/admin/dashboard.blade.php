@@ -84,7 +84,7 @@
     </div>
 
     <div class="rounded-xl border border-line bg-surface p-4">
-        <h2 class="mb-3 text-sm font-semibold text-heading">Distribuce kategorií {{ $rok }}</h2>
+        <h2 class="mb-3 text-sm font-semibold text-heading">Distribuce pásem {{ $rok }}</h2>
         <canvas id="chartKategorie" height="200"></canvas>
     </div>
 
@@ -191,9 +191,9 @@
 window.__dashboardConfig = {
     rok: {{ $rok }},
     rokPredchozi: {{ $rok - 1 }},
-    trendKolaLabels: @json($trendKola->pluck('nazev')),
+    trendKolaLabels: @json($trendKola->pluck('name')),
     trendKolaData: @json($trendKola->pluck('pocet')),
-    katLabels: @json($kategorieData->map(fn ($r) => $kategorie[$r->category_id]?->name ?? "kat {$r->category_id}")->values()),
+    katLabels: @json($kategorieData->map(fn ($r) => $r->band_name ?? 'Neznámé pásmo')->values()),
     katData: @json($kategorieData->pluck('pocet')),
     aktData: @json($kolaRoku->pluck('pocet_schvalenych')->values()),
     prevData: @json($trendPredchoziRok->pluck('pocet')->values()),
