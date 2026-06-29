@@ -6,7 +6,7 @@ namespace Database\Seeders;
 
 class PrefixesTableSeeder extends JsonTableSeeder
 {
-    protected string $table = 'prefixes';
+    protected string $table = 'edi_prefixes';
 
     protected ?int $autoIncrement = 570;
 

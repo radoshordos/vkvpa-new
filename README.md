@@ -451,7 +451,7 @@ Jedna migrace na tabulku – každá `create_*` migrace nese finální schéma t
 | `create_edi_categories_table` | Jediný číselník kategorií (pásmo × sekce × varianta); přidává i FK `edi_entries.category_id` → `edi_categories` |
 | `create_diskuse_table` | Diskuzní příspěvky ke kolům |
 | `create_login_tokens_table` | Dočasné přihlašovací tokeny (magic-link) |
-| `create_prefixes_table` | Mapování prefixů na země (DXCC) |
+| `create_edi_prefixes_table` | Mapování prefixů na země (DXCC) |
 
 ### Modely a vztahy
 
