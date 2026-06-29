@@ -8,11 +8,13 @@ use App\Http\Controllers\EdiVizualizaceController;
 use App\Models\EdiCategory;
 use App\Models\EdiEntry;
 use App\Models\EdiHead;
+use App\Models\EdiLine;
 use App\Models\EdiRound;
 use App\Models\User;
 use App\Services\Edi\DenikStatistiky;
 use App\Services\Edi\EdiImportService;
 use App\Services\Edi\EdiParser;
+use App\Services\Edi\QsoGeometry;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
@@ -339,6 +341,75 @@ class EdiVizualizaceTest extends TestCase
         ]);
 
         $this->assertNull(app(DenikStatistiky::class)->sezona($head));
+    }
+
+    public function test_round_stations_layer_is_scoped_to_deniks_band(): void
+    {
+        $kolo = EdiRound::create([
+            'starts_at' => '2026-03-15', 'closes_at' => '2026-03-20 23:59:59',
+            'name' => '03/2026', 'note' => '', 'evaluated_at' => '2026-03-21 10:00:00',
+        ]);
+
+        // Neobsazená band_id (seed pokrývá 1–11; v testech není FK na edi_bands).
+        $cat144 = EdiCategory::create(['band_id' => 901, 'name' => 'Pásmo A', 'section' => 'SO', 'variant' => 'domestic']);
+        $cat432 = EdiCategory::create(['band_id' => 902, 'name' => 'Pásmo B', 'section' => 'SO', 'variant' => 'domestic']);
+
+        $makeHead = function (string $call, string $worked, string $workedWwl) use ($kolo): EdiHead {
+            $head = EdiHead::create([
+                'round_id' => $kolo->id, 't_date' => '20260315', 'p_call' => $call, 'p_wwlo' => 'JN79',
+                'p_band' => 'x', 'r_name' => 'X', 'r_emai' => 'x@x.cz', 's_powe' => 100,
+            ]);
+            EdiLine::create([
+                'edi_head_id' => $head->id, 'qso_at' => '2026-03-15 09:00:00',
+                'call_sign' => $worked, 'received_wwl' => $workedWwl, 'mode_code' => 2,
+            ]);
+
+            return $head;
+        };
+
+        // Deník na 144 MHz (prohlížený): v logu protistanice OK9SAME (144).
+        $head144 = $makeHead('OK1AAA', 'OK9SAME', 'JN89AA');
+        // Jiný deník téhož kola na 432 MHz: protistanice OK9OTHER jen tady.
+        $head432 = $makeHead('OK1BBB', 'OK9OTHER', 'JN88AA');
+
+        $entry = function (EdiCategory $cat, string $call, int $headId) use ($kolo): void {
+            EdiEntry::create([
+                'round_id' => $kolo->id, 'category_id' => $cat->id,
+                'qrp' => false, 'lp' => false, 'callsign' => $call, 'locator' => 'JN79AA',
+                'qso_count' => 1, 'qso_points' => 1, 'multiplier' => 1, 'points' => 1,
+                'name' => 'T', 'email' => 't@t.cz', 'phone' => '', 'note' => '',
+                'soapbox' => '', 'ip' => '', 'edi_head_id' => $headId,
+                'rank' => 1, 'approved' => true, 'session_id' => '',
+            ]);
+        };
+        $entry($cat144, 'OK1AAA', $head144->id);
+        $entry($cat432, 'OK1BBB', $head432->id);
+
+        $calls = app(QsoGeometry::class)->roundStations($head144, 1)->pluck('call')->all();
+
+        // Vrstva 144 MHz deníku obsahuje jen stanice ze 144 MHz, ne z 432 MHz.
+        $this->assertContains('OK9SAME', $calls);
+        $this->assertNotContains('OK9OTHER', $calls);
+    }
+
+    public function test_round_stations_layer_empty_without_known_band(): void
+    {
+        $kolo = EdiRound::create([
+            'starts_at' => '2026-03-15', 'closes_at' => '2026-03-20 23:59:59',
+            'name' => '03/2026', 'note' => '', 'evaluated_at' => '2026-03-21 10:00:00',
+        ]);
+
+        // Deník bez napojeného záznamu (historická data) → pásmo neznámé.
+        $head = EdiHead::create([
+            'round_id' => $kolo->id, 't_date' => '20260315', 'p_call' => 'OK1AAA', 'p_wwlo' => 'JN79',
+            'p_band' => '144 MHz', 'r_name' => 'X', 'r_emai' => 'x@x.cz', 's_powe' => 100,
+        ]);
+        EdiLine::create([
+            'edi_head_id' => $head->id, 'qso_at' => '2026-03-15 09:00:00',
+            'call_sign' => 'OK9SAME', 'received_wwl' => 'JN89AA', 'mode_code' => 2,
+        ]);
+
+        $this->assertSame([], app(QsoGeometry::class)->roundStations($head, 1)->all());
     }
 
     public function test_removed_inkubator_route_is_not_linked_from_vizualizace(): void
