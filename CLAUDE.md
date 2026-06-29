@@ -44,7 +44,7 @@ EDI files may arrive as Windows-1250; `EdiParser` converts via `iconv` before pr
 
 **EDI schema** (`edi_head`, `edi_lines`, `edi_category`): derived from the original system but fully normalized to `snake_case` column names (`mode_code`, `received_wwl`, `qso_points`, `t_date`, `p_call`, etc.) — accessed as ordinary Eloquent attributes, no magic-string `$line->{'...'}` access and no `property.notFound` suppressions. `Ediline` exposes a few PHP 8.4 property hooks (`receivedWwl`, `qsoPoints`, `modeCode`, `mode`, `newWwl`) that normalize/cast the raw columns. Both models carry `#[WithoutTimestamps]` since they have custom time columns (`stamp`, `d_cas`). `EdiCategory` (`edi_category`) is the **single** category lookup — band × section × variant, with `dxid` self-FK linking a DX row to its domestic counterpart (NULL = domestic); it exposes back-compat read accessors `nazev` (= `name`) and generated `zkratka`. The historical dataset now lives only as seeder snapshots (see *Seeding* below); the original Adminer SQL dumps were converted and removed.
 
-**Application schema** (`vkvpa_*` tables): `EdiEntry` (contest entry/result row), `EdiRound` (contest round), `VkvpaPrihlaseni`, `DiscussionPost` (discussion, table `discussion_posts`; photos held binary in `discussion_post_photos` via `DiscussionPostPhoto`). Category is `edi_category` (above): `EdiEntry.category_id` is a FK to `edi_category.id` (the old duplicate `vkvpa_kategorie` table was dropped; `EdiCategory` is the sole category model).
+**Application schema** (`vkvpa_*` tables): `EdiEntry` (contest entry/result row), `EdiRound` (contest round), `LoginToken` (table `login_tokens`, one-time magic-link login tokens), `DiscussionPost` (discussion, table `discussion_posts`; photos held binary in `discussion_post_photos` via `DiscussionPostPhoto`). Category is `edi_category` (above): `EdiEntry.category_id` is a FK to `edi_category.id` (the old duplicate `vkvpa_kategorie` table was dropped; `EdiCategory` is the sole category model).
 
 One migration per table: each `create_*` migration holds the table's final schema including its outgoing foreign keys, ordered so referenced tables are created first. FKs are added in a `DB::getDriverName() !== 'sqlite'` guard (SQLite can't `ALTER TABLE ADD FOREIGN KEY` and the test DB runs without them — integrity is enforced by the app + tests there); `edi_lines` is the exception, declaring its FK inline since it works in `CREATE TABLE`.
 
@@ -98,7 +98,7 @@ The `crk` "all round stations" layer (`QsoGeometry::roundStations()`) is withhel
 
 Session-based with two entry points:
 - Standard login form at `/login`
-- Token login at `/login/token/{kod}` (one-time alphanumeric code, TTL = `vkvpa.token_ttl_days` = 5 days)
+- Token login at `/login/token/{token}` (one-time alphanumeric code stored hashed in `login_tokens`, TTL = `vkvpa.token_ttl_days` = 5 days)
 
 Admin routes are protected by `EnsureAdmin` middleware (`middleware('admin')`). `User::is_admin` boolean flag.
 

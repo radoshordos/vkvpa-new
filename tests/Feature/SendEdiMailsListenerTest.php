@@ -11,7 +11,7 @@ use App\Mail\HlaseniProVyhodnocovatele;
 use App\Models\EdiCategory;
 use App\Models\EdiEntry;
 use App\Models\EdiRound;
-use App\Models\VkvpaPrihlaseni;
+use App\Models\LoginToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Mail;
@@ -190,7 +190,7 @@ class SendEdiMailsListenerTest extends TestCase
         Config::set('vkvpa.contact_mail', 'vyhodnocovatel@example.com');
         $this->dispatch();
 
-        $this->assertSame(1, VkvpaPrihlaseni::count());
+        $this->assertSame(1, LoginToken::count());
     }
 
     public function test_token_is_hashed_sha256_in_db(): void
@@ -209,9 +209,9 @@ class SendEdiMailsListenerTest extends TestCase
         });
 
         $this->assertNotNull($mailable);
-        $stored = VkvpaPrihlaseni::first();
+        $stored = LoginToken::first();
         $this->assertNotNull($stored);
-        $this->assertSame(hash('sha256', $mailable->kod), $stored->kod);
+        $this->assertSame(hash('sha256', $mailable->token), $stored->token);
     }
 
     public function test_no_token_stored_when_contact_mail_empty(): void
@@ -220,7 +220,7 @@ class SendEdiMailsListenerTest extends TestCase
 
         $this->dispatch();
 
-        $this->assertSame(0, VkvpaPrihlaseni::count());
+        $this->assertSame(0, LoginToken::count());
     }
 
     // ── Kombinace ────────────────────────────────────────────────────────────
@@ -234,7 +234,7 @@ class SendEdiMailsListenerTest extends TestCase
 
         Mail::assertQueued(HlaseniPrijato::class);
         Mail::assertQueued(HlaseniProVyhodnocovatele::class);
-        $this->assertSame(1, VkvpaPrihlaseni::count());
+        $this->assertSame(1, LoginToken::count());
     }
 
     public function test_no_mail_queued_when_both_addresses_absent(): void
@@ -245,6 +245,6 @@ class SendEdiMailsListenerTest extends TestCase
         $this->dispatch();
 
         Mail::assertNothingQueued();
-        $this->assertSame(0, VkvpaPrihlaseni::count());
+        $this->assertSame(0, LoginToken::count());
     }
 }

@@ -27,9 +27,9 @@ class HlaseniProVyhodnocovatele extends Mailable
         public readonly EdiEntry $hlaseni,
         public readonly string $koloNazev,
         public readonly string $kategorieNazev,
-        public readonly string $kod,
+        public readonly string $token,
     ) {
-        $this->prevzitUrl = route('login.token', ['kod' => $kod, 'confirm' => $hlaseni->id]);
+        $this->prevzitUrl = route('login.token', ['token' => $token, 'confirm' => $hlaseni->id]);
     }
 
     public function envelope(): Envelope

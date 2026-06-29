@@ -6,8 +6,8 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\LoginToken;
 use App\Models\User;
-use App\Models\VkvpaPrihlaseni;
 use App\Support\VkvpaSettings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -55,22 +55,22 @@ class AuthController extends Controller
     /**
      * Přihlášení přes jednorázový kód (?kod=).
      */
-    public function loginViaToken(string $kod, Request $request): RedirectResponse
+    public function loginViaToken(string $token, Request $request): RedirectResponse
     {
-        VkvpaPrihlaseni::query()
-            ->where('time', '<', Carbon::now()->subDays(VkvpaSettings::tokenTtlDays()))
+        LoginToken::query()
+            ->where('created_at', '<', Carbon::now()->subDays(VkvpaSettings::tokenTtlDays()))
             ->delete();
 
         // lockForUpdate + delete v transakci: paralelní požadavky (prefetch prohlížeče,
         // dvojité kliknutí) nemohou použít stejný token dvakrát. Vrací ['user_id' => …]
         // při úspěchu (i null pro starší token bez vazby), nebo false když token chybí.
-        $consumed = DB::transaction(function () use ($kod): array|false {
-            $token = VkvpaPrihlaseni::query()->where('kod', hash('sha256', $kod))->lockForUpdate()->first();
-            if ($token === null) {
+        $consumed = DB::transaction(function () use ($token): array|false {
+            $loginToken = LoginToken::query()->where('token', hash('sha256', $token))->lockForUpdate()->first();
+            if ($loginToken === null) {
                 return false;
             }
-            $userId = $token->user_id;
-            $token->delete();
+            $userId = $loginToken->user_id;
+            $loginToken->delete();
 
             return ['user_id' => $userId];
         });

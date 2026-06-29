@@ -7,8 +7,8 @@ namespace App\Listeners;
 use App\Events\EdiImported;
 use App\Mail\HlaseniPrijato;
 use App\Mail\HlaseniProVyhodnocovatele;
+use App\Models\LoginToken;
 use App\Models\User;
-use App\Models\VkvpaPrihlaseni;
 use App\Support\VkvpaSettings;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Mail;
@@ -34,18 +34,17 @@ final class SendEdiMailsListener implements ShouldQueue
 
         $contactMail = VkvpaSettings::contactMail();
         if (filter_var($contactMail, FILTER_VALIDATE_EMAIL) !== false) {
-            $kod = Str::password(32, letters: true, numbers: true, symbols: false);
+            $token = Str::password(32, letters: true, numbers: true, symbols: false);
             // Token svážeme s administrátorem (vyhodnocovatelem), takže přihlášení
             // přes magic-link vede ke konkrétní identitě, ne k „prvnímu adminovi".
             $adminId = User::query()->where('is_admin', true)->value('id');
-            VkvpaPrihlaseni::create([
-                'kod' => hash('sha256', $kod),
-                'time' => now(),
+            LoginToken::create([
+                'token' => hash('sha256', $token),
                 'user_id' => $adminId,
             ]);
 
             Mail::to($contactMail)->queue(
-                new HlaseniProVyhodnocovatele($data, $koloNazev, $kategorieNazev, $kod),
+                new HlaseniProVyhodnocovatele($data, $koloNazev, $kategorieNazev, $token),
             );
         }
     }

@@ -121,7 +121,7 @@ pravda o schématu:
 - `create_edi_entries` ← odstraněno redundantní `nullable()` u sloupců s DEFAULT
   (NOT NULL + DEFAULT) a doplněny indexy `category_id`, `(round_id, approved)`,
   `(znacka, round_id)`
-- `create_vkvpa_prihlaseni` ← UNIQUE na `kod`
+- `create_login_tokens` ← UNIQUE na `token`
 
 Net stav schématu zůstal identický; ověřeno `migrate:fresh` i celou testovací sadou.
 Ponechány legitimní `create_diskuse_table` a `add_aktivni_to_edi_rounds`.
