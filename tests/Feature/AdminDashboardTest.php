@@ -68,6 +68,7 @@ class AdminDashboardTest extends TestCase
             ->assertSee('Distribuce pásem 2026')
             ->getContent();
 
+        $this->assertIsString($html);
         $compact = str_replace(' ', '', $html);
         $this->assertStringContainsString('katLabels:["144MHz","432MHz"]', $compact);
         $this->assertStringContainsString('katData:[2,1]', $compact);
