@@ -42,10 +42,6 @@ const crkLayer = L.layerGroup();
 // Vrstva: přehrávání deníku (paprsky + špendlíky řízené časem na slideru)
 const playbackLayer = L.layerGroup();
 
-// Zvýraznění nového násobiče – výrazná růžová/magenta, jasně odlišná od barev
-// druhu provozu (SSB modrá, CW jantarová, ostatní šedá), aby se nepletla se SSB.
-const NASOBIC = { stroke: '#be185d', fill: '#ec4899' };
-
 // ── Filtr druhu provozu napříč vrstvami ────────────────────────────────────
 // Klíč skupiny = kód módu: 1=SSB, 2=CW, 3=SSB/CW, 4=CW/SSB, 5=AM, 6=FM,
 // 0=Ostatní (shodně s tlačítky data-mode-filter a PHP enumem QsoMode).
@@ -110,7 +106,7 @@ cfg.points.forEach(function (p, idx) {
     spendlikMarkers.push(spendlik);
     addModeEntry(spendlikyLayer, p.mode, [spendlik]);
 
-    // přehrávání: paprsek + špendlík s časem QSO; nový násobič fialově a větší
+    // přehrávání: paprsek + špendlík s časem QSO; nový násobič jen větší (barva dle provozu)
     const nn = nasobicByIdx.get(idx);
     const group = [];
     if (cfg.home) {
@@ -119,7 +115,7 @@ cfg.points.forEach(function (p, idx) {
         }));
     }
     group.push(L.circleMarker([p.lat, p.lon], nn
-        ? { radius: 7, color: NASOBIC.stroke, fillColor: NASOBIC.fill, fillOpacity: 0.9, weight: 2 }
+        ? { radius: 7, color: mc.stroke, fillColor: mc.fill, fillOpacity: 0.9, weight: 2 }
         : { radius: 5, color: mc.stroke, fillColor: mc.fill, fillOpacity: 0.9, weight: 1.5 },
     ).bindPopup(`<strong>${p.call}</strong> <span style="font-size:.8em;opacity:.7">${modeLabel(p.mode)}</span><br>${p.wwl}<br>${hhmm(p.time)} UTC`
         + (p.dist !== null ? `<br>${p.dist} km` : '')
@@ -168,7 +164,6 @@ function updateLegend(key) {
     if (aggregateLayer(key)) return; // vrstva nemá barvy podle provozu
 
     const rows = presentModes.map((m) => [modeColor(m).fill, m === 0 ? t.other : modeLabel(m)]);
-    if (key === 'playback') rows.push([NASOBIC.fill, t.new_mult_legend]);
 
     legendCtl = L.control({ position: 'bottomright' });
     legendCtl.onAdd = function () {

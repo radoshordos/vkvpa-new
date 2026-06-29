@@ -400,7 +400,6 @@ return [
             'stations' => 'stations',
             'legend' => 'Legend',
             'other' => 'Other',
-            'new_mult_legend' => 'New multiplier',
             'play' => '▶ Play',
             'pause' => '⏸ Pause',
             'score_pts' => 'pts',
