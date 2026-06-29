@@ -502,6 +502,8 @@ return [
         'chart_zeme' => 'Země (TOP)',
         'chart_prefix' => 'Prefixy (TOP)',
         'chart_trend' => 'Trend posledních kol',
+        'chart_pasma' => 'Podíl pásem v čase',
+        'pasma_year' => '{1} :count rok|[2,4] :count roky|[5,*] :count let',
 
         'badge_ucast' => 'Rekord účasti!',
         'badge_skore' => 'Rekord skóre!',

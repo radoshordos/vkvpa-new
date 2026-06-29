@@ -166,6 +166,76 @@ chart('chartTrend', {
     },
 });
 
+// Podíl pásem v čase (100% skládaný plošný): pro každé kolo počet stanic na
+// pásmu (z band_id kategorie) přepočtený na procenta. Přepínač 1/2/3 roky
+// filtruje osu X podle roku kola; data chodí za celé 3leté okno najednou.
+const pasma = cfg.pasmaTrend || { rounds: [], bands: [], stanice: [] };
+const pasmaEl = document.getElementById('chartPasma');
+if (pasmaEl && arr(pasma.rounds).length > 0 && arr(pasma.bands).length > 0) {
+    const maxYear = Math.max(...pasma.rounds.map((r) => r.year));
+
+    // Datasety (procentní podíl) pro kola v posledních `years` letech.
+    const build = (years) => {
+        const idx = pasma.rounds.reduce((acc, r, i) => {
+            if (r.year > maxYear - years) acc.push(i);
+            return acc;
+        }, []);
+        const labels = idx.map((i) => pasma.rounds[i].name);
+        // Základ 100 % = součet stanic přes pásma v daném kole.
+        const totals = idx.map((i) => pasma.bands.reduce((s, _b, bi) => s + (pasma.stanice[bi][i] || 0), 0));
+        const datasets = pasma.bands.map((b, bi) => {
+            const color = PALETTE[bi % PALETTE.length];
+            return {
+                label: b.token,
+                data: idx.map((i, k) => (totals[k] > 0 ? (100 * (pasma.stanice[bi][i] || 0)) / totals[k] : 0)),
+                _counts: idx.map((i) => pasma.stanice[bi][i] || 0),
+                backgroundColor: color + 'cc',
+                borderColor: color,
+                borderWidth: 1,
+                fill: true,
+                pointRadius: 0,
+                tension: 0.25,
+            };
+        });
+        return { labels, datasets };
+    };
+
+    const pasmaChart = new Chart(pasmaEl, {
+        type: 'line',
+        data: build(2),
+        options: {
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: { position: 'bottom' },
+                tooltip: {
+                    callbacks: {
+                        label: (ctx) => {
+                            const cnt = ctx.dataset._counts ? ctx.dataset._counts[ctx.dataIndex] : 0;
+                            return `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)} % (${cnt} ${t.stations || 'stanic'})`;
+                        },
+                    },
+                },
+            },
+            scales: {
+                x: { stacked: true, ticks: { maxRotation: 45 } },
+                y: { stacked: true, beginAtZero: true, max: 100, ticks: { callback: (v) => `${v} %` } },
+            },
+        },
+    });
+
+    const pasmaTabs = document.querySelectorAll('[data-pasma-years]');
+    pasmaTabs.forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const years = parseInt(btn.getAttribute('data-pasma-years'), 10) || 1;
+            const next = build(years);
+            pasmaChart.data.labels = next.labels;
+            pasmaChart.data.datasets = next.datasets;
+            pasmaChart.update();
+            pasmaTabs.forEach((b) => b.classList.toggle('active', b === btn));
+        });
+    });
+}
+
 // Profil stanice: trend bodů v čase (jen na stránce profilu).
 const staniceTrend = cfg.staniceTrend || { labels: [], body: [] };
 chart('chartStaniceTrend', {

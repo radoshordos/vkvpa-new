@@ -496,6 +496,8 @@ return [
         'chart_zeme' => 'Countries (TOP)',
         'chart_prefix' => 'Prefixes (TOP)',
         'chart_trend' => 'Recent rounds trend',
+        'chart_pasma' => 'Band share over time',
+        'pasma_year' => '{1} :count year|[2,*] :count years',
 
         'badge_ucast' => 'Attendance record!',
         'badge_skore' => 'Score record!',
