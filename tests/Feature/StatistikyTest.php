@@ -261,6 +261,30 @@ class StatistikyTest extends TestCase
         $this->assertSame([1, 3], $trend['stanice'][1]); // 432 MHz
     }
 
+    public function test_pasma_trend_can_filter_by_domestic_and_dx_variant(): void
+    {
+        $kat144Domestic = $this->category(1, 'SO', 'domestic');
+        $kat144Dx = $this->category(1, 'SO', 'dx');
+        $kat432Dx = $this->category(2, 'SO', 'dx');
+
+        $kolo = EdiRound::create(['starts_at' => '2026-04-15', 'closes_at' => '2026-04-20 23:59:59', 'name' => '04/2026', 'note' => '', 'evaluated_at' => '2026-04-21 10:00:00']);
+
+        $this->bandEntry($kolo, $kat144Domestic, 'OK1AAA');
+        $this->bandEntry($kolo, $kat144Dx, 'DL1AAA');
+        $this->bandEntry($kolo, $kat432Dx, 'OM1AAA');
+
+        $pasma = app(PasmaTrend::class);
+        $domestic = $pasma->vsechna('domestic');
+        $dx = $pasma->vsechna('dx');
+
+        $this->assertSame(['144'], array_column($domestic['bands'], 'token'));
+        $this->assertSame([1], $domestic['stanice'][0]);
+
+        $this->assertSame(['144', '432'], array_column($dx['bands'], 'token'));
+        $this->assertSame([1], $dx['stanice'][0]);
+        $this->assertSame([1], $dx['stanice'][1]);
+    }
+
     public function test_trends_page_renders_band_chart_with_units(): void
     {
         $kat = $this->category(1, 'SO', 'domestic');
@@ -271,7 +295,12 @@ class StatistikyTest extends TestCase
         $html = $this->get(route('statistiky.trendy'))
             ->assertOk()
             ->assertSee('chartPasma')
-            ->assertSee('data-pasma-years="0"', false) // přepínač „vše"
+            ->assertSee('data-pasma-years', false)
+            ->assertSee('value="0"', false) // volba „vše"
+            ->assertSee('data-pasma-scope', false)
+            ->assertSee('value="domestic"', false)
+            ->assertSee('value="dx"', false)
+            ->assertDontSee('value="2"', false)
             ->assertSee(__('pages.stat.chart_pasma'))
             ->assertSee(__('pages.trendy.heading'))
             ->getContent() ?: '';

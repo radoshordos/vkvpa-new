@@ -31,9 +31,10 @@ final class PasmaTrend
     /**
      * Trend přes všechna vyhodnocená kola (chronologicky).
      *
+     * @param  'domestic'|'dx'|null  $variant
      * @return PasmaTrendData
      */
-    public function vsechna(): array
+    public function vsechna(?string $variant = null): array
     {
         $kola = EdiRound::query()
             ->whereNotNull('evaluated_at')
@@ -44,11 +45,17 @@ final class PasmaTrend
             return ['rounds' => [], 'bands' => [], 'stanice' => []];
         }
 
-        $rows = EdiEntry::query()
+        $query = EdiEntry::query()
             ->join('edi_categories', 'edi_entries.category_id', '=', 'edi_categories.id')
             ->where('edi_entries.approved', true)
             ->whereIn('edi_entries.round_id', $kola->pluck('id'))
-            ->whereNotNull('edi_categories.band_id')
+            ->whereNotNull('edi_categories.band_id');
+
+        if ($variant !== null) {
+            $query->where('edi_categories.variant', $variant);
+        }
+
+        $rows = $query
             ->groupBy('edi_entries.round_id', 'edi_categories.band_id')
             ->selectRaw('edi_entries.round_id as round_id, edi_categories.band_id as band_id, COUNT(DISTINCT edi_entries.callsign) as stanic')
             ->get();

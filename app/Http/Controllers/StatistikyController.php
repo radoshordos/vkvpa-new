@@ -85,9 +85,16 @@ final class StatistikyController extends Controller
 
     public function trendy(PasmaTrend $pasma): View
     {
+        $pasmaTrend = $pasma->vsechna();
+
         return view('pages.statistiky.trendy', [
             'active' => 'statistiky.trendy',
-            'pasmaTrend' => $pasma->vsechna(),
+            'pasmaTrend' => $pasmaTrend,
+            'pasmaTrends' => [
+                'all' => $pasmaTrend,
+                'domestic' => $pasma->vsechna('domestic'),
+                'dx' => $pasma->vsechna('dx'),
+            ],
         ]);
     }
 

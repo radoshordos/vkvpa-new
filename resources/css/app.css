@@ -162,6 +162,11 @@
         border-radius: 0.75rem;
         box-shadow: 0 1px 2px rgb(20 22 40 / 0.04), inset 0 1px 0 rgb(255 255 255 / 0.07);
     }
+    .quick-card-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+        gap: 0.75rem;
+    }
 
     /* ── Tlačítka ────────────────────────────────────────────────── */
     .btn {

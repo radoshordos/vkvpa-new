@@ -165,4 +165,16 @@ class HomePageTest extends TestCase
             ->assertOk()
             ->assertDontSee('Z diskuse');
     }
+
+    public function test_home_links_to_long_term_trends(): void
+    {
+        Carbon::setTestNow('2026-06-22 12:00:00');
+        $this->round();
+
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertSee(route('statistiky.trendy', [], false), false)
+            ->assertSee(__('pages.home.section_stats'))
+            ->assertSee(__('pages.home.ql_trends'));
+    }
 }

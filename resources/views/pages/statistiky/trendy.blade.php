@@ -8,12 +8,6 @@
 
 @push('head')
   @vite('resources/js/trendy.js')
-  <style>
-    .yr-tab { padding: .25rem .75rem; border-radius: .375rem; font-size: .8rem; font-weight: 600; cursor: pointer;
-              border: 1px solid var(--color-line, #e2e8f0); background: var(--color-surface, #fff);
-              color: var(--color-muted, #64748b); transition: background .15s, color .15s; }
-    .yr-tab.active, .yr-tab:hover { background: var(--color-brand, #3b82f6); color: #fff; border-color: transparent; }
-  </style>
 @endpush
 
 @section('content')
@@ -21,6 +15,7 @@
 <script @cspNonce>
 window.__trendyConfig = {
     pasmaTrend: @json($pasmaTrend),
+    pasmaTrends: @json($pasmaTrends),
     t: { stations: @json(__('pages.stat.js_stations')) },
 };
 </script>
@@ -34,18 +29,31 @@ window.__trendyConfig = {
 </header>
 
 @if ($pasmaTrend['rounds'] !== [])
-<div class="rounded-lg border border-line bg-surface p-3 mb-5">
-  <div class="flex items-center gap-2 mb-2 flex-wrap">
+<div class="mb-5 w-full rounded-lg border border-line bg-surface p-4">
+  <div class="mb-3 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
     <span class="text-sm font-semibold text-heading">{{ __('pages.stat.chart_pasma') }}</span>
-    <span class="ml-auto flex gap-1 flex-wrap">
-      <button class="yr-tab" data-pasma-years="1">{{ trans_choice('pages.stat.pasma_year', 1) }}</button>
-      <button class="yr-tab" data-pasma-years="2">{{ trans_choice('pages.stat.pasma_year', 2) }}</button>
-      <button class="yr-tab" data-pasma-years="3">{{ trans_choice('pages.stat.pasma_year', 3) }}</button>
-      <button class="yr-tab" data-pasma-years="5">{{ trans_choice('pages.stat.pasma_year', 5) }}</button>
-      <button class="yr-tab active" data-pasma-years="0">{{ __('pages.stat.pasma_all') }}</button>
-    </span>
+    <div class="flex flex-wrap gap-3">
+      <div class="field mb-0 w-40">
+        <label class="label" for="pasma-scope">{{ __('pages.trendy.scope_label') }}</label>
+        <select id="pasma-scope" class="select" data-pasma-scope>
+          <option value="all">{{ __('pages.trendy.scope_all') }}</option>
+          <option value="domestic">{{ __('pages.trendy.scope_domestic') }}</option>
+          <option value="dx">{{ __('pages.trendy.scope_dx') }}</option>
+        </select>
+      </div>
+      <div class="field mb-0 w-40">
+        <label class="label" for="pasma-years">{{ __('pages.trendy.years_label') }}</label>
+        <select id="pasma-years" class="select" data-pasma-years>
+          <option value="1">{{ trans_choice('pages.stat.pasma_year', 1) }}</option>
+          <option value="3">{{ trans_choice('pages.stat.pasma_year', 3) }}</option>
+          <option value="5">{{ trans_choice('pages.stat.pasma_year', 5) }}</option>
+          <option value="0" selected>{{ __('pages.stat.pasma_all') }}</option>
+        </select>
+      </div>
+    </div>
   </div>
-  <div class="h-80"><canvas id="chartPasma"></canvas></div>
+  <div class="h-[calc(50vh-9rem)] min-h-[18rem] max-h-[28rem]"><canvas id="chartPasma" class="h-full w-full"></canvas></div>
+  <p class="mt-2 hidden text-xs text-muted" data-pasma-empty>{{ __('pages.trendy.scope_empty') }}</p>
   <p class="mt-2 text-xs text-muted">{{ __('pages.trendy.pasma_note') }}</p>
 </div>
 @else

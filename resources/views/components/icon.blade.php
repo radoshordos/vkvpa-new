@@ -21,6 +21,7 @@
         'file'        => ['vb' => '0 0 16 16', 'sw' => 1.5,  'p' => '<path d="M9 2H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V6L9 2Z"/><path d="M9 2v4h4M8 9.5v3M6.5 11l1.5-1.5 1.5 1.5"/>'],
         'pencil'      => ['vb' => '0 0 16 16', 'sw' => 1.5,  'p' => '<path d="M11.5 2.5a1.5 1.5 0 0 1 2 2L5 13l-3 1 1-3 8.5-8.5Z"/>'],
         'arrow-right'     => ['vb' => '0 0 16 16', 'sw' => 1.75, 'p' => '<path d="M3 8h10M9 4l4 4-4 4"/>'],
+        'trend-up'        => ['vb' => '0 0 24 24', 'sw' => 2,    'p' => '<path stroke-linecap="round" stroke-linejoin="round" d="M4 19V5M4 19h16M7 15l4-4 3 3 5-7"/><path stroke-linecap="round" stroke-linejoin="round" d="M16 7h3v3"/>'],
         'triangle-alert'  => ['vb' => '0 0 24 24', 'sw' => 2,    'p' => '<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/>'],
         'check-circle'    => ['vb' => '0 0 24 24', 'sw' => 2,    'p' => '<path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>'],
         'info-circle'     => ['vb' => '0 0 24 24', 'sw' => 2,    'p' => '<path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"/>'],
