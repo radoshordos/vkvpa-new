@@ -109,6 +109,7 @@ return [
         'last_evaluated_heading' => 'Last evaluated round',
         'discussion_heading' => 'From the discussion',
         'discussion_all' => 'full discussion →',
+        'discussion_photos' => '{1} :count photo|[2,*] :count photos',
         'local_time_suffix' => 'local time',
         'live_heading' => 'Interim results',
         'live_refresh_in' => 'Refresh in',
