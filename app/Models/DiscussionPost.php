@@ -43,7 +43,9 @@ class DiscussionPost extends Model
             return null;
         }
 
-        return hash_hmac('sha256', $ip, (string) config('app.key'));
+        $key = config('app.key');
+
+        return hash_hmac('sha256', $ip, is_string($key) ? $key : '');
     }
 
     /** @return BelongsTo<EdiRound, $this> */
