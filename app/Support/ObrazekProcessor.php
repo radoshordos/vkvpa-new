@@ -6,8 +6,7 @@ namespace App\Support;
 
 use Intervention\Image\Drivers\Gd\Driver as GdDriver;
 use Intervention\Image\Drivers\Imagick\Driver as ImagickDriver;
-use Intervention\Image\Encoders\JpegEncoder;
-use Intervention\Image\Encoders\PngEncoder;
+use Intervention\Image\Encoders\WebpEncoder;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Interfaces\ImageInterface;
 use RuntimeException;
@@ -16,21 +15,32 @@ use Throwable;
 /**
  * Zpracování nahraných fotografií pro diskuzi.
  *
- * Z nahraného souboru vyrobí zmenšený hlavní obrázek + čtvercový náhled,
- * odstraní EXIF (vč. GPS) a sjednotí výstupní formát. HEIC/HEIF z mobilů
- * dekóduje přes Imagick (pokud je k dispozici); ostatní rastrové formáty
- * zvládne i GD.
+ * Z nahraného souboru vyrobí zmenšený hlavní obrázek + náhled (oba se
+ * zachovaným poměrem stran), odstraní EXIF (vč. GPS) a sjednotí výstup na
+ * WebP – menší soubory při zachované kvalitě i průhlednosti. HEIC/HEIF
+ * z mobilů dekóduje přes Imagick (pokud je k dispozici); ostatní rastrové
+ * formáty zvládne i GD.
  */
 final class ObrazekProcessor
 {
     /** Delší strana hlavního obrázku v px. */
     private const MAX_HRANA = 2000;
 
-    /** Strana čtvercového náhledu v px. */
-    private const NAHLED_HRANA = 400;
+    /** Delší strana náhledu v px (poměr stran se zachovává). */
+    private const NAHLED_HRANA = 640;
 
-    /** Kvalita JPEG výstupu. */
-    private const JPEG_KVALITA = 82;
+    /** Kvalita WebP hlavního obrázku. */
+    private const KVALITA = 82;
+
+    /** Kvalita WebP náhledu. */
+    private const NAHLED_KVALITA = 80;
+
+    /**
+     * Maximální počet pixelů vstupního obrázku (šířka × výška). Brání útoku
+     * typu „decompression bomb" – malý komprimovaný soubor s obrovskými rozměry,
+     * který by při dekódování vyčerpal paměť. 50 Mpx pokryje i profi fotoaparáty.
+     */
+    private const MAX_PIXELU = 50_000_000;
 
     public function __construct(private readonly ImageManager $manager) {}
 
@@ -40,9 +50,27 @@ final class ObrazekProcessor
      */
     public static function create(): self
     {
-        $driver = extension_loaded('imagick') ? new ImagickDriver : new GdDriver;
+        if (extension_loaded('imagick')) {
+            self::omezImagickZdroje();
 
-        return new self(new ImageManager($driver));
+            return new self(new ImageManager(new ImagickDriver));
+        }
+
+        return new self(new ImageManager(new GdDriver));
+    }
+
+    /**
+     * Tvrdě omezí zdroje, které smí ImageMagick spotřebovat při dekódování
+     * (zejm. HEIC/HEIF). Doplňuje kontrolu rozměrů a chrání před bombami
+     * i u formátů, jejichž rozměry nelze levně zjistit přes getimagesize().
+     */
+    private static function omezImagickZdroje(): void
+    {
+        \Imagick::setResourceLimit(\Imagick::RESOURCETYPE_MEMORY, 256 * 1024 * 1024); // 256 MB RAM
+        \Imagick::setResourceLimit(\Imagick::RESOURCETYPE_MAP, 512 * 1024 * 1024);    // 512 MB mmap
+        \Imagick::setResourceLimit(\Imagick::RESOURCETYPE_AREA, 128 * 1024 * 1024);   // pixel cache
+        \Imagick::setResourceLimit(\Imagick::RESOURCETYPE_DISK, 1024 * 1024 * 1024);  // 1 GB swap
+        \Imagick::setResourceLimit(\Imagick::RESOURCETYPE_TIME, 30);                  // 30 s
     }
 
     public static function imagickKDispozici(): bool
@@ -60,26 +88,21 @@ final class ObrazekProcessor
      */
     public function zpracuj(string $cesta): array
     {
-        // PNG si necháme jako PNG kvůli průhlednosti, vše ostatní → JPEG.
-        $jePng = $this->jePng($cesta);
+        $this->overRozmery($cesta);
 
         // Zdroj načteme zvlášť pro hlavní obrázek a pro náhled – Intervention
         // image je mutable a klonování by mohlo sdílet podkladový resource.
+        // Oba zmenšujeme přes scaleDown, takže si zachovají poměr stran (náhled
+        // tedy má stejný poměr jako hlavní obrázek – mřížka to využívá pro
+        // layout bez „skákání" při lazy-loadu).
         $hlavni = $this->nacti($cesta)->scaleDown(self::MAX_HRANA, self::MAX_HRANA);
-        $nahled = $this->nacti($cesta)->coverDown(self::NAHLED_HRANA, self::NAHLED_HRANA);
+        $nahled = $this->nacti($cesta)->scaleDown(self::NAHLED_HRANA, self::NAHLED_HRANA);
 
-        if ($jePng) {
-            $dataHlavni = $hlavni->encode(new PngEncoder)->toString();
-            $dataNahled = $nahled->encode(new PngEncoder)->toString();
-            $mime = 'image/png';
-        } else {
-            $dataHlavni = $hlavni->encode(new JpegEncoder(quality: self::JPEG_KVALITA))->toString();
-            $dataNahled = $nahled->encode(new JpegEncoder(quality: self::JPEG_KVALITA))->toString();
-            $mime = 'image/jpeg';
-        }
+        $dataHlavni = $hlavni->encode(new WebpEncoder(quality: self::KVALITA))->toString();
+        $dataNahled = $nahled->encode(new WebpEncoder(quality: self::NAHLED_KVALITA))->toString();
 
         return [
-            'mime_type' => $mime,
+            'mime_type' => 'image/webp',
             'data' => $dataHlavni,
             'thumbnail' => $dataNahled,
             'width' => $hlavni->width(),
@@ -103,11 +126,19 @@ final class ObrazekProcessor
         }
     }
 
-    private function jePng(string $cesta): bool
+    /**
+     * Odmítne obrázky s nereálně velkým rozlišením ještě před dekódováním
+     * (decompression bomb). Rozměry zjišťuje levně z hlavičky přes getimagesize;
+     * formáty, které getimagesize neumí (HEIC/HEIF), kryjí Imagick limity
+     * nastavené v {@see omezImagickZdroje()}.
+     *
+     * @throws RuntimeException pokud obrázek překračuje povolený počet pixelů
+     */
+    private function overRozmery(string $cesta): void
     {
-        // HEIC apod. getimagesize nezná (vrátí false) → rozhodně to není PNG.
         $info = @getimagesize($cesta);
-
-        return is_array($info) && $info[2] === IMAGETYPE_PNG;
+        if (is_array($info) && $info[0] * $info[1] > self::MAX_PIXELU) {
+            throw new RuntimeException('Obrázek má příliš velké rozlišení.');
+        }
     }
 }

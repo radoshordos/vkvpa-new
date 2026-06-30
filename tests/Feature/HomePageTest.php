@@ -147,7 +147,7 @@ class HomePageTest extends TestCase
     {
         Carbon::setTestNow('2026-06-22 12:00:00');
         $kolo = $this->round();
-        DiscussionPost::create(['round_id' => $kolo->id, 'callsign' => 'OK1XYZ', 'body' => 'Pěkné podmínky dnes ráno!', 'ip_address' => '127.0.0.1']);
+        DiscussionPost::create(['round_id' => $kolo->id, 'callsign' => 'OK1XYZ', 'body' => 'Pěkné podmínky dnes ráno!']);
 
         $this->get(route('home'))
             ->assertOk()

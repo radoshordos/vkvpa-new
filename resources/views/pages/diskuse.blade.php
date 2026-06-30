@@ -65,17 +65,23 @@
                 </div>
                 <p class="mt-2 whitespace-pre-wrap break-words">{{ $p->body }}</p>
                 @if ($p->photos->isNotEmpty())
+                    @php $fotoCount = $p->photos->count(); @endphp
                     <div class="mt-3 flex flex-wrap gap-2">
                         @foreach ($p->photos as $f)
-                            <a href="{{ route('diskuse.foto', $f->id) }}"
-                               class="block overflow-hidden rounded-lg shadow-sm"
+                            <a href="{{ route('diskuse.foto', [$p->id, $f->position]) }}"
+                               class="relative block h-28 overflow-hidden rounded-lg shadow-sm sm:h-32"
+                               style="aspect-ratio: {{ $f->width }} / {{ max($f->height, 1) }}"
                                data-lightbox
                                data-gallery="{{ $p->id }}"
                                aria-label="{{ __('pages.diskuse.photo_open') }}">
-                                <img src="{{ route('diskuse.foto.nahled', $f->id) }}"
+                                <img src="{{ route('diskuse.foto.nahled', [$p->id, $f->position]) }}"
                                      alt="Fotografie od {{ $p->callsign }}"
                                      loading="lazy"
-                                     class="h-28 w-28 object-cover transition hover:opacity-90 sm:h-32 sm:w-32">
+                                     class="h-full w-full object-cover transition hover:opacity-90">
+                                @if ($loop->first && $fotoCount > 1)
+                                    <span class="absolute right-1 top-1 flex items-center gap-1 rounded-full bg-black/60 px-2 py-0.5 text-xs font-medium leading-none text-white"
+                                          aria-hidden="true">🖼 {{ $fotoCount }}</span>
+                                @endif
                             </a>
                         @endforeach
                     </div>
