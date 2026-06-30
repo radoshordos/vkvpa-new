@@ -304,6 +304,8 @@ return [
         'photo_hint' => 'Můžete přidat až 5 fotek najednou (i přímo z mobilu). Obrázky se automaticky zmenší.',
         'photo_open' => 'Zvětšit fotografii',
         'photo_close' => 'Zavřít',
+        'photo_prev' => 'Předchozí fotografie',
+        'photo_next' => 'Další fotografie',
         'photo_too_many' => 'Najednou lze nahrát nejvýše :max fotek.',
         'ph_callsign' => 'OK1XYZ',
         'ph_name' => 'Volitelně',

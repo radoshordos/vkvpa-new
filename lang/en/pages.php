@@ -302,6 +302,8 @@ return [
         'photo_hint' => 'You can add up to 5 photos at once (also straight from your phone). Images are resized automatically.',
         'photo_open' => 'Enlarge photo',
         'photo_close' => 'Close',
+        'photo_prev' => 'Previous photo',
+        'photo_next' => 'Next photo',
         'photo_too_many' => 'You can upload at most :max photos at once.',
         'ph_callsign' => 'OK1XYZ',
         'ph_name' => 'Optional',
