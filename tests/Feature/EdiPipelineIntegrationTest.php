@@ -9,11 +9,9 @@ use App\Models\EdiEntry;
 use App\Models\EdiHead;
 use App\Models\EdiLine;
 use App\Models\EdiRound;
-use App\Models\User;
 use App\Services\Scoring\ScoringService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Hash;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\Features\SupportTesting\Testable;
 use Livewire\Livewire;
@@ -210,7 +208,7 @@ class EdiPipelineIntegrationTest extends TestCase
             ->assertDontSee('OK2KJT');
 
         // Admin ho vidí (meruňkové pozadí).
-        $admin = User::create(['name' => 'A', 'password' => Hash::make('x'), 'is_admin' => true]);
+        $admin = $this->makeUser('A', isAdmin: true);
         $this->actingAs($admin)
             ->get(route('vysledkova_listina', ['kolo' => $kolo->id]))
             ->assertOk()

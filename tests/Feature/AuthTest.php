@@ -21,11 +21,7 @@ class AuthTest extends TestCase
 
     private function admin(string $password = 'tajne-heslo'): User
     {
-        return User::create([
-            'name' => 'Beda',
-            'password' => Hash::make($password),
-            'is_admin' => true,
-        ]);
+        return $this->makeUser('Beda', isAdmin: true, password: $password);
     }
 
     /**

@@ -8,7 +8,6 @@ use App\Http\Controllers\Admin\KolaAdminController;
 use App\Models\EdiRound;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 /**
@@ -22,7 +21,7 @@ class KolaAdminControllerTest extends TestCase
 
     private function admin(): User
     {
-        return User::create(['name' => 'Admin', 'password' => Hash::make('x'), 'is_admin' => true]);
+        return $this->makeUser('Admin', isAdmin: true);
     }
 
     /** @param array<string, mixed> $overrides */

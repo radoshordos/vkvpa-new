@@ -37,14 +37,17 @@ class AdminUserSeeder extends Seeder
             [$name, $pass] = $this->promptForCredentials($name, $pass);
         }
 
-        User::query()->updateOrCreate(
+        $user = User::query()->updateOrCreate(
             ['name' => $name],
             [
                 'email' => $email,
                 'password' => $pass,
-                'is_admin' => true,
             ],
         );
+
+        // `is_admin` není ve #[Fillable] (ochrana proti mass-assignment z requestu),
+        // proto ho nastavujeme explicitně přes forceFill.
+        $user->forceFill(['is_admin' => true])->save();
 
         $this->command->info("Admin účet '{$name}' připraven.");
     }

@@ -14,7 +14,6 @@ use App\Models\User;
 use App\Services\Edi\EdiImportService;
 use App\Services\Edi\EdiParser;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 /**
@@ -36,12 +35,12 @@ class EdiPorovnaniTest extends TestCase
 
     private function user(): User
     {
-        return User::create(['name' => 'Test', 'password' => Hash::make('x'), 'is_admin' => false]);
+        return $this->makeUser('Test');
     }
 
     private function admin(): User
     {
-        return User::create(['name' => 'Admin', 'password' => Hash::make('x'), 'is_admin' => true]);
+        return $this->makeUser('Admin', isAdmin: true);
     }
 
     public function test_renders_without_round_with_no_rivals(): void
