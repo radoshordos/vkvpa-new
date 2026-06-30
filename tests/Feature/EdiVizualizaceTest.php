@@ -16,7 +16,6 @@ use App\Services\Edi\EdiImportService;
 use App\Services\Edi\EdiParser;
 use App\Services\Edi\QsoGeometry;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
@@ -38,12 +37,12 @@ class EdiVizualizaceTest extends TestCase
 
     private function user(): User
     {
-        return User::create(['name' => 'Test', 'password' => Hash::make('x'), 'is_admin' => false]);
+        return $this->makeUser('Test');
     }
 
     private function admin(): User
     {
-        return User::create(['name' => 'Admin', 'password' => Hash::make('x'), 'is_admin' => true]);
+        return $this->makeUser('Admin', isAdmin: true);
     }
 
     public function test_anonymous_sees_vizualizace_when_no_active_round(): void

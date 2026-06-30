@@ -10,7 +10,6 @@ use App\Models\EdiEntry;
 use App\Models\EdiRound;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class KategorieControllerTest extends TestCase
@@ -27,7 +26,7 @@ class KategorieControllerTest extends TestCase
 
     private function admin(): User
     {
-        return User::create(['name' => 'Admin', 'password' => Hash::make('x'), 'is_admin' => true]);
+        return $this->makeUser('Admin', isAdmin: true);
     }
 
     /**

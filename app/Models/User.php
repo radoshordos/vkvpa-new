@@ -15,11 +15,14 @@ use Override;
  *
  * Přihlašuje se uživatelským jménem (sloupec `name`), nikoli e-mailem.
  */
+// `is_admin` ZÁMĚRNĚ není ve Fillable: admin se zakládá jen seederem
+// (AdminUserSeeder nastavuje příznak explicitně přes forceFill), nikoli z dat
+// requestu. Kdyby v budoucnu vznikla veřejná správa uživatelů plnící model
+// z požadavku, tato absence brání eskalaci práv přes mass-assignment.
 #[Fillable([
     'name',
     'email',
     'password',
-    'is_admin',
 ])]
 #[Hidden([
     'password',

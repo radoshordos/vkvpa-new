@@ -10,7 +10,6 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class DiskuseTest extends TestCase
@@ -19,7 +18,7 @@ class DiskuseTest extends TestCase
 
     private function admin(): User
     {
-        return User::create(['name' => 'Admin', 'password' => Hash::make('x'), 'is_admin' => true]);
+        return $this->makeUser('Admin', isAdmin: true);
     }
 
     private function round(): EdiRound

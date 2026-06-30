@@ -218,10 +218,10 @@ alternativou (neaplikováno na přání provozovatele) je Adminer z repozitáře
 
 ## Poznámky / doporučení do budoucna
 
-- **Mass assignment `is_admin`:** `User` má `is_admin` ve `#[Fillable]`.
-  Aktuálně neexploatovatelné – neexistuje veřejná registrace ani endpoint
-  plnící `User` z požadavku (vytváří se jen seederem). Pokud přibude veřejná
-  správa uživatelů, odebrat `is_admin` z `Fillable` a nastavovat ho explicitně.
+- **Mass assignment `is_admin`:** ✅ vyřešeno – `is_admin` odebráno z `#[Fillable]`
+  modelu `User`; admin se zakládá jen seederem, který příznak nastavuje
+  explicitně přes `forceFill`. Případná budoucí veřejná správa uživatelů tak
+  nemůže příznak nastavit z dat requestu (ochrana proti eskalaci práv).
 - **Údaje závodníků (`/admin/uzivatele`):** stránka zobrazuje citlivá osobní
   data (jméno, e-mail, telefon). Je za `admin` middleware; do dokumentace se
   publikují jen smyšlená demonstrační data.

@@ -9,9 +9,7 @@ use App\Models\EdiCategory;
 use App\Models\EdiEntry;
 use App\Models\EdiHead;
 use App\Models\EdiRound;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 /**
@@ -172,7 +170,7 @@ class VysledkyListinaTest extends TestCase
         $this->entry($kolo->id, $kat->id, 'OK1NEW', 10, 5, 100, 0)
             ->update(['approved' => false]);
 
-        $admin = User::create(['name' => 'Admin', 'password' => Hash::make('x'), 'is_admin' => true]);
+        $admin = $this->makeUser('Admin', isAdmin: true);
 
         $this->actingAs($admin)
             ->get(route('vysledkova_listina', ['kolo' => $kolo->id]))

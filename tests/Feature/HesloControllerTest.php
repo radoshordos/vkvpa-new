@@ -15,7 +15,7 @@ class HesloControllerTest extends TestCase
 
     private function admin(string $heslo = 'staresloheslo'): User
     {
-        return User::create(['name' => 'Admin', 'password' => Hash::make($heslo), 'is_admin' => true]);
+        return $this->makeUser('Admin', isAdmin: true, password: $heslo);
     }
 
     public function test_edit_renders_for_admin(): void
