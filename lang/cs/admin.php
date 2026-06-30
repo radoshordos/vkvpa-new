@@ -14,6 +14,7 @@ return [
     'nav_imports' => 'EDI hromadný import',
     'nav_export' => 'Export EDI (ZIP)',
     'nav_users' => 'Údaje závodníků',
+    'nav_edi_manual' => 'EDI manuál',
     'nav_api_docs' => 'API dokumentace',
     'nav_backup' => 'Záloha DB (SQL)',
     'nav_logs_viewer' => 'Logy aplikace',
@@ -190,6 +191,10 @@ return [
     'debug_tag_own' => 'vlastní čtverec',
     'debug_tag_new_mult' => '★ nový násobič',
     'debug_tag_dup' => 'duplikát',
+
+    // EDI manual
+    'edi_manual_title' => 'EDI manuál – Administrace VKV PA',
+    'edi_manual_heading' => 'EDI manuál pro import',
 
     // Logy aplikace
     'logy_title' => 'Logy aplikace – Administrace VKV PA',

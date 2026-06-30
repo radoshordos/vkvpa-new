@@ -28,7 +28,7 @@ use Override;
  * @property string $r_name
  * @property string|null $r_emai
  * @property string $r_phon
- * @property int $s_powe
+ * @property float $s_powe
  * @property string|null $s_tx_eq
  * @property string|null $s_ante
  * @property string|null $src
@@ -63,7 +63,7 @@ class EdiHead extends Model
     {
         return [
             'round_id' => 'integer',
-            's_powe' => 'integer',
+            's_powe' => 'float',
             'stamp' => 'datetime',
             'd_cas' => 'datetime',
         ];

@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('r_name', 50);
             $table->string('r_emai', 100)->nullable();
             $table->string('r_phon', 50)->default('');
-            $table->unsignedSmallInteger('s_powe');
+            $table->decimal('s_powe', 9, 4)->unsigned();
             $table->string('s_tx_eq', 100)->nullable();
             $table->string('s_ante', 100)->nullable();
             $table->mediumText('src')->nullable();

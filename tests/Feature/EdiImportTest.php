@@ -9,12 +9,12 @@ use App\Models\EdiLine;
 use App\Services\Edi\EdiImportService;
 use App\Services\Edi\EdiParser;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
+use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 
 /**
  * Test perzistence importu EDI.
  */
-class EdiImportTest extends TestCase
+class EdiImportTest extends BaseTestCase
 {
     use RefreshDatabase;
 
@@ -27,7 +27,7 @@ class EdiImportTest extends TestCase
 
         $this->assertInstanceOf(EdiHead::class, $head);
         $this->assertSame('OK2KJT', $head->p_call);
-        $this->assertSame(800, (int) $head->s_powe);
+        $this->assertSame(800.0, $head->s_powe);
 
         $this->assertSame(2, EdiLine::where('edi_head_id', $head->id)->count());
 
@@ -42,6 +42,31 @@ class EdiImportTest extends TestCase
         $this->assertSame('2026-03-15 08:00:00', $first->qso_at->utc()->format('Y-m-d H:i:s'));
 
         $this->assertCount(2, $head->lines);
+    }
+
+    public function test_imports_fractional_power(): void
+    {
+        $edi = implode("\n", [
+            '[REG1TEST;1]',
+            'TDate=20260315;20260315',
+            'PCall=OK1TEST',
+            'PWWLo=JN79GB',
+            'PSect=SINGLE',
+            'PBand=144 MHz',
+            'RName=Test',
+            'RPhon=',
+            'RHBBS=',
+            'SPowe=0.25',
+            '[QSORecords;1]',
+            '260315;0830;OK1AB;1;59;001;59;001;;JN89AA;3;;;;',
+            '[END;]',
+        ])."\n";
+
+        $log = new EdiParser()->parse($edi);
+        $head = new EdiImportService()->import($log);
+
+        $this->assertSame(0.25, $head->s_powe);
+        $this->assertSame(0.25, EdiHead::findOrFail($head->id)->s_powe);
     }
 
     public function test_imports_edi_with_no_qso_lines(): void

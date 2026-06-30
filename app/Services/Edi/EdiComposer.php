@@ -127,12 +127,19 @@ final class EdiComposer
         return strlen($d) === 8 ? substr($d, 2) : $this->digits($value, 6);
     }
 
-    /** Výkon „NNNW" (z čísla); prázdné zůstává prázdné. */
+    /** Výkon ve W; zachová až čtyři desetinná místa. */
     private function power(string $value): string
     {
-        $w = $this->digits($value, 0);
+        $power = EdiHeader::parsePower($value);
 
-        return $w === '' ? '' : $w.'W';
+        return $power === null ? '' : $this->formatPower($power).'W';
+    }
+
+    private function formatPower(float $power): string
+    {
+        $formatted = number_format($power, 4, '.', '');
+
+        return rtrim(rtrim($formatted, '0'), '.') ?: '0';
     }
 
     /** RST jako číslice (případně s tónovým písmenem A/S/M dle {@see RstPropagation}); default „59". */

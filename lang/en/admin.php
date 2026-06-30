@@ -14,6 +14,7 @@ return [
     'nav_imports' => 'EDI bulk import',
     'nav_export' => 'EDI export (ZIP)',
     'nav_users' => 'Entrant details',
+    'nav_edi_manual' => 'EDI manual',
     'nav_api_docs' => 'API documentation',
     'nav_backup' => 'DB backup (SQL)',
     'nav_logs_viewer' => 'Application logs',
@@ -190,6 +191,10 @@ return [
     'debug_tag_own' => 'own square',
     'debug_tag_new_mult' => '★ new multiplier',
     'debug_tag_dup' => 'duplicate',
+
+    // EDI manual
+    'edi_manual_title' => 'EDI manual - VKV PA Admin',
+    'edi_manual_heading' => 'EDI import manual',
 
     // Application logs
     'logy_title' => 'Application logs – VKV PA Admin',

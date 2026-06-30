@@ -27,8 +27,32 @@ class EdiParserTest extends TestCase
         $this->assertSame('MULTI', $log->header->pSect());
         $this->assertSame('144 MHz', $log->header->pBand());
         $this->assertSame('ok2ulq@seznam.cz', $log->header->rHBBS());
-        $this->assertSame(800, $log->header->sPowe());
+        $this->assertSame(800.0, $log->header->sPowe());
         $this->assertFalse($log->header->isQrp());
+    }
+
+    public function test_parses_fractional_power(): void
+    {
+        $edi = "[REG1TEST;1]\nPCall=OK1ABC\nSPowe=0.25 W\n[QSORecords;1]\n"
+            ."260315;0800;OK1XYZ;1;59;001;59;001;;JN79AB;3;;;;\n[END;]\n";
+
+        $log = new EdiParser()->parse($edi);
+
+        $this->assertSame(0.25, $log->header->sPowe());
+        $this->assertTrue($log->header->isQrp());
+        $this->assertTrue($log->header->isLp());
+    }
+
+    public function test_parses_fractional_power_with_decimal_comma(): void
+    {
+        $edi = "[REG1TEST;1]\nPCall=OK1ABC\nSPowe=2,5W\n[QSORecords;1]\n"
+            ."260315;0800;OK1XYZ;1;59;001;59;001;;JN79AB;3;;;;\n[END;]\n";
+
+        $log = new EdiParser()->parse($edi);
+
+        $this->assertSame(2.5, $log->header->sPowe());
+        $this->assertTrue($log->header->isQrp());
+        $this->assertTrue($log->header->isLp());
     }
 
     public function test_parses_all_qso_lines(): void
