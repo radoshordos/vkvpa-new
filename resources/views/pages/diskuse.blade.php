@@ -68,13 +68,13 @@
                     @php $fotoCount = $p->photos->count(); @endphp
                     <div class="mt-3 flex flex-wrap gap-2">
                         @foreach ($p->photos as $f)
-                            <a href="{{ route('diskuse.foto', $f->id) }}"
+                            <a href="{{ route('diskuse.foto', [$p->id, $f->position]) }}"
                                class="relative block h-28 overflow-hidden rounded-lg shadow-sm sm:h-32"
                                style="aspect-ratio: {{ $f->width }} / {{ max($f->height, 1) }}"
                                data-lightbox
                                data-gallery="{{ $p->id }}"
                                aria-label="{{ __('pages.diskuse.photo_open') }}">
-                                <img src="{{ route('diskuse.foto.nahled', $f->id) }}"
+                                <img src="{{ route('diskuse.foto.nahled', [$p->id, $f->position]) }}"
                                      alt="Fotografie od {{ $p->callsign }}"
                                      loading="lazy"
                                      class="h-full w-full object-cover transition hover:opacity-90">

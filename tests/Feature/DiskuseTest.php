@@ -55,7 +55,7 @@ class DiskuseTest extends TestCase
     public function test_show_renders_view_with_prispevky(): void
     {
         $kolo = $this->round();
-        DiscussionPost::create(['round_id' => $kolo->id, 'callsign' => 'OK1AB', 'body' => 'Ahoj ze závodu!', 'ip_address' => '127.0.0.1']);
+        DiscussionPost::create(['round_id' => $kolo->id, 'callsign' => 'OK1AB', 'body' => 'Ahoj ze závodu!']);
 
         $this->get(route('diskuse.show', $kolo->id))
             ->assertOk()
@@ -87,7 +87,7 @@ class DiskuseTest extends TestCase
             'name' => '01/2023',
             'note' => '',
         ]);
-        DiscussionPost::create(['round_id' => $stareS->id, 'callsign' => 'OK1AB', 'body' => 'Starý příspěvek.', 'ip_address' => '127.0.0.1']);
+        DiscussionPost::create(['round_id' => $stareS->id, 'callsign' => 'OK1AB', 'body' => 'Starý příspěvek.']);
 
         $kola = $this->get(route('diskuse.show', $aktualni->id))
             ->assertOk()
@@ -246,15 +246,36 @@ class DiskuseTest extends TestCase
             'fotky' => [UploadedFile::fake()->image('s.jpg', 600, 600)],
         ]);
 
-        $foto = DiscussionPost::where('callsign', 'OK1SERVE')->firstOrFail()->photos->firstOrFail();
+        $prispevek = DiscussionPost::where('callsign', 'OK1SERVE')->firstOrFail();
+        $foto = $prispevek->photos->firstOrFail();
 
-        $this->get(route('diskuse.foto', $foto->id))
+        $this->get(route('diskuse.foto', [$prispevek->id, $foto->position]))
+            ->assertOk()
+            ->assertHeader('Content-Type', 'image/webp')
+            ->assertHeader('X-Content-Type-Options', 'nosniff');
+
+        $this->get(route('diskuse.foto.nahled', [$prispevek->id, $foto->position]))
             ->assertOk()
             ->assertHeader('Content-Type', 'image/webp');
+    }
 
-        $this->get(route('diskuse.foto.nahled', $foto->id))
-            ->assertOk()
-            ->assertHeader('Content-Type', 'image/webp');
+    public function test_foto_route_is_scoped_to_its_post(): void
+    {
+        $kolo = $this->round();
+
+        $this->post(route('diskuse.store', $kolo->id), [
+            'znacka' => 'OK1OWN',
+            'text' => 'S fotkou.',
+            'fotky' => [UploadedFile::fake()->image('o.jpg', 500, 500)],
+        ]);
+
+        $sFotkou = DiscussionPost::where('callsign', 'OK1OWN')->firstOrFail();
+        $bezFotky = DiscussionPost::create(['round_id' => $kolo->id, 'callsign' => 'OK1NOF', 'body' => 'Bez fotky.']);
+
+        // Fotku nelze vytáhnout přes cizí příspěvek…
+        $this->get(route('diskuse.foto', [$bezFotky->id, 0]))->assertNotFound();
+        // …ani na neexistujícím pořadí ve správném příspěvku.
+        $this->get(route('diskuse.foto', [$sFotkou->id, 99]))->assertNotFound();
     }
 
     public function test_store_requires_znacka(): void
@@ -312,7 +333,7 @@ class DiskuseTest extends TestCase
     public function test_admin_can_delete_prispevek(): void
     {
         $kolo = $this->round();
-        $p = DiscussionPost::create(['round_id' => $kolo->id, 'callsign' => 'OK1DEL', 'body' => 'Smažitelný.', 'ip_address' => '127.0.0.1']);
+        $p = DiscussionPost::create(['round_id' => $kolo->id, 'callsign' => 'OK1DEL', 'body' => 'Smažitelný.']);
 
         $this->actingAs($this->admin())
             ->delete(route('diskuse.destroy', $p->id))
@@ -345,7 +366,7 @@ class DiskuseTest extends TestCase
     public function test_guest_cannot_delete_prispevek(): void
     {
         $kolo = $this->round();
-        $p = DiscussionPost::create(['round_id' => $kolo->id, 'callsign' => 'OK1ND', 'body' => 'Nesmažitelný hostem.', 'ip_address' => '127.0.0.1']);
+        $p = DiscussionPost::create(['round_id' => $kolo->id, 'callsign' => 'OK1ND', 'body' => 'Nesmažitelný hostem.']);
 
         $this->delete(route('diskuse.destroy', $p->id))
             ->assertRedirect(route('login'));

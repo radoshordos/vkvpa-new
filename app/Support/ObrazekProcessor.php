@@ -35,6 +35,13 @@ final class ObrazekProcessor
     /** Kvalita WebP náhledu. */
     private const NAHLED_KVALITA = 80;
 
+    /**
+     * Maximální počet pixelů vstupního obrázku (šířka × výška). Brání útoku
+     * typu „decompression bomb" – malý komprimovaný soubor s obrovskými rozměry,
+     * který by při dekódování vyčerpal paměť. 50 Mpx pokryje i profi fotoaparáty.
+     */
+    private const MAX_PIXELU = 50_000_000;
+
     public function __construct(private readonly ImageManager $manager) {}
 
     /**
@@ -43,9 +50,27 @@ final class ObrazekProcessor
      */
     public static function create(): self
     {
-        $driver = extension_loaded('imagick') ? new ImagickDriver : new GdDriver;
+        if (extension_loaded('imagick')) {
+            self::omezImagickZdroje();
 
-        return new self(new ImageManager($driver));
+            return new self(new ImageManager(new ImagickDriver));
+        }
+
+        return new self(new ImageManager(new GdDriver));
+    }
+
+    /**
+     * Tvrdě omezí zdroje, které smí ImageMagick spotřebovat při dekódování
+     * (zejm. HEIC/HEIF). Doplňuje kontrolu rozměrů a chrání před bombami
+     * i u formátů, jejichž rozměry nelze levně zjistit přes getimagesize().
+     */
+    private static function omezImagickZdroje(): void
+    {
+        \Imagick::setResourceLimit(\Imagick::RESOURCETYPE_MEMORY, 256 * 1024 * 1024); // 256 MB RAM
+        \Imagick::setResourceLimit(\Imagick::RESOURCETYPE_MAP, 512 * 1024 * 1024);    // 512 MB mmap
+        \Imagick::setResourceLimit(\Imagick::RESOURCETYPE_AREA, 128 * 1024 * 1024);   // pixel cache
+        \Imagick::setResourceLimit(\Imagick::RESOURCETYPE_DISK, 1024 * 1024 * 1024);  // 1 GB swap
+        \Imagick::setResourceLimit(\Imagick::RESOURCETYPE_TIME, 30);                  // 30 s
     }
 
     public static function imagickKDispozici(): bool
@@ -63,6 +88,8 @@ final class ObrazekProcessor
      */
     public function zpracuj(string $cesta): array
     {
+        $this->overRozmery($cesta);
+
         // Zdroj načteme zvlášť pro hlavní obrázek a pro náhled – Intervention
         // image je mutable a klonování by mohlo sdílet podkladový resource.
         // Oba zmenšujeme přes scaleDown, takže si zachovají poměr stran (náhled
@@ -96,6 +123,22 @@ final class ObrazekProcessor
             return $this->manager->decodePath($cesta)->orient();
         } catch (Throwable $e) {
             throw new RuntimeException('Soubor se nepodařilo načíst jako obrázek.', 0, $e);
+        }
+    }
+
+    /**
+     * Odmítne obrázky s nereálně velkým rozlišením ještě před dekódováním
+     * (decompression bomb). Rozměry zjišťuje levně z hlavičky přes getimagesize;
+     * formáty, které getimagesize neumí (HEIC/HEIF), kryjí Imagick limity
+     * nastavené v {@see omezImagickZdroje()}.
+     *
+     * @throws RuntimeException pokud obrázek překračuje povolený počet pixelů
+     */
+    private function overRozmery(string $cesta): void
+    {
+        $info = @getimagesize($cesta);
+        if (is_array($info) && $info[0] * $info[1] > self::MAX_PIXELU) {
+            throw new RuntimeException('Obrázek má příliš velké rozlišení.');
         }
     }
 }

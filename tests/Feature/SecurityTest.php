@@ -40,7 +40,6 @@ class SecurityTest extends TestCase
             'round_id' => $kolo->id,
             'callsign' => 'OK1XSS',
             'body' => '<script>alert("xss")</script>',
-            'ip_address' => '127.0.0.1',
         ]);
 
         $this->get(route('diskuse.show', $kolo->id))
@@ -57,7 +56,6 @@ class SecurityTest extends TestCase
             'round_id' => $kolo->id,
             'callsign' => '<img src=x onerror=alert(1)>',
             'body' => 'Normální text',
-            'ip_address' => '127.0.0.1',
         ]);
 
         $this->get(route('diskuse.show', $kolo->id))

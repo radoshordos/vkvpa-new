@@ -90,7 +90,7 @@ class DiskuseController extends Controller
                 'callsign' => $request->string('znacka')->value(),
                 'name' => $request->filled('jmeno') ? $request->string('jmeno')->trim()->value() : null,
                 'body' => $request->string('text')->trim()->value(),
-                'ip_address' => $request->ip(),
+                'ip_hash' => DiscussionPost::hashIp($request->ip()),
             ]);
 
             foreach ($zpracovane as $foto) {
@@ -104,18 +104,29 @@ class DiskuseController extends Controller
     }
 
     /**
-     * Servíruje hlavní obrázek z DB. Obsah je neměnný (adresovaný ID), proto
-     * dlouhá cache.
+     * Servíruje hlavní obrázek z DB. Fotka je adresovaná pozicí v rámci svého
+     * příspěvku (ne globálním ID), takže ji nelze tahat napřímo mimo kontext.
+     * Obsah je neměnný, proto dlouhá cache.
      */
-    public function foto(DiscussionPostPhoto $foto): Response
+    public function foto(DiscussionPost $prispevek, string $poradi): Response
     {
+        $foto = $this->fotoNaPozici($prispevek, $poradi);
+
         return $this->obrazek($foto->mime_type, $foto->data);
     }
 
     /** Servíruje náhled (thumbnail) z DB. */
-    public function nahled(DiscussionPostPhoto $foto): Response
+    public function nahled(DiscussionPost $prispevek, string $poradi): Response
     {
+        $foto = $this->fotoNaPozici($prispevek, $poradi);
+
         return $this->obrazek($foto->mime_type, $foto->thumbnail);
+    }
+
+    /** Najde fotku podle pořadí (position) uvnitř příspěvku, jinak 404. */
+    private function fotoNaPozici(DiscussionPost $prispevek, string $poradi): DiscussionPostPhoto
+    {
+        return $prispevek->photos()->where('position', (int) $poradi)->firstOrFail();
     }
 
     private function obrazek(string $mime, string $data): Response
@@ -127,6 +138,9 @@ class DiskuseController extends Controller
             'Content-Length' => (string) strlen($data),
             'Cache-Control' => 'public, max-age=31536000, immutable',
             'ETag' => $etag,
+            // Prohlížeč nesmí typ „dohádávat" – servírujeme jen překódované
+            // rastry, nikdy ne text/HTML, takže sniffing rovnou vypneme.
+            'X-Content-Type-Options' => 'nosniff',
         ]);
     }
 
