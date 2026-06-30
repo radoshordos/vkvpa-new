@@ -428,6 +428,314 @@
     table.data-table td.year-score-cell:hover {
         background-color: var(--brand-softer);
     }
+
+    /* ── Admin dashboard ──────────────────────────────────────────── */
+    .dashboard-page {
+        --dashboard-maroon: #9c2a35;
+        --dashboard-teal: #0f766e;
+        --dashboard-amber: #b45309;
+        --dashboard-plum: #6d28d9;
+        --dashboard-slate: #475569;
+        --dashboard-chart-primary: #9c2a35;
+        --dashboard-chart-secondary: #0f766e;
+        --dashboard-chart-tertiary: #b45309;
+        --dashboard-chart-plum: #6d28d9;
+        --dashboard-chart-slate: #475569;
+        --dashboard-chart-soft: #c2410c;
+    }
+    .dark .dashboard-page {
+        --dashboard-maroon: #f08a95;
+        --dashboard-teal: #5eead4;
+        --dashboard-amber: #f4bf69;
+        --dashboard-plum: #c4b5fd;
+        --dashboard-slate: #cbd5e1;
+        --dashboard-chart-primary: #f08a95;
+        --dashboard-chart-secondary: #5eead4;
+        --dashboard-chart-tertiary: #f4bf69;
+        --dashboard-chart-plum: #c4b5fd;
+        --dashboard-chart-slate: #cbd5e1;
+        --dashboard-chart-soft: #fb923c;
+    }
+    .dashboard-top {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 1.25rem;
+        padding: 1rem;
+        border: 1px solid color-mix(in oklab, var(--dashboard-maroon) 18%, var(--line));
+        border-radius: 0.55rem;
+        background:
+            linear-gradient(135deg, color-mix(in oklab, var(--dashboard-maroon) 9%, transparent), transparent 52%),
+            linear-gradient(315deg, color-mix(in oklab, var(--dashboard-teal) 8%, transparent), transparent 58%),
+            var(--surface);
+        box-shadow: 0 12px 28px rgb(20 22 40 / 0.07);
+    }
+    .dashboard-kicker {
+        margin-bottom: 0.25rem;
+        color: var(--dashboard-maroon);
+        font-size: 0.74rem;
+        font-weight: 700;
+        letter-spacing: 0;
+        text-transform: uppercase;
+    }
+    .dashboard-page .dashboard-title {
+        margin: 0;
+        padding: 0;
+        border: 0;
+        color: var(--ink);
+        font-size: 1.55rem;
+        line-height: 1.15;
+    }
+    .dashboard-title span {
+        color: var(--muted);
+        font-size: 1rem;
+        font-weight: 600;
+    }
+    .dashboard-year-switcher {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 0.35rem;
+        font-size: 0.875rem;
+    }
+    .dashboard-year-switcher a {
+        display: inline-flex;
+        min-height: 2rem;
+        align-items: center;
+        justify-content: center;
+        border-width: 1px;
+        border-style: solid;
+        border-radius: 0.45rem;
+        text-decoration: none;
+    }
+    .dashboard-stat-grid {
+        display: grid;
+        gap: 0.75rem;
+    }
+    .dashboard-stat-grid--overview {
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.5rem), 1fr));
+    }
+    .dashboard-stat-grid--ops {
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+    }
+    .dashboard-stat-card {
+        --dashboard-tone: var(--dashboard-maroon);
+        position: relative;
+        display: flex;
+        min-height: 6.25rem;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 0.7rem;
+        overflow: hidden;
+        padding: 0.95rem 1rem 0.95rem 1.15rem;
+        border: 1px solid color-mix(in oklab, var(--dashboard-tone) 18%, var(--line));
+        border-radius: 0.55rem;
+        background:
+            linear-gradient(140deg, color-mix(in oklab, var(--dashboard-tone) 10%, transparent), transparent 60%),
+            var(--surface);
+        color: var(--ink);
+        box-shadow: 0 1px 2px rgb(20 22 40 / 0.04);
+    }
+    .dashboard-stat-card::before {
+        content: '';
+        position: absolute;
+        inset: 0.8rem auto 0.8rem 0;
+        width: 0.25rem;
+        border-radius: 0 999px 999px 0;
+        background: var(--dashboard-tone);
+    }
+    .content a.dashboard-stat-card {
+        color: var(--ink);
+        text-decoration: none;
+    }
+    .dashboard-stat-card--link {
+        transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+    }
+    .dashboard-stat-card--link:hover,
+    .dashboard-stat-card--link:focus-visible {
+        border-color: color-mix(in oklab, var(--dashboard-tone) 42%, var(--line));
+        box-shadow: 0 10px 22px rgb(20 22 40 / 0.08);
+        outline: none;
+        transform: translateY(-1px);
+    }
+    .dashboard-stat-card--primary {
+        --dashboard-tone: var(--dashboard-maroon);
+    }
+    .dashboard-stat-card--teal {
+        --dashboard-tone: var(--dashboard-teal);
+    }
+    .dashboard-stat-card--amber,
+    .dashboard-stat-card--warning {
+        --dashboard-tone: var(--dashboard-amber);
+    }
+    .dashboard-stat-card--slate {
+        --dashboard-tone: var(--dashboard-slate);
+    }
+    .dashboard-stat-card--plum {
+        --dashboard-tone: var(--dashboard-plum);
+    }
+    .dashboard-stat-card--warning.is-active {
+        background:
+            linear-gradient(140deg, color-mix(in oklab, var(--dashboard-amber) 18%, transparent), transparent 58%),
+            var(--surface);
+    }
+    .dashboard-stat-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+    }
+    .dashboard-stat-label {
+        color: var(--muted);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0;
+        line-height: 1.25;
+        text-transform: uppercase;
+    }
+    .dashboard-stat-value {
+        color: color-mix(in oklab, var(--dashboard-tone) 78%, var(--ink));
+        font-size: 1.9rem;
+        font-weight: 800;
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+    }
+    .dashboard-pulse {
+        display: inline-flex;
+        width: 0.6rem;
+        height: 0.6rem;
+        flex: 0 0 auto;
+        border-radius: 999px;
+        background: var(--dashboard-amber);
+        animation: dashboard-pulse 1.6s ease-in-out infinite;
+    }
+    @keyframes dashboard-pulse {
+        0%,
+        100% {
+            box-shadow: 0 0 0 0 color-mix(in oklab, var(--dashboard-amber) 40%, transparent);
+        }
+        50% {
+            box-shadow: 0 0 0 0.45rem color-mix(in oklab, var(--dashboard-amber) 0%, transparent);
+        }
+    }
+    .dashboard-chart-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem;
+    }
+    .dashboard-panel {
+        padding: 1rem;
+        border: 1px solid color-mix(in oklab, var(--dashboard-slate) 14%, var(--line));
+        border-radius: 0.55rem;
+        background: var(--surface);
+        box-shadow: 0 1px 2px rgb(20 22 40 / 0.04);
+    }
+    .dashboard-panel-header {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 0.75rem;
+        margin-bottom: 0.75rem;
+    }
+    .dashboard-page .dashboard-panel h2,
+    .dashboard-page .dashboard-section-heading h2 {
+        margin: 0;
+        padding: 0;
+        border: 0;
+        color: var(--ink);
+        font-size: 0.95rem;
+        font-weight: 700;
+        line-height: 1.25;
+    }
+    .dashboard-panel-header span {
+        color: var(--muted);
+        font-size: 0.78rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+    .dashboard-panel canvas {
+        width: 100% !important;
+    }
+    .dashboard-section-heading {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin: 1rem 0 0.6rem;
+    }
+    .dashboard-section-heading::after {
+        content: '';
+        height: 1px;
+        flex: 1 1 auto;
+        background: linear-gradient(90deg, color-mix(in oklab, var(--dashboard-maroon) 35%, var(--line)), transparent);
+    }
+    .dashboard-table-wrap {
+        background: var(--surface);
+        box-shadow: 0 1px 2px rgb(20 22 40 / 0.04);
+    }
+    .dashboard-page table.data-table thead th {
+        background:
+            linear-gradient(90deg, color-mix(in oklab, var(--dashboard-maroon) 8%, transparent), transparent),
+            var(--surface-2);
+        color: var(--ink);
+    }
+    .dashboard-page table.data-table tbody tr:hover td {
+        background-color: color-mix(in oklab, var(--dashboard-teal) 8%, var(--surface));
+    }
+    .dashboard-page .badge-brand {
+        background-color: color-mix(in oklab, var(--dashboard-maroon) 14%, var(--surface));
+        color: var(--dashboard-maroon);
+    }
+    .dashboard-page .badge-muted {
+        background-color: color-mix(in oklab, var(--dashboard-slate) 12%, var(--surface-2));
+    }
+    .dashboard-progress {
+        width: 3rem;
+        height: 0.35rem;
+        overflow: hidden;
+        border-radius: 999px;
+        background: color-mix(in oklab, var(--dashboard-slate) 16%, var(--line));
+    }
+    .dashboard-progress__bar {
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, var(--dashboard-teal), var(--dashboard-maroon));
+        transition: width 0.2s ease;
+    }
+    .dashboard-medal {
+        display: inline-flex;
+        min-width: 1.65rem;
+        justify-content: flex-end;
+        color: var(--muted);
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+    }
+    .dashboard-medal--gold {
+        color: var(--dashboard-amber);
+    }
+    .dashboard-medal--silver {
+        color: var(--dashboard-slate);
+    }
+    .dashboard-medal--bronze {
+        color: var(--dashboard-maroon);
+    }
+    @media (max-width: 44rem) {
+        .dashboard-top {
+            align-items: stretch;
+            flex-direction: column;
+        }
+        .dashboard-year-switcher {
+            justify-content: flex-start;
+        }
+        .dashboard-chart-grid {
+            grid-template-columns: 1fr;
+        }
+        .dashboard-panel-header {
+            align-items: flex-start;
+            flex-direction: column;
+            gap: 0.15rem;
+        }
+    }
     .year-score-link {
         display: inline-flex;
         min-width: 1.75rem;
