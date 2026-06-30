@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 /**
@@ -27,11 +28,18 @@ class AuthTest extends TestCase
         ]);
     }
 
-    /** Uloží token jako SHA-256 hash (stejně jako SendEdiMailsListener). */
-    private function createToken(string $plaintext, ?Carbon $createdAt = null, ?int $userId = null): void
+    /**
+     * Uloží token jako selector + argon2id verifier (stejně jako LoginToken::issue)
+     * a vrátí jeho plaintext podobu (selector+verifier) pro volání login.token.
+     */
+    private function createToken(?Carbon $createdAt = null, ?int $userId = null): string
     {
+        $selector = Str::password(LoginToken::SELECTOR_LENGTH, letters: true, numbers: true, symbols: false);
+        $verifier = Str::password(LoginToken::VERIFIER_LENGTH, letters: true, numbers: true, symbols: false);
+
         $loginToken = new LoginToken([
-            'token' => hash('sha256', $plaintext),
+            'selector' => $selector,
+            'token' => Hash::make($verifier),
             'user_id' => $userId,
         ]);
 
@@ -41,6 +49,8 @@ class AuthTest extends TestCase
         }
 
         $loginToken->save();
+
+        return $selector.$verifier;
     }
 
     public function test_login_form_renders(): void
@@ -94,9 +104,9 @@ class AuthTest extends TestCase
     public function test_valid_token_logs_in_admin(): void
     {
         $admin = $this->admin();
-        $this->createToken('abc123', userId: $admin->id);
+        $token = $this->createToken(userId: $admin->id);
 
-        $this->get(route('login.token', ['token' => 'abc123']))
+        $this->get(route('login.token', ['token' => $token]))
             ->assertRedirect(route('admin.dashboard'));
 
         $this->assertAuthenticatedAs($admin);
@@ -107,9 +117,9 @@ class AuthTest extends TestCase
     public function test_token_without_user_id_is_rejected(): void
     {
         $this->admin();
-        $this->createToken('nulltoken', userId: null);
+        $token = $this->createToken(userId: null);
 
-        $this->get(route('login.token', ['token' => 'nulltoken']))
+        $this->get(route('login.token', ['token' => $token]))
             ->assertRedirect(route('login'))
             ->assertSessionHasErrors('username');
 
@@ -130,9 +140,9 @@ class AuthTest extends TestCase
     public function test_expired_token_is_cleaned_and_rejected(): void
     {
         $this->admin();
-        $this->createToken('stary123', now()->subDays(6));
+        $token = $this->createToken(now()->subDays(6));
 
-        $this->get(route('login.token', ['token' => 'stary123']))
+        $this->get(route('login.token', ['token' => $token]))
             ->assertRedirect(route('login'))
             ->assertSessionHasErrors('username');
 
@@ -143,9 +153,9 @@ class AuthTest extends TestCase
     public function test_token_with_confirm_redirects_to_record(): void
     {
         $admin = $this->admin();
-        $this->createToken('xyz789', userId: $admin->id);
+        $token = $this->createToken(userId: $admin->id);
 
-        $this->get(route('login.token', ['token' => 'xyz789', 'confirm' => 42]))
+        $this->get(route('login.token', ['token' => $token, 'confirm' => 42]))
             ->assertRedirect(route('hlaseni.index', ['id' => 42]));
 
         $this->assertAuthenticatedAs($admin);

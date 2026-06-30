@@ -138,9 +138,11 @@ ač se ukládá SHA-256 (64 znaků) → v MySQL by se hash ořezával.
 
 **Náprava:** přidán `login_tokens.user_id`; token se váže na konkrétního
 administrátora (s ověřením práv a zpětnou kompatibilitou), konzumace
-v transakci s `lockForUpdate`. Sloupec `token` rozšířen na `varchar(64)`.
-Kryptografie OK: `Str::password(32)` (CSPRNG), SHA-256 hash, jednorázové,
-TTL 5 dní, rate limit 10/min.
+v transakci s `lockForUpdate`. Token má tvar selector+verifier: veřejný
+`selector` (16 znaků) slouží k O(1) vyhledání řádku, tajný `verifier` (32 znaků)
+se ukládá hashovaný přes Hash fasádu (argon2id, preferován před SHA-2) a ověřuje
+`Hash::check`. Kryptografie OK: `Str::password` (CSPRNG), argon2id hash,
+jednorázové, TTL 5 dní, rate limit 10/min.
 
 ### 4. Možný DoS přes velikost generovaného PNG
 

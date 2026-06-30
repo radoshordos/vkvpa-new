@@ -14,6 +14,7 @@ use App\Models\EdiRound;
 use App\Models\LoginToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
@@ -193,7 +194,7 @@ class SendEdiMailsListenerTest extends TestCase
         $this->assertSame(1, LoginToken::count());
     }
 
-    public function test_token_is_hashed_sha256_in_db(): void
+    public function test_token_is_hashed_via_hash_driver_in_db(): void
     {
         Config::set('vkvpa.contact_mail', 'vyhodnocovatel@example.com');
         $this->data->email = '';
@@ -211,7 +212,16 @@ class SendEdiMailsListenerTest extends TestCase
         $this->assertNotNull($mailable);
         $stored = LoginToken::first();
         $this->assertNotNull($stored);
-        $this->assertSame(hash('sha256', $mailable->token), $stored->token);
+
+        // Plaintext token = selector + verifier; v DB je veřejný selector a
+        // verifier hashovaný přes Hash fasádu (produkce argon2id, testy bcrypt –
+        // viz phpunit.xml), tj. už ne deterministický SHA-2.
+        $selector = substr($mailable->token, 0, LoginToken::SELECTOR_LENGTH);
+        $verifier = substr($mailable->token, LoginToken::SELECTOR_LENGTH);
+
+        $this->assertSame($selector, $stored->selector);
+        $this->assertNotSame(hash('sha256', $verifier), $stored->token);
+        $this->assertTrue(Hash::check($verifier, $stored->token));
     }
 
     public function test_no_token_stored_when_contact_mail_empty(): void
