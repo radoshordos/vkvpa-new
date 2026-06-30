@@ -70,6 +70,7 @@
                             <a href="{{ route('diskuse.foto', $f->id) }}"
                                class="block overflow-hidden rounded-lg shadow-sm"
                                data-lightbox
+                               data-gallery="{{ $p->id }}"
                                aria-label="{{ __('pages.diskuse.photo_open') }}">
                                 <img src="{{ route('diskuse.foto.nahled', $f->id) }}"
                                      alt="Fotografie od {{ $p->callsign }}"
@@ -219,38 +220,94 @@
     <img id="lb-img" src="" alt="" class="max-h-[90vh] max-w-full rounded-lg shadow-lg">
     <button type="button" id="lb-close" aria-label="{{ __('pages.diskuse.photo_close') }}"
             class="absolute right-4 top-4 rounded-full bg-white/90 px-3 py-1 text-lg font-bold text-ink">&times;</button>
+    <button type="button" id="lb-prev" aria-label="{{ __('pages.diskuse.photo_prev') }}"
+            class="absolute left-4 top-1/2 hidden -translate-y-1/2 rounded-full bg-white/90 px-3 py-1 text-2xl font-bold text-ink">&lsaquo;</button>
+    <button type="button" id="lb-next" aria-label="{{ __('pages.diskuse.photo_next') }}"
+            class="absolute right-4 top-1/2 hidden -translate-y-1/2 rounded-full bg-white/90 px-3 py-1 text-2xl font-bold text-ink">&rsaquo;</button>
+    <span id="lb-counter" class="absolute bottom-4 left-1/2 hidden -translate-x-1/2 rounded-full bg-white/90 px-3 py-1 text-sm font-medium text-ink"></span>
 </div>
 
 @push('scripts')
 <script @cspNonce>
 (function () {
-    // --- Lightbox ---
+    // --- Lightbox s listováním v rámci galerie (jednoho příspěvku) ---
     var overlay = document.getElementById('lb-overlay');
     var lbImg   = document.getElementById('lb-img');
     var lbClose = document.getElementById('lb-close');
+    var lbPrev  = document.getElementById('lb-prev');
+    var lbNext  = document.getElementById('lb-next');
+    var counter = document.getElementById('lb-counter');
 
-    function openLb(src) {
-        lbImg.setAttribute('src', src);
+    var current = [];   // pole URL fotek v aktuální galerii
+    var index   = 0;    // index zobrazené fotky
+
+    function render() {
+        lbImg.setAttribute('src', current[index] || '');
+        var many = current.length > 1;
+        lbPrev.classList.toggle('hidden', !many);
+        lbNext.classList.toggle('hidden', !many);
+        counter.classList.toggle('hidden', !many);
+        if (many) {
+            counter.textContent = (index + 1) + ' / ' + current.length;
+        }
+    }
+
+    function openLb(urls, start) {
+        current = urls;
+        index = start;
         overlay.classList.remove('hidden');
         overlay.classList.add('flex');
+        render();
     }
     function closeLb() {
         overlay.classList.add('hidden');
         overlay.classList.remove('flex');
         lbImg.setAttribute('src', '');
+        current = [];
+    }
+    function step(delta) {
+        if (current.length < 2) { return; }
+        index = (index + delta + current.length) % current.length;
+        render();
     }
 
     document.querySelectorAll('a[data-lightbox]').forEach(function (a) {
         a.addEventListener('click', function (e) {
             e.preventDefault();
-            openLb(a.getAttribute('href'));
+            // Galerie = všechny fotky se stejným data-gallery (jeden příspěvek).
+            var group = a.getAttribute('data-gallery');
+            var links = group
+                ? document.querySelectorAll('a[data-lightbox][data-gallery="' + group + '"]')
+                : [a];
+            var urls = Array.prototype.map.call(links, function (l) {
+                return l.getAttribute('href');
+            });
+            openLb(urls, Array.prototype.indexOf.call(links, a));
         });
     });
+
     lbClose.addEventListener('click', closeLb);
+    lbPrev.addEventListener('click', function (e) { e.stopPropagation(); step(-1); });
+    lbNext.addEventListener('click', function (e) { e.stopPropagation(); step(1); });
     overlay.addEventListener('click', function (e) { if (e.target === overlay) closeLb(); });
     document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && !overlay.classList.contains('hidden')) closeLb();
+        if (overlay.classList.contains('hidden')) { return; }
+        if (e.key === 'Escape') { closeLb(); }
+        else if (e.key === 'ArrowLeft') { step(-1); }
+        else if (e.key === 'ArrowRight') { step(1); }
     });
+
+    // Swipe na dotykových zařízeních.
+    var touchX = null;
+    overlay.addEventListener('touchstart', function (e) {
+        touchX = e.changedTouches[0].clientX;
+    }, { passive: true });
+    overlay.addEventListener('touchend', function (e) {
+        if (touchX === null) { return; }
+        var dx = e.changedTouches[0].clientX - touchX;
+        touchX = null;
+        if (Math.abs(dx) > 40) { step(dx < 0 ? 1 : -1); }
+    }, { passive: true });
 
     // --- Náhled vybraných souborů ---
     var input   = document.querySelector('[data-foto-input]');
