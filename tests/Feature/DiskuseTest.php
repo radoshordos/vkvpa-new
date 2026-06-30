@@ -176,7 +176,7 @@ class DiskuseTest extends TestCase
 
         $foto = $prispevek->photos->first();
         $this->assertNotNull($foto);
-        $this->assertSame('image/jpeg', $foto->mime_type);
+        $this->assertSame('image/webp', $foto->mime_type);
         $this->assertNotEmpty($foto->data);
         $this->assertNotEmpty($foto->thumbnail);
         $this->assertGreaterThan(0, $foto->width);
@@ -250,11 +250,11 @@ class DiskuseTest extends TestCase
 
         $this->get(route('diskuse.foto', $foto->id))
             ->assertOk()
-            ->assertHeader('Content-Type', 'image/jpeg');
+            ->assertHeader('Content-Type', 'image/webp');
 
         $this->get(route('diskuse.foto.nahled', $foto->id))
             ->assertOk()
-            ->assertHeader('Content-Type', 'image/jpeg');
+            ->assertHeader('Content-Type', 'image/webp');
     }
 
     public function test_store_requires_znacka(): void

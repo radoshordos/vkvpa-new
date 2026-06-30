@@ -6,8 +6,7 @@ namespace App\Support;
 
 use Intervention\Image\Drivers\Gd\Driver as GdDriver;
 use Intervention\Image\Drivers\Imagick\Driver as ImagickDriver;
-use Intervention\Image\Encoders\JpegEncoder;
-use Intervention\Image\Encoders\PngEncoder;
+use Intervention\Image\Encoders\WebpEncoder;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Interfaces\ImageInterface;
 use RuntimeException;
@@ -16,21 +15,25 @@ use Throwable;
 /**
  * Zpracování nahraných fotografií pro diskuzi.
  *
- * Z nahraného souboru vyrobí zmenšený hlavní obrázek + čtvercový náhled,
- * odstraní EXIF (vč. GPS) a sjednotí výstupní formát. HEIC/HEIF z mobilů
- * dekóduje přes Imagick (pokud je k dispozici); ostatní rastrové formáty
- * zvládne i GD.
+ * Z nahraného souboru vyrobí zmenšený hlavní obrázek + náhled (oba se
+ * zachovaným poměrem stran), odstraní EXIF (vč. GPS) a sjednotí výstup na
+ * WebP – menší soubory při zachované kvalitě i průhlednosti. HEIC/HEIF
+ * z mobilů dekóduje přes Imagick (pokud je k dispozici); ostatní rastrové
+ * formáty zvládne i GD.
  */
 final class ObrazekProcessor
 {
     /** Delší strana hlavního obrázku v px. */
     private const MAX_HRANA = 2000;
 
-    /** Strana čtvercového náhledu v px. */
-    private const NAHLED_HRANA = 400;
+    /** Delší strana náhledu v px (poměr stran se zachovává). */
+    private const NAHLED_HRANA = 640;
 
-    /** Kvalita JPEG výstupu. */
-    private const JPEG_KVALITA = 82;
+    /** Kvalita WebP hlavního obrázku. */
+    private const KVALITA = 82;
+
+    /** Kvalita WebP náhledu. */
+    private const NAHLED_KVALITA = 80;
 
     public function __construct(private readonly ImageManager $manager) {}
 
@@ -60,26 +63,19 @@ final class ObrazekProcessor
      */
     public function zpracuj(string $cesta): array
     {
-        // PNG si necháme jako PNG kvůli průhlednosti, vše ostatní → JPEG.
-        $jePng = $this->jePng($cesta);
-
         // Zdroj načteme zvlášť pro hlavní obrázek a pro náhled – Intervention
         // image je mutable a klonování by mohlo sdílet podkladový resource.
+        // Oba zmenšujeme přes scaleDown, takže si zachovají poměr stran (náhled
+        // tedy má stejný poměr jako hlavní obrázek – mřížka to využívá pro
+        // layout bez „skákání" při lazy-loadu).
         $hlavni = $this->nacti($cesta)->scaleDown(self::MAX_HRANA, self::MAX_HRANA);
-        $nahled = $this->nacti($cesta)->coverDown(self::NAHLED_HRANA, self::NAHLED_HRANA);
+        $nahled = $this->nacti($cesta)->scaleDown(self::NAHLED_HRANA, self::NAHLED_HRANA);
 
-        if ($jePng) {
-            $dataHlavni = $hlavni->encode(new PngEncoder)->toString();
-            $dataNahled = $nahled->encode(new PngEncoder)->toString();
-            $mime = 'image/png';
-        } else {
-            $dataHlavni = $hlavni->encode(new JpegEncoder(quality: self::JPEG_KVALITA))->toString();
-            $dataNahled = $nahled->encode(new JpegEncoder(quality: self::JPEG_KVALITA))->toString();
-            $mime = 'image/jpeg';
-        }
+        $dataHlavni = $hlavni->encode(new WebpEncoder(quality: self::KVALITA))->toString();
+        $dataNahled = $nahled->encode(new WebpEncoder(quality: self::NAHLED_KVALITA))->toString();
 
         return [
-            'mime_type' => $mime,
+            'mime_type' => 'image/webp',
             'data' => $dataHlavni,
             'thumbnail' => $dataNahled,
             'width' => $hlavni->width(),
@@ -101,13 +97,5 @@ final class ObrazekProcessor
         } catch (Throwable $e) {
             throw new RuntimeException('Soubor se nepodařilo načíst jako obrázek.', 0, $e);
         }
-    }
-
-    private function jePng(string $cesta): bool
-    {
-        // HEIC apod. getimagesize nezná (vrátí false) → rozhodně to není PNG.
-        $info = @getimagesize($cesta);
-
-        return is_array($info) && $info[2] === IMAGETYPE_PNG;
     }
 }
