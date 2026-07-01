@@ -64,7 +64,7 @@ class AdminDashboardTest extends TestCase
         $html = $this->actingAs($this->admin())
             ->get(route('admin.dashboard', ['rok' => 2026]))
             ->assertOk()
-            ->assertSee('Distribuce pásem 2026')
+            ->assertSee('chartKategorie', false)
             ->getContent();
 
         $this->assertIsString($html);

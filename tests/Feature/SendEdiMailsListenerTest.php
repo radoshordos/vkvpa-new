@@ -12,10 +12,13 @@ use App\Models\EdiCategory;
 use App\Models\EdiEntry;
 use App\Models\EdiRound;
 use App\Models\LoginToken;
+use Illuminate\Events\CallQueuedListener;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Mail\SendQueuedMailable;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
 /**
@@ -64,6 +67,54 @@ class SendEdiMailsListenerTest extends TestCase
     }
 
     // ── Závodník ──────────────────────────────────────────────────────────────
+
+    public function test_imported_event_listener_is_routed_to_mail_queue_with_retry_options(): void
+    {
+        Queue::fake();
+
+        EdiImported::dispatch($this->data);
+
+        Queue::assertPushedOn('mail', CallQueuedListener::class, fn (CallQueuedListener $job): bool => $job->class === SendEdiMailsListener::class
+            && $job->tries === 3
+            && $job->timeout === 30
+            && $this->listenerBackoff($job) === [60, 300, 900]);
+    }
+
+    public function test_queued_mailables_are_routed_to_mail_queue_with_retry_options(): void
+    {
+        Queue::fake();
+
+        Config::set('vkvpa.contact_mail', 'vyhodnocovatel@example.com');
+        $this->dispatch();
+
+        Queue::assertPushedOn('mail', SendQueuedMailable::class, fn (SendQueuedMailable $job): bool => $job->mailable instanceof HlaseniPrijato
+            && $job->tries === 3
+            && $job->timeout === 30
+            && $job->backoff() === [60, 300, 900]);
+
+        Queue::assertPushedOn('mail', SendQueuedMailable::class, fn (SendQueuedMailable $job): bool => $job->mailable instanceof HlaseniProVyhodnocovatele
+            && $job->tries === 3
+            && $job->timeout === 30
+            && $job->backoff() === [60, 300, 900]);
+    }
+
+    private function listenerBackoff(CallQueuedListener $job): mixed
+    {
+        return (new \ReflectionProperty($job, 'backoff'))->getValue($job);
+    }
+
+    public function test_no_mail_or_token_when_mail_sending_is_disabled(): void
+    {
+        Mail::fake();
+
+        Config::set('vkvpa.mail_enabled', false);
+        Config::set('vkvpa.contact_mail', 'vyhodnocovatel@example.com');
+
+        $this->dispatch();
+
+        Mail::assertNothingQueued();
+        $this->assertSame(0, LoginToken::count());
+    }
 
     public function test_contestant_mail_queued_when_valid_email(): void
     {

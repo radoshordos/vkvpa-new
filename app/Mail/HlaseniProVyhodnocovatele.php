@@ -9,6 +9,9 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
+use Illuminate\Queue\Attributes\Backoff;
+use Illuminate\Queue\Attributes\Timeout;
+use Illuminate\Queue\Attributes\Tries;
 use Illuminate\Queue\SerializesModels;
 
 /**
@@ -16,6 +19,9 @@ use Illuminate\Queue\SerializesModels;
  * Obsahuje „převzít záznam" odkaz s jednorázovým kódem, který po přihlášení
  * přesměruje na převzetí konkrétního hlášení.
  */
+#[Tries(3)]
+#[Backoff(60, 300, 900)]
+#[Timeout(30)]
 class HlaseniProVyhodnocovatele extends Mailable
 {
     use Queueable;

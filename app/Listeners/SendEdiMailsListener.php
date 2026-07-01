@@ -11,16 +11,26 @@ use App\Models\LoginToken;
 use App\Models\User;
 use App\Support\VkvpaSettings;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Queue\Attributes\Backoff;
+use Illuminate\Queue\Attributes\Timeout;
+use Illuminate\Queue\Attributes\Tries;
 use Illuminate\Support\Facades\Mail;
 
 /**
  * Po importu EDI deníku odešle potvrzovací e-mail účastníkovi
  * a oznámení vyhodnocovateli s odkazem pro převzetí záznamu.
  */
+#[Tries(3)]
+#[Backoff(60, 300, 900)]
+#[Timeout(30)]
 final class SendEdiMailsListener implements ShouldQueue
 {
     public function handle(EdiImported $event): void
     {
+        if (! VkvpaSettings::mailEnabled()) {
+            return;
+        }
+
         $data = $event->data;
         $data->loadMissing(['round', 'category']);
 
