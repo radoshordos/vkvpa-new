@@ -49,6 +49,7 @@
         <a class="badge badge-brand" href="#struktura">Struktura</a>
         <a class="badge badge-brand" href="#hlavicka">Hlavička</a>
         <a class="badge badge-brand" href="#vykon">Výkon</a>
+        <a class="badge badge-brand" href="#antena">Anténa</a>
         <a class="badge badge-brand" href="#qso">QSO pole</a>
         <a class="badge badge-brand" href="#prijeti">Co projde importem</a>
         <a class="badge badge-brand" href="#skore">Bodování</a>
@@ -164,8 +165,8 @@ RSoap=Poznamka zavodnika
                     <tr>
                         <td class="mono font-bold">STXEq, SAnte</td>
                         <td><x-badge variant="brand">volitelné</x-badge></td>
-                        <td>Libovolný text.</td>
-                        <td>Parser je umí přečíst, aktuální import je neukládá do výsledkového řádku.</td>
+                        <td>Volitelný text techniky. Klíče musí být přesně <code>STXEq</code> a <code>SAnte</code>.</td>
+                        <td>Řádky import nezastaví. Aktuální upload je zachová v <code>edi_heads.src</code>; do sloupců <code>s_tx_eq</code> / <code>s_ante</code> se z nové EDI cesty nezapisují.</td>
                     </tr>
                 </tbody>
             </table>
@@ -242,6 +243,70 @@ RSoap=Poznamka zavodnika
                         <td class="num">0<br>70000</td>
                         <td><x-badge variant="warn">část projde</x-badge></td>
                         <td>Záporné hodnoty se berou jako 0. Velká kladná čísla projdou, pokud se vejdou do databázového rozsahu <code>0-99999.9999</code>.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section id="antena" class="manual-anchor mt-8">
+        <h2>Anténa: <code>SAnte</code> → <code>edi_heads.s_ante</code> / <code>edi_heads.src</code></h2>
+        <p class="max-w-3xl text-sm text-muted">
+            Řádek <code>SAnte=...</code> je pomocný údaj o anténě. Parser kvůli němu deník
+            neodmítá a původní text vždy zůstává v <code>edi_heads.src</code>. Samotný sloupec
+            <code>edi_heads.s_ante</code> má limit <code>varchar(100)</code>; při ručním zápisu,
+            zpětném plnění nebo budoucím ukládání z EDI tedy projdou jen hodnoty do 100 znaků.
+            V historickém <code>src</code> je <code>SAnte=</code> u 20&nbsp;858 deníků
+            (19&nbsp;697 neprázdných), nejdelší nalezená hodnota má 50 znaků. V původním
+            sloupci <code>s_ante</code> je neprázdných 1&nbsp;302 hodnot a nejdelší má 27 znaků.
+        </p>
+
+        <div class="table-wrap mt-3">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Hodnota v EDI</th>
+                        <th>Projde importem?</th>
+                        <th>Dostane se do <code>s_ante</code>?</th>
+                        <th>Poznámka</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="mono">SAnte=10el<br>SAnte=2x9 el. F9FT+20 el. yagi<br>SAnte=4 x 38 el. M2, 8 x 14 el, 8 x 6 el., 1 x 38 el. M2</td>
+                        <td><x-badge variant="ok">ano</x-badge></td>
+                        <td><x-badge variant="ok">ano, při zápisu</x-badge></td>
+                        <td>Běžný text s mezerami, tečkami, čárkami, plusy nebo čísly je v pořádku, pokud se vejde do 100 znaků. Aktuální upload ho ale nechává jen v <code>src</code>.</td>
+                    </tr>
+                    <tr>
+                        <td class="mono">SAnte=<br>(řádek SAnte chybí)</td>
+                        <td><x-badge variant="ok">ano</x-badge></td>
+                        <td><x-badge variant="brand">ne</x-badge></td>
+                        <td>Prázdná nebo chybějící anténa není chyba a nemá vliv na skóre.</td>
+                    </tr>
+                    <tr>
+                        <td class="mono">SAnte= 15el YU7EF<br>SAnte=bílá hůl</td>
+                        <td><x-badge variant="ok">ano</x-badge></td>
+                        <td><x-badge variant="ok">ano, při zápisu</x-badge></td>
+                        <td>Mezera za rovnítkem ani diakritika import nezastaví. Význam antény se nevaliduje.</td>
+                    </tr>
+                    <tr>
+                        <td class="mono">sante=10el<br>SANTE=10el<br>SAnt=10el</td>
+                        <td><x-badge variant="warn">ano, ale jen jako surový text</x-badge></td>
+                        <td><x-badge variant="brand">ne</x-badge></td>
+                        <td>Názvy hlavičkových klíčů jsou case-sensitive. Cokoliv jiného než přesné <code>SAnte</code> se do antény nepřečte.</td>
+                    </tr>
+                    <tr>
+                        <td class="mono">SAnte=antena=poznámka</td>
+                        <td><x-badge variant="warn">ano, ale nerozpozná se jako SAnte</x-badge></td>
+                        <td><x-badge variant="brand">ne</x-badge></td>
+                        <td>Parser dělí hlavičku podle posledního rovnítka. Další <code>=</code> v hodnotě proto z klíče udělá neznámé pole.</td>
+                    </tr>
+                    <tr>
+                        <td class="mono">SAnte=(text delší než 100 znaků)</td>
+                        <td><x-badge variant="ok">ano</x-badge></td>
+                        <td><x-badge variant="danger">ne bez zkrácení</x-badge></td>
+                        <td>EDI upload tím nespadne, protože hodnota zůstává v <code>src</code>. Přímý zápis do <code>edi_heads.s_ante</code> musí dodržet databázový limit 100 znaků.</td>
                     </tr>
                 </tbody>
             </table>

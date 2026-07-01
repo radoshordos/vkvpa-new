@@ -6,29 +6,22 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
+use Tests\TestCase;
 
 /**
- * Admin manuál k EDI importu.
+ * Obsahové kontroly admin manuálu k EDI importu.
  */
-class EdiManualPageTest extends BaseTestCase
+class EdiManualContentTest extends TestCase
 {
     use RefreshDatabase;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        $this->withoutVite();
-    }
 
     private function admin(): User
     {
         $user = User::create([
-            'name' => 'AdminManual',
-            'email' => 'manual@example.com',
+            'name' => 'AdminManualContent',
+            'email' => 'manual-content@example.com',
             'password' => Hash::make('tajne-heslo'),
         ]);
         $user->forceFill(['is_admin' => true])->save();
@@ -47,7 +40,7 @@ class EdiManualPageTest extends BaseTestCase
             ->assertRedirect(route('login'));
     }
 
-    public function test_admin_can_open_manual_from_menu(): void
+    public function test_admin_can_open_manual_from_menu_and_see_sante_edges(): void
     {
         $this->actingAs($this->admin())
             ->get(route('edi.manual'))
@@ -57,6 +50,12 @@ class EdiManualPageTest extends BaseTestCase
             ->assertSee('SPowe=2,5')
             ->assertSee('SPowe=0.25')
             ->assertSee('edi_heads.s_powe')
+            ->assertSee('Anténa')
+            ->assertSee('SAnte=2x9 el. F9FT+20 el. yagi')
+            ->assertSee('SAnte=antena=poznámka')
+            ->assertSee('edi_heads.s_ante')
+            ->assertSee('edi_heads.src')
+            ->assertSee('varchar(100)')
             ->assertSee('Date;Time;Call;Mode;SentRST;SentNr;RcvdRST;RcvdNr;RcvdExch;RcvdWWL;QSO-Points;NewExch;NewWWL;NewDXCC;Duplicate')
             ->assertSee(route('edi.manual'), escape: false);
     }
