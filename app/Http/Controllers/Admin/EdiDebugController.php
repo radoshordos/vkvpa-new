@@ -47,6 +47,12 @@ class EdiDebugController extends Controller
         ]);
     }
 
+    /** Dokumentace aktuálního chování EDI importu pro administrátory. */
+    public function manual(): View
+    {
+        return view('pages.admin.edi-manual');
+    }
+
     /** Rozpad bodování deníku uloženého v databázi (sloupec `src`). */
     public function show(EdiHead $head): View|RedirectResponse
     {

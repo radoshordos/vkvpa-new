@@ -5,7 +5,6 @@ declare(strict_types=1);
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DenikyController;
 use App\Http\Controllers\Admin\EdiDebugController;
-use App\Http\Controllers\Admin\EdiManualController;
 use App\Http\Controllers\Admin\ExportController;
 use App\Http\Controllers\Admin\HesloController;
 use App\Http\Controllers\Admin\ImportController;
@@ -160,7 +159,7 @@ Route::middleware('admin')->group(function (): void {
     Route::get('/admin/edi-debug', [EdiDebugController::class, 'create'])->name('edi.debug.create');
     Route::post('/admin/edi-debug', [EdiDebugController::class, 'analyze'])->name('edi.debug.store');
     Route::get('/admin/edi-debug/{head}', [EdiDebugController::class, 'show'])->name('edi.debug.show')->whereNumber('head');
-    Route::get('/admin/edi-manual', EdiManualController::class)->name('edi.manual');
+    Route::get('/admin/edi-manual', [EdiDebugController::class, 'manual'])->name('edi.manual');
 
     Route::get('/admin/deniky', [DenikyController::class, 'index'])->name('deniky.index');
 
