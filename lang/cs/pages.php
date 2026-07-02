@@ -433,6 +433,11 @@ return [
             'title_dist' => 'Rozložení vzdáleností QSO podle druhu provozu',
             'title_country' => 'QSO podle zemí (DXCC)',
             'title_prefix' => 'QSO podle prefixů',
+            // Popup velkého čtverce (vrstvy Lokátory / Obsazené čtverce)
+            'sq_stations' => 'stanic',
+            'sq_modes' => 'Druhy provozu',
+            'sq_odx' => 'ODX',
+            'sq_calls' => 'Stanice',
         ],
     ],
 

@@ -191,7 +191,8 @@ window.__vizConfig = {
       <option value="lokatory" data-map-layer="lokatory">{{ __('pages.viz.layer_lokatory') }}</option>
       <option value="ctverce" data-map-layer="ctverce">{{ __('pages.viz.layer_ctverce') }}</option>
     </select>
-    {{-- Filtr druhu provozu – platí pro vrstvy s QSO (skrývá ho JS na vrstvě Lokátory).
+    {{-- Filtr druhu provozu – platí pro všechny vrstvy (u Lokátorů a Obsazených
+         čtverců přepočítává počty QSO ve čtverci podle zapnutých druhů provozu).
          Tlačítka se generují jen pro druhy provozu, které se v deníku vyskytují. --}}
     <span id="viz-mode-filter" class="inline-flex items-center gap-2 flex-wrap sm:ml-auto">
       <span class="text-xs text-muted">{{ __('pages.viz.mode_filter') }}</span>

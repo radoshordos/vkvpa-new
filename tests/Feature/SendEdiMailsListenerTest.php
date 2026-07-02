@@ -58,6 +58,10 @@ class SendEdiMailsListenerTest extends TestCase
 
         $this->listener = new SendEdiMailsListener;
 
+        // Maily jsou deterministicky zapnuté – ambientní .env má MAIL_ENABLED=false
+        // (CI kopíruje .env.example), jinak by se listener ukončil a nic neodeslal.
+        // Test na vypnutý mail si hodnotu přepíše na false sám.
+        Config::set('vkvpa.mail_enabled', true);
         Config::set('vkvpa.contact_mail', '');
     }
 

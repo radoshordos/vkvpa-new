@@ -431,6 +431,11 @@ return [
             'title_dist' => 'QSO distance distribution by mode',
             'title_country' => 'QSOs by country (DXCC)',
             'title_prefix' => 'QSOs by prefix',
+            // Big-square popup (Locators / Occupied squares layers)
+            'sq_stations' => 'stations',
+            'sq_modes' => 'Modes',
+            'sq_odx' => 'ODX',
+            'sq_calls' => 'Stations',
         ],
     ],
 

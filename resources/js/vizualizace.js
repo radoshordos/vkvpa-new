@@ -73,6 +73,8 @@ function applyModeFilter() {
             }
         });
     });
+    // Vrstvy agregující čtverce (Lokátory, Obsazené čtverce) se přepočítají z QSO.
+    rebuildSquareLayers();
     // Přehrávání respektuje filtr přes applyTime (viditelnost = čas × provoz).
     applyTime(Number(slider.value));
 }
@@ -123,25 +125,91 @@ cfg.points.forEach(function (p, idx) {
     playbackItems.push({ t: p.time, mode: modeGroup(p.mode), group, shown: false });
 });
 
-// Maximální počet QSO ve čtverci – pro normalizaci teplotní škály obsazených čtverců.
+// Maximální počet QSO ve čtverci – pro normalizaci teplotní škály obsazených
+// čtverců. Z plného (nefiltrovaného) součtu, aby škála zůstala při filtrování
+// provozu stabilní (barva čtverce neskáče jen kvůli vypnutí jiného čtverce).
 const maxSquareCount = cfg.squares.reduce((m, s) => Math.max(m, s.count), 1);
 // Teplotní škála žlutá → červená (víc QSO = červenější), odmocnina kvůli rozprostření.
 const squareHeatColor = (count) => `hsl(${Math.round(60 - 60 * Math.sqrt(count / maxSquareCount))}, 90%, 50%)`;
 
+// Střed každého velkého čtverce (ze serverem předpočítaných souřadnic).
+const squareCenter = {};
 cfg.squares.forEach(function (s) {
     bounds.push([s.lat, s.lon]);
-    L.circleMarker([s.lat, s.lon], {
-        radius: 14, color: '#7c3aed', fillColor: '#a855f7', fillOpacity: 0.65, weight: 2,
-    }).addTo(lokatoryLayer)
-        .bindTooltip(String(s.count), { permanent: true, direction: 'center', className: 'sq-label' })
-        .bindPopup(`<strong>${s.square}</strong><br>${s.count} ${t.stations}`);
-
-    // Obsazené čtverce: velký čtverec = 2° délky × 1° šířky kolem středu.
-    L.rectangle([[s.lat - 0.5, s.lon - 1], [s.lat + 0.5, s.lon + 1]], {
-        color: '#b45309', weight: 1, fillColor: squareHeatColor(s.count), fillOpacity: 0.45,
-    }).addTo(ctverceLayer)
-        .bindPopup(`<strong>${s.square}</strong><br>${s.count} ${t.stations}`);
+    squareCenter[s.square] = { lat: s.lat, lon: s.lon };
 });
+
+// Body za spojení získané ve velkém čtverci (ze serverem počítané statistiky).
+const squareBody = {};
+cfg.squarePoints.forEach(function (s) { squareBody[s.square] = s.body; });
+
+// Detailní rozpad každého velkého čtverce z QSO deníku: počty podle druhu
+// provozu, různé stanice a ODX (nejvzdálenější QSO). Slouží jednak filtru
+// (počet ve čtverci = součet zapnutých druhů provozu), jednak popupu se
+// statistikou čtverce. Popup ukazuje vždy úplný rozpad – nezávisle na filtru.
+const squareDetail = new Map();
+cfg.points.forEach(function (p) {
+    const sq = (p.wwl || '').slice(0, 4).toUpperCase();
+    if (!squareCenter[sq]) return;
+    let d = squareDetail.get(sq);
+    if (!d) { d = { modes: {}, total: 0, calls: new Map(), odx: null }; squareDetail.set(sq, d); }
+    d.modes[modeGroup(p.mode)] = (d.modes[modeGroup(p.mode)] || 0) + 1;
+    d.total += 1;
+    if (!d.calls.has(p.call)) d.calls.set(p.call, p.wwl);
+    if (p.dist !== null && (d.odx === null || p.dist > d.odx.dist)) {
+        d.odx = { call: p.call, wwl: p.wwl, dist: p.dist };
+    }
+});
+
+// Pořadí druhů provozu v rozpadu (Ostatní na konec), shodně s legendou.
+const modeOrder = (g) => g || 99;
+
+// Popup se statistikou čtverce – plný (nefiltrovaný) rozpad, počítá se jednou.
+function buildSquarePopup(sq, d) {
+    const modeRows = Object.keys(d.modes).map(Number).sort((a, b) => modeOrder(a) - modeOrder(b))
+        .map((g) => `<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${modeColor(g).fill};margin-right:5px;vertical-align:middle"></span>${g === 0 ? t.other : modeLabel(g)}: <strong>${d.modes[g]}</strong>`)
+        .join('<br>');
+
+    let html = `<strong style="font-size:1.05em">${sq}</strong><br>`
+        + `${d.total} ${t.qso_suffix} · ${d.calls.size} ${t.sq_stations} · ${squareBody[sq] || 0} ${t.pts}`
+        + `<br><span style="opacity:.7">${t.sq_modes}:</span><br>${modeRows}`;
+
+    if (d.odx) {
+        html += `<br><span style="opacity:.7">${t.sq_odx}:</span> ${d.odx.call} (${d.odx.wwl}) ${d.odx.dist} km`;
+    }
+
+    html += `<br><span style="opacity:.7">${t.sq_calls}:</span><br>`
+        + `<span style="display:inline-block;max-height:7em;overflow:auto">${[...d.calls.keys()].sort().join(', ')}</span>`;
+
+    return html;
+}
+squareDetail.forEach((d, sq) => { d.popup = buildSquarePopup(sq, d); });
+
+// (Pře)kreslí vrstvy Lokátory + Obsazené čtverce podle aktuálního filtru provozu.
+function rebuildSquareLayers() {
+    lokatoryLayer.clearLayers();
+    ctverceLayer.clearLayers();
+    squareDetail.forEach(function (d, sq) {
+        const c = squareCenter[sq];
+        let count = 0;
+        Object.keys(d.modes).forEach(function (g) { if (modeFilter[g]) count += d.modes[g]; });
+        if (count === 0) return;
+
+        L.circleMarker([c.lat, c.lon], {
+            radius: 14, color: '#7c3aed', fillColor: '#a855f7', fillOpacity: 0.65, weight: 2,
+        }).addTo(lokatoryLayer)
+            .bindTooltip(String(count), { permanent: true, direction: 'center', className: 'sq-label' })
+            .bindPopup(d.popup);
+
+        // Obsazené čtverce: velký čtverec = 2° délky × 1° šířky kolem středu.
+        L.rectangle([[c.lat - 0.5, c.lon - 1], [c.lat + 0.5, c.lon + 1]], {
+            color: '#b45309', weight: 1, fillColor: squareHeatColor(count), fillOpacity: 0.45,
+        }).addTo(ctverceLayer)
+            .bindPopup(d.popup);
+    });
+}
+
+rebuildSquareLayers();
 
 // ── Legenda – obsah podle aktivní vrstvy ───────────────────────────────────
 
@@ -204,12 +272,14 @@ cfg.points.forEach(function (p) {
     addModeEntry(crkLayer, p.mode, members);
 });
 
-// Mřížka velkých čtverců (2° délky × 1° šířky) – překresluje se podle výřezu,
-// dokud je vrstva CRK aktivní (viz přepínání vrstev níže).
-const crkGrid = L.layerGroup().addTo(crkLayer);
+// Mřížka velkých čtverců (2° délky × 1° šířky) – podklad sdílený vrstvami CRK,
+// Lokátory a Obsazené čtverce; překresluje se podle výřezu mapy, dokud je některá
+// z těchto vrstev aktivní (viz přepínání vrstev níže). Není součástí žádné z nich –
+// přidává se přímo na mapu pod jejich značky.
+const gridLayer = L.layerGroup();
 
-function redrawCrkGrid() {
-    redrawMaidenheadGrid(map, crkGrid);
+function redrawGrid() {
+    redrawMaidenheadGrid(map, gridLayer);
 }
 
 // ── Přehrávání deníku (vrstva „Přehrávání") ────────────────────────────────
@@ -297,16 +367,21 @@ fitMapToBounds(map, bounds);
 const layers = { jezek: jezekLayer, spendliky: spendlikyLayer, lokatory: lokatoryLayer, ctverce: ctverceLayer, crk: crkLayer, playback: playbackLayer };
 
 // Vrstvy agregující čtverce nemají barvy podle druhu provozu – skrývá se u nich
-// legenda i filtr provozu.
+// barevná legenda (filtr provozu na ně ale platí: přepočítává počty QSO).
 const aggregateLayer = (key) => key === 'lokatory' || key === 'ctverce';
+
+// Vrstvy, pod kterými se vykresluje mřížka velkých čtverců (Maidenhead) jako podklad.
+const layersWithGrid = { crk: true, lokatory: true, ctverce: true };
 
 function showLayer(key) {
     Object.values(layers).forEach((l) => map.removeLayer(l));
     if (homeMarker) map.removeLayer(homeMarker);
-    map.off('moveend', redrawCrkGrid);
+    map.off('moveend', redrawGrid);
+    map.removeLayer(gridLayer);
     stopReplay();
+    // Mřížku lokátorů přidáme jako první, aby ležela pod značkami vrstvy.
+    if (layersWithGrid[key]) { redrawGrid(); gridLayer.addTo(map); map.on('moveend', redrawGrid); }
     layers[key].addTo(map);
-    if (key === 'crk') { redrawCrkGrid(); map.on('moveend', redrawCrkGrid); }
     if (key === 'playback') {
         // Výchozí stav: celý deník zobrazen (slider na konci okna).
         slider.value = String(cfg.window.to);
@@ -316,8 +391,6 @@ function showLayer(key) {
     playbackControls.classList.toggle('flex', key === 'playback');
     // Mimo Přehrávání časová linka v grafech nemá co sledovat – zhasnout.
     if (key !== 'playback' && chartTimeMarker) chartTimeMarker(null);
-    // Filtr provozu nedává smysl na vrstvách agregujících čtverce (Lokátory, Obsazené čtverce).
-    document.getElementById('viz-mode-filter').classList.toggle('hidden', aggregateLayer(key));
     updateLegend(key);
     if (homeMarker) homeMarker.addTo(map);
     layerSelect.value = key;
