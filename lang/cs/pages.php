@@ -537,8 +537,6 @@ return [
         'rec_in_round' => 'kolo :kolo',
         'rec_stations_unit' => 'stanic',
 
-        'layer_tok' => 'Tok mezi čtverci',
-
         'stanice_title' => 'Profil stanice :call',
         'stanice_meta' => 'Historie stanice :call ve VKV PA: účast v :kola kolech, body a pořadí.',
         'stanice_subtitle' => 'Historie a výsledky napříč vyhodnocenými koly.',

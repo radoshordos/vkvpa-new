@@ -100,7 +100,7 @@ class StatistikyTest extends TestCase
             ->assertSee('chartKategorie')
             ->assertSee('chartTrend')
             ->assertSee('data-stat-layer="ucastnici"', false)
-            ->assertSee('data-stat-layer="tok"', false)
+            ->assertDontSee('data-stat-layer="tok"', false)
             ->assertSee(route('statistiky.kolo.og', ['kolo' => $kolo->id], false), false) // OG náhled
             // Toto kolo je jediné vyhodnocené → drží všechny all-time rekordy
             // → odznak rekordní účasti.
@@ -113,6 +113,7 @@ class StatistikyTest extends TestCase
         $this->assertStringContainsString('"call":"OK5BIG"', $compact);
         $this->assertStringContainsString('"counts":', $compact); // časová osa
         $this->assertStringContainsString('ucastnici:', $compact); // vrstva účastníků
+        $this->assertStringNotContainsString('tok:', $compact);
     }
 
     public function test_index_shows_hall_of_fame(): void
