@@ -408,8 +408,9 @@ class DenikStatistiky
      * QSO, která se do skóre nepočítají (mimo závodní okno, jiný den než
      * závod), plus QSO v deníku označená jako duplicitní (ta se ve skóre
      * počítají, ale závodníka zajímají). Výpis je oříznut na 50 řádků.
+     * `duvod` je klíč pro překlad (pages.viz.uncounted_reason_*), ne hotový text.
      *
-     * @return array{celkem: int, radky: list<array{call: string, cas: string, duvod: string}>}
+     * @return array{celkem: int, radky: list<array{call: string, cas: string, duvod: 'okno'|'den'|'duplicita'}>}
      */
     public function nezapocitana(EdiHead $head): array
     {
@@ -426,11 +427,11 @@ class DenikStatistiky
             $duvod = null;
 
             if ($hhmm < $from || $hhmm > $to) {
-                $duvod = 'mimo závodní okno';
+                $duvod = 'okno';
             } elseif ($den !== null && $at?->format('Y-m-d') !== $den) {
-                $duvod = 'jiný den než závod';
+                $duvod = 'den';
             } elseif (trim((string) $l->duplicate_qso_d) !== '') {
-                $duvod = 'v deníku označeno jako duplicita (D)';
+                $duvod = 'duplicita';
             }
 
             if ($duvod !== null) {

@@ -382,6 +382,13 @@ return [
         'chart_png_title' => 'Download chart as PNG',
         'country_other' => 'Other',
 
+        'uncounted_heading' => 'Uncounted / flagged QSOs (:count) – show list',
+        'uncounted_truncated' => 'Showing the first :shown rows.',
+        'uncounted_reason_okno' => 'outside the contest window',
+        'uncounted_reason_den' => 'different day than the contest',
+        'uncounted_reason_duplicita' => 'flagged as duplicate (D) in the log',
+        'col_reason' => 'Reason',
+
         'odx_heading' => 'TOP ODX – longest QSOs',
         'odx_empty' => 'No QSOs with a computed distance.',
         'odx_hint' => 'Click a row to show the QSO on the map.',
