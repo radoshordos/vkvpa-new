@@ -411,6 +411,39 @@ class EdiVizualizaceTest extends TestCase
         $this->assertSame([], app(QsoGeometry::class)->roundStations($head, 1)->all());
     }
 
+    public function test_uncounted_qso_listed_with_reason(): void
+    {
+        $head = $this->importSample();
+
+        // QSO před závodním oknem (07:00, okno 08:00–11:00) → objeví se ve
+        // výpisu nezapočítaných QSO s důvodem „mimo závodní okno".
+        EdiLine::create([
+            'edi_head_id' => $head->id, 'qso_at' => '2026-03-15 07:00:00',
+            'call_sign' => 'OK9EARLY', 'received_wwl' => 'JN89AA', 'mode_code' => 2,
+        ]);
+
+        $html = $this->actingAs($this->user())
+            ->get(route('edi.vizualizace', $head->id))
+            ->assertOk()
+            ->getContent() ?: '';
+
+        $this->assertStringContainsString('OK9EARLY', $html);
+        $this->assertStringContainsString(__('pages.viz.uncounted_reason_okno'), $html);
+    }
+
+    public function test_uncounted_section_hidden_when_all_qso_counted(): void
+    {
+        // sample.edi má obě QSO v závodním okně → sekce výpisu se nerenderuje.
+        $head = $this->importSample();
+
+        $html = $this->actingAs($this->user())
+            ->get(route('edi.vizualizace', $head->id))
+            ->assertOk()
+            ->getContent() ?: '';
+
+        $this->assertStringNotContainsString(__('pages.viz.col_reason'), $html);
+    }
+
     public function test_removed_inkubator_route_is_not_linked_from_vizualizace(): void
     {
         $head = $this->importSample();

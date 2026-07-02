@@ -285,6 +285,10 @@ function redrawGrid() {
 // ── Přehrávání deníku (vrstva „Přehrávání") ────────────────────────────────
 
 const playbackControls = document.getElementById('viz-playback-controls');
+
+// Překreslení svislé časové linky v grafech (průběh + timeline) podle času na
+// slideru; přiřazuje se až po vytvoření grafů níže (do té doby no-op).
+let chartTimeMarker = null;
 const slider = document.getElementById('viz-cas');
 const casLabel = document.getElementById('viz-cas-label');
 const qsoCount = document.getElementById('viz-qso-count');
@@ -302,6 +306,13 @@ function applyTime(time) {
     casLabel.textContent = hhmm(time);
     qsoCount.textContent = String(shown);
 
+    // Časová linka v grafech sleduje slider – jen na vrstvě Přehrávání a jen
+    // dokud slider není na konci okna (plný deník = linka u kraje by rušila).
+    if (chartTimeMarker) {
+        const active = !playbackControls.classList.contains('hidden');
+        chartTimeMarker(active && time < cfg.window.to ? time : null);
+    }
+
     // Průběžné skóre k času (poslední záznam cfg.cumulative; je řazeno časem).
     let last = null;
     for (const c of cfg.cumulative) {
@@ -312,7 +323,15 @@ function applyTime(time) {
 }
 
 let timer = null;
-const speedMs = 50; // ms na minutu závodu (pevná rychlost přehrávání 1×)
+
+// Ladění rychlosti přehrávání (vše v ms na minutu závodu): malý deník běží
+// základním tempem, u početnějších se přehrávání úměrně zpomaluje, aby
+// neprobleskl příliš rychle na sledování.
+const playbackBaseMs = 50; // základní tempo (deníky do ~100 QSO)
+const playbackMaxMs = 150; // strop zpomalení pro velmi početné deníky
+const playbackMsPerQso = 0.5; // zpomalení za každé QSO deníku
+
+const speedMs = Math.min(playbackMaxMs, Math.max(playbackBaseMs, Math.round(cfg.points.length * playbackMsPerQso)));
 
 function stopReplay() {
     if (timer !== null) { clearInterval(timer); timer = null; }
@@ -370,6 +389,8 @@ function showLayer(key) {
     }
     playbackControls.classList.toggle('hidden', key !== 'playback');
     playbackControls.classList.toggle('flex', key === 'playback');
+    // Mimo Přehrávání časová linka v grafech nemá co sledovat – zhasnout.
+    if (key !== 'playback' && chartTimeMarker) chartTimeMarker(null);
     updateLegend(key);
     if (homeMarker) homeMarker.addTo(map);
     layerSelect.value = key;
@@ -424,14 +445,18 @@ const charts = [];
 // ── Synchronizovaný hover: průběh skóre ↔ timeline (sdílená časová osa) ────
 // Najetí na jeden graf kreslí svislou linku v odpovídajícím čase na obou.
 
-const hoverSync = { t: null }; // minuty od půlnoci, null = nic
+// Minuty od půlnoci, null = nic; `t` = najetí myší, `playback` = čas na
+// slideru přehrávání (myš má přednost, po opuštění grafu se linka vrátí
+// na čas přehrávání).
+const hoverSync = { t: null, playback: null };
 
 const syncPlugin = {
     id: 'vizHoverSync',
     afterDraw(chart) {
         const toX = chart.$vizSyncToX;
-        if (hoverSync.t === null || !toX) return;
-        const x = toX(hoverSync.t);
+        const tm = hoverSync.t ?? hoverSync.playback;
+        if (tm === null || !toX) return;
+        const x = toX(tm);
         if (x === null || x < chart.chartArea.left || x > chart.chartArea.right) return;
         const ctx = chart.ctx;
         ctx.save();
@@ -544,6 +569,13 @@ function syncHover(chart, pixelToMinutes) {
 syncHover(prubehChart, (px) => prubehChart.scales.x.getValueForPixel(px));
 // Kategorie → index intervalu (getValueForPixel zaokrouhluje na nejbližší) → střed intervalu.
 syncHover(timelineChart, (px) => cfg.window.from + (timelineChart.scales.x.getValueForPixel(px) + 0.5) * 15);
+
+// Napojení přehrávání na časovou linku grafů (viz applyTime výše).
+chartTimeMarker = function (t) {
+    hoverSync.playback = t;
+    prubehChart.draw();
+    timelineChart.draw();
+};
 
 // ── Chart.js: Azimutová růžice s přepínáním vážení (počet / km / body) ─────
 // 16 sektorů po 22,5°; popisky směrů přímo u výsečí (legenda by byla nečitelná).

@@ -384,6 +384,13 @@ return [
         'chart_png_title' => 'Stáhnout graf jako PNG',
         'country_other' => 'Ostatní',
 
+        'uncounted_heading' => 'Nezapočítaná / označená QSO (:count) – zobrazit výpis',
+        'uncounted_truncated' => 'Zobrazeno prvních :shown řádků.',
+        'uncounted_reason_okno' => 'mimo závodní okno',
+        'uncounted_reason_den' => 'jiný den než závod',
+        'uncounted_reason_duplicita' => 'v deníku označeno jako duplicita (D)',
+        'col_reason' => 'Důvod',
+
         'odx_heading' => 'TOP ODX – nejvzdálenější spojení',
         'odx_empty' => 'Žádná spojení se spočítanou vzdáleností.',
         'odx_hint' => 'Klik na řádek zobrazí spojení na mapě.',
