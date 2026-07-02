@@ -7,12 +7,16 @@
 
 @section('content')
 
-<div class="mb-6 flex items-baseline justify-between gap-4">
-    <h1>Dashboard <span class="text-muted font-normal text-base">{{ $rok }}</span></h1>
-    <div class="flex gap-1 text-sm">
-        <a href="{{ route('admin.dashboard', ['rok' => $rok - 1]) }}" class="btn-ghost px-2">← {{ $rok - 1 }}</a>
+<div class="dashboard-page" data-dashboard>
+<div class="dashboard-top">
+    <div>
+        <div class="dashboard-kicker">Administrace</div>
+        <h1 class="dashboard-title">Dashboard <span>{{ $rok }}</span></h1>
+    </div>
+    <div class="dashboard-year-switcher">
+        <a href="{{ route('admin.dashboard', ['rok' => $rok - 1]) }}" class="btn btn-ghost px-2">← {{ $rok - 1 }}</a>
         @if ($rok < now()->year)
-            <a href="{{ route('admin.dashboard', ['rok' => $rok + 1]) }}" class="btn-ghost px-2">{{ $rok + 1 }} →</a>
+            <a href="{{ route('admin.dashboard', ['rok' => $rok + 1]) }}" class="btn btn-ghost px-2">{{ $rok + 1 }} →</a>
         @endif
     </div>
 </div>
@@ -21,88 +25,87 @@
 <div class="mb-8 space-y-3">
 
     {{-- Řádek 1: přehledové počty --}}
-    <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+    <div class="dashboard-stat-grid dashboard-stat-grid--overview">
         @foreach ([
-            ['label' => 'Kol celkem',    'value' => $celkemKol],
-            ['label' => "Kol {$rok}",    'value' => $kolaTento],
-            ['label' => "Stanic {$rok}", 'value' => $znackyTento],
-            ['label' => 'Stanic celkem', 'value' => $celkemZnacek],
+            ['label' => 'Kol celkem',    'value' => $celkemKol,    'tone' => 'primary'],
+            ['label' => "Kol {$rok}",    'value' => $kolaTento,    'tone' => 'teal'],
+            ['label' => "Stanic {$rok}", 'value' => $znackyTento,  'tone' => 'amber'],
+            ['label' => 'Stanic celkem', 'value' => $celkemZnacek, 'tone' => 'slate'],
         ] as $card)
-            <div class="rounded-xl border border-line bg-surface p-4">
-                <div class="text-3xl font-bold text-heading">{{ $card['value'] }}</div>
-                <div class="mt-1 text-xs text-muted">{{ $card['label'] }}</div>
+            <div class="dashboard-stat-card dashboard-stat-card--{{ $card['tone'] }}">
+                <div class="dashboard-stat-label">{{ $card['label'] }}</div>
+                <div class="dashboard-stat-value">{{ $card['value'] }}</div>
             </div>
         @endforeach
     </div>
 
     {{-- Řádek 2: operativní a výkonnostní statistiky --}}
-    <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+    <div class="dashboard-stat-grid dashboard-stat-grid--ops">
 
         {{-- Čekající na schválení – zvýrazněno pokud jsou nevyřízené záznamy --}}
         <a href="{{ route('deniky.index') }}"
-           class="no-underline rounded-xl border p-4 transition hover:border-brand
-                  {{ $cekajici > 0
-                      ? 'border-amber-400 bg-amber-50 dark:border-amber-500 dark:bg-amber-950/20'
-                      : 'border-line bg-surface' }}">
-            <div class="flex items-start justify-between gap-2">
-                <div>
-                    <div class="text-3xl font-bold {{ $cekajici > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-heading' }}">
-                        {{ $cekajici }}
-                    </div>
-                    <div class="mt-1 text-xs text-muted">Čeká na schválení {{ $rok }}</div>
-                </div>
+           class="card dashboard-stat-card dashboard-stat-card--warning dashboard-stat-card--link {{ $cekajici > 0 ? 'is-active' : '' }}">
+            <div class="dashboard-stat-row">
+                <div class="dashboard-stat-label">Čeká na schválení {{ $rok }}</div>
                 @if ($cekajici > 0)
-                    <span class="relative mt-1 flex h-2.5 w-2.5 shrink-0">
-                        <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75"></span>
-                        <span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-amber-500"></span>
-                    </span>
+                    <span class="dashboard-pulse" aria-hidden="true"></span>
                 @endif
             </div>
+            <div class="dashboard-stat-value">{{ $cekajici }}</div>
         </a>
 
-        <div class="rounded-xl border border-line bg-surface p-4">
-            <div class="text-3xl font-bold text-heading">
-                {{ $avgBody > 0 ? \Illuminate\Support\Number::format($avgBody, 0) : '—' }}
-            </div>
-            <div class="mt-1 text-xs text-muted">Průměrné body {{ $rok }}</div>
+        <div class="dashboard-stat-card dashboard-stat-card--primary">
+            <div class="dashboard-stat-label">Průměrné body {{ $rok }}</div>
+            <div class="dashboard-stat-value">{{ $avgBody > 0 ? \Illuminate\Support\Number::format($avgBody, 0) : '—' }}</div>
         </div>
 
-        <div class="rounded-xl border border-line bg-surface p-4">
-            <div class="text-3xl font-bold text-heading">{{ $avgQso > 0 ? $avgQso : '—' }}</div>
-            <div class="mt-1 text-xs text-muted">Průměrný počet QSO {{ $rok }}</div>
+        <div class="dashboard-stat-card dashboard-stat-card--teal">
+            <div class="dashboard-stat-label">Průměrný počet QSO {{ $rok }}</div>
+            <div class="dashboard-stat-value">{{ $avgQso > 0 ? $avgQso : '—' }}</div>
         </div>
 
     </div>
 </div>
 
 {{-- ── Grafy – řádek 1 ──────────────────────────────────────────────────── --}}
-<div class="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+<div class="dashboard-chart-grid mb-6">
 
-    <div class="rounded-xl border border-line bg-surface p-4">
-        <h2 class="mb-3 text-sm font-semibold text-heading">Účastníci per kolo (posledních 12)</h2>
+    <section class="dashboard-panel">
+        <div class="dashboard-panel-header">
+            <h2>Účastníci per kolo</h2>
+            <span>posledních 12</span>
+        </div>
         <canvas id="chartKola" height="200"></canvas>
-    </div>
+    </section>
 
-    <div class="rounded-xl border border-line bg-surface p-4">
-        <h2 class="mb-3 text-sm font-semibold text-heading">Distribuce pásem {{ $rok }}</h2>
+    <section class="dashboard-panel">
+        <div class="dashboard-panel-header">
+            <h2>Distribuce pásem</h2>
+            <span>{{ $rok }}</span>
+        </div>
         <canvas id="chartKategorie" height="200"></canvas>
-    </div>
+    </section>
 
 </div>
 
 {{-- ── Graf: rok vs. rok ────────────────────────────────────────────────── --}}
-<div class="mb-8 rounded-xl border border-line bg-surface p-4">
-    <h2 class="mb-3 text-sm font-semibold text-heading">Rok vs. rok – {{ $rok - 1 }} / {{ $rok }}</h2>
+<section class="dashboard-panel dashboard-panel--wide mb-8">
+    <div class="dashboard-panel-header">
+        <h2>Rok vs. rok</h2>
+        <span>{{ $rok - 1 }} / {{ $rok }}</span>
+    </div>
     <canvas id="chartRokVsRok" height="140"></canvas>
-</div>
+</section>
 
 {{-- ── Přehled kol roku ─────────────────────────────────────────────────── --}}
-<h2>Přehled kol {{ $rok }}</h2>
+<div class="dashboard-section-heading">
+    <h2>Přehled kol {{ $rok }}</h2>
+</div>
 
 @if ($kolaRoku->isEmpty())
     <p class="mb-8 text-sm text-muted">Žádná kola pro rok {{ $rok }}.</p>
 @else
-    <div class="table-wrap mb-8">
+    <div class="table-wrap dashboard-table-wrap mb-8">
         <table class="data-table">
             <thead>
                 <tr>
@@ -132,8 +135,8 @@
                         <td class="num">{{ $kolo->pocet_celkem }}</td>
                         <td class="num">
                             <div class="flex items-center justify-end gap-2">
-                                <div class="h-1 w-12 overflow-hidden rounded-full bg-line">
-                                    <div class="h-full rounded-full bg-brand transition-all" style="width:{{ $pct }}%"></div>
+                                <div class="dashboard-progress">
+                                    <div class="dashboard-progress__bar" style="width:{{ $pct }}%"></div>
                                 </div>
                                 <span class="font-semibold">{{ $kolo->pocet_schvalenych }}</span>
                             </div>
@@ -152,12 +155,14 @@
 @endif
 
 {{-- ── Top 10 stanic ───────────────────────────────────────────────────── --}}
-<h2>Top 10 stanic {{ $rok }}</h2>
+<div class="dashboard-section-heading">
+    <h2>Top 10 stanic {{ $rok }}</h2>
+</div>
 
 @if ($top10->isEmpty())
     <p class="text-sm text-muted">Žádné výsledky pro rok {{ $rok }}.</p>
 @else
-    <div class="table-wrap mb-8">
+    <div class="table-wrap dashboard-table-wrap mb-8">
         <table class="data-table">
             <thead>
                 <tr>
@@ -170,11 +175,11 @@
             </thead>
             <tbody>
                 @php
-                    $medalColors = ['text-amber-500', 'text-zinc-400', 'text-orange-600'];
+                    $medalColors = ['dashboard-medal--gold', 'dashboard-medal--silver', 'dashboard-medal--bronze'];
                 @endphp
                 @foreach ($top10 as $i => $r)
                     <tr>
-                        <td class="num font-bold {{ $medalColors[$i] ?? 'text-muted' }}">{{ $i + 1 }}</td>
+                        <td class="num"><span class="dashboard-medal {{ $medalColors[$i] ?? '' }}">{{ $i + 1 }}</span></td>
                         <td class="mono font-bold">{{ $r->callsign }}</td>
                         <td>{{ $r->name }}</td>
                         <td class="text-sm text-muted">{{ $kategorie->get($r->kategorie_id)?->name ?? '—' }}</td>
@@ -185,6 +190,7 @@
         </table>
     </div>
 @endif
+</div>
 
 @push('scripts')
 <script @cspNonce>

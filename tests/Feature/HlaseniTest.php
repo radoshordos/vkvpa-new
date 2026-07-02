@@ -8,9 +8,7 @@ use App\Models\EdiCategory;
 use App\Models\EdiEntry;
 use App\Models\EdiHead;
 use App\Models\EdiRound;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class HlaseniTest extends TestCase
@@ -68,7 +66,7 @@ class HlaseniTest extends TestCase
     public function test_admin_report_is_stored_and_approved(): void
     {
         [$kolo, $kat] = $this->prepare();
-        $admin = User::create(['name' => 'Admin', 'password' => Hash::make('x'), 'is_admin' => true]);
+        $admin = $this->makeUser('Admin', isAdmin: true);
 
         $this->actingAs($admin)
             ->post('/hlaseni', $this->payload($kolo->id, $kat->id))
@@ -116,7 +114,7 @@ class HlaseniTest extends TestCase
     {
         [$kolo, $kat] = $this->prepare();
         $kolo->update(['closes_at' => now()->subDay()]);
-        $admin = User::create(['name' => 'Admin', 'password' => Hash::make('x'), 'is_admin' => true]);
+        $admin = $this->makeUser('Admin', isAdmin: true);
 
         $this->actingAs($admin)
             ->post('/hlaseni', $this->payload($kolo->id, $kat->id))
@@ -286,7 +284,7 @@ class HlaseniTest extends TestCase
             'locator' => 'JO70AA', 'email' => 'x@y.cz', 'qso_count' => 1, 'multiplier' => 1, 'points' => 1,
             'approved' => true,
         ]);
-        $admin = User::create(['name' => 'Admin', 'password' => Hash::make('x'), 'is_admin' => true]);
+        $admin = $this->makeUser('Admin', isAdmin: true);
 
         $payload = $this->payload($kolo->id, $kat->id);
         $payload['id_zaznamu'] = $existing->id;
@@ -346,7 +344,7 @@ class HlaseniTest extends TestCase
             'locator' => 'JO70AA', 'email' => 'secret@example.com', 'qso_count' => 1,
             'multiplier' => 1, 'points' => 1, 'approved' => true,
         ]);
-        $admin = User::create(['name' => 'Admin', 'password' => Hash::make('x'), 'is_admin' => true]);
+        $admin = $this->makeUser('Admin', isAdmin: true);
 
         $this->actingAs($admin)
             ->get(route('hlaseni.index', ['id' => $existing->id]))

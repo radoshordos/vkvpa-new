@@ -138,9 +138,11 @@ ač se ukládá SHA-256 (64 znaků) → v MySQL by se hash ořezával.
 
 **Náprava:** přidán `login_tokens.user_id`; token se váže na konkrétního
 administrátora (s ověřením práv a zpětnou kompatibilitou), konzumace
-v transakci s `lockForUpdate`. Sloupec `token` rozšířen na `varchar(64)`.
-Kryptografie OK: `Str::password(32)` (CSPRNG), SHA-256 hash, jednorázové,
-TTL 5 dní, rate limit 10/min.
+v transakci s `lockForUpdate`. Token má tvar selector+verifier: veřejný
+`selector` (16 znaků) slouží k O(1) vyhledání řádku, tajný `verifier` (32 znaků)
+se ukládá hashovaný přes Hash fasádu (argon2id, preferován před SHA-2) a ověřuje
+`Hash::check`. Kryptografie OK: `Str::password` (CSPRNG), argon2id hash,
+jednorázové, TTL 5 dní, rate limit 10/min.
 
 ### 4. Možný DoS přes velikost generovaného PNG
 
@@ -216,10 +218,10 @@ alternativou (neaplikováno na přání provozovatele) je Adminer z repozitáře
 
 ## Poznámky / doporučení do budoucna
 
-- **Mass assignment `is_admin`:** `User` má `is_admin` ve `#[Fillable]`.
-  Aktuálně neexploatovatelné – neexistuje veřejná registrace ani endpoint
-  plnící `User` z požadavku (vytváří se jen seederem). Pokud přibude veřejná
-  správa uživatelů, odebrat `is_admin` z `Fillable` a nastavovat ho explicitně.
+- **Mass assignment `is_admin`:** ✅ vyřešeno – `is_admin` odebráno z `#[Fillable]`
+  modelu `User`; admin se zakládá jen seederem, který příznak nastavuje
+  explicitně přes `forceFill`. Případná budoucí veřejná správa uživatelů tak
+  nemůže příznak nastavit z dat requestu (ochrana proti eskalaci práv).
 - **Údaje závodníků (`/admin/uzivatele`):** stránka zobrazuje citlivá osobní
   data (jméno, e-mail, telefon). Je za `admin` middleware; do dokumentace se
   publikují jen smyšlená demonstrační data.

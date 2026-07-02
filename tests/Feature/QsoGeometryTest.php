@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Enums\QsoMode;
+use App\Models\EdiCategory;
+use App\Models\EdiEntry;
 use App\Models\EdiHead;
 use App\Models\EdiLine;
 use App\Models\EdiRound;
@@ -223,6 +225,21 @@ class QsoGeometryTest extends TestCase
     {
         $headA = EdiHead::create(['round_id' => $idKola, 't_date' => '20260315', 'p_call' => 'OK1AAA', 'p_wwlo' => 'JN79', 'p_band' => '144 MHz', 'r_name' => 'A', 'r_emai' => 'a@a.cz', 's_powe' => 100]);
         $headB = EdiHead::create(['round_id' => $idKola, 't_date' => '20260315', 'p_call' => 'OK1BBB', 'p_wwlo' => 'JN89', 'p_band' => '144 MHz', 'r_name' => 'B', 'r_emai' => 'b@b.cz', 's_powe' => 100]);
+
+        // Oba deníky na témž pásmu (přes napojený záznam/kategorii) – vrstva
+        // „stanice z kola" je pásmově oddělená a bez známého pásma se skryje.
+        // band_id 901 je mimo seed (v testech není FK na edi_bands).
+        $cat = EdiCategory::create(['band_id' => 901, 'name' => '144 MHz', 'section' => 'SO', 'variant' => 'domestic']);
+        foreach ([$headA, $headB] as $h) {
+            EdiEntry::create([
+                'round_id' => $idKola, 'category_id' => $cat->id,
+                'qrp' => false, 'lp' => false, 'callsign' => $h->p_call, 'locator' => $h->p_wwlo,
+                'qso_count' => 1, 'qso_points' => 1, 'multiplier' => 1, 'points' => 1,
+                'name' => 'T', 'email' => 't@t.cz', 'phone' => '', 'note' => '',
+                'soapbox' => '', 'ip' => '', 'edi_head_id' => $h->id,
+                'rank' => 1, 'approved' => true, 'session_id' => '',
+            ]);
+        }
 
         // OK5BIG: 3 QSO v deníku A + 2 v deníku B = 5 napříč kolem → projde (min 5).
         foreach (['0810', '0811', '0812'] as $t) {

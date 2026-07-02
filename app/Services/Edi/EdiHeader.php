@@ -79,25 +79,44 @@ final readonly class EdiHeader
         return $this->get('SAnte');
     }
 
-    /** Výkon v W jako celé číslo (např. „800W" → 800). */
-    public function sPowe(): int
+    /** Výkon ve W; podporuje desetinnou tečku i čárku (např. „0,25W" → 0.25). */
+    public function sPowe(): float
     {
-        return (int) $this->get('SPowe');
+        return self::parsePower($this->get('SPowe')) ?? 0.0;
     }
 
-    /** QRP = výkon 1–5 W. */
+    public static function parsePower(string $value): ?float
+    {
+        $value = trim($value);
+        if ($value === '' || str_starts_with($value, '-')) {
+            return null;
+        }
+
+        if (preg_match('/^\+?((?:\d+(?:[.,]\d+)?|[.,]\d+)(?:[eE][+-]?\d+)?)/', $value, $match) !== 1) {
+            return null;
+        }
+
+        $power = (float) str_replace(',', '.', $match[1]);
+        if (! is_finite($power) || $power < 0.0) {
+            return null;
+        }
+
+        return round($power, 4);
+    }
+
+    /** QRP = výkon větší než 0 W a nejvýše 5 W. */
     public function isQrp(): bool
     {
         $p = $this->sPowe();
 
-        return $p > 0 && $p <= 5;
+        return $p > 0.0 && $p <= 5.0;
     }
 
-    /** LP (low power) = výkon 1–99 W (< 100 W). QRP je podmnožina LP. */
+    /** LP (low power) = výkon větší než 0 W a menší než 100 W. QRP je podmnožina LP. */
     public function isLp(): bool
     {
         $p = $this->sPowe();
 
-        return $p > 0 && $p < 100;
+        return $p > 0.0 && $p < 100.0;
     }
 }

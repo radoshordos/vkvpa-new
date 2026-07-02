@@ -21,16 +21,32 @@ use Override;
  * @property string $callsign
  * @property string|null $name
  * @property string $body
- * @property string|null $ip_address
+ * @property string|null $ip_hash HMAC-SHA256 IP odesílatele (ne syrová PII)
  * @property Carbon $created_at
  * @property-read EdiRound $round
  * @property-read Collection<int, DiscussionPostPhoto> $photos
  */
-#[Fillable(['round_id', 'callsign', 'name', 'body', 'ip_address'])]
+#[Fillable(['round_id', 'callsign', 'name', 'body', 'ip_hash'])]
 #[Table(name: 'discussion_posts', key: 'id')]
 class DiscussionPost extends Model
 {
     public const UPDATED_AT = null;
+
+    /**
+     * Zahashuje IP odesílatele (HMAC-SHA256 s app key) pro účely moderace.
+     * Neukládáme syrovou IP – hash zachová korelaci stejného odesílatele, ale
+     * není to čitelná osobní údaj.
+     */
+    public static function hashIp(?string $ip): ?string
+    {
+        if ($ip === null || $ip === '') {
+            return null;
+        }
+
+        $key = config('app.key');
+
+        return hash_hmac('sha256', $ip, is_string($key) ? $key : '');
+    }
 
     /** @return BelongsTo<EdiRound, $this> */
     public function round(): BelongsTo

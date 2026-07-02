@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
 
 /**
@@ -61,12 +62,17 @@ class AuthController extends Controller
             ->where('created_at', '<', Carbon::now()->subDays(VkvpaSettings::tokenTtlDays()))
             ->delete();
 
+        // Token = selector+verifier: selectorem najdeme řádek, verifier ověříme
+        // proti argon2id hashi (přímé WHERE na hash nejde – má náhodnou sůl).
+        $selector = substr($token, 0, LoginToken::SELECTOR_LENGTH);
+        $verifier = substr($token, LoginToken::SELECTOR_LENGTH);
+
         // lockForUpdate + delete v transakci: paralelní požadavky (prefetch prohlížeče,
         // dvojité kliknutí) nemohou použít stejný token dvakrát. Vrací ['user_id' => …]
         // při úspěchu (i null pro starší token bez vazby), nebo false když token chybí.
-        $consumed = DB::transaction(function () use ($token): array|false {
-            $loginToken = LoginToken::query()->where('token', hash('sha256', $token))->lockForUpdate()->first();
-            if ($loginToken === null) {
+        $consumed = DB::transaction(function () use ($selector, $verifier): array|false {
+            $loginToken = LoginToken::query()->where('selector', $selector)->lockForUpdate()->first();
+            if ($loginToken === null || ! Hash::check($verifier, $loginToken->token)) {
                 return false;
             }
             $userId = $loginToken->user_id;

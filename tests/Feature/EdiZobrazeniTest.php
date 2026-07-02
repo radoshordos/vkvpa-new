@@ -10,7 +10,6 @@ use App\Models\EdiHead;
 use App\Models\EdiRound;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 /**
@@ -44,12 +43,12 @@ class EdiZobrazeniTest extends TestCase
 
     private function admin(): User
     {
-        return User::create(['name' => 'admin', 'password' => Hash::make('x'), 'is_admin' => true]);
+        return $this->makeUser('admin', isAdmin: true);
     }
 
     private function regularUser(): User
     {
-        return User::create(['name' => 'user', 'password' => Hash::make('x'), 'is_admin' => false]);
+        return $this->makeUser('user');
     }
 
     /** Kolo s otevřeným upload oknem (závod proběhl, uzávěrka v budoucnu). */

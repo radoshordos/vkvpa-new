@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\AddRequestContext;
 use App\Http\Middleware\EnsureAdmin;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetLocale;
@@ -18,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
+            AddRequestContext::class,
             SetLocale::class,
             SecurityHeaders::class,
         ]);
@@ -26,6 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 HandleCors::class,
             ],
             append: [
+                AddRequestContext::class,
                 SecurityHeaders::class,
             ],
         );

@@ -9,7 +9,6 @@ use App\Models\EdiEntry;
 use App\Models\EdiRound;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 /**
@@ -25,7 +24,7 @@ class AuthorizationEdgeCasesTest extends TestCase
 
     private function nonAdmin(): User
     {
-        return User::create(['name' => 'Uzivatel', 'password' => Hash::make('x'), 'is_admin' => false]);
+        return $this->makeUser('Uzivatel');
     }
 
     private function zaznam(): EdiEntry

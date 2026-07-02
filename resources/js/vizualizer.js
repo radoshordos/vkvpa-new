@@ -6,7 +6,14 @@
 
 import L from 'leaflet';
 import { createOsmMap } from './leaflet-osm-map.js';
-import { modeColor, modeLabel } from './leaflet-mode-colors.js';
+import {
+    createHomeMarker,
+    createQsoMarker,
+    createQsoRay,
+    fitMapToBounds,
+    pushPointBounds,
+    qsoPopupHtml,
+} from './leaflet-qso-map.js';
 import { redrawMaidenheadGrid } from './maidenhead-grid.js';
 
 const cfg = window.__vizMap || {};
@@ -20,38 +27,30 @@ if (mapEl) {
 
     // Domácí stanoviště – výrazný modrý bod.
     if (cfg.home) {
-        L.circleMarker([cfg.home.lat, cfg.home.lon], {
-            radius: 8, color: '#1d4ed8', fillColor: '#3b82f6', fillOpacity: 0.9, weight: 2,
-        }).addTo(map).bindPopup(
+        createHomeMarker(
+            cfg.home,
             `<strong>${cfg.pcall || ''}</strong><br>${cfg.homeLoc || ''}` +
-            (cfg.band ? `<br>${cfg.band}` : '') +
-            `<br><span style="opacity:.6">${t.home || ''}</span>`,
-        );
-        bounds.push([cfg.home.lat, cfg.home.lon]);
+                (cfg.band ? `<br>${cfg.band}` : '') +
+                `<br><span style="opacity:.6">${t.home || ''}</span>`,
+        ).addTo(map);
+        pushPointBounds(bounds, cfg.home);
     }
 
     // Paprsky + špendlíky ke všem protistanicím.
     (cfg.points || []).forEach(function (p) {
-        bounds.push([p.lat, p.lon]);
-        const mc = modeColor(p.mode);
+        pushPointBounds(bounds, p);
 
         if (cfg.home) {
-            L.polyline([[cfg.home.lat, cfg.home.lon], [p.lat, p.lon]], {
-                color: mc.fill, weight: 1.2, opacity: 0.55,
-            }).addTo(map);
+            createQsoRay(cfg.home, p).addTo(map);
         }
 
-        const call = p.call || '';
-        const popup =
-            `<strong><a href="https://www.qrz.com/db/${encodeURIComponent(call)}" target="_blank" rel="noopener">${call}</a></strong>` +
-            ` <span style="font-size:.8em;opacity:.7">${modeLabel(p.mode)}</span><br>${p.wwl}` +
-            (p.dist !== null ? `<br>${p.dist} km` : '') +
-            (p.azimut !== null ? `<br>${t.azimuth || 'azimut'} ${p.azimut}°` : '') +
-            `<br>${p.points} ${t.pts || ''}`;
-
-        L.circleMarker([p.lat, p.lon], {
-            radius: 5, color: mc.stroke, fillColor: mc.fill, fillOpacity: 0.9, weight: 1.5,
-        }).addTo(map).bindPopup(popup);
+        createQsoMarker(p).addTo(map).bindPopup(qsoPopupHtml(p, {
+            linkCall: true,
+            includeDistance: true,
+            includeAzimuth: true,
+            azimuthLabel: t.azimuth || 'azimut',
+            pointsLabel: t.pts || '',
+        }));
     });
 
     // ── Rastr velkých čtverců Maidenhead (2° délky × 1° šířky) ─────────────
@@ -64,11 +63,7 @@ if (mapEl) {
 
     map.on('moveend zoomend', redrawGrid);
 
-    if (bounds.length > 0) {
-        map.fitBounds(bounds, { padding: [30, 30] });
-    } else {
-        map.setView([50, 15], 5);
-    }
+    fitMapToBounds(map, bounds, { padding: [30, 30], fallbackZoom: 5 });
 
     redrawGrid();
 }

@@ -26,7 +26,7 @@ final readonly class EdiDebugReport
         public string $tDate,
         public string $band,
         public string $section,
-        public int $power,
+        public float $power,
         public bool $qrp,
         public string $windowFrom,
         public string $windowTo,

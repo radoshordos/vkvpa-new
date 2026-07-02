@@ -72,8 +72,10 @@ final readonly class ImportEdiAction
 
         $idKola = $this->scoring->koloForTDate($h->tDate()) ?? 0;
 
-        Context::add('callsign', $pcall);
-        Context::add('round_id', $idKola);
+        Context::add([
+            'callsign' => $pcall,
+            'round_id' => $idKola,
+        ]);
 
         if ($idKola === 0) {
             throw new RoundNotFoundException($h->tDate());
@@ -102,6 +104,8 @@ final readonly class ImportEdiAction
         if ($idKategorie === null) {
             throw new UnknownSectionException($h->pSect());
         }
+
+        Context::add('category_id', $idKategorie);
 
         // Duplicita se hlídá na trojici kolo + značka + kategorie (stejně jako
         // unique index v DB) – tatáž stanice tak smí pro jedno kolo nahrát
@@ -172,6 +176,14 @@ final readonly class ImportEdiAction
         } catch (UniqueConstraintViolationException) {
             throw new DuplicateEdiException($pcall);
         }
+
+        Context::add([
+            'callsign' => $data->callsign,
+            'round_id' => $data->round_id,
+            'category_id' => $data->category_id,
+            'entry_id' => $data->id,
+            'edi_head_id' => $data->edi_head_id,
+        ]);
 
         if ($notify) {
             // defer() odešle event až po odeslání HTTP odpovědi – queue dispatch

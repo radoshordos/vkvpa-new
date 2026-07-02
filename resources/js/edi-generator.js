@@ -9,7 +9,14 @@
 
 import L from 'leaflet';
 import { createOsmMap } from './leaflet-osm-map.js';
-import { modeColor, modeLabel } from './leaflet-mode-colors.js';
+import {
+    createHomeMarker,
+    createQsoMarker,
+    createQsoRay,
+    fitMapToBounds,
+    pushPointBounds,
+    qsoPopupHtml,
+} from './leaflet-qso-map.js';
 
 const KEY = 'vkvpa:edi-generator';
 
@@ -55,35 +62,30 @@ function redraw() {
     const bounds = [];
 
     if (home) {
-        homeMarker = L.circleMarker([home.lat, home.lon], {
-            radius: 8, color: '#1d4ed8', fillColor: '#3b82f6', fillOpacity: 0.9, weight: 2,
-        }).addTo(map);
-        bounds.push([home.lat, home.lon]);
+        homeMarker = createHomeMarker(home).addTo(map);
+        pushPointBounds(bounds, home);
     }
 
     points.forEach(function (p) {
-        const mc = modeColor(p.mode);
         if (home) {
-            L.polyline([[home.lat, home.lon], [p.lat, p.lon]], {
-                color: mc.fill, weight: 1.2, opacity: 0.55,
-            }).addTo(qsoLayer);
+            createQsoRay(home, p).addTo(qsoLayer);
         }
-        const popup = `<strong>${p.call}</strong> <span style="font-size:.8em;opacity:.7">${modeLabel(p.mode)}</span>`
-            + `<br>${p.wwl}`
-            + (p.dist !== null ? `<br>${p.dist} km` : '')
-            + (p.azimut !== null ? `<br>${p.azimut}°` : '')
-            + `<br>${p.points} b.`;
-        L.circleMarker([p.lat, p.lon], {
-            radius: 5, color: mc.stroke, fillColor: mc.fill, fillOpacity: 0.9, weight: 1.5,
-        }).bindPopup(popup).addTo(qsoLayer);
-        bounds.push([p.lat, p.lon]);
+        createQsoMarker(p)
+            .bindPopup(qsoPopupHtml(p, {
+                includeDistance: true,
+                includeAzimuth: true,
+                pointsLabel: 'b.',
+            }))
+            .addTo(qsoLayer);
+        pushPointBounds(bounds, p);
     });
 
-    if (bounds.length > 1) {
-        map.fitBounds(bounds, { padding: [30, 30], maxZoom: 9 });
-    } else if (bounds.length === 1) {
-        map.setView(bounds[0], 8);
-    }
+    fitMapToBounds(map, bounds, {
+        padding: [30, 30],
+        fallbackCenter: null,
+        maxZoom: 9,
+        singleZoom: 8,
+    });
 
     // Leaflet po vložení do dříve skrytého kontejneru potřebuje přeměřit.
     setTimeout(() => map.invalidateSize(), 0);

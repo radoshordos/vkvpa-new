@@ -86,9 +86,13 @@ Route::get('/mail-image', [MailImageController::class, 'show'])->name('mail.imag
 
 // Diskuse k závodnímu kolu
 Route::get('/diskuse', [DiskuseController::class, 'index'])->name('diskuse.index');
-// Servírování fotek z DB (dvousegmentové cesty stojí před wildcard /diskuse/{kolo}).
-Route::get('/diskuse/foto/{foto}', [DiskuseController::class, 'foto'])->name('diskuse.foto');
-Route::get('/diskuse/foto/{foto}/nahled', [DiskuseController::class, 'nahled'])->name('diskuse.foto.nahled');
+// Servírování fotek z DB – fotka je adresovaná v kontextu svého příspěvku
+// (/diskuse/{příspěvek}/foto/{pořadí}), takže se nedá tahat napřímo podle
+// globálního ID; tříslozkové cesty stojí před wildcard /diskuse/{kolo}.
+Route::get('/diskuse/{prispevek}/foto/{poradi}', [DiskuseController::class, 'foto'])
+    ->whereNumber('poradi')->name('diskuse.foto');
+Route::get('/diskuse/{prispevek}/foto/{poradi}/nahled', [DiskuseController::class, 'nahled'])
+    ->whereNumber('poradi')->name('diskuse.foto.nahled');
 Route::get('/diskuse/{kolo}', [DiskuseController::class, 'show'])->name('diskuse.show');
 Route::post('/diskuse/{kolo}', [DiskuseController::class, 'store'])->middleware('throttle:diskuse')->name('diskuse.store');
 
@@ -155,6 +159,7 @@ Route::middleware('admin')->group(function (): void {
     Route::get('/admin/edi-debug', [EdiDebugController::class, 'create'])->name('edi.debug.create');
     Route::post('/admin/edi-debug', [EdiDebugController::class, 'analyze'])->name('edi.debug.store');
     Route::get('/admin/edi-debug/{head}', [EdiDebugController::class, 'show'])->name('edi.debug.show')->whereNumber('head');
+    Route::get('/admin/edi-manual', [EdiDebugController::class, 'manual'])->name('edi.manual');
 
     Route::get('/admin/deniky', [DenikyController::class, 'index'])->name('deniky.index');
 

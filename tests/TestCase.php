@@ -4,15 +4,29 @@ declare(strict_types=1);
 
 namespace Tests;
 
+use App\Models\User;
 use Database\Seeders\EdiBandTableSeeder;
 use Database\Seeders\EdiCategoryTableSeeder;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Once;
 
 abstract class TestCase extends BaseTestCase
 {
+    /**
+     * Vytvoří uživatele pro testy. `is_admin` není ve #[Fillable] (ochrana proti
+     * mass-assignment z requestu), proto ho nastavujeme explicitně přes forceFill.
+     */
+    protected function makeUser(string $name, bool $isAdmin = false, string $password = 'x'): User
+    {
+        $user = User::create(['name' => $name, 'password' => Hash::make($password)]);
+        $user->forceFill(['is_admin' => $isAdmin])->save();
+
+        return $user;
+    }
+
     protected function setUp(): void
     {
         parent::setUp();

@@ -20,6 +20,7 @@ use App\Models\EdiRound;
 use App\Services\Edi\EdiLog;
 use App\Services\Edi\EdiParser;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Context;
 use Tests\TestCase;
 
 /**
@@ -119,6 +120,19 @@ class ImportEdiActionTest extends TestCase
         $this->assertSame('override@example.com', $data->email);
     }
 
+    public function test_execute_adds_import_identifiers_to_log_context(): void
+    {
+        Context::flush();
+
+        $data = $this->execute($this->sampleLog());
+
+        $this->assertSame('OK2KJT', Context::get('callsign'));
+        $this->assertSame($this->round->id, Context::get('round_id'));
+        $this->assertSame($data->category_id, Context::get('category_id'));
+        $this->assertSame($data->id, Context::get('entry_id'));
+        $this->assertSame($data->edi_head_id, Context::get('edi_head_id'));
+    }
+
     // ---- preview --------------------------------------------------------
 
     public function test_preview_returns_preview_without_writing_to_db(): void
@@ -131,6 +145,17 @@ class ImportEdiActionTest extends TestCase
 
         $this->assertSame(0, EdiHead::count(), 'Náhled nesmí zapisovat do DB');
         $this->assertSame(0, EdiEntry::count());
+    }
+
+    public function test_preview_adds_resolved_identifiers_to_log_context(): void
+    {
+        Context::flush();
+
+        $preview = $this->action()->preview($this->sampleLog(), enforceUploadWindow: false);
+
+        $this->assertSame('OK2KJT', Context::get('callsign'));
+        $this->assertSame($this->round->id, Context::get('round_id'));
+        $this->assertSame($preview->idKategorie, Context::get('category_id'));
     }
 
     public function test_preview_score_matches_execute_score(): void

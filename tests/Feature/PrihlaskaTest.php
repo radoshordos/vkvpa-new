@@ -9,10 +9,8 @@ use App\Models\EdiCategory;
 use App\Models\EdiEntry;
 use App\Models\EdiHead;
 use App\Models\EdiRound;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Hash;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -223,7 +221,7 @@ class PrihlaskaTest extends TestCase
     public function test_manual_admin_submission_is_approved(): void
     {
         [$kolo, $kat] = $this->prepare();
-        $admin = User::create(['name' => 'Admin', 'password' => Hash::make('x'), 'is_admin' => true]);
+        $admin = $this->makeUser('Admin', isAdmin: true);
 
         $this->actingAs($admin);
 
@@ -314,7 +312,7 @@ class PrihlaskaTest extends TestCase
     {
         [$kolo, $kat] = $this->prepare();
         $kolo->update(['closes_at' => now()->subDay()]);
-        $admin = User::create(['name' => 'Admin', 'password' => Hash::make('x'), 'is_admin' => true]);
+        $admin = $this->makeUser('Admin', isAdmin: true);
 
         $this->actingAs($admin);
 

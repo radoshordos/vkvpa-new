@@ -11,17 +11,26 @@ use App\Models\LoginToken;
 use App\Models\User;
 use App\Support\VkvpaSettings;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Queue\Attributes\Backoff;
+use Illuminate\Queue\Attributes\Timeout;
+use Illuminate\Queue\Attributes\Tries;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Str;
 
 /**
  * Po importu EDI deníku odešle potvrzovací e-mail účastníkovi
  * a oznámení vyhodnocovateli s odkazem pro převzetí záznamu.
  */
+#[Tries(3)]
+#[Backoff(60, 300, 900)]
+#[Timeout(30)]
 final class SendEdiMailsListener implements ShouldQueue
 {
     public function handle(EdiImported $event): void
     {
+        if (! VkvpaSettings::mailEnabled()) {
+            return;
+        }
+
         $data = $event->data;
         $data->loadMissing(['round', 'category']);
 
@@ -34,14 +43,11 @@ final class SendEdiMailsListener implements ShouldQueue
 
         $contactMail = VkvpaSettings::contactMail();
         if (filter_var($contactMail, FILTER_VALIDATE_EMAIL) !== false) {
-            $token = Str::password(32, letters: true, numbers: true, symbols: false);
             // Token svážeme s administrátorem (vyhodnocovatelem), takže přihlášení
             // přes magic-link vede ke konkrétní identitě, ne k „prvnímu adminovi".
-            $adminId = User::query()->where('is_admin', true)->value('id');
-            LoginToken::create([
-                'token' => hash('sha256', $token),
-                'user_id' => $adminId,
-            ]);
+            // LoginToken::issue uloží verifier jako argon2id hash a vrátí plaintext.
+            $admin = User::query()->where('is_admin', true)->first();
+            $token = LoginToken::issue($admin?->id);
 
             Mail::to($contactMail)->queue(
                 new HlaseniProVyhodnocovatele($data, $koloNazev, $kategorieNazev, $token),

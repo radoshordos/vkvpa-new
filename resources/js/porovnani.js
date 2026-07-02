@@ -1,6 +1,12 @@
 import L from 'leaflet';
 import { Chart, registerables } from 'chart.js';
 import { createOsmMap } from './leaflet-osm-map.js';
+import {
+    createHomeMarker,
+    createQsoMarker,
+    fitMapToBounds,
+    pushPointBounds,
+} from './leaflet-qso-map.js';
 import { applyChartTheme } from './chart-theme.js';
 
 Chart.register(...registerables);
@@ -29,24 +35,21 @@ if (mapEl && cfg.compare) {
     const bounds = [];
 
     if (cfg.home) {
-        L.circleMarker([cfg.home.lat, cfg.home.lon], {
-            radius: 8, color: '#1d4ed8', fillColor: '#3b82f6', fillOpacity: 0.9, weight: 2,
-        }).addTo(map).bindPopup(`<strong>${cfg.pcall}</strong><br>${cfg.homeLoc}`);
-        bounds.push([cfg.home.lat, cfg.home.lon]);
+        createHomeMarker(cfg.home, `<strong>${cfg.pcall}</strong><br>${cfg.homeLoc}`).addTo(map);
+        pushPointBounds(bounds, cfg.home);
     }
 
     if (cmp.rivalHome) {
-        L.circleMarker([cmp.rivalHome.lat, cmp.rivalHome.lon], {
-            radius: 8, color: '#b45309', fillColor: '#f59e0b', fillOpacity: 0.9, weight: 2,
-        }).addTo(map).bindPopup(`<strong>${cmp.rival}</strong><br>${cmp.rivalLoc}`);
-        bounds.push([cmp.rivalHome.lat, cmp.rivalHome.lon]);
+        createHomeMarker(cmp.rivalHome, `<strong>${cmp.rival}</strong><br>${cmp.rivalLoc}`, {
+            color: '#b45309',
+            fillColor: '#f59e0b',
+        }).addTo(map);
+        pushPointBounds(bounds, cmp.rivalHome);
     }
 
     function comparePin(s, color, owner) {
-        bounds.push([s.lat, s.lon]);
-        return L.circleMarker([s.lat, s.lon], {
-            radius: 5, color: color.stroke, fillColor: color.fill, fillOpacity: 0.9, weight: 1.5,
-        }).bindPopup(`<strong>${s.call}</strong><br>${s.wwl}`
+        pushPointBounds(bounds, s);
+        return createQsoMarker(s, { color }).bindPopup(`<strong>${s.call}</strong><br>${s.wwl}`
             + (s.dist !== null ? `<br>${s.dist} km` : '')
             + `<br><em>${owner}</em>`);
     }
@@ -68,11 +71,7 @@ if (mapEl && cfg.compare) {
     };
     legend.addTo(map);
 
-    if (bounds.length > 0) {
-        map.fitBounds(bounds, { padding: [24, 24] });
-    } else {
-        map.setView([50, 15], 6);
-    }
+    fitMapToBounds(map, bounds);
 }
 
 // ── Chart.js: barvy podle motivu (denní/noční) ─────────────────────────────

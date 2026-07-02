@@ -9,7 +9,6 @@ use App\Models\EdiHead;
 use App\Models\EdiRound;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 /**
@@ -23,7 +22,7 @@ class ZalohaControllerTest extends TestCase
 
     private function admin(): User
     {
-        return User::create(['name' => 'Admin', 'password' => Hash::make('x'), 'is_admin' => true]);
+        return $this->makeUser('Admin', isAdmin: true);
     }
 
     private function seedKolo(): EdiRound

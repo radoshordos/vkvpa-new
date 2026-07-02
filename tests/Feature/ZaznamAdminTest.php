@@ -10,7 +10,6 @@ use App\Models\EdiEntry;
 use App\Models\EdiRound;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 /**
@@ -24,7 +23,7 @@ class ZaznamAdminTest extends TestCase
 
     private function admin(): User
     {
-        return User::create(['name' => 'Admin', 'password' => Hash::make('x'), 'is_admin' => true]);
+        return $this->makeUser('Admin', isAdmin: true);
     }
 
     /** Záznam v kole s otevřeným příjmem (stav Příjem) – převzetí lze i vracet. */

@@ -52,7 +52,7 @@ class EdiComposerTest extends TestCase
         $this->assertSame('OK2KJT', $log->header->pCall());
         $this->assertSame('JN99AJ', $log->header->pWWLo());
         $this->assertSame('144 MHz', $log->header->pBand());
-        $this->assertSame(800, $log->header->sPowe());
+        $this->assertSame(800.0, $log->header->sPowe());
         $this->assertSame('20260315;20260315', $log->header->tDate());
 
         // Jen 2 kompletní spojení; deklarovaný i naparsovaný počet sedí.

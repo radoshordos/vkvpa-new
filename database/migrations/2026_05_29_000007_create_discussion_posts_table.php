@@ -22,7 +22,9 @@ return new class extends Migration
             // Fotografie se ukládají binárně do podřízené tabulky
             // `discussion_post_photos` (1:N), takže jich může být víc na jeden
             // příspěvek.
-            $table->string('ip_address', 45)->nullable();
+            // Ne syrová IP, ale její HMAC-SHA256 (viz DiscussionPost::hashIp) –
+            // kvůli moderaci bez uchovávání čitelné osobní údaje. 64 hex znaků.
+            $table->string('ip_hash', 64)->nullable();
             // DATETIME (ne TIMESTAMP) – nezávislé na session time_zone serveru.
             $table->dateTime('created_at')->useCurrent();
 

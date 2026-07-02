@@ -6,6 +6,8 @@ declare(strict_types=1);
  * Konfigurace aplikace VKV PA.
  */
 return [
+    'mail_enabled' => env('MAIL_ENABLED', true),
+
     'contact_mail' => env('CONTACT_MAIL', 'ok1vum@hamradio.cz'),
     'contact_name' => env('CONTACT_NAME', 'Míla OK1VUM'),
 

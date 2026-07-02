@@ -11,6 +11,11 @@ use Illuminate\Support\Facades\Config;
  */
 final class VkvpaSettings
 {
+    public static function mailEnabled(): bool
+    {
+        return Config::boolean('vkvpa.mail_enabled', true);
+    }
+
     public static function contactMail(): string
     {
         return Config::string('vkvpa.contact_mail', '');

@@ -6,6 +6,8 @@ namespace App\Providers;
 
 use App\Events\EdiImported;
 use App\Listeners\SendEdiMailsListener;
+use App\Mail\HlaseniPrijato;
+use App\Mail\HlaseniProVyhodnocovatele;
 use App\Support\VkvpaSettings;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
@@ -13,6 +15,7 @@ use Illuminate\Foundation\Events\LocaleUpdated;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Number;
 use Illuminate\Support\ServiceProvider;
@@ -51,6 +54,11 @@ class AppServiceProvider extends ServiceProvider
         );
 
         Event::listen(EdiImported::class, SendEdiMailsListener::class);
+        Queue::route([
+            SendEdiMailsListener::class => 'mail',
+            HlaseniPrijato::class => 'mail',
+            HlaseniProVyhodnocovatele::class => 'mail',
+        ]);
 
         // Number::format() drží lokalizaci nezávisle na App::getLocale() (vlastní
         // statický stav, default 'en') – navážeme na SetLocale middleware, aby
