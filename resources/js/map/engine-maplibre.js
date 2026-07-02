@@ -365,6 +365,15 @@ export function createMapLibreEngine() {
             map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-left');
             map.addControl(new maplibregl.FullscreenControl(), 'top-left');
 
+            // Styl dark OpenFreeMap odkazuje na ikony chybějící ve sprite
+            // (circle-11) – prázdný pixel warning utiší, POI značky podkladu
+            // pro vizualizaci nejsou potřeba.
+            map.on('styleimagemissing', (e) => {
+                if (!map.hasImage(e.id)) {
+                    map.addImage(e.id, { width: 1, height: 1, data: new Uint8Array(4) });
+                }
+            });
+
             popup = new maplibregl.Popup({ maxWidth: '320px' });
 
             // deck.gl overlay nad podkladem (overlaid – přežije setStyle při
