@@ -56,6 +56,8 @@ class EdiVizualizaceController extends Controller
         $prefixy = PrefixResolver::fromDatabase();
         $ostatni = (string) __('pages.viz.country_other');
 
+        $nezapocitana = $this->statistiky->nezapocitana($head);
+
         return view('pages.vizualizace', [
             'active' => '',
             'head' => $head,
@@ -93,7 +95,8 @@ class EdiVizualizaceController extends Controller
             'tempo' => $this->statistiky->tempo($enriched, $fromMin, $toMin),
             'modeStats' => $this->statistiky->modeStats($enriched),
             'odx' => $this->statistiky->topOdx($enriched),
-            'nezapocitanaCelkem' => $this->statistiky->nezapocitana($head)['celkem'],
+            'nezapocitanaCelkem' => $nezapocitana['celkem'],
+            'nezapocitanaRadky' => $nezapocitana['radky'],
             'distHistogram' => $this->distHistogram($enriched),
             'stats' => $this->stats($enriched),
         ]);

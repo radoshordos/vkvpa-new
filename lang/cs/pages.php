@@ -371,6 +371,7 @@ return [
         'mode_filter' => 'Provoz:',
         'mode_other_short' => 'Ostatní',
         'play' => '▶ Přehrát',
+        'play_speed' => 'Rychlost přehrávání',
         'qso' => 'QSO',
         'score_title' => 'Průběžné skóre k času na slideru: body za spojení × násobiče',
 
@@ -383,6 +384,13 @@ return [
         'sezona_unavailable' => 'Celoroční trend zatím není k dispozici – deník nemá přiřazené kolo nebo stanice nemá schválené záznamy.',
         'chart_png_title' => 'Stáhnout graf jako PNG',
         'country_other' => 'Ostatní',
+
+        'uncounted_heading' => 'Nezapočítaná / označená QSO (:count) – zobrazit výpis',
+        'uncounted_truncated' => 'Zobrazeno prvních :shown řádků.',
+        'uncounted_reason_okno' => 'mimo závodní okno',
+        'uncounted_reason_den' => 'jiný den než závod',
+        'uncounted_reason_duplicita' => 'v deníku označeno jako duplicita (D)',
+        'col_reason' => 'Důvod',
 
         'odx_heading' => 'TOP ODX – nejvzdálenější spojení',
         'odx_empty' => 'Žádná spojení se spočítanou vzdáleností.',

@@ -369,6 +369,7 @@ return [
         'mode_filter' => 'Mode:',
         'mode_other_short' => 'Other',
         'play' => '▶ Play',
+        'play_speed' => 'Playback speed',
         'qso' => 'QSO',
         'score_title' => 'Running score at the slider time: points per QSO × multipliers',
 
@@ -381,6 +382,13 @@ return [
         'sezona_unavailable' => 'Season trend is not available yet – the log has no assigned round or the station has no approved entries.',
         'chart_png_title' => 'Download chart as PNG',
         'country_other' => 'Other',
+
+        'uncounted_heading' => 'Uncounted / flagged QSOs (:count) – show list',
+        'uncounted_truncated' => 'Showing the first :shown rows.',
+        'uncounted_reason_okno' => 'outside the contest window',
+        'uncounted_reason_den' => 'different day than the contest',
+        'uncounted_reason_duplicita' => 'flagged as duplicate (D) in the log',
+        'col_reason' => 'Reason',
 
         'odx_heading' => 'TOP ODX – longest QSOs',
         'odx_empty' => 'No QSOs with a computed distance.',

@@ -206,6 +206,11 @@ window.__vizConfig = {
   {{-- Ovládání přehrávání – viditelné jen v režimu „Přehrávání" (řídí JS). --}}
   <div id="viz-playback-controls" class="hidden items-center gap-3 mb-2 flex-wrap">
     <button type="button" id="viz-play" class="map-tab">{{ __('pages.viz.play') }}</button>
+    <span class="inline-flex items-center gap-1" title="{{ __('pages.viz.play_speed') }}">
+      @foreach ([1, 2, 4] as $s)
+      <button type="button" class="map-tab{{ $s === 1 ? ' active' : '' }}" data-play-speed="{{ $s }}">{{ $s }}×</button>
+      @endforeach
+    </span>
     <input type="range" id="viz-cas" class="flex-1 min-w-40"
            min="{{ $window['from'] }}" max="{{ $window['to'] }}" value="{{ $window['to'] }}" step="1">
     <span class="text-sm font-mono font-semibold text-heading" id="viz-cas-label"></span>
@@ -275,6 +280,39 @@ window.__vizConfig = {
   <button type="button" class="chart-png" data-chart-png="chartDist" data-nazev="histogram-vzdalenosti" title="{{ __('pages.viz.chart_png_title') }}">⤓</button>
   <div class="h-72 sm:h-72"><canvas id="chartDist"></canvas></div>
 </div>
+
+{{-- ── Nezapočítaná / označená QSO – rozbalitelný výpis s důvody ────────── --}}
+@if ($nezapocitanaCelkem > 0)
+<details class="rounded-lg border border-line bg-surface p-3 mb-5">
+  <summary class="cursor-pointer text-sm font-semibold text-heading">
+    {{ __('pages.viz.uncounted_heading', ['count' => $nezapocitanaCelkem]) }}
+  </summary>
+  <p class="text-xs text-muted mt-2 mb-2">{{ __('pages.viz.tempo_uncounted_hint') }}</p>
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>{{ __('pages.viz.col_callsign') }}</th>
+          <th>{{ __('pages.viz.col_time') }}</th>
+          <th>{{ __('pages.viz.col_reason') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+      @foreach ($nezapocitanaRadky as $r)
+        <tr>
+          <td class="mono font-bold">{{ $r['call'] }}</td>
+          <td class="mono">{{ $r['cas'] }}</td>
+          <td>{{ __('pages.viz.uncounted_reason_' . $r['duvod']) }}</td>
+        </tr>
+      @endforeach
+      </tbody>
+    </table>
+  </div>
+  @if ($nezapocitanaCelkem > count($nezapocitanaRadky))
+    <p class="text-xs text-muted mt-2">{{ __('pages.viz.uncounted_truncated', ['shown' => count($nezapocitanaRadky)]) }}</p>
+  @endif
+</details>
+@endif
 
 {{-- ── TOP ODX ─────────────────────────────────────────────────────────── --}}
 <div class="section-head">{{ __('pages.viz.odx_heading') }}</div>
