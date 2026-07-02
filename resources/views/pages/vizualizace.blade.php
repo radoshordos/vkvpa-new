@@ -13,8 +13,14 @@
   <link rel="preconnect" href="https://tile.openstreetmap.org">
   @vite('resources/js/vizualizace.js')
   <style>
-    #viz-mapa { height: 52vh; width: 100%; border-radius: .5rem; isolation: isolate; }
+    #viz-mapa { height: 52vh; width: 100%; border-radius: .5rem; isolation: isolate; position: relative; }
     .sq-label { background: transparent; border: none; box-shadow: none; color: #fff; font-weight: 700; font-size: 11px; }
+    /* Legenda druhů provozu – HTML overlay uvnitř mapy (nezávislý na enginu),
+       nad ovládacími prvky Leafletu (z-index panes končí na 1000). */
+    .viz-legend { position: absolute; right: 8px; bottom: 26px; z-index: 1100; pointer-events: none;
+                  background: color-mix(in srgb, var(--surface, #fff) 92%, transparent);
+                  color: var(--ink, #333); padding: 6px 10px; border-radius: 6px;
+                  font-size: 12px; line-height: 1.7; box-shadow: 0 1px 4px rgba(0,0,0,.2); }
     /* Popisky kružnic vzdáleností a mřížky lokátorů (vrstva „CRK"). */
     .km-label { background: transparent; border: none; box-shadow: none; color: #c00; font-weight: bold; font-size: 11px; white-space: nowrap; text-shadow: 0 0 2px #fff, 0 0 2px #fff; }
     .loc-label { background: transparent; border: none; box-shadow: none; color: #333; font-weight: bold; font-size: 11px; white-space: nowrap; text-shadow: 0 0 2px #fff, 0 0 2px #fff; }
