@@ -41,14 +41,13 @@ use Illuminate\Support\Facades\DB;
  * @phpstan-type StatTrend array{labels: list<string>, stanic: list<int>, qso: list<int>, body: list<int>}
  * @phpstan-type StatFakt array{key: string, params: array<string, string|int>}
  * @phpstan-type StatOdznaky array{ucast: bool, skore: bool, qso: bool, multiplier: bool}
- * @phpstan-type StatTok array{from: string, to: string, fromLat: float, fromLon: float, toLat: float, toLon: float, count: int}
- * @phpstan-type StatAnalyza array{ctverce: list<StatCtverec>, odx: StatOdx|null, timeline: StatTimeline, mody: StatMody, zeme: list<StatNazevPocet>, prefixy: list<StatNazevPocet>, tok: list<StatTok>}
+ * @phpstan-type StatAnalyza array{ctverce: list<StatCtverec>, odx: StatOdx|null, timeline: StatTimeline, mody: StatMody, zeme: list<StatNazevPocet>, prefixy: list<StatNazevPocet>}
  * @phpstan-type StatPrehled array{
  *     pocetStanic: int, pocetZaznamu: int, pocetQso: int, bodyCelkem: int,
  *     pocetCtvercu: int, odx: StatOdx|null,
  *     stanice: list<StatStanice>, ctverce: list<StatCtverec>, ucastnici: list<StatUcastnik>,
  *     timeline: StatTimeline, mody: StatMody, zeme: list<StatNazevPocet>, prefixy: list<StatNazevPocet>,
- *     kategorie: list<StatKat>, tok: list<StatTok>,
+ *     kategorie: list<StatKat>,
  *     topBody: list<StatTop>, topQso: list<StatTop>, topNasobice: list<StatTop>,
  *     pasma: list<array{id: int, label: string}>,
  *     topPodlePasma: array<int, array{body: list<StatTop>, qso: list<StatTop>, mult: list<StatTop>}>,
@@ -83,7 +82,7 @@ final class KoloStatistiky
 
     public static function cacheKey(int $koloId): string
     {
-        return sprintf('vkvpa:kolo-stats:v7:%d', $koloId);
+        return sprintf('vkvpa:kolo-stats:v8:%d', $koloId);
     }
 
     public function forgetRound(int $koloId): void
@@ -114,7 +113,6 @@ final class KoloStatistiky
             'zeme' => $a['zeme'],
             'prefixy' => $a['prefixy'],
             'kategorie' => $kategorie,
-            'tok' => $a['tok'],
             'topBody' => $topAll['body'],
             'topQso' => $topAll['qso'],
             'topNasobice' => $topAll['mult'],
@@ -146,8 +144,6 @@ final class KoloStatistiky
         $zemeCount = [];
         /** @var array<string, int> $prefixCount */
         $prefixCount = [];
-        /** @var array<string, int> $tokCount */
-        $tokCount = [];
         $timeline = array_fill(0, $buckets, 0);
         /** @var array<int, int> $modyCount  klíč = kód módu (QsoMode->value), hodnota = počet QSO */
         $modyCount = [];
@@ -200,15 +196,8 @@ final class KoloStatistiky
             $zemeCount[$zKey] = ($zemeCount[$zKey] ?? 0) + 1;
             $prefixCount[$pKey] = ($prefixCount[$pKey] ?? 0) + 1;
 
-            // Tok mezi velkými čtverci (pavučina): domácí čtverec → pracovaný.
-            $homeWwl = strtoupper(trim(is_scalar($r->home_wwl) ? (string) $r->home_wwl : ''));
-            $homeSq = Maidenhead::bigSquare($homeWwl);
-            if (Maidenhead::isValidBigSquare($homeSq) && Maidenhead::isValidBigSquare($sq) && $homeSq !== $sq) {
-                $tk = $homeSq.'|'.$sq;
-                $tokCount[$tk] = ($tokCount[$tk] ?? 0) + 1;
-            }
-
             // ODX kola.
+            $homeWwl = strtoupper(trim(is_scalar($r->home_wwl) ? (string) $r->home_wwl : ''));
             $worked = $this->coords($wwl, $r->lat, $r->lon);
             $home = $this->coords($homeWwl, null, null);
             if ($worked === null || $home === null) {
@@ -237,22 +226,6 @@ final class KoloStatistiky
         }
         usort($ctverce, static fn (array $a, array $b): int => $b['count'] <=> $a['count']);
 
-        /** @var list<StatTok> $tok */
-        $tok = [];
-        foreach ($tokCount as $pair => $count) {
-            $parts = explode('|', (string) $pair, 2);
-            $from = $parts[0];
-            $to = $parts[1] ?? '';
-            $cf = Maidenhead::bigSquareCenter($from);
-            $ct = Maidenhead::bigSquareCenter($to);
-            if ($cf === null || $ct === null) {
-                continue;
-            }
-            $tok[] = ['from' => $from, 'to' => $to, 'fromLat' => $cf['lat'], 'fromLon' => $cf['lon'], 'toLat' => $ct['lat'], 'toLon' => $ct['lon'], 'count' => $count];
-        }
-        usort($tok, static fn (array $a, array $b): int => $b['count'] <=> $a['count']);
-        $tok = array_slice($tok, 0, 150);
-
         $labels = [];
         for ($i = 0; $i < $buckets; $i++) {
             $labels[] = DenikStatistiky::hhmm($fromMin + $i * 15);
@@ -273,7 +246,6 @@ final class KoloStatistiky
             'mody' => $mody,
             'zeme' => $this->topNazevPocet($zemeCount),
             'prefixy' => $this->topNazevPocet($prefixCount),
-            'tok' => $tok,
         ];
     }
 

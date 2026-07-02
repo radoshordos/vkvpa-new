@@ -57,20 +57,10 @@ if (document.getElementById('stat-mapa')) {
             .bindPopup(`<strong>${u.call}</strong> ${place}<br>${u.loc} · ${u.kat} · ${u.body} ${t.points || 'b.'}`);
     });
 
-    // Pavučina: agregovaný tok mezi velkými čtverci (tloušťka dle počtu QSO).
-    const tok = arr(cfg.tok);
-    const tokLayer = L.layerGroup();
-    const maxTok = tok.reduce((m, x) => Math.max(m, x.count), 1);
-    tok.forEach((x) => {
-        L.polyline([[x.fromLat, x.fromLon], [x.toLat, x.toLon]], {
-            color: '#6366f1', weight: 1 + 4 * Math.sqrt(x.count / maxTok), opacity: 0.35,
-        }).addTo(tokLayer).bindPopup(`${x.from} → ${x.to}<br>${x.count}×`);
-    });
-
     staniceLayer.addTo(map);
     fitMapToBounds(map, bounds, { padding: [20, 20], fallbackCenter: [49.8, 15.5] });
 
-    const layers = { stanice: staniceLayer, ctverce: ctverceLayer, ucastnici: ucastniciLayer, tok: tokLayer };
+    const layers = { stanice: staniceLayer, ctverce: ctverceLayer, ucastnici: ucastniciLayer };
     const tabs = document.querySelectorAll('[data-stat-layer]');
     tabs.forEach((btn) => {
         btn.addEventListener('click', () => {

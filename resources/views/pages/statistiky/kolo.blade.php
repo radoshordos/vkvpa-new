@@ -27,7 +27,6 @@ window.__statConfig = {
     stanice: @json($prehled['stanice']),
     ctverce: @json($prehled['ctverce']),
     ucastnici: @json($prehled['ucastnici']),
-    tok: @json($prehled['tok']),
     timeline: @json($prehled['timeline']),
     mody: @json($prehled['mody']),
     zeme: @json($prehled['zeme']),
@@ -90,7 +89,6 @@ window.__statConfig = {
     <button class="map-tab active" data-stat-layer="stanice">{{ __('pages.stat.layer_stations') }}</button>
     <button class="map-tab" data-stat-layer="ctverce">{{ __('pages.stat.layer_squares') }}</button>
     <button class="map-tab" data-stat-layer="ucastnici">{{ __('pages.stat.layer_participants') }}</button>
-    <button class="map-tab" data-stat-layer="tok">{{ __('pages.stat.layer_tok') }}</button>
   </div>
   <div id="stat-mapa"></div>
 </div>

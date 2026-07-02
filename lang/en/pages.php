@@ -542,8 +542,6 @@ return [
         'rec_in_round' => 'round :kolo',
         'rec_stations_unit' => 'stations',
 
-        'layer_tok' => 'Flow between squares',
-
         'stanice_title' => ':call station profile',
         'stanice_meta' => ':call history in VKV PA: :kola rounds, points and placement.',
         'stanice_subtitle' => 'History and results across evaluated rounds.',
