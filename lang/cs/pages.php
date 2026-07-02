@@ -371,7 +371,6 @@ return [
         'mode_filter' => 'Provoz:',
         'mode_other_short' => 'Ostatní',
         'play' => '▶ Přehrát',
-        'play_speed' => 'Rychlost přehrávání',
         'qso' => 'QSO',
         'score_title' => 'Průběžné skóre k času na slideru: body za spojení × násobiče',
 

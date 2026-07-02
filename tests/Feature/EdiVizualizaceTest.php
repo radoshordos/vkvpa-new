@@ -444,20 +444,6 @@ class EdiVizualizaceTest extends TestCase
         $this->assertStringNotContainsString(__('pages.viz.col_reason'), $html);
     }
 
-    public function test_playback_speed_buttons_rendered(): void
-    {
-        $head = $this->importSample();
-
-        $html = $this->actingAs($this->user())
-            ->get(route('edi.vizualizace', $head->id))
-            ->assertOk()
-            ->getContent() ?: '';
-
-        $this->assertStringContainsString('data-play-speed="1"', $html);
-        $this->assertStringContainsString('data-play-speed="2"', $html);
-        $this->assertStringContainsString('data-play-speed="4"', $html);
-    }
-
     public function test_removed_inkubator_route_is_not_linked_from_vizualizace(): void
     {
         $head = $this->importSample();

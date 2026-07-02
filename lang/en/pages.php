@@ -369,7 +369,6 @@ return [
         'mode_filter' => 'Mode:',
         'mode_other_short' => 'Other',
         'play' => '▶ Play',
-        'play_speed' => 'Playback speed',
         'qso' => 'QSO',
         'score_title' => 'Running score at the slider time: points per QSO × multipliers',
 

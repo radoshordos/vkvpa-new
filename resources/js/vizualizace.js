@@ -253,8 +253,10 @@ function applyTime(time) {
 }
 
 let timer = null;
-const baseSpeedMs = 50; // ms na minutu závodu při rychlosti 1×
-let speed = 1; // násobek rychlosti (tlačítka 1× / 2× / 4×)
+// Rychlost přehrávání: základ 50 ms na minutu závodu, u početnějších deníků
+// úměrně pomaleji (0,5 ms na QSO, strop 150 ms) – velký deník by při plné
+// rychlosti probleskl příliš rychle na sledování.
+const speedMs = Math.min(150, Math.max(50, Math.round(cfg.points.length / 2)));
 
 function stopReplay() {
     if (timer !== null) { clearInterval(timer); timer = null; }
@@ -280,19 +282,7 @@ playBtn.addEventListener('click', function () {
     playBtn.textContent = t.pause;
     slider.value = String(time);
     applyTime(time);
-    timer = setInterval(tick, baseSpeedMs / speed);
-});
-
-// Rychlost přehrávání – při běžícím přehrávání se interval přenastaví hned.
-document.querySelectorAll('[data-play-speed]').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-        speed = Number(btn.dataset.playSpeed) || 1;
-        document.querySelectorAll('[data-play-speed]').forEach((b) => b.classList.toggle('active', b === btn));
-        if (timer !== null) {
-            clearInterval(timer);
-            timer = setInterval(tick, baseSpeedMs / speed);
-        }
-    });
+    timer = setInterval(tick, speedMs);
 });
 
 // Výřez nastavíme dřív, než zapneme vrstvu – mřížka CRK čte map.getBounds().

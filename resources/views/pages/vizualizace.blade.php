@@ -206,11 +206,6 @@ window.__vizConfig = {
   {{-- Ovládání přehrávání – viditelné jen v režimu „Přehrávání" (řídí JS). --}}
   <div id="viz-playback-controls" class="hidden items-center gap-3 mb-2 flex-wrap">
     <button type="button" id="viz-play" class="map-tab">{{ __('pages.viz.play') }}</button>
-    <span class="inline-flex items-center gap-1" title="{{ __('pages.viz.play_speed') }}">
-      @foreach ([1, 2, 4] as $s)
-      <button type="button" class="map-tab{{ $s === 1 ? ' active' : '' }}" data-play-speed="{{ $s }}">{{ $s }}×</button>
-      @endforeach
-    </span>
     <input type="range" id="viz-cas" class="flex-1 min-w-40"
            min="{{ $window['from'] }}" max="{{ $window['to'] }}" value="{{ $window['to'] }}" step="1">
     <span class="text-sm font-mono font-semibold text-heading" id="viz-cas-label"></span>
