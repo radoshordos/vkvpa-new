@@ -253,10 +253,15 @@ function applyTime(time) {
 }
 
 let timer = null;
-// Rychlost přehrávání: základ 50 ms na minutu závodu, u početnějších deníků
-// úměrně pomaleji (0,5 ms na QSO, strop 150 ms) – velký deník by při plné
-// rychlosti probleskl příliš rychle na sledování.
-const speedMs = Math.min(150, Math.max(50, Math.round(cfg.points.length / 2)));
+
+// Ladění rychlosti přehrávání (vše v ms na minutu závodu): malý deník běží
+// základním tempem, u početnějších se přehrávání úměrně zpomaluje, aby
+// neprobleskl příliš rychle na sledování.
+const playbackBaseMs = 50; // základní tempo (deníky do ~100 QSO)
+const playbackMaxMs = 150; // strop zpomalení pro velmi početné deníky
+const playbackMsPerQso = 0.5; // zpomalení za každé QSO deníku
+
+const speedMs = Math.min(playbackMaxMs, Math.max(playbackBaseMs, Math.round(cfg.points.length * playbackMsPerQso)));
 
 function stopReplay() {
     if (timer !== null) { clearInterval(timer); timer = null; }
