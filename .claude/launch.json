@@ -1,6 +1,6 @@
 {
   "version": "0.0.1",
-  "autoPort": true,
+  "autoPort": false,
   "configurations": [
     {
       "name": "vkvpa",
@@ -11,7 +11,7 @@
     {
       "name": "docker",
       "runtimeExecutable": "docker",
-      "runtimeArgs": ["compose", "up", "-d"],
+      "runtimeArgs": ["compose", "up", "web"],
       "port": 8080
     }
   ]

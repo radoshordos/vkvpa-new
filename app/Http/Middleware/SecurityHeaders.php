@@ -30,6 +30,9 @@ class SecurityHeaders
         // Prevent plugin-based attacks, base-tag injection, and framing by foreign origins.
         // jsdelivr.net: swagger-ui (api-docs).
         // tile.openstreetmap.org: Leaflet map tiles (img-src + connect-src).
+        // basemaps.cartocdn.com: tmavý rastr CARTO dark_matter (noční Leaflet).
+        // tiles.openfreemap.org: vektorové dlaždice + styl + glyphy/sprite pro
+        // MapLibre GL (načítá je fetch-em → connect-src; sprite i img-src).
         // 'unsafe-inline' for style-src: required by Leaflet and inline style attributes.
         //
         // script-src: místo 'unsafe-inline' per-request nonce – inline skript bez
@@ -39,13 +42,16 @@ class SecurityHeaders
         // direktiv (wire:click, x-*) přes new Function(); bez něj interaktivní
         // komponenty (podání hlášení) nefungují. Inline <script> i tak zůstávají
         // blokované (chybí 'unsafe-inline'), eval nezpracovává uživatelská data.
+        // worker-src blob:: MapLibre GL parsuje dlaždice ve web workerech
+        // vytvářených z blob: URL – bez povolení by je prohlížeč zablokoval.
         $response->headers->set('Content-Security-Policy', implode('; ', [
             "default-src 'self'",
             "script-src 'self' 'unsafe-eval' 'nonce-{$nonce}' cdn.jsdelivr.net",
             "style-src 'self' 'unsafe-inline' cdn.jsdelivr.net",
-            "img-src 'self' data: blob: https://tile.openstreetmap.org",
+            "img-src 'self' data: blob: https://tile.openstreetmap.org https://*.basemaps.cartocdn.com https://tiles.openfreemap.org",
             "font-src 'self' data:",
-            "connect-src 'self' https://tile.openstreetmap.org",
+            "connect-src 'self' https://tile.openstreetmap.org https://*.basemaps.cartocdn.com https://tiles.openfreemap.org",
+            "worker-src 'self' blob:",
             "frame-ancestors 'self'",
             "object-src 'none'",
             "base-uri 'self'",

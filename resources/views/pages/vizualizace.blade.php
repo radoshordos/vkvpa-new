@@ -13,8 +13,14 @@
   <link rel="preconnect" href="https://tile.openstreetmap.org">
   @vite('resources/js/vizualizace.js')
   <style>
-    #viz-mapa { height: 52vh; width: 100%; border-radius: .5rem; isolation: isolate; }
+    #viz-mapa { height: 52vh; width: 100%; border-radius: .5rem; isolation: isolate; position: relative; }
     .sq-label { background: transparent; border: none; box-shadow: none; color: #fff; font-weight: 700; font-size: 11px; }
+    /* Legenda druhů provozu – HTML overlay uvnitř mapy (nezávislý na enginu),
+       nad ovládacími prvky Leafletu (z-index panes končí na 1000). */
+    .viz-legend { position: absolute; right: 8px; bottom: 26px; z-index: 1100; pointer-events: none;
+                  background: color-mix(in srgb, var(--surface, #fff) 92%, transparent);
+                  color: var(--ink, #333); padding: 6px 10px; border-radius: 6px;
+                  font-size: 12px; line-height: 1.7; box-shadow: 0 1px 4px rgba(0,0,0,.2); }
     /* Popisky kružnic vzdáleností a mřížky lokátorů (vrstva „CRK"). */
     .km-label { background: transparent; border: none; box-shadow: none; color: #c00; font-weight: bold; font-size: 11px; white-space: nowrap; text-shadow: 0 0 2px #fff, 0 0 2px #fff; }
     .loc-label { background: transparent; border: none; box-shadow: none; color: #333; font-weight: bold; font-size: 11px; white-space: nowrap; text-shadow: 0 0 2px #fff, 0 0 2px #fff; }
@@ -39,6 +45,15 @@
                  border-radius: .25rem; background: transparent; color: var(--color-muted, #64748b);
                  font-size: .9rem; line-height: 1; cursor: pointer; }
     .chart-png:hover { color: #fff; background: var(--color-brand, #3b82f6); }
+    /* Tmavý režim: popupy a popisky obou mapových enginů ladí s motivem. */
+    .dark .leaflet-popup-content-wrapper, .dark .leaflet-popup-tip { background: var(--surface-2); color: var(--ink); }
+    .dark .maplibregl-popup-content { background: var(--surface-2); color: var(--ink); }
+    .dark .maplibregl-popup-anchor-bottom .maplibregl-popup-tip { border-top-color: var(--surface-2); }
+    .dark .maplibregl-popup-anchor-top .maplibregl-popup-tip { border-bottom-color: var(--surface-2); }
+    .dark .maplibregl-popup-anchor-left .maplibregl-popup-tip { border-right-color: var(--surface-2); }
+    .dark .maplibregl-popup-anchor-right .maplibregl-popup-tip { border-left-color: var(--surface-2); }
+    .dark .loc-label { color: #ccc; text-shadow: 0 0 2px #000, 0 0 2px #000; }
+    .dark .km-label { text-shadow: 0 0 2px #000, 0 0 2px #000; }
   </style>
 @endpush
 
@@ -191,6 +206,12 @@ window.__vizConfig = {
       <option value="lokatory" data-map-layer="lokatory">{{ __('pages.viz.layer_lokatory') }}</option>
       <option value="ctverce" data-map-layer="ctverce">{{ __('pages.viz.layer_ctverce') }}</option>
     </select>
+    {{-- Přepínač vykreslování: klasický Leaflet ⇄ GPU MapLibre GL + deck.gl.
+         Volba se pamatuje (localStorage); bez WebGL zůstává Leaflet. --}}
+    <span class="inline-flex items-center gap-1" role="group" aria-label="{{ __('pages.viz.engine_toggle') }}">
+      <button type="button" class="map-tab" data-map-engine="leaflet" title="{{ __('pages.viz.engine_leaflet_title') }}">Leaflet</button>
+      <button type="button" class="map-tab" data-map-engine="maplibre" title="{{ __('pages.viz.engine_maplibre_title') }}">MapLibre&nbsp;GL</button>
+    </span>
     {{-- Filtr druhu provozu – platí pro všechny vrstvy (u Lokátorů a Obsazených
          čtverců přepočítává počty QSO ve čtverci podle zapnutých druhů provozu).
          Tlačítka se generují jen pro druhy provozu, které se v deníku vyskytují. --}}
@@ -204,6 +225,8 @@ window.__vizConfig = {
       @endforeach
     </span>
   </div>
+  {{-- Hláška: prohlížeč neumí WebGL → zůstal Leaflet (odkrývá JS). --}}
+  <p id="viz-engine-note" class="hidden text-xs text-warn mb-2">{{ __('pages.viz.engine_fallback') }}</p>
   {{-- Ovládání přehrávání – viditelné jen v režimu „Přehrávání" (řídí JS). --}}
   <div id="viz-playback-controls" class="hidden items-center gap-3 mb-2 flex-wrap">
     <button type="button" id="viz-play" class="map-tab">{{ __('pages.viz.play') }}</button>
