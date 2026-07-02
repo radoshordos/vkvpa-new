@@ -3,6 +3,7 @@ import { modeColor, modeLabel } from './leaflet-mode-colors.js';
 import { applyChartTheme } from './chart-theme.js';
 import { buildVizData, hhmm, modeGroup } from './map/viz-data.js';
 import { createLeafletEngine } from './map/engine-leaflet.js';
+import { createMapLibreEngine } from './map/engine-maplibre.js';
 
 Chart.register(...registerables);
 
@@ -12,7 +13,7 @@ const t = cfg.t || {};
 
 const isDark = () => document.documentElement.classList.contains('dark');
 
-// ── Mapa: vyměnitelný engine (Leaflet) ─────────────────────────────────────
+// ── Mapa: vyměnitelný engine (Leaflet / MapLibre GL + deck.gl) ─────────────
 // Orchestrátor drží DOM ovládání (výběr vrstvy, filtr provozu, přehrávání,
 // legendu) a stav; samotné kreslení deleguje na engine se společným rozhraním
 // init/setLayer/setModeFilter/applyTime/focusQso/setTheme/fit/destroy.
@@ -23,8 +24,33 @@ const modeFilter = { 0: true, 1: true, 2: true, 3: true, 4: true, 5: true, 6: tr
 const data = buildVizData(cfg);
 const mapEl = document.getElementById('viz-mapa');
 
-const engine = createLeafletEngine();
-engine.init({ container: 'viz-mapa', cfg, data, modeFilter, dark: isDark() });
+const ENGINES = { leaflet: createLeafletEngine, maplibre: createMapLibreEngine };
+
+// MapLibre GL vyžaduje WebGL – bez něj se tiše padá na Leaflet (s hláškou).
+function webglSupported() {
+    try {
+        const c = document.createElement('canvas');
+        return !!(c.getContext('webgl2') || c.getContext('webgl'));
+    } catch (e) {
+        return false;
+    }
+}
+
+const engineNote = document.getElementById('viz-engine-note');
+
+function showEngineNote() {
+    if (engineNote) engineNote.classList.remove('hidden');
+}
+
+// Volba enginu se pamatuje; výchozí je lehčí Leaflet.
+let engineKey = 'leaflet';
+try {
+    if (localStorage.getItem('viz-map-engine') === 'maplibre') engineKey = 'maplibre';
+} catch (e) { /* localStorage nemusí být dostupný */ }
+if (engineKey === 'maplibre' && !webglSupported()) {
+    engineKey = 'leaflet';
+    showEngineNote();
+}
 
 // ── Legenda druhů provozu – HTML overlay nezávislý na enginu ───────────────
 
@@ -39,8 +65,29 @@ legendEl.innerHTML = `<strong style="display:block;margin-bottom:2px">${t.legend
     + data.presentModes
         .map((m) => `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${modeColor(m).fill};margin-right:5px;vertical-align:middle"></span>${m === 0 ? t.other : modeLabel(m)}`)
         .join('<br>');
-// Uvnitř kontejneru mapy, aby zůstala vidět i na celé obrazovce.
-mapEl.appendChild(legendEl);
+
+let engine = null;
+
+function initEngine(key) {
+    engine = ENGINES[key]();
+    engine.init({ container: 'viz-mapa', cfg, data, modeFilter, dark: isDark() });
+    // Legenda je dítě kontejneru mapy (aby zůstala vidět i na celé obrazovce)
+    // – po (re)initu enginu ji vrátíme na konec kontejneru.
+    mapEl.appendChild(legendEl);
+}
+
+try {
+    initEngine(engineKey);
+} catch (e) {
+    // Inicializace WebGL může selhat i po pozitivní detekci – tiše na Leaflet.
+    if (engineKey !== 'leaflet') {
+        engineKey = 'leaflet';
+        showEngineNote();
+        initEngine('leaflet');
+    } else {
+        throw e;
+    }
+}
 
 // Vrstvy agregující čtverce nemají barvy podle druhu provozu – skrývá se u nich
 // barevná legenda (filtr provozu na ně ale platí: přepočítává počty QSO).
@@ -158,6 +205,48 @@ document.querySelectorAll('[data-mode-filter]').forEach(function (btn) {
         applyModeFilter();
     });
 });
+
+// ── Přepínač mapového enginu (Leaflet ⇄ MapLibre GL + deck.gl) ─────────────
+
+function syncEngineButtons() {
+    document.querySelectorAll('[data-map-engine]').forEach(function (b) {
+        b.classList.toggle('active', b.dataset.mapEngine === engineKey);
+    });
+}
+
+function switchEngine(key) {
+    if (!ENGINES[key] || key === engineKey) return;
+    if (key === 'maplibre' && !webglSupported()) {
+        showEngineNote();
+        syncEngineButtons();
+        return;
+    }
+    stopReplay();
+    engine.destroy();
+    engineKey = key;
+    try { localStorage.setItem('viz-map-engine', key); } catch (e) { /* noop */ }
+    try {
+        initEngine(key);
+    } catch (e) {
+        // Inicializace WebGL může selhat i po pozitivní detekci (vyčerpané
+        // kontexty, ovladač) – tiše zpět na Leaflet.
+        if (key !== 'leaflet') {
+            engineKey = 'leaflet';
+            showEngineNote();
+            try { localStorage.setItem('viz-map-engine', 'leaflet'); } catch (e2) { /* noop */ }
+            initEngine('leaflet');
+        }
+    }
+    // Obnova stavu mapy: aktuální vrstva + filtr (přehrávání začíná s celým
+    // deníkem – slider na konci okna, viz showLayer).
+    showLayer(layerSelect.value);
+    syncEngineButtons();
+}
+
+document.querySelectorAll('[data-map-engine]').forEach(function (btn) {
+    btn.addEventListener('click', function () { switchEngine(btn.dataset.mapEngine); });
+});
+syncEngineButtons();
 
 // Klik na řádek TOP ODX → špendlík daného QSO na mapě.
 document.querySelectorAll('[data-odx-idx]').forEach(function (row) {
